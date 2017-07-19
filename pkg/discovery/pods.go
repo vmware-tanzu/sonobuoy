@@ -30,9 +30,9 @@ import (
 )
 
 const (
-	// PodsLocation is the location within the results tarball where pod
+	// PodLogsLocation is the location within the results tarball where pod
 	// information is stored.
-	PodsLocation = "pods"
+	PodLogsLocation = "podlogs"
 )
 
 // gatherPodLogs will loop through collecting pod logs and placing them into a directory tree
@@ -60,7 +60,7 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 				return errors.WithStack(err)
 			}
 
-			outdir := path.Join(cfg.OutputDir(), NSResourceLocation, ns, PodsLocation, pod.Name, "logs")
+			outdir := path.Join(cfg.OutputDir(), PodLogsLocation, ns, pod.Name, "logs")
 			if err = os.MkdirAll(outdir, 0755); err != nil {
 				return errors.WithStack(err)
 			}

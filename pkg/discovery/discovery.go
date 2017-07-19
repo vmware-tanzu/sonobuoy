@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path"
 	"time"
 
 	"github.com/golang/glog"
@@ -47,16 +48,19 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
 	// 1. Get the list of namespaces and apply the regex filter on the namespace
 	nslist := FilterNamespaces(kubeClient, cfg.Filters.Namespaces)
 
-	// 2. Create the directory which will store the results
-	outpath := cfg.ResultsDir + "/" + cfg.UUID
-	err := os.MkdirAll(outpath, 0755)
+	// 2. Create the directory which will store the results, including the
+	// `meta` directory inside it (which we always need regardless of
+	// config)
+	outpath := path.Join(cfg.ResultsDir, cfg.UUID)
+	metapath := path.Join(outpath, MetaLocation)
+	err := os.MkdirAll(metapath, 0755)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	// 3. Dump the config.json we used to run our test
 	if blob, err := json.Marshal(cfg); err == nil {
-		if err = ioutil.WriteFile(outpath+"/config.json", blob, 0644); err != nil {
+		if err = ioutil.WriteFile(path.Join(metapath, "config.json"), blob, 0644); err != nil {
 			panic(err.Error())
 		}
 	}
@@ -67,20 +71,26 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
 	)
 
 	// 5. Run the queries
+	recorder := NewQueryRecorder()
 	trackErrorsFor("querying cluster resources")(
-		QueryClusterResources(kubeClient, cfg),
+		QueryClusterResources(kubeClient, recorder, cfg),
 	)
 
 	for _, ns := range nslist {
 		trackErrorsFor("querying resources under namespace " + ns)(
-			QueryNSResources(kubeClient, ns, cfg),
+			QueryNSResources(kubeClient, recorder, ns, cfg),
 		)
 	}
 
-	// 6. Clean up after the plugins
+	// 6. Dump the query times
+	trackErrorsFor("recording query times")(
+		recorder.DumpQueryData(path.Join(metapath, "query-time.json")),
+	)
+
+	// 7. Clean up after the plugins
 	pluginaggregation.Cleanup(kubeClient, cfg.LoadedPlugins)
 
-	// 7. tarball up results YYYYMMDDHHMM_sonobuoy_UID.tar.gz
+	// 8. tarball up results YYYYMMDDHHMM_sonobuoy_UID.tar.gz
 	tb := cfg.ResultsDir + "/" + t.Format("200601021504") + "_sonobuoy_" + cfg.UUID + ".tar.gz"
 	err = tarx.Compress(tb, outpath, &tarx.CompressOptions{Compression: tarx.Gzip})
 	if err == nil {
