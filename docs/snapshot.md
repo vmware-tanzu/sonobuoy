@@ -1,7 +1,5 @@
 # Sonobuoy Snapshot Layout
 
-> NOTE: This documentation is a draft proposal for the structure of a Sonobuoy tarball and how it should be changed.  This documentation does not represent the current state of a Sonobuoy tarball.
-
 - [Filename](#filename)
 - [Contents](#contents)
 	- [/resources](#resources)
@@ -50,8 +48,6 @@ This looks like the following:
 
 ### /podlogs
 
-> NOTE: pod logs are currently distributed throughout the tarball in `/resources/ns/<namespace>/pods/<podname>/<containername>.txt`.  The proposal is to move them under a different directory so that "types" within a directory are consistent
-
 The `/podlogs` directory contains logs for each pod found during the Sonobuoy run, similarly to what you would get with `kubectl logs -n <namespace> <pod> <container>`.
 
 - `/podlogs/<namespace>/<podname>/<containername>.log` - Contains the logs for the each container, for each pod in each namespace.
@@ -68,6 +64,12 @@ The `/plugins` directory contains output for each plugin selected for this Sonob
 
 - `/plugins/<plugin>/results/<hostname>.<format>` - For plugins that run once on every node to collect node-specific data (ones that use the DaemonSet driver, for instance), this will contain the results for this plugin, for each node, using the format that the plugin expects.  See [file formats][2] for details.
 
+Some plugins can include several files as part of their results.  To do this, a plugin will submit a `.tar.gz` file, the contents of which are extracted into the following:
+
+- `/plugins/<plugin>/results/<extracted files>` - For plugins that collect cluster-wide data into a `.tar.gz` file
+
+- `/plugins/<plugin>/<node>/<extracted files>` - For plugins that collect per-node data into a `.tar.gz` file
+
 This looks like the following:
 
 ![tarball plugins screenshot][7]
@@ -77,7 +79,6 @@ This looks like the following:
 The `/meta` directory contains metadata about this Sonobuoy run, including configuration and query runtime.
 
 - `/meta/query-time.json` - Contains metadata about how long each query took, example: `{"queryobj":"Pods","time":12.345ms"}`
-  > NOTE: this file is currently distributed throughout the tarball in `/resources/.../results.json`.  Proposal is to move it here, and create other `.json` files under `/meta` if we start capturing other things than query time.
 - `/meta/config.json` - A copy of the Sonobuoy configuration that was set up when this run was created, but with unspecified values filled in with explicit defaults, and with a `UUID` field in the root JSON, set to a randomly generated UUID created for that Sonobuoy run.
 
 This looks like the following:
@@ -85,8 +86,6 @@ This looks like the following:
 ![tarball meta screenshot][8]
 
 ### /serverversion.json
-
-> NOTE: this is currently `/serverversion/serverversion.json`, proposal here is to just make it `/serverversion.json`
 
 `/serverversion.json` contains the output from querying the server's version, including the major and minor version, git commit, etc.
 
