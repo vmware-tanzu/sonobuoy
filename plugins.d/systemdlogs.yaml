@@ -1,0 +1,73 @@
+name: systemd_logs
+driver: DaemonSet
+resultType: systemd_logs
+spec:
+  tolerations:
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: NoSchedule
+  - key: CriticalAddonsOnly
+    operator: Exists
+  hostNetwork: true
+  hostIPC: true
+  hostPID: true
+  dnsPolicy: ClusterFirstWithHostNet
+  containers:
+  - name: systemd-logs
+    command:
+    - sh
+    - -c
+    - /get_systemd_logs.sh && sleep 3600
+    env:
+    - name: NODE_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: spec.nodeName
+    - name: RESULTS_DIR
+      value: /tmp/results
+    - name: CHROOT_DIR
+      value: /node
+    image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
+    imagePullPolicy: Always
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /node
+      name: root
+    - mountPath: /tmp/results
+      name: results
+    - mountPath: /etc/sonobuoy
+      name: config
+  - name: sonobuoy-worker
+    command:
+    - sh
+    - -c
+    - /sonobuoy worker single-node -v 5 --logtostderr && sleep 3600
+    env:
+    - name: NODE_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: spec.nodeName
+    - name: RESULTS_DIR
+      value: /tmp/results
+    image: gcr.io/heptio-images/sonobuoy:latest
+    imagePullPolicy: Always
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - mountPath: /tmp/results
+      name: results
+    - mountPath: /etc/sonobuoy
+      name: config
+  volumes:
+  - name: root
+    hostPath:
+      path: /
+  - name: results
+    emptyDir: {}
+  - name: config
+    configMap:
+      # This will be rewritten when the DaemonSetPlugin driver goes to launch the pod.
+      name: __SONOBUOY_CONFIGMAP__
