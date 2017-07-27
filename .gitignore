@@ -1,0 +1,10 @@
+/sonobuoy
+/sonoctl
+
+# Build artifacts for kube-conformance
+/build/*/_cache
+/build/kube-conformance/e2e.test
+/build/kube-conformance/kubectl
+
+# we output results to this directory by default
+/results
