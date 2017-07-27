@@ -7,13 +7,10 @@
 
 ## Overview
 
-Sonobuoy addresses the gap in tools for [Kubernetes][3] cluster introspection. It is a customizable, extendable, and cluster-agnostic way to record snapshots of your cluster's essential characteristics.
-
-Sonobuoy generates clear, informative reports about your cluster, regardless of your deployment details. Its selective data dumps of Kubernetes resource objects and cluster nodes allow for the following use cases:
+Sonobuoy addresses the gap in tools for [Kubernetes][3] cluster introspection. It is a customizable, extendable, and cluster-agnostic way to generate clear, informative reports about your cluster--regardless of your deployment details. Its selective data dumps of Kubernetes resource objects and cluster nodes allow for the following use cases:
 
 * Integrated end-to-end (e2e) [conformance-testing 1.7+][13]
 * Workload debugging
-* Workload recovery
 * Custom data collection via extensible plugins
 
 ## Install and Configure
