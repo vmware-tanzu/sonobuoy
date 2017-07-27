@@ -12,47 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TARGET = sonobuoy
-GOTARGET = github.com/heptio/$(TARGET)
-BUILDMNT = /go/src/$(GOTARGET)
-REGISTRY ?= gcr.io/heptio-images
-VERSION ?= v0.8.0
-TESTARGS ?= -v -timeout 60s
-IMAGE = $(REGISTRY)/$(BIN)
-BUILD_IMAGE ?= golang:1.8
-TEST_PKGS ?= ./cmd/... ./pkg/...
-DOCKER ?= docker
-DIR := ${CURDIR}
-BUILDCMD = go build -v -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET)"
-BUILD = $(BUILDCMD) ./cmd/sonobuoy
-TEST = go test $(TEST_PKGS) $(TESTARGS)
-
 local:
-	$(BUILD)
+	$(MAKE) -C build/sonobuoy local
 
 test:
-	$(TEST)
+	$(MAKE) -C build/sonobuoy test
 
 all: cbuild container
 
 cbuild:
-	$(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c '$(BUILD) && $(TEST)'
+	$(MAKE) -C build/sonobuoy cbuild
 
 container: cbuild
-	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest -t $(REGISTRY)/$(TARGET):$(VERSION) .
+	$(MAKE) -C build/sonobuoy container
 	$(MAKE) -C build/kube-conformance container
 	$(MAKE) -C build/systemd-logs container
 
 push:
-	gcloud docker -- push $(REGISTRY)/$(TARGET):$(VERSION)
+	$(MAKE) -C build/sonobuoy push
 	$(MAKE) -C build/kube-conformance push
 	$(MAKE) -C build/systemd-logs push
 
 .PHONY: all local container cbuild push test
 
 clean:
+	$(MAKE) -C build/sonobuoy clean
 	$(MAKE) -C build/kube-conformance clean
 	$(MAKE) -C build/systemd-logs clean
-	rm -f $(TARGET)
-	$(DOCKER) rmi $(REGISTRY)/$(TARGET):latest $(REGISTRY)/$(TARGET):$(VERSION)
-
