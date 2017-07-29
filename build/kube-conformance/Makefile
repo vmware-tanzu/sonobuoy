@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Note the only reason we are creating this is because upstream 
-# does not yet publish a released e2e container 
-# https://github.com/kubernetes/kubernetes/issues/47920 
+# Note the only reason we are creating this is because upstream
+# does not yet publish a released e2e container
+# https://github.com/kubernetes/kubernetes/issues/47920
 
 TARGET = kube-conformance
 GOTARGET = github.com/heptio/$(TARGET)
@@ -43,14 +43,14 @@ _cache/kubernetes.tar.gz: _cache
 
 _cache:
 	mkdir -p _cache
-	
+
 container: e2e.test kubectl
 	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest -t $(REGISTRY)/$(TARGET):$(KVER) .
 
 push:
 	gcloud docker -- push $(REGISTRY)/$(TARGET):latest $(REGISTRY)/$(TARGET):$(KVER)
 
-.PHONY: all container 
+.PHONY: all container
 
 clean:
 	rm -rf _cache
