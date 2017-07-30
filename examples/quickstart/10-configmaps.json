@@ -1,0 +1,35 @@
+{
+   "apiVersion": "v1",
+   "items": [
+      {
+         "apiVersion": "v1",
+         "data": {
+            "config.json": "{\"Description\": \"EXAMPLE\", \"Filters\": {\"LabelSelector\": \"\", \"Namespaces\": \".*\"}, \"PluginNamespace\": \"heptio-sonobuoy\", \"Plugins\": [{\"name\": \"systemd_logs\"}, {\"name\": \"e2e\"}], \"Resources\": [\"CertificateSigningRequests\", \"ClusterRoleBindings\", \"ClusterRoles\", \"ComponentStatuses\", \"Nodes\", \"PersistentVolumes\", \"PodSecurityPolicies\", \"ServerVersion\", \"StorageClasses\", \"ThirdPartyResources\", \"ConfigMaps\", \"DaemonSets\", \"Deployments\", \"Endpoints\", \"Events\", \"HorizontalPodAutoscalers\", \"Ingresses\", \"Jobs\", \"LimitRanges\", \"PersistentVolumeClaims\", \"Pods\", \"PodLogs\", \"PodDisruptionBudgets\", \"PodPresets\", \"PodTemplates\", \"ReplicaSets\", \"ReplicationControllers\", \"ResourceQuotas\", \"RoleBindings\", \"Roles\", \"ServiceAccounts\", \"Services\", \"StatefulSets\"], \"ResultsDir\": \"/tmp/sonobuoy\", \"Server\": {\"advertiseaddress\": \"sonobuoy-master:8080\", \"bindaddress\": \"0.0.0.0\", \"bindport\": 8080, \"timeoutseconds\": 3600}, \"Version\": \"v0.8.0\"}"
+         },
+         "kind": "ConfigMap",
+         "metadata": {
+            "labels": {
+               "component": "sonobuoy"
+            },
+            "name": "sonobuoy-config-cm",
+            "namespace": "heptio-sonobuoy"
+         }
+      },
+      {
+         "apiVersion": "v1",
+         "data": {
+            "e2e.yaml": "name: e2e\ndriver: Job\nresultType: e2e\nspec:\n  serviceAccountName: sonobuoy-serviceaccount\n  tolerations:\n    - key: node-role.kubernetes.io/master\n      operator: Exists\n      effect: NoSchedule\n    - key: CriticalAddonsOnly\n      operator: Exists\n  restartPolicy: Never\n  containers:\n    - name: e2e\n      image: gcr.io/heptio-images/kube-conformance:latest\n      imagePullPolicy: Always\n      # NOTE: Full conformance can take a while depending on your cluster size.\n      # As a result, only a single test is set atm to verify correctness.\n      # Operators that want the complete test results can comment out the\n      # env section.\n      env:\n        - name: E2E_FOCUS\n          value: \"Pods should be submitted and removed\"\n      volumeMounts:\n        - name: results\n          mountPath: /tmp/results\n    - name: sonobuoy-worker\n      command:\n        - sh\n        - -c\n        - /sonobuoy worker global -v 5 --logtostderr\n      env:\n        - name: NODE_NAME\n          valueFrom:\n          fieldRef:\n              apiVersion: v1\n              fieldPath: spec.nodeName\n        - name: RESULTS_DIR\n          value: /tmp/results\n      image: gcr.io/heptio-images/sonobuoy:latest\n      imagePullPolicy: Always\n      volumeMounts:\n        - name: config\n          mountPath: /etc/sonobuoy\n        - name: results\n          mountPath: /tmp/results\n  volumes:\n    - name: results\n      emptyDir: {}\n    - name: config\n      configMap:\n        # This will be rewritten when the JobPlugin driver goes to launch the pod.\n        name: __SONOBUOY_CONFIGMAP__",
+            "systemdlogs.yaml": "name: systemd_logs\ndriver: DaemonSet\nresultType: systemd_logs\nspec:\n  tolerations:\n    - key: node-role.kubernetes.io/master\n      operator: Exists\n      effect: NoSchedule\n    - key: CriticalAddonsOnly\n      operator: Exists\n  hostNetwork: true\n  hostIPC: true\n  hostPID: true\n  dnsPolicy: ClusterFirstWithHostNet\n  containers:\n    - name: systemd-logs\n      command:\n        - sh\n        - -c\n        - /get_systemd_logs.sh && sleep 3600\n      env:\n        - name: NODE_NAME\n          valueFrom:\n            fieldRef:\n              apiVersion: v1\n              fieldPath: spec.nodeName\n        - name: RESULTS_DIR\n          value: /tmp/results\n        - name: CHROOT_DIR\n          value: /node\n      image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest\n      imagePullPolicy: Always\n      securityContext:\n        privileged: true\n      volumeMounts:\n        - mountPath: /node\n          name: root\n        - mountPath: /tmp/results\n          name: results\n        - mountPath: /etc/sonobuoy\n          name: config\n    - name: sonobuoy-worker\n      command:\n        - sh\n        - -c\n        - /sonobuoy worker single-node -v 5 --logtostderr && sleep 3600\n      env:\n        - name: NODE_NAME\n          valueFrom:\n          fieldRef:\n            apiVersion: v1\n            fieldPath: spec.nodeName\n        - name: RESULTS_DIR\n          value: /tmp/results\n      image: gcr.io/heptio-images/sonobuoy:latest\n      imagePullPolicy: Always\n      securityContext:\n        privileged: true\n      volumeMounts:\n        - mountPath: /tmp/results\n          name: results\n        - mountPath: /etc/sonobuoy\n          name: config\n  volumes:\n    - name: root\n      hostPath:\n        path: /\n    - name: results\n      emptyDir: {}\n    - name: config\n      configMap:\n        # This will be rewritten when the DaemonSetPlugin driver goes to launch the pod.\n        name: __SONOBUOY_CONFIGMAP__"
+         },
+         "kind": "ConfigMap",
+         "metadata": {
+            "labels": {
+               "component": "sonobuoy"
+            },
+            "name": "sonobuoy-plugins-cm",
+            "namespace": "heptio-sonobuoy"
+         }
+      }
+   ],
+   "kind": "List"
+}
