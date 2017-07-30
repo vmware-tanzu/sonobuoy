@@ -100,9 +100,9 @@ local systemdlogsConfig = {
         operator: "Exists",
       },
     ],
-    hostNetwork: true,
-    hostIPC: true,
-    hostPID: true,
+    hostNetwork: "true",
+    hostIPC: "true",
+    hostPID: "true",
     dnsPolicy: "ClusterFirstWithHostNet",
     containers: [
       {
@@ -117,9 +117,9 @@ local systemdlogsConfig = {
             name: "NODE_NAME",
             valueFrom: {
               fieldRef: {
-                apiVersion: "v1",
-                fieldPath: "spec.nodeName",
+                apiVersion: "v1"
               },
+              fieldPath: "spec.nodeName",
             }
           },
           {
@@ -134,7 +134,7 @@ local systemdlogsConfig = {
         image: "gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest",
         imagePullPolicy: "Always",
         securityContext: {
-          privileged: true,
+          privileged: "true",
         },
         volumeMounts: [
           {
@@ -164,8 +164,8 @@ local systemdlogsConfig = {
             valueFrom: {
               fieldRef: {
                 apiVersion: "v1",
-                fieldPath: "spec.nodeName",
               },
+              fieldPath: "spec.nodeName",
             },
           },
           {
@@ -176,7 +176,7 @@ local systemdlogsConfig = {
         image: "gcr.io/heptio-images/sonobuoy:latest",
         imagePullPolicy: "Always",
         securityContext: {
-          privileged: true,
+          privileged: "true",
         },
         volumeMounts: [
           {
@@ -190,25 +190,25 @@ local systemdlogsConfig = {
         ],
       },
     ],
-    volumes: [
-      {
-        name: "root",
-        hostPath: {
-          path: "/",
-        },
-      },
-      {
-        name: "results",
-        emptyDir: {},
-      },
-      {
-        name: "config",
-        configMap: {
-          name: "__SONOBUOY_CONFIGMAP__",
-        },
-      },
-    ],
   },
+  volumes: [
+    {
+      name: "root",
+      hostPath: {
+        path: "/",
+      },
+    },
+    {
+      name: "results",
+      emptyDir: {},
+    },
+    {
+      name: "config",
+      configMap: {
+        name: "__SONOBUOY_CONFIGMAP__",
+      },
+    },
+  ],
 };
 
 local e2eConfig = {
@@ -264,8 +264,8 @@ local e2eConfig = {
             valueFrom: {
               fieldRef: {
                 apiVersion: "v1",
-                fieldPath: "spec.nodeName",
               },
+              fieldPath: "spec.nodeName",
             },
           },
           {
@@ -287,20 +287,20 @@ local e2eConfig = {
         ],
       },
     ],
-    volumes: [
-      {
-        name: "results",
-        emptyDir: {},
-      },
-      {
-        name: "config",
-        configMap: {
-          # This will be rewritten when the JobPlugin driver goes to launch the pod.
-          name: "__SONOBUOY_CONFIGMAP__",
-        },
-      },
-    ],
   },
+  volumes: [
+    {
+      name: "results",
+      emptyDir: {},
+    },
+    {
+      name: "config",
+      configMap: {
+        # This will be rewritten when the JobPlugin driver goes to launch the pod.
+        name: "__SONOBUOY_CONFIGMAP__",
+      },
+    },
+  ],
 };
 
 local plugins = {
