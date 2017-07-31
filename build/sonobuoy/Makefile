@@ -27,7 +27,7 @@ DOCKER ?= docker
 
 BUILDMNT = /go/src/$(GOTARGET)
 BUILD_IMAGE ?= golang:1.8
-BUILDCMD = go build -v -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET)"
+BUILDCMD = go build -o build/sonobuoy/$(TARGET) -v -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET)"
 BUILD = $(BUILDCMD) $(GOTARGET)/cmd/sonobuoy
 
 TESTARGS ?= -v -timeout 60s
