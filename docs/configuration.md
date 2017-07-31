@@ -94,13 +94,13 @@ See [Parameter Reference][3] for a more detailed description of each setting.
 }
 ```
 ### Parameter reference
-| Key  | Type | Default | Meaning  |  
+| Key  | Type | Default | Meaning  |
 |---|---|---|---|
-|  UUID | String |  A randomly generated UUID | Used to name the directory where Sonobuoy-collected data is saved (e.g. `sonobuoy_<UUID>`)  |   
+|  UUID | String |  A randomly generated UUID | Used to name the directory where Sonobuoy-collected data is saved (e.g. `sonobuoy_<UUID>`)  |
 | Description | String | "DEFAULT" | Metadata for keeping track of configs and their use cases |
 | Version | String | `buildInfo.version` (comes from the compilation of the Docker image) | The Sonobuoy version that the config uses for its schema |
 | Kubeconfig | String | ""<br><br>*NOT necessary for containerized Sonobuoy, which will default to the in-cluster config* | Allows Sonobuoy to communicate with and gather info from the Kubernetes cluster |
-| ResultsDir | String | "./results" | The directory in which Sonobuoy writes its results |
+| ResultsDir | String | "./results" | The directory in which Sonobuoy writes its results. Customizable with `RESULTS_DIR` environment variable. |
 | Resources | String Array | An array containing all possible resources | *See the [sample JSON][2] above for a list of all available resource types.*<br><br>Indicates to Sonobuoy what type of data it should be recording |
 | Filters.LabelSelector | String | "" | Uses standard Kubernetes [label selector syntax][14] to filter which resource objects are recorded |
 | Filters.Namespaces | String | ".*" | Uses regex on namespaces to filter which resource objects are recorded |
@@ -113,7 +113,7 @@ See [Parameter Reference][3] for a more detailed description of each setting.
 
 ## Plugin configuration
 
-If you have the appropriate plugin definition (third-party or your own), you can easily opt into it by adding a *Plugin Selection* to the main Sonobuoy config's "Plugin" section.  
+If you have the appropriate plugin definition (third-party or your own), you can easily opt into it by adding a *Plugin Selection* to the main Sonobuoy config's "Plugin" section.
 
 The following code snippet, for example, selects the `e2e` and `systemd_logs` plugins:
 
