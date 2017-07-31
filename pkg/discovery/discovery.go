@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/golang/glog"
@@ -77,6 +78,17 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) []error {
 		err = os.RemoveAll(outpath)
 	}
 	if err != nil {
+		errlst = append(errlst, err)
+	}
+
+	// 8. Always write the done file
+	doneFile := cfg.ResultsDir + "/done"
+	absoluteFilepath, err := filepath.Abs(tb)
+	glog.Infof("Writing the done file: %v", doneFile)
+	if err != nil {
+		errlst = append(errlst, err)
+	}
+	if err = ioutil.WriteFile(doneFile, []byte(absoluteFilepath), 0644); err != nil {
 		errlst = append(errlst, err)
 	}
 
