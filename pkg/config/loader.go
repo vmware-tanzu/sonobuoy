@@ -72,6 +72,11 @@ func LoadConfig() (*Config, error) {
 	// 4 - Any other settings
 	cfg.Version = buildinfo.Version
 
+	// Make the results dir overridable with an environment variable
+	if resultsDir, ok := os.LookupEnv("RESULTS_DIR"); ok {
+		cfg.ResultsDir = resultsDir
+	}
+
 	// Use the exact user config for resources, if set. Viper merges in
 	// arrays, making this part necessary.  This way, if they leave out the
 	// Resources section altogether they get the default set, but if they
