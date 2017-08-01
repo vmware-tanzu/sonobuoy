@@ -27,7 +27,7 @@ DOCKER ?= docker
 
 BUILDMNT = /go/src/$(GOTARGET)
 BUILD_IMAGE ?= golang:1.8
-BUILDCMD = go build -o build/sonobuoy/$(TARGET) -v -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET)"
+BUILDCMD = go build -o $(TARGET) -v -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET)"
 BUILD = $(BUILDCMD) $(GOTARGET)/cmd/sonobuoy
 
 TESTARGS ?= -v -timeout 60s
@@ -39,14 +39,14 @@ all: container
 test:
 	$(TEST)
 
-local: sonobuoy
+local:
 	$(BUILD)
 
 container: cbuild
 	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest -t $(REGISTRY)/$(TARGET):$(VERSION) .
 
 cbuild:
-	$(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c '$(BUILD) && $(TEST)'
+	$(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT)/build/sonobuoy $(BUILD_IMAGE) /bin/sh -c '$(BUILD) && $(TEST)'
 
 push:
 	gcloud docker -- push $(REGISTRY)/$(TARGET):$(VERSION)
