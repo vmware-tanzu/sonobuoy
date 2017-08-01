@@ -1,6 +1,3 @@
-/sonobuoy
-/sonoctl
-
 # Build artifacts
 /build/*/_cache
 /build/kube-conformance/e2e.test
