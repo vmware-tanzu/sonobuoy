@@ -153,7 +153,7 @@ However, ensure that your pod declaration has addressed the following aspects, w
 
 * **Config Volume Mount**
   * To mount the main Sonobuoy config on the Sonobuoy pod, a ConfigMap is recommended. This is used in the example.
-  * Ensure that `mountPath` matches one of the paths enumerated in [the chart above]().
+  * Ensure that `mountPath` matches one of the paths enumerated in [the chart above][0].
 
 
 * **Output Volume Mount**
