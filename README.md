@@ -7,7 +7,9 @@
 
 ## Overview
 
-Sonobuoy addresses the gap in tools for [Kubernetes][3] cluster introspection. It is a customizable, extendable, and cluster-agnostic way to generate clear, informative reports about your cluster--regardless of your deployment details. Its selective data dumps of Kubernetes resource objects and cluster nodes allow for the following use cases:
+Heptio Sonobuoy is a diagnostic tool that makes it easier to understand the state of a Kubernetes cluster by running a set of [Kubernetes][3] conformance tests in an accessible and non-destructive manner. It is a customizable, extendable, and cluster-agnostic way to generate clear, informative reports about your cluster--regardless of your deployment details.
+
+Its selective data dumps of Kubernetes resource objects and cluster nodes allow for the following use cases:
 
 * Integrated end-to-end (e2e) [conformance-testing 1.7+][13]
 * Workload debugging
