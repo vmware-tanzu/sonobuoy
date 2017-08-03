@@ -1,4 +1,4 @@
 # Changelog
 
-#### v1.0.0 - YYYY-MM-DD
+#### v0.8.0 - 2017-08-03
   * Initial Release
