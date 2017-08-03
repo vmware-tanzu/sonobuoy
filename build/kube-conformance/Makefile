@@ -54,4 +54,4 @@ push:
 
 clean:
 	rm -rf _cache
-	$(DOCKER) rmi $(REGISTRY)/$(TARGET):latest $(REGISTRY)/$(TARGET):$(KVER)
+	$(DOCKER) rmi $(REGISTRY)/$(TARGET):latest $(REGISTRY)/$(TARGET):$(KVER) || true
