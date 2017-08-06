@@ -100,97 +100,97 @@ local systemdlogsConfig = {
         operator: "Exists",
       },
     ],
-  },
-  hostNetwork: "true",
-  hostIPC: "true",
-  hostPID: "true",
-  dnsPolicy: "ClusterFirstWithHostNet",
-  containers: [
-    {
-      name: "systemd-logs",
-      command: [
-        "sh",
-        "-c",
-        "/get_systemd_logs.sh && sleep 3600"
-      ],
-      env: [
-        {
-          name: "NODE_NAME",
-          valueFrom: {
-            fieldRef: {
-              apiVersion: "v1"
-            },
-            fieldPath: "spec.nodeName",
-          }
-        },
-        {
-          name: "RESULTS_DIR",
-          value: "/tmp/results",
-        },
-        {
-          name: "CHROOT_DIR",
-          value: "/node",
-        },
-      ],
-      image: "gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest",
-      imagePullPolicy: "Always",
-      securityContext: {
-        privileged: "true",
-      },
-      volumeMounts: [
-        {
-          mountPath: "/node",
-          name: "root",
-        },
-        {
-          mountPath: "/tmp/results",
-          name: "results",
-        },
-        {
-          mountPath: "/etc/sonobuoy",
-          name: "config",
-        },
-      ],
-    },
-    {
-      name: "sonobuoy-worker",
-      command: [
-        "sh",
-        "-c",
-        "/sonobuoy worker single-node -v 5 --logtostderr && sleep 3600",
-      ],
-      env: [
-        {
-          name: "NODE_NAME",
-          valueFrom: {
-            fieldRef: {
-              apiVersion: "v1",
-            },
-            fieldPath: "spec.nodeName",
+    hostNetwork: "true",
+    hostIPC: "true",
+    hostPID: "true",
+    dnsPolicy: "ClusterFirstWithHostNet",
+    containers: [
+      {
+        name: "systemd-logs",
+        command: [
+          "sh",
+          "-c",
+          "/get_systemd_logs.sh && sleep 3600"
+        ],
+        env: [
+          {
+            name: "NODE_NAME",
+            valueFrom: {
+              fieldRef: {
+                apiVersion: "v1"
+              },
+              fieldPath: "spec.nodeName",
+            }
           },
+          {
+            name: "RESULTS_DIR",
+            value: "/tmp/results",
+          },
+          {
+            name: "CHROOT_DIR",
+            value: "/node",
+          },
+        ],
+        image: "gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest",
+        imagePullPolicy: "Always",
+        securityContext: {
+          privileged: "true",
         },
-        {
-          name: "RESULTS_DIR",
-          value: "/tmp/results",
-        },
-      ],
-      image: "gcr.io/heptio-images/sonobuoy:latest",
-      imagePullPolicy: "Always",
-      securityContext: {
-        privileged: "true",
+        volumeMounts: [
+          {
+            mountPath: "/node",
+            name: "root",
+          },
+          {
+            mountPath: "/tmp/results",
+            name: "results",
+          },
+          {
+            mountPath: "/etc/sonobuoy",
+            name: "config",
+          },
+        ],
       },
-      volumeMounts: [
-        {
-          mountPath: "/tmp/results",
-          name: "results",
+      {
+        name: "sonobuoy-worker",
+        command: [
+          "sh",
+          "-c",
+          "/sonobuoy worker single-node -v 5 --logtostderr && sleep 3600",
+        ],
+        env: [
+          {
+            name: "NODE_NAME",
+            valueFrom: {
+              fieldRef: {
+                apiVersion: "v1",
+              },
+              fieldPath: "spec.nodeName",
+            },
+          },
+          {
+            name: "RESULTS_DIR",
+            value: "/tmp/results",
+          },
+        ],
+        image: "gcr.io/heptio-images/sonobuoy:latest",
+        imagePullPolicy: "Always",
+        securityContext: {
+          privileged: "true",
         },
-        {
-          mountPath: "/etc/sonobuoy",
-          name: "config",
-        },
-      ],
-    },
-  ],
+        volumeMounts: [
+          {
+            mountPath: "/tmp/results",
+            name: "results",
+          },
+          {
+            mountPath: "/etc/sonobuoy",
+            name: "config",
+          },
+        ],
+      },
+    ],
+  },
   volumes: [
     {
       name: "root",
@@ -228,66 +228,66 @@ local e2eConfig = {
         operator: "Exists",
       },
     ],
-  },
-  restartPolicy: "Never",
-  containers: [
-    {
-      name: "e2e",
-      image: "gcr.io/heptio-images/kube-conformance:latest",
-      imagePullPolicy: "Always",
-      # NOTE: Full conformance can take a while depending on your cluster size.
-      # As a result, only a single test is set atm to verify correctness.
-      # Operators that want the complete test results can comment out the
-      # env section.
-      env: [
-        {
-          name: "E2E_FOCUS",
-          value: "Pods should be submitted and removed",
-        },
-      ],
-      volumeMounts: [
-        {
-          name: "results",
-          mountPath: "/tmp/results",
-        },
-      ],
-    },
-    {
-      name: "sonobuoy-worker",
-      command: [
-        "sh",
-        "-c",
-        "/sonobuoy worker global -v 5 --logtostderr",
-      ],
-      env: [
-        {
-          name: "NODE_NAME",
-          valueFrom: {
-            fieldRef: {
-              apiVersion: "v1",
-            },
-            fieldPath: "spec.nodeName",
+    restartPolicy: "Never",
+    containers: [
+      {
+        name: "e2e",
+        image: "gcr.io/heptio-images/kube-conformance:latest",
+        imagePullPolicy: "Always",
+        # NOTE: Full conformance can take a while depending on your cluster size.
+        # As a result, only a single test is set atm to verify correctness.
+        # Operators that want the complete test results can comment out the
+        # env section.
+        env: [
+          {
+            name: "E2E_FOCUS",
+            value: "Pods should be submitted and removed",
           },
-        },
-        {
-          name: "RESULTS_DIR",
-          value: "/tmp/results",
-        },
-      ],
-      image: "gcr.io/heptio-images/sonobuoy:latest",
-      imagePullPolicy: "Always",
-      volumeMounts: [
-        {
-          name: "config",
-          mountPath: "/etc/sonobuoy",
-        },
-        {
-          name: "results",
-          mountPath: "/tmp/results",
-        },
-      ],
-    },
-  ],
+        ],
+        volumeMounts: [
+          {
+            name: "results",
+            mountPath: "/tmp/results",
+          },
+        ],
+      },
+      {
+        name: "sonobuoy-worker",
+        command: [
+          "sh",
+          "-c",
+          "/sonobuoy worker global -v 5 --logtostderr",
+        ],
+        env: [
+          {
+            name: "NODE_NAME",
+            valueFrom: {
+              fieldRef: {
+                apiVersion: "v1",
+              },
+              fieldPath: "spec.nodeName",
+            },
+          },
+          {
+            name: "RESULTS_DIR",
+            value: "/tmp/results",
+          },
+        ],
+        image: "gcr.io/heptio-images/sonobuoy:latest",
+        imagePullPolicy: "Always",
+        volumeMounts: [
+          {
+            name: "config",
+            mountPath: "/etc/sonobuoy",
+          },
+          {
+            name: "results",
+            mountPath: "/tmp/results",
+          },
+        ],
+      },
+    ],
+  },
   volumes: [
     {
       name: "results",
@@ -304,8 +304,8 @@ local e2eConfig = {
 };
 
 local plugins = {
-  "systemdlogs.yaml": std.toString(systemdlogsConfig),
-  "e2e.yaml": std.toString(e2eConfig),
+  "systemdlogs.json": std.toString(systemdlogsConfig),
+  "e2e.json": std.toString(e2eConfig),
 };
 
 local sonobuoyConfig = configMap.new() +

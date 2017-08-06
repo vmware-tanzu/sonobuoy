@@ -46,6 +46,7 @@ local:
 	$(BUILD)
 
 container: cbuild
+<<<<<<< HEAD
 	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest -t $(REGISTRY)/$(TARGET):$(VERSION) .
 
 cbuild:
@@ -53,6 +54,12 @@ cbuild:
 
 push:
 	gcloud docker -- push $(REGISTRY)/$(TARGET):$(VERSION)
+=======
+	$(MAKE) -C build/sonobuoy container
+
+push:
+	$(MAKE) -C build/sonobuoy push
+>>>>>>> testing
 
 .PHONY: all container push generate-examples
 
@@ -65,3 +72,16 @@ generate-examples: $(EXAMPLE_OUTPUT)
 
 examples/quickstart/%.json: examples/quickstart/%.jsonnet
 	jsonnet -J /usr/local/lib/jsonnet/ksonnet-lib -o $@ $<
+<<<<<<< HEAD
+=======
+
+clean:
+	$(MAKE) -C build/sonobuoy clean
+	$(MAKE) -C build/kube-conformance clean
+	$(MAKE) -C build/systemd-logs clean
+<<<<<<< HEAD
+	rm -f /examples/quickstart/*.json
+=======
+	rm -f ./examples/quickstart/*.json
+>>>>>>> e68ddf3... testing
+>>>>>>> testing
