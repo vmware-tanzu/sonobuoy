@@ -31,16 +31,19 @@ local conf = {
 
 };
 
-local namespace = local ns = k.core.v1.namespace;
+local namespace =
+    local ns = k.core.v1.namespace;
     ns.new() +
     ns.mixin.metadata.name(conf.namespace);
 
-local serviceaccount = local sa = k.core.v1.serviceAccount;
+local serviceaccount =
+    local sa = k.core.v1.serviceAccount;
     sa.new() +
     sa.mixin.metadata.mixinInstance(conf.metadata) +
     sa.mixin.metadata.namespace(conf.namespace);
 
-local clusterRoleBinding = local crb = k.rbac.v1beta1.clusterRoleBinding;
+local clusterRoleBinding =
+    local crb = k.rbac.v1beta1.clusterRoleBinding;
     crb.new() +
     crb.mixin.metadata.mixinInstance(conf.metadata) +
     # TODO: replace with `crb.mixinroleRef.kind("ClusterRole") when https://github.com/ksonnet/ksonnet-lib/issues/53 closes.
@@ -54,7 +57,8 @@ local clusterRoleBinding = local crb = k.rbac.v1beta1.clusterRoleBinding;
         crb.subjectsType.namespace(conf.namespace),
     ]);
 
-local clusterRole = local cr = k.rbac.v1beta1.clusterRole;
+local clusterRole =
+    local cr = k.rbac.v1beta1.clusterRole;
     cr.new() +
     cr.mixin.metadata.mixinInstance(conf.metadata) +
     cr.mixin.metadata.namespace(conf.namespace) +
