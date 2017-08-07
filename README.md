@@ -15,12 +15,16 @@ Its selective data dumps of Kubernetes resource objects and cluster nodes allow 
 * Workload debugging
 * Custom data collection via extensible plugins
 
-## Install and Configure
+## Quickstart
 
-Heptio provides prebuilt Sonobuoy container images in its Google Container Registry (*gcr.io/heptio-images*). For the sake of faster setup on your cluster, **this quickstart pulls from this registry to skip the container build process**. You can use this same process to deploy Sonobuoy to production.
+> Heptio provides prebuilt Sonobuoy container images in its Google Container Registry (*gcr.io/heptio-images*). For the sake of faster setup on your cluster, **this quickstart pulls from this registry to skip the container build process**. You can use this same process to deploy Sonobuoy to production.
+>
+> See [Build From Scratch][4] for instructions on building Sonobuoy yourself.
 
-See [Build From Scratch][4] for instructions on building Sonobuoy yourself.
-
+This guide executes a Sonobuoy run on your cluster, and records the following results:
+* Basic info about your cluster's hosts, Kubernetes resources, and versions.
+* *(Via plugin)* [`systemd`][14] logs from each host
+* *(Via plugin)* The results of a single e2e conformance test ("Pods should be submitted and removed"). See the [conformance guide][13] for configuration details.
 
 ### 0. Prerequisites
 
@@ -48,11 +52,14 @@ You can view actively running pods with the following command:
 kubectl get pods -l component=sonobuoy --namespace=heptio-sonobuoy
 ```
 
-To verify that Sonobuoy has completed successfuly, check the logs:
+To verify that Sonobuoy has completed successfully, check the logs:
 ```
 kubectl logs -f sonobuoy --namespace=heptio-sonobuoy
 ```
 If you see the log line `no-exit was specified, sonobuoy is now blocking`, the Sonobuoy pod is done running.
+
+*Note*: If you see the error `plugin <name> does not exist`, delete
+the `sonobuoy` pod via `kubectl delete pod sonobuoy --namespace heptio-sonobuoy` and rerun the `kubectl apply` command above. This error occurs when Sonobuoy's ConfigMap creations are not completed before its pod creation. While the YAML files in `examples/quickstart` use numeric prefixes ("00-", "10-", etc.) to specify the order of resource creation, `kubectl apply` is asynchronous and can result in dependency issues.
 
 To view the output, copy the output directory from the main Sonobuoy pod to somewhere local:
 ```
@@ -103,8 +110,8 @@ developer certificate of origin that we require.
 See [the list of releases](/CHANGELOG.md) to find out about feature changes.
 
 [0]: https://github.com/heptio
-[1]: https://jenkins.i.heptio.com/buildStatus/icon?job=sonobuoy-master-deployer
-[2]: https://jenkins.i.heptio.com/job/sonobuoy-master-deployer/
+[1]: https://jenkins.i.heptio.com/buildStatus/icon?job=sonobuoy-tag-deployer
+[2]: https://jenkins.i.heptio.com/job/sonobuoy-tag-deployer/
 [3]: https://github.com/kubernetes/kubernetes
 [4]: /docs/build-from-scratch.md
 [5]: http://docs.heptio.com/content/tutorials/aws-cloudformation-k8s.html
@@ -116,3 +123,4 @@ See [the list of releases](/CHANGELOG.md) to find out about feature changes.
 [11]: /CONTRIBUTING.md
 [12]: /CODE_OF_CONDUCT.md
 [13]: /docs/conformance-testing.md
+[14]: https://github.com/systemd/systemd
