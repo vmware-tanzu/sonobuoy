@@ -59,7 +59,7 @@ func LoadConfig() (*Config, error) {
 
 	// 3 - figure out what address we will tell pods to dial for aggregation
 	if cfg.Aggregation.AdvertiseAddress == "" {
-		if ip, ok := os.LookupEnv("SONOBUOY_ADVERTISE_IP"); ok {
+		if ip := os.Getenv("SONOBUOY_ADVERTISE_IP"); ip != "" {
 			cfg.Aggregation.AdvertiseAddress = fmt.Sprintf("%v:%d", ip, cfg.Aggregation.BindPort)
 		} else {
 			hostname, _ := os.Hostname()
