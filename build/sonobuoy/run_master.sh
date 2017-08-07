@@ -1,3 +1,5 @@
+#!/bin/bash
+##########################################################################
 # Copyright 2017 Heptio Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM buildpack-deps:jessie-scm
-MAINTAINER Timothy St. Clair "tstclair@heptio.com"
+RESULTS_DIR="${RESULTS_DIR:-/tmp/sonobuoy}"
+# It's ok for these env vars to be unbound
+RESULTS_DIR="${RESULTS_DIR}" SONOBUOY_CONFIG="${SONOBUOY_CONFIG}" SONOBUOY_ADVERTISE_IP="${SONOBUOY_ADVERTISE_IP}" /sonobuoy master -v 3 --logtostderr
 
-RUN apt-get update && apt-get -y --no-install-recommends install \
-    ca-certificates \
-    && rm -rf /var/cache/apt/* \
-    && rm -rf /var/lib/apt/lists/*
-ADD sonobuoy /sonobuoy
-ADD run_master.sh /run_master.sh
-#USER nobody:nobody
-
-CMD ["/bin/sh", "-c", "/run_master.sh"]
+echo -n "${RESULTS_DIR}/$(ls -t "${RESULTS_DIR}" | grep -v done | head -n 1)" > "${RESULTS_DIR}"/done
