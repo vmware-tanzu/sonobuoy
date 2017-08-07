@@ -184,6 +184,7 @@ data:
         # env section.
         env:
         - name: E2E_FOCUS
+          # Specifies a single conformance test. See above comment for details.
           value: "Pods should be submitted and removed"
         volumeMounts:
         - name: results
