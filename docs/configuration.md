@@ -158,7 +158,7 @@ However, ensure that your pod declaration has addressed the following aspects, w
 
 * **Output Volume Mount**
   * Sonobuoy output should be persisted by writing to [Persistent Volume Claims (PVC)][15].
-  * However, for the sake of prototyping (as in the example), you can mount via `hostPath`. This allows you to later inspect Sonobuoy's results by SSHing directly into the pod's node.
+  * However, for the sake of prototyping (as in the example), you can mount via `emptyDir`. This allows you to later inspect Sonobuoy's results by copying them to your local machine with `kubectl cp`.
 
 
 * **Advertise IP (env variable)**
