@@ -54,7 +54,7 @@ spec:
       configMap:
         name: sonobuoy-plugins-cm
     # NOTE: This will drop the results on the hostpath of the machine as an example.
-    # We recommend using a persistent volumes for more perminant recording.
+    # We recommend using a persistent volume for more permanent recording.
     - name: output-volume
       hostPath:
         path: /tmp/sonobuoy

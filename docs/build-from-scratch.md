@@ -10,7 +10,7 @@ Sonobuoy can run as (1) **a standalone program** on a node in your cluster, or (
 ## 0. Prerequisites
 
 ### General
-In addition to the handling the prerequisites mentioned in [Install and Configure][4], you should have [Go][5] installed (minimum version 1.8).
+In addition to the handling the prerequisites mentioned in the [Quickstart][4], you should have [Go][5] installed (minimum version 1.8).
 
 ### Standalone
 > **Make sure that you are SSHed into one of the nodes on your cluster.** The subsequent instructions assume that this is the case.
