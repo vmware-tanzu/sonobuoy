@@ -1,7 +1,5 @@
 # Build artifacts
 /build/*/_cache
-/build/kube-conformance/e2e.test
-/build/kube-conformance/kubectl
 /build/sonobuoy/sonobuoy
 
 # we output results to this directory by default
