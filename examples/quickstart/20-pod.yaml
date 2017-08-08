@@ -53,11 +53,11 @@ spec:
     - name: sonobuoy-plugins-volume
       configMap:
         name: sonobuoy-plugins-cm
-    # NOTE: This will drop the results on the hostpath of the machine as an example.
-    # We recommend using a persistent volume for more permanent recording.
+    # NOTE: This will drop the results in a temporary directory that only lasts
+    # while the pod is still running. We recommend using a persistent volume
+    # for more permanent recording.
     - name: output-volume
-      hostPath:
-        path: /tmp/sonobuoy
+      emptyDir: {}
 
 ---
 apiVersion: v1
