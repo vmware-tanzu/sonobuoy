@@ -25,17 +25,14 @@ cbuild:
 
 container: cbuild
 	$(MAKE) -C build/sonobuoy container
-	$(MAKE) -C build/kube-conformance container
 	$(MAKE) -C build/systemd-logs container
 
 push:
 	$(MAKE) -C build/sonobuoy push
-	$(MAKE) -C build/kube-conformance push
 	$(MAKE) -C build/systemd-logs push
 
 .PHONY: all local container cbuild push test
 
 clean:
 	$(MAKE) -C build/sonobuoy clean
-	$(MAKE) -C build/kube-conformance clean
 	$(MAKE) -C build/systemd-logs clean
