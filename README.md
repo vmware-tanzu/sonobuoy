@@ -56,10 +56,25 @@ To verify that Sonobuoy has completed successfully, check the logs:
 ```
 kubectl logs -f sonobuoy --namespace=heptio-sonobuoy
 ```
-If you see the log line `no-exit was specified, sonobuoy is now blocking`, the Sonobuoy pod is done running.
+If you see the log line `no-exit was specified, sonobuoy is now blocking`, the Sonobuoy pod has completed its data collection.
 
-*Note*: If you see the error `plugin <name> does not exist`, delete
-the `sonobuoy` pod via `kubectl delete pod sonobuoy --namespace heptio-sonobuoy` and rerun the `kubectl apply` command above. This error occurs when Sonobuoy's ConfigMap creations are not completed before its pod creation. While the YAML files in `examples/quickstart` use numeric prefixes ("00-", "10-", etc.) to specify the order of resource creation, `kubectl apply` is asynchronous and can result in dependency issues.
+> *Notes*:
+>
+> * **The Sonobuoy pod in this example continues to run after it finishes data collection**, due to the `--no-exit` flag in its YAML manifest. This allows you to easily grab the results tarball.
+>
+> * **Sonobuoy collects one data report per run**---each time you want a new report you need to delete the existing Sonobuoy YAML files and reapply them (see the [tear down step][15]).
+>
+> * **In practice, you should make sure that the Sonobuoy pod writes its results to a Persistent Volume.** The quickstart example writes its output to an `emptyDir` volume for simplicity.
+>
+> *Troubleshooting errors from `kubectl logs`*:
+>    * `plugin <name> does not exist`
+>           
+>       * Delete the `sonobuoy` pod via `kubectl delete pod sonobuoy --namespace heptio-sonobuoy` and rerun the `kubectl apply` command above. This error occurs when Sonobuoy's ConfigMap creations are not completed before its pod creation. While the YAML files in `examples/quickstart` use numeric prefixes ("00-", "10-", etc.) to specify the order of resource creation, `kubectl apply` is asynchronous and can result in dependency issues.
+>
+>    * Other errors
+>
+>        * If you are able to debug and resolve the issue on your own, *make sure to delete and reapply Sonobuoy's YAML manifests*. Otherwise, [file an issue][10].
+>
 
 To view the output, copy the output directory from the main Sonobuoy pod to somewhere local:
 ```
@@ -72,14 +87,10 @@ There should a collection of tarballs inside of `./results` , where each tarball
 
 ### 3. Tear down
 
-Sonobuoy is not a persistent, background process---each time you want a new data report you will need to re-run it.
-
 To clean up Kubernetes objects created by Sonobuoy, run the following commands:
 ```
 kubectl delete -f examples/quickstart/
 ```
-You may also want to clear the contents of the results directory that the Sonobuoy pod wrote to.
-
 
 ## Further documentation
 
@@ -124,3 +135,4 @@ See [the list of releases](/CHANGELOG.md) to find out about feature changes.
 [12]: /CODE_OF_CONDUCT.md
 [13]: /docs/conformance-testing.md
 [14]: https://github.com/systemd/systemd
+[15]: #3-tear-down
