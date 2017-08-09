@@ -12,27 +12,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-local:
-	$(MAKE) -C build/sonobuoy local
+# Note the only reason we are creating this is because upstream
+# does not yet publish a released e2e container
+# https://github.com/kubernetes/kubernetes/issues/47920
+
+TARGET = sonobuoy
+GOTARGET = github.com/heptio/$(TARGET)
+REGISTRY ?= gcr.io/heptio-images
+IMAGE = $(REGISTRY)/$(TARGET)
+DIR := ${CURDIR}
+VERSION ?= v0.8.0
+
+DOCKER ?= docker
+
+BUILDMNT = /go/src/$(GOTARGET)
+BUILD_IMAGE ?= golang:1.8
+BUILDCMD = go build -o $(TARGET) -v -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET)"
+BUILD = $(BUILDCMD) $(GOTARGET)/cmd/sonobuoy
+
+TESTARGS ?= -v -timeout 60s
+TEST = go test $(TEST_PKGS) $(TESTARGS)
+TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
+
+all: container
 
 test:
-	$(MAKE) -C build/sonobuoy test
+	$(TEST)
 
-all: cbuild container
-
-cbuild:
-	$(MAKE) -C build/sonobuoy cbuild
+local:
+	$(BUILD)
 
 container: cbuild
-	$(MAKE) -C build/sonobuoy container
-	$(MAKE) -C build/systemd-logs container
+	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest -t $(REGISTRY)/$(TARGET):$(VERSION) .
+
+cbuild:
+	$(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c '$(BUILD) && $(TEST)'
 
 push:
-	$(MAKE) -C build/sonobuoy push
-	$(MAKE) -C build/systemd-logs push
+	gcloud docker -- push $(REGISTRY)/$(TARGET):$(VERSION)
 
-.PHONY: all local container cbuild push test
+.PHONY: all container push
 
 clean:
-	$(MAKE) -C build/sonobuoy clean
-	$(MAKE) -C build/systemd-logs clean
+	rm -f $(TARGET)
+	$(DOCKER) rmi $(REGISTRY)/$(TARGET):latest $(REGISTRY)/$(TARGET):$(VERSION) || true
