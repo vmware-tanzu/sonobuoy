@@ -1,4 +1,3 @@
-##########################################################################
 # Copyright 2017 Heptio Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +13,14 @@
 # limitations under the License.
 
 FROM buildpack-deps:jessie-scm
-MAINTAINER Ken Simon "ken@heptio.com"
+MAINTAINER Timothy St. Clair "tstclair@heptio.com"
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
     ca-certificates \
     && rm -rf /var/cache/apt/* \
     && rm -rf /var/lib/apt/lists/*
-COPY get_systemd_logs.sh /get_systemd_logs.sh
+ADD sonobuoy /sonobuoy
+ADD scripts/run_master.sh /run_master.sh
+#USER nobody:nobody
 
-CMD ["/bin/bash", "-c", "/get_systemd_logs.sh"]
+CMD ["/bin/sh", "-c", "/run_master.sh"]

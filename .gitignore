@@ -1,6 +1,5 @@
 # Build artifacts
-/build/*/_cache
-/build/sonobuoy/sonobuoy
+/sonobuoy
 
 # we output results to this directory by default
 /results
