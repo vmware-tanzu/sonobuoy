@@ -149,10 +149,10 @@ spec:
 
 The current, default set of Sonobuoy plugins are available in the `plugins.d` directory within this repo. You can also use the list below as a reference:
 
-| Plugin | Overview | Env Variables (Config) |
+| Plugin | Overview | Source Code Repository | Env Variables (Config) |
 | --- | --- | --- |
-| [`systemd_logs`][11] | Gather the latest system logs from each node, using systemd's `journalctl` command. | (1) `RESULTS_DIR`<br>(2)`CHROOT_DIR`<br>(3)`LOG_MINUTES`|
-| [`e2e`][9] | Run Kubernetes end-to-end tests (e.g. conformance) and gather the results. | `E2E_*` variables configure the end-to-end tests. See the [conformance testing guide][15] for details. |
+| [`systemd_logs`][11] | Gather the latest system logs from each node, using systemd's `journalctl` command. | [heptio/sonobuoy-plugin-systemd-logs][16] | (1) `RESULTS_DIR`<br>(2)`CHROOT_DIR`<br>(3)`LOG_MINUTES`|
+| [`e2e`][9] | Run Kubernetes end-to-end tests (e.g. conformance) and gather the results. | [heptio/kube-conformance][17] | `E2E_*` variables configure the end-to-end tests. See the [conformance testing guide][15] for details. |
 
 See the [`/build`][14] directory for the source code used to build these plugins (specifically, their "producer" containers).
 
@@ -172,3 +172,5 @@ See the [`/build`][14] directory for the source code used to build these plugins
 [13]: /build/systemd-logs/get_systemd_logs.sh
 [14]: /build
 [15]: conformance-testing.md#integration-with-sonobuoy
+[16]: https://github.com/heptio/sonobuoy-plugin-systemd-logs
+[17]: https://github.com/heptio/kube-conformance
