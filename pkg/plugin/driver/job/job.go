@@ -121,13 +121,13 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, _ []v1.Node, resultsCh
 		// Make sure there's a pod
 		pod, err := p.findPod(kubeclient)
 		if err != nil {
-			resultsCh <- utils.MakeErrorResult(p, map[string]interface{}{"error": err.Error()}, "")
+			resultsCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{"error": err.Error()}, "")
 			break
 		}
 
 		// Make sure the pod isn't failing
 		if isFailing, reason := utils.IsPodFailing(pod); isFailing {
-			resultsCh <- utils.MakeErrorResult(p, map[string]interface{}{
+			resultsCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
 				"error": reason,
 				"pod":   pod,
 			}, "")

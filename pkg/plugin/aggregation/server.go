@@ -153,13 +153,15 @@ func (s *Server) nodeResultsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse the path into the node name and the type
-	node, resultType := parts[0], parts[1]
+	// Parse the path into the node name, result type, and extension
+	node, file := parts[0], parts[1]
+	resultType, extension := parseFileName(file)
 
 	glog.Infof("got %v result from %v\n", resultType, node)
 
 	result := &plugin.Result{
 		ResultType: resultType,
+		Extension:  extension,
 		NodeName:   node,
 		Body:       r.Body,
 	}
@@ -183,7 +185,6 @@ func (s *Server) globalResultsHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	resultType := parts[0]
 
 	// We accept PUT because the client is specifying the resource identifier via
 	// the HTTP path. (As opposed to POST, where typically the clients would post
@@ -198,11 +199,13 @@ func (s *Server) globalResultsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resultType, extension := parseFileName(parts[0])
 	glog.Infof("got %v result\n", resultType)
 
 	result := &plugin.Result{
 		NodeName:   "",
 		ResultType: resultType,
+		Extension:  extension,
 		Body:       r.Body,
 	}
 
@@ -211,4 +214,17 @@ func (s *Server) globalResultsHandler(w http.ResponseWriter, r *http.Request) {
 	// given twice for the same node, etc.
 	s.ResultsCallback(result, w)
 	r.Body.Close()
+}
+
+// given an uploaded filename, parse it into its base name and extension.  If
+// there are no "." characters, the extension will be blank and the name will
+// be set to the filename as-is
+func parseFileName(file string) (name string, extension string) {
+	filenameParts := strings.SplitN(file, ".", 2)
+
+	if len(filenameParts) == 2 {
+		return filenameParts[0], "." + filenameParts[1]
+	}
+
+	return file, ""
 }
