@@ -20,6 +20,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang/glog"
@@ -51,6 +52,12 @@ func GatherResults(waitfile string, url string) error {
 
 	s := string(inputFileName)
 	glog.Infof("Detected done file, transmitting: (%v)", s)
+
+	// Append a file extension, if there is one
+	filenameParts := strings.SplitN(s, ".", 2)
+	if len(filenameParts) == 2 {
+		url += "." + filenameParts[1]
+	}
 
 	// transmit back the results file.
 	return DoRequest(url, func() (io.Reader, error) {
