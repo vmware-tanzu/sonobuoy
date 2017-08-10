@@ -213,7 +213,7 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 			if isFailing, reason := utils.IsPodFailing(&pod); isFailing {
 				podsReported[nodeName] = true
 
-				resultsCh <- utils.MakeErrorResult(p, map[string]interface{}{
+				resultsCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
 					"error": reason,
 					"pod":   pod,
 				}, nodeName)
@@ -228,7 +228,7 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 		for _, node := range availableNodes {
 			if !podsFound[node.Name] && !podsReported[node.Name] {
 				podsReported[node.Name] = true
-				resultsCh <- utils.MakeErrorResult(p, map[string]interface{}{
+				resultsCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
 					"error": fmt.Sprintf(
 						"No pod was scheduled on node %v within %v. Check tolerations for plugin %v",
 						node.Name,

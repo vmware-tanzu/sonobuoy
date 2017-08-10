@@ -77,6 +77,7 @@ type ExpectedResult struct {
 type Result struct {
 	NodeName   string
 	ResultType string
+	Extension  string
 	Body       io.Reader
 	Error      string
 }
@@ -143,14 +144,4 @@ func (r *Result) ExpectedResultID() string {
 	}
 
 	return r.ResultType + "/" + r.NodeName
-}
-
-// Extension returns the results extension for different plugins
-// TODO: We should load this for the plugin.
-func (r *Result) Extension() string {
-	if r.ResultType == "e2e" {
-		return ".tar.gz"
-	}
-
-	return ".json"
 }
