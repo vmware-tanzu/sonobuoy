@@ -62,7 +62,7 @@ func IsPodFailing(pod *v1.Pod) (bool, string) {
 // for this plugin as a JSON file, so it's what users will see for why the
 // plugin failed.  If errdata["error"] is not set, it will be filled in with an
 // "Unknown error" string.
-func MakeErrorResult(p plugin.Interface, errdata map[string]interface{}, nodeName string) *plugin.Result {
+func MakeErrorResult(resultType string, errdata map[string]interface{}, nodeName string) *plugin.Result {
 	errJSON, _ := json.Marshal(errdata)
 
 	errstr := "Unknown error"
@@ -73,8 +73,9 @@ func MakeErrorResult(p plugin.Interface, errdata map[string]interface{}, nodeNam
 	return &plugin.Result{
 		Body:       bytes.NewReader(errJSON),
 		Error:      errstr,
-		ResultType: p.GetResultType(),
+		ResultType: resultType,
 		NodeName:   nodeName,
+		Extension:  ".json",
 	}
 }
 

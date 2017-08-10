@@ -30,6 +30,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/viniciuschiele/tarx"
 )
 
 // Aggregator is responsible for taking results from an HTTP server (configured
@@ -196,26 +197,55 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 	// Create the output directory for the result.  Will be of the
 	// form .../plugins/:results_type/:node.json (for DaemonSet plugins) or
 	// .../plugins/:results_type.json (for Job plugins)
-	resultsFile := path.Join(a.OutputDir, result.Path()+result.Extension())
+	resultsFile := path.Join(a.OutputDir, result.Path()+result.Extension)
 	resultsDir := path.Dir(resultsFile)
 	glog.Infof("Creating directory %v", resultsDir)
 	if err := os.MkdirAll(resultsDir, 0755); err != nil {
 		glog.Errorf("Could not make directory %v: %v", resultsDir, err)
-
 		return err
 	}
 
-	// Open the results file for writing
-	f, err := os.Create(resultsFile)
+	// Write the results file out and close it
+	err := func() error {
+		f, err := os.Create(resultsFile)
+		if err != nil {
+			glog.Errorf("Could not open output file %v for writing: %v", resultsFile, err)
+			return err
+		}
+		defer f.Close()
+
+		// Copy the request body into the file
+		_, err = io.Copy(f, result.Body)
+		if err != nil {
+			glog.Errorf("Error writing plugin result: %v", err)
+			return err
+		}
+
+		return nil
+	}()
 	if err != nil {
-		glog.Errorf("Could not open output file %v for writing: %v", resultsFile, err)
 		return err
 	}
-	defer f.Close()
 
-	// Copy the request body into the file
-	io.Copy(f, result.Body)
-	glog.Infof("wrote results to %v\n", resultsFile)
+	// If it's a tarball, extract it
+	if result.Extension == ".tar.gz" {
+		resultsDir := path.Join(a.OutputDir, result.Path())
+
+		err = tarx.Extract(resultsFile, resultsDir, &tarx.ExtractOptions{})
+		if err != nil {
+			glog.Errorf("Could not extract tar file %v: %v", resultsFile, err)
+			return err
+		}
+
+		err = os.Remove(resultsFile)
+		if err != nil {
+			return err
+		}
+
+		glog.Infof("extracted results tarball into %v", resultsDir)
+	} else {
+		glog.Infof("wrote results to %v", resultsFile)
+	}
 
 	return nil
 }

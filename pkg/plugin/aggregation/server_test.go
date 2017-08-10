@@ -17,12 +17,12 @@ limitations under the License.
 package aggregation
 
 import (
+	"bytes"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -32,7 +32,7 @@ func TestStart(t *testing.T) {
 	checkins := make(map[string]*plugin.Result, 0)
 
 	expectedResult := "systemd_logs/results/testnode"
-	expectedJSON := `{"some": "json"}`
+	expectedJSON := []byte(`{"some": "json"}`)
 
 	tmpdir, err := ioutil.TempDir("", "sonobuoy_server_test")
 	if err != nil {
@@ -100,7 +100,7 @@ func TestStart(t *testing.T) {
 
 var testPort = 8099
 
-func doRequest(t *testing.T, method, path, body string) *http.Response {
+func doRequest(t *testing.T, method, path string, body []byte) *http.Response {
 	// Make a new HTTP transport for every request, this avoids issues where HTTP
 	// connection keep-alive leaves connections running to old server instances.
 	// (We can take the performance hit since it's just tests.)
@@ -115,7 +115,7 @@ func doRequest(t *testing.T, method, path, body string) *http.Response {
 	req, err := http.NewRequest(
 		method,
 		resultsURL.String(),
-		strings.NewReader(body),
+		bytes.NewReader(body),
 	)
 	if err != nil {
 		t.Fatalf("error constructing request: %v", err)
