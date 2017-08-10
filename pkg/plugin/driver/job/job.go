@@ -18,12 +18,13 @@ package job
 
 import (
 	"encoding/hex"
-	"fmt"
 	"strings"
 	"time"
 
+	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/json"
@@ -96,10 +97,10 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface) error {
 
 	// Submit them to the API server, capturing the results
 	if _, err = kubeclient.CoreV1().ConfigMaps(p.Namespace).Create(configMap); err != nil {
-		return fmt.Errorf("could not create ConfigMap resource for Job plugin: %v", err)
+		return errors.Wrapf(err, "could not create ConfigMap resource for Job plugin %v", p.Name)
 	}
 	if _, err = kubeclient.CoreV1().Pods(p.Namespace).Create(job); err != nil {
-		return fmt.Errorf("could not create Job resource for Job plugin %v: %v", p.Name, err)
+		return errors.Wrapf(err, "could not create Job resource for Job plugin %v", p.Name)
 	}
 
 	return nil
@@ -137,10 +138,8 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, _ []v1.Node, resultsCh
 }
 
 // Cleanup cleans up the k8s Job and ConfigMap created by this plugin instance
-func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) []error {
+func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
 	p.cleanedUp = true
-	var errors []error
-
 	gracePeriod := int64(1)
 	deletionPolicy := metav1.DeletePropagationBackground
 
@@ -154,13 +153,16 @@ func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) []error {
 
 	// Delete the Pod created by the job manually (just deleting the Job
 	// doesn't kill the pod, it still lets it finish.)
-	// TODO: Fix this there is a subtle bug here.
+	// TODO: for now we're not actually creating a Job at all, just a
+	// single Pod, to get the restart semantics we want. But later if we
+	// want to make this a real Job, we still need to delete pods manually
+	// after deleting the job.
 	err := kubeclient.CoreV1().Pods(p.Namespace).DeleteCollection(
 		&deleteOptions,
 		listOptions,
 	)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("Error deleting pods for Job %v: %v", p.jobName(), err))
+		errlog.LogError(errors.Wrapf(err, "error deleting pods for Job %v", p.jobName()))
 	}
 
 	// Delete the ConfigMap created by this plugin
@@ -169,10 +171,8 @@ func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) []error {
 		listOptions,
 	)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("Error deleting configmap %v: %v", p.configMapName(), err))
+		errlog.LogError(errors.Wrapf(err, "error deleting pods for Job %v", p.jobName()))
 	}
-
-	return errors
 }
 
 func (p *Plugin) listOptions() metav1.ListOptions {
@@ -187,11 +187,11 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 func (p *Plugin) findPod(kubeclient kubernetes.Interface) (*v1.Pod, error) {
 	pods, err := kubeclient.CoreV1().Pods(p.Namespace).List(p.listOptions())
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	if len(pods.Items) != 1 {
-		return nil, fmt.Errorf("No pods were created by plugin %v", p.Name)
+		return nil, errors.Errorf("no pods were created by plugin %v", p.Name)
 	}
 
 	return &pods.Items[0], nil
@@ -221,7 +221,7 @@ func (p *Plugin) buildConfigMap() (*v1.ConfigMap, error) {
 	// shelling out to kubectl)
 	cfgjson, err := json.Marshal(p.Config)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	cmap := &v1.ConfigMap{
@@ -238,7 +238,7 @@ func (p *Plugin) buildConfigMap() (*v1.ConfigMap, error) {
 		},
 	}
 
-	return cmap, err
+	return cmap, nil
 }
 
 func (p *Plugin) buildJob() (*v1.Pod, error) {

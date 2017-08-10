@@ -24,14 +24,24 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/heptio/sonobuoy/pkg/errlog"
 	pluginaggregation "github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+	"github.com/pkg/errors"
 	"github.com/viniciuschiele/tarx"
 	"k8s.io/client-go/kubernetes"
 )
 
 // Run is the main entrypoint for discovery
-func Run(kubeClient kubernetes.Interface, cfg *config.Config) []error {
-	var errlst []error
+func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
+	// closure used to collect and report errors.
+	trackErrorsFor := func(action string) func(error) {
+		return func(err error) {
+			if err != nil {
+				errCount++
+				errlog.LogError(errors.Wrapf(err, "error %v", action))
+			}
+		}
+	}
 
 	t := time.Now()
 	// 1. Get the list of namespaces and apply the regex filter on the namespace
@@ -51,24 +61,24 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) []error {
 		}
 	}
 
-	// closure used to collect and report errors.
-	rollup := func(err []error) {
-		if err != nil {
-			errlst = append(errlst, err...)
-		}
-	}
-
 	// 4. Run the plugin aggregator
-	errlst = append(errlst, pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, outpath)...)
+	trackErrorsFor("running plugins")(
+		pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, outpath),
+	)
 
 	// 5. Run the queries
-	rollup(QueryClusterResources(kubeClient, cfg))
+	trackErrorsFor("querying cluster resources")(
+		QueryClusterResources(kubeClient, cfg),
+	)
+
 	for _, ns := range nslist {
-		rollup(QueryNSResources(kubeClient, ns, cfg))
+		trackErrorsFor("querying resources under namespace " + ns)(
+			QueryNSResources(kubeClient, ns, cfg),
+		)
 	}
 
 	// 6. Clean up after the plugins
-	errlst = append(errlst, pluginaggregation.Cleanup(kubeClient, cfg.LoadedPlugins)...)
+	pluginaggregation.Cleanup(kubeClient, cfg.LoadedPlugins)
 
 	// 7. tarball up results YYYYMMDDHHMM_sonobuoy_UID.tar.gz
 	tb := cfg.ResultsDir + "/" + t.Format("200601021504") + "_sonobuoy_" + cfg.UUID + ".tar.gz"
@@ -76,10 +86,8 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) []error {
 	if err == nil {
 		err = os.RemoveAll(outpath)
 	}
-	if err != nil {
-		errlst = append(errlst, err)
-	}
-
+	trackErrorsFor("assembling results tarball")(err)
 	glog.Infof("Results available at %v", tb)
-	return errlst
+
+	return errCount
 }

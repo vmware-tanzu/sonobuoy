@@ -17,13 +17,13 @@ limitations under the License.
 package app
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
-	"github.com/golang/glog"
+	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/worker"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -61,23 +61,23 @@ func runGather(cmd *cobra.Command, args []string) {
 func loadAndValidateConfig() (*plugin.WorkerConfig, error) {
 	cfg, err := worker.LoadConfig()
 	if err != nil {
-		return nil, fmt.Errorf("error loading agent configuration: %v", err)
+		return nil, errors.Wrap(err, "error loading agent configuration")
 	}
 
-	var errors []string
+	var errlst []string
 	if cfg.MasterURL == "" {
-		errors = append(errors, "MasterURL not set")
+		errlst = append(errlst, "MasterURL not set")
 	}
 	if cfg.ResultsDir == "" {
-		errors = append(errors, "ResultsDir not set")
+		errlst = append(errlst, "ResultsDir not set")
 	}
 	if cfg.ResultType == "" {
-		errors = append(errors, "ResultsType not set")
+		errlst = append(errlst, "ResultsType not set")
 	}
 
-	if len(errors) > 0 {
-		joinedErrs := strings.Join(errors, ", ")
-		return nil, fmt.Errorf("errors in agent configuration: (%v)", joinedErrs)
+	if len(errlst) > 0 {
+		joinedErrs := strings.Join(errlst, ", ")
+		return nil, errors.Errorf("invalid agent configuration: (%v)", joinedErrs)
 	}
 
 	return cfg, nil
@@ -86,7 +86,7 @@ func loadAndValidateConfig() (*plugin.WorkerConfig, error) {
 func runGatherSingleNode(cmd *cobra.Command, args []string) {
 	cfg, err := loadAndValidateConfig()
 	if err != nil {
-		glog.Errorln(err)
+		errlog.LogError(err)
 		os.Exit(1)
 	}
 
@@ -96,7 +96,7 @@ func runGatherSingleNode(cmd *cobra.Command, args []string) {
 
 	err = worker.GatherResults(cfg.ResultsDir+"/done", url)
 	if err != nil {
-		glog.Errorln(err)
+		errlog.LogError(err)
 		os.Exit(1)
 	}
 
@@ -105,7 +105,7 @@ func runGatherSingleNode(cmd *cobra.Command, args []string) {
 func runGatherGlobal(cmd *cobra.Command, args []string) {
 	cfg, err := loadAndValidateConfig()
 	if err != nil {
-		glog.Errorln(err)
+		errlog.LogError(err)
 		os.Exit(1)
 	}
 
@@ -115,7 +115,7 @@ func runGatherGlobal(cmd *cobra.Command, args []string) {
 
 	err = worker.GatherResults(cfg.ResultsDir+"/done", url)
 	if err != nil {
-		glog.Errorln(err)
+		errlog.LogError(err)
 		os.Exit(1)
 	}
 }

@@ -18,7 +18,6 @@ package loader
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -32,6 +31,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/daemonset"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/job"
+	"github.com/pkg/errors"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -89,7 +89,7 @@ func loadPlugin(namespace string, dfn plugin.Definition, masterAddress string) (
 		cfg.MasterURL = "http://" + masterAddress + "/api/v1/results/global"
 		return job.NewPlugin(namespace, dfn, cfg), nil
 	default:
-		return nil, fmt.Errorf("Unknown driver %v", dfn.Driver)
+		return nil, errors.Errorf("Unknown driver %v", dfn.Driver)
 	}
 }
 
@@ -160,16 +160,16 @@ func loadJSON(jsonBytes []byte) (*plugin.Definition, error) {
 func loadPluginDefinition(ret *plugin.Definition) error {
 	// Validate it
 	if ret.Driver == "" {
-		return fmt.Errorf("No driver specified in plugin file")
+		return errors.Errorf("No driver specified in plugin file")
 	}
 	if ret.ResultType == "" {
-		return fmt.Errorf("No resultType specified in plugin file")
+		return errors.Errorf("No resultType specified in plugin file")
 	}
 	if ret.Name == "" {
-		return fmt.Errorf("No name specified in plugin file")
+		return errors.Errorf("No name specified in plugin file")
 	}
 	if ret.RawPodSpec == nil {
-		return fmt.Errorf("No pod spec specified in plugin file")
+		return errors.Errorf("No pod spec specified in plugin file")
 	}
 
 	// Construct a pod spec from the ConfigMap data. We can't decode it
