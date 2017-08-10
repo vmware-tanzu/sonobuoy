@@ -24,6 +24,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/pkg/errors"
 )
 
 // Server is a net/http server that can handle API requests for aggregation of
@@ -95,7 +96,7 @@ func (s *Server) Start() error {
 	l, err := net.Listen("tcp", s.BindAddr)
 
 	if err != nil {
-		return fmt.Errorf("could not listen on %v: %v", s.BindAddr, err)
+		return errors.Errorf("could not listen on %v: %v", s.BindAddr, err)
 	}
 	defer l.Close()
 

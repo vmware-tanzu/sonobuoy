@@ -23,6 +23,7 @@ import (
 	"regexp"
 
 	"github.com/golang/glog"
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -53,7 +54,7 @@ func SerializeObj(obj interface{}, outpath string, file string) error {
 			err = ioutil.WriteFile(outpath+"/"+file, eJSONBytes, 0644)
 		}
 	}
-	return err
+	return errors.WithStack(err)
 }
 
 // SerializeArrayObj will write out an array of object
@@ -64,7 +65,7 @@ func SerializeArrayObj(objs []interface{}, outpath string, file string) error {
 			err = ioutil.WriteFile(outpath+"/"+file, eJSONBytes, 0644)
 		}
 	}
-	return err
+	return errors.WithStack(err)
 }
 
 // SerializeObjAppend will serialize an object and append to the end of file
@@ -74,5 +75,5 @@ func SerializeObjAppend(f *os.File, obj interface{}) error {
 		_, err = f.Write(blob)
 		_, err = f.WriteString(",")
 	}
-	return err
+	return errors.WithStack(err)
 }

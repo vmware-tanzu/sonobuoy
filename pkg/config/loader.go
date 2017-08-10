@@ -23,6 +23,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	pluginloader "github.com/heptio/sonobuoy/pkg/plugin/loader"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -49,12 +50,12 @@ func LoadConfig() (*Config, error) {
 
 	// 1 - Read in the config file.
 	if err = viper.ReadInConfig(); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	// 2 - Unmarshal the Config struct
 	if err = viper.Unmarshal(cfg); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	// 3 - figure out what address we will tell pods to dial for aggregation
@@ -106,7 +107,7 @@ func LoadClient(cfg *Config) (kubernetes.Interface, error) {
 		config, err = rest.InClusterConfig()
 	}
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	// 2 - creates the clientset from kubeconfig
@@ -139,7 +140,7 @@ func loadAllPlugins(cfg *Config) error {
 		}
 
 		if !found {
-			return fmt.Errorf("Configured plugin %v does not exist", sel.Name)
+			return errors.Errorf("Configured plugin %v does not exist", sel.Name)
 		}
 	}
 

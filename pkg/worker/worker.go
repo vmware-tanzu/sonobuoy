@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/pkg/errors"
 )
 
 // GatherResults is the consumer of a co-scheduled container that agrees on the following
@@ -62,10 +63,6 @@ func GatherResults(waitfile string, url string) error {
 	// transmit back the results file.
 	return DoRequest(url, func() (io.Reader, error) {
 		outfile, err := os.Open(s)
-		if err != nil {
-			glog.Errorf("Failed to open file (%s)", s)
-			return nil, err
-		}
-		return outfile, err
+		return outfile, errors.WithStack(err)
 	})
 }

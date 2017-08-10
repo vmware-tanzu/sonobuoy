@@ -22,8 +22,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/pkg/errors"
 	gouuid "github.com/satori/go.uuid"
 	v1 "k8s.io/api/core/v1"
 	v1beta1ext "k8s.io/api/extensions/v1beta1"
@@ -102,19 +104,18 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface) error {
 
 	// Submit them to the API server, capturing the results
 	if _, err = kubeclient.CoreV1().ConfigMaps(p.Namespace).Create(configMap); err != nil {
-		return fmt.Errorf("could not create configMap for worker daemonset: %v", err)
+		return errors.Wrapf(err, "could not create ConfigMap for daemonset plugin %v", p.GetName())
 	}
 	if _, err = kubeclient.ExtensionsV1beta1().DaemonSets(p.Namespace).Create(daemonSet); err != nil {
-		return fmt.Errorf("could not create DaemonSet for sonobuoy plugin %v: %v", p.Name, err)
+		return errors.Wrapf(err, "could not create DaemonSet for daemonset plugin %v", p.GetName())
 	}
 
 	return nil
 }
 
 // Cleanup cleans up the k8s DaemonSet and ConfigMap created by this plugin instance
-func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) []error {
+func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
 	p.cleanedUp = true
-	var errors []error
 	gracePeriod := int64(1)
 	deletionPolicy := metav1.DeletePropagationBackground
 
@@ -130,7 +131,7 @@ func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) []error {
 		listOptions,
 	)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("Error deleting DaemonSet %v: %v", p.daemonSetName(), err))
+		errlog.LogError(errors.Wrapf(err, "could not delete DaemonSet %v for daemonset plugin %v", p.daemonSetName(), p.GetName()))
 	}
 
 	// Delete the ConfigMap created by this plugin
@@ -139,10 +140,8 @@ func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) []error {
 		listOptions,
 	)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("Error deleting configmap %v: %v", p.configMapName(), err))
+		errlog.LogError(errors.Wrapf(err, "could not delete ConfigMap %v for daemonset plugin %v", p.configMapName(), p.GetName()))
 	}
-
-	return errors
 }
 
 func (p *Plugin) listOptions() metav1.ListOptions {
@@ -155,11 +154,11 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*v1beta1ext.DaemonSet, error) {
 	dsets, err := kubeclient.ExtensionsV1beta1().DaemonSets(p.Namespace).List(p.listOptions())
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	if len(dsets.Items) != 1 {
-		return nil, fmt.Errorf("Expected plugin %v to create 1 daemonset, found %v", p.Name, len(dsets.Items))
+		return nil, errors.Errorf("expected plugin %v to create 1 daemonset, found %v", p.Name, len(dsets.Items))
 	}
 
 	return &dsets.Items[0], nil
@@ -189,12 +188,14 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 		// is having issues.
 		ds, err := p.findDaemonSet(kubeclient)
 		if err != nil {
+			errlog.LogError(errors.Wrapf(err, "could not find DaemonSet created by plugin %v, will retry", p.GetName()))
 			continue
 		}
 
 		// Find all the pods configured by this daemonset
 		pods, err := kubeclient.CoreV1().Pods(p.Namespace).List(p.listOptions())
 		if err != nil {
+			errlog.LogError(errors.Wrapf(err, "could not find pods created by plugin %v, will retry", p.GetName()))
 			// Likewise, if we can't query for pods, just retry next time.
 			continue
 		}
@@ -265,7 +266,7 @@ func (p *Plugin) buildConfigMap() (*v1.ConfigMap, error) {
 	// shelling out to kubectl)
 	cfgjson, err := json.Marshal(p.Config)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	cmap := &v1.ConfigMap{
@@ -282,7 +283,7 @@ func (p *Plugin) buildConfigMap() (*v1.ConfigMap, error) {
 		},
 	}
 
-	return cmap, err
+	return cmap, nil
 }
 
 func (p *Plugin) buildDaemonSet() (*v1beta1ext.DaemonSet, error) {

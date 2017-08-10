@@ -29,7 +29,9 @@ import (
 	"sync"
 
 	"github.com/golang/glog"
+	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/pkg/errors"
 	"github.com/viniciuschiele/tarx"
 )
 
@@ -201,7 +203,8 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 	resultsDir := path.Dir(resultsFile)
 	glog.Infof("Creating directory %v", resultsDir)
 	if err := os.MkdirAll(resultsDir, 0755); err != nil {
-		glog.Errorf("Could not make directory %v: %v", resultsDir, err)
+		err = errors.Wrapf(err, "could not make directory %v", resultsDir)
+		errlog.LogError(err)
 		return err
 	}
 
@@ -209,7 +212,8 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 	err := func() error {
 		f, err := os.Create(resultsFile)
 		if err != nil {
-			glog.Errorf("Could not open output file %v for writing: %v", resultsFile, err)
+			err = errors.Wrapf(err, "could not open output file %v for writing", resultsFile)
+			errlog.LogError(err)
 			return err
 		}
 		defer f.Close()
@@ -217,7 +221,8 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 		// Copy the request body into the file
 		_, err = io.Copy(f, result.Body)
 		if err != nil {
-			glog.Errorf("Error writing plugin result: %v", err)
+			err = errors.Wrapf(err, "error writing plugin result")
+			errlog.LogError(err)
 			return err
 		}
 
@@ -233,7 +238,8 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 
 		err = tarx.Extract(resultsFile, resultsDir, &tarx.ExtractOptions{})
 		if err != nil {
-			glog.Errorf("Could not extract tar file %v: %v", resultsFile, err)
+			err = errors.Wrapf(err, "could not extract tar file %v", resultsFile)
+			errlog.LogError(err)
 			return err
 		}
 

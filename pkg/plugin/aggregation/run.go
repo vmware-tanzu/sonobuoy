@@ -17,12 +17,12 @@ limitations under the License.
 package aggregation
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/golang/glog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -40,13 +40,11 @@ import (
 // 4. Hook the shared monitoring channel up to aggr's IngestResults() function
 // 5. Block until aggr shows all results accounted for (results come in through
 //    the HTTP callback), stopping the HTTP server on completion
-func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, outdir string) []error {
-	var errors []error
-
+func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, outdir string) error {
 	// Construct a list of things we'll need to dispatch
 	if len(plugins) == 0 {
 		glog.Info("Skipping host data gathering: no plugins defined")
-		return errors
+		return nil
 	}
 
 	// Get a list of nodes so the plugins can properly estimate what
@@ -55,8 +53,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// call, we should only do this in one place and cache it.
 	nodes, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
-		errors = append(errors, err)
-		return errors
+		return errors.WithStack(err)
 	}
 
 	// Find out what results we should expect for each of the plugins
@@ -92,7 +89,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		// Have the plugin monitor for errors
 		go p.Monitor(client, nodes.Items, monitorCh)
 		if err != nil {
-			errors = append(errors, err)
+			return errors.Wrapf(err, "error running plugin %v", p.GetName())
 		}
 	}
 	// 4. Have the aggregator plumb results from each plugins' monitor function
@@ -108,24 +105,24 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// 5. Wait for aggr to show that all results are accounted for
 	select {
 	case <-timeout:
-		errors = append(errors, fmt.Errorf("timed out waiting for results, shutting down HTTP server"))
 		srv.Stop()
 		stopWaitCh <- true
+		return errors.Errorf("timed out waiting for plugins, shutting down HTTP server")
 	case err := <-doneServ:
-		errors = append(errors, fmt.Errorf("Error running aggregation server: %v", err))
 		stopWaitCh <- true
+		if err != nil {
+			return err
+		}
 	case <-doneAggr:
 		break
 	}
 
-	return errors
+	return nil
 }
 
-func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) (errors []error) {
+func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
 	// Cleanup after each plugin
 	for _, p := range plugins {
-		errors = append(errors, p.Cleanup(client)...)
+		p.Cleanup(client)
 	}
-
-	return errors
 }

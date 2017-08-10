@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
@@ -50,11 +51,11 @@ func LoadConfig() (*plugin.WorkerConfig, error) {
 	setConfigDefaults(config)
 
 	if err = viper.ReadInConfig(); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	if err = viper.Unmarshal(config); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return config, nil
