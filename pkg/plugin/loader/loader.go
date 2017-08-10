@@ -17,11 +17,12 @@ limitations under the License.
 package loader
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
+	"path/filepath"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -92,7 +93,7 @@ func loadPlugin(namespace string, dfn plugin.Definition, masterAddress string) (
 	}
 }
 
-// scanPlugins looks for Plugin Definition YAML files in the given directory,
+// scanPlugins looks for Plugin Definition files in the given directory,
 // and returns an array of PluginDefinition structs.
 func scanPlugins(dir string) ([]plugin.Definition, error) {
 	var plugins []plugin.Definition
@@ -103,8 +104,13 @@ func scanPlugins(dir string) ([]plugin.Definition, error) {
 	}
 
 	for _, file := range files {
-		// We only look at .yaml files in this directory
-		if !strings.HasSuffix(file.Name(), ".yaml") {
+		var loaderFn loader
+		switch filepath.Ext(file.Name()) {
+		case ".yaml":
+			loaderFn = loadYAML
+		case ".json":
+			loaderFn = loadJSON
+		default:
 			continue
 		}
 
@@ -115,10 +121,16 @@ func scanPlugins(dir string) ([]plugin.Definition, error) {
 			return plugins, err
 		}
 
+		pluginDef, err := loaderFn(y)
+		if err != nil {
+			glog.Warningf("Error unmarshalling bytes at %v: %v", fullPath, err)
+			continue
+		}
+
 		// Load it into a proper PluginDefinition.  If we can't, just
 		// warn.  If they've selected this plugin in their config,
 		// they'll get an error then.
-		pluginDef, err := loadPluginDefinition(y)
+		err = loadPluginDefinition(pluginDef)
 		if err != nil {
 			glog.Warningf("Error loading plugin at %v: %v", fullPath, err)
 			continue
@@ -130,36 +142,42 @@ func scanPlugins(dir string) ([]plugin.Definition, error) {
 	return plugins, err
 }
 
-// loadPluginDefinition takes a YAML string of bytes and loads a
-// plugin.Definition.
-func loadPluginDefinition(pluginYaml []byte) (*plugin.Definition, error) {
+type loader func([]byte) (*plugin.Definition, error)
+
+func loadYAML(yamlBytes []byte) (*plugin.Definition, error) {
 	var ret plugin.Definition
+	err := yaml.Unmarshal(yamlBytes, &ret)
+	return &ret, err
+}
 
-	err := yaml.Unmarshal(pluginYaml, &ret)
-	if err != nil {
-		return nil, err
-	}
+func loadJSON(jsonBytes []byte) (*plugin.Definition, error) {
+	var ret plugin.Definition
+	err := json.Unmarshal(jsonBytes, &ret)
+	return &ret, err
+}
 
+// loadPluginDefinition takes a plugin.Definition and makes a real plugin.Definition
+func loadPluginDefinition(ret *plugin.Definition) error {
 	// Validate it
 	if ret.Driver == "" {
-		return nil, fmt.Errorf("No driver specified in plugin YAML")
+		return fmt.Errorf("No driver specified in plugin file")
 	}
 	if ret.ResultType == "" {
-		return nil, fmt.Errorf("No resultType specified in plugin YAML")
+		return fmt.Errorf("No resultType specified in plugin file")
 	}
 	if ret.Name == "" {
-		return nil, fmt.Errorf("No name specified in plugin YAML")
+		return fmt.Errorf("No name specified in plugin file")
 	}
 	if ret.RawPodSpec == nil {
-		return nil, fmt.Errorf("No pod spec specified in plugin YAML")
+		return fmt.Errorf("No pod spec specified in plugin file")
 	}
 
-	// Construct a pod spec from the YAML. We can't decode it
+	// Construct a pod spec from the ConfigMap data. We can't decode it
 	// directly since a PodSpec is not a runtime.Object (it doesn't
 	// have ObjectMeta attributes like Kind and Metadata), so we:
 
 	// make a fake pod as a map[string]interface{}, and load the
-	// plugin config yaml into its spec
+	// plugin config into its spec
 	placeholderPodMap := map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "Pod",
@@ -169,7 +187,7 @@ func loadPluginDefinition(pluginYaml []byte) (*plugin.Definition, error) {
 	// serialize the result into YAML
 	placeholderPodYaml, err := yaml.Marshal(placeholderPodMap)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Decode *that* yaml into a Pod
@@ -179,5 +197,5 @@ func loadPluginDefinition(pluginYaml []byte) (*plugin.Definition, error) {
 	}
 	ret.PodSpec = placeholderPod.Spec
 
-	return &ret, nil
+	return nil
 }
