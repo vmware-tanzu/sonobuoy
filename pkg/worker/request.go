@@ -19,11 +19,11 @@ package worker
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
-	"github.com/golang/glog"
+	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/pkg/errors"
 	"github.com/sethgrid/pester"
 )
 
@@ -35,7 +35,7 @@ import (
 func DoRequest(url string, callback func() (io.Reader, error)) error {
 	input, err := callback()
 	if err != nil {
-		glog.Errorf("Error gathering host data: %v", err)
+		errlog.LogError(errors.Wrap(err, "error gathering host data"))
 
 		// If the callback couldn't get the data, we should send the reason why to
 		// the server.
@@ -44,34 +44,34 @@ func DoRequest(url string, callback func() (io.Reader, error)) error {
 		}
 		errbody, err := json.Marshal(errobj)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(errbody))
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		// And if we can't even do that, log it.
 		resp, err := pester.Do(req)
 		if err != nil || resp.StatusCode != http.StatusOK {
-			glog.Errorf("Could not send error message to master URL (%v): %v", url, err)
+			errlog.LogError(errors.Wrapf(err, "could not send error message to master URL (%v)", url))
 		}
 
-		return err
+		return errors.WithStack(err)
 	}
 
 	req, err := http.NewRequest(http.MethodPut, url, input)
 	if err != nil {
-		glog.Errorf("Error constructing master request to %v: %v", url, err)
+		return errors.Wrapf(err, "error constructing master request to %v", url)
 	}
 
 	resp, err := pester.Do(req)
 	if err != nil {
-		return fmt.Errorf("Error dialing master to %v: %v", url, err)
+		return errors.Wrapf(err, "error dialing master at %v", url)
 	}
 	if resp.StatusCode != http.StatusOK {
 		// TODO: retry logic for something like a 429 or otherwise
-		return fmt.Errorf("Got a %v response when dialing master to %v", resp.StatusCode, url)
+		return errors.Errorf("got a %v response when dialing master to %v", resp.StatusCode, url)
 	}
 
 	return nil

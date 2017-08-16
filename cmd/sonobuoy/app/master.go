@@ -22,6 +22,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/discovery"
+	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/spf13/cobra"
 )
 
@@ -46,24 +47,19 @@ func runMaster(cmd *cobra.Command, args []string) {
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		glog.Error(err)
+		errlog.LogError(err)
 		os.Exit(1)
 	}
 
 	// Load a kubernetes client
 	kubeClient, err := config.LoadClient(cfg)
 	if err != nil {
-		glog.Error(err)
+		errlog.LogError(err)
 		os.Exit(1)
 	}
 
 	// Run Discovery (gather API data, run plugins)
-	if errlist := discovery.Run(kubeClient, cfg); errlist != nil {
-		for _, err := range errlist {
-			if err != nil {
-				glog.Error(err)
-			}
-		}
+	if errcount := discovery.Run(kubeClient, cfg); errcount > 0 {
 		exit = 1
 	}
 
