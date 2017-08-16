@@ -20,12 +20,14 @@ import (
 	"flag"
 	"os"
 
+	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	// import `flag` flags into this command to support glog flags
 	RootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+	RootCmd.PersistentFlags().BoolVarP(&errlog.DebugOutput, "debug", "d", false, "Enable debug output (includes stack traces)")
 }
 
 // RootCmd is the root command that is executed when sonobuoy is run without

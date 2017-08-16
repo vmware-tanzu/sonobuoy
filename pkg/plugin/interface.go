@@ -31,7 +31,7 @@ type Interface interface {
 	// returns.  It does not block and wait until the plugin has finished.
 	Run(kubeClient kubernetes.Interface) error
 	// Cleanup cleans up all resources created by the plugin
-	Cleanup(kubeClient kubernetes.Interface) []error
+	Cleanup(kubeClient kubernetes.Interface)
 	// Monitor continually checks for problems in the resources created by a
 	// plugin (either because it won't schedule, or the image won't
 	// download, too many failed executions, etc) and sends the errors as

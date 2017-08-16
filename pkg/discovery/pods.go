@@ -23,6 +23,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -35,14 +36,11 @@ const (
 )
 
 // gatherPodLogs will loop through collecting pod logs and placing them into a directory tree
-func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListOptions, cfg *config.Config) []error {
-	var errs []error
-
+func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListOptions, cfg *config.Config) error {
 	// 1 - Collect the list of pods
 	podlist, err := kubeClient.CoreV1().Pods(ns).List(opts)
 	if err != nil {
-		errs = append(errs, err)
-		return errs
+		return errors.WithStack(err)
 	}
 
 	glog.Info("Collecting Pod Logs...")
@@ -58,21 +56,21 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 				},
 			).Do().Raw()
 
-			if err == nil {
-				outdir := path.Join(cfg.OutputDir(), NSResourceLocation, ns, PodsLocation, pod.Name, "logs")
-				if err = os.MkdirAll(outdir, 0755); err != nil {
-					errs = append(errs, err)
-				}
+			if err != nil {
+				return errors.WithStack(err)
+			}
 
-				outfile := path.Join(outdir, container.Name) + ".txt"
-				if err = ioutil.WriteFile(outfile, body, 0644); err != nil {
-					errs = append(errs, err)
-				}
-			} else {
-				errs = append(errs, err)
+			outdir := path.Join(cfg.OutputDir(), NSResourceLocation, ns, PodsLocation, pod.Name, "logs")
+			if err = os.MkdirAll(outdir, 0755); err != nil {
+				return errors.WithStack(err)
+			}
+
+			outfile := path.Join(outdir, container.Name) + ".txt"
+			if err = ioutil.WriteFile(outfile, body, 0644); err != nil {
+				return errors.WithStack(err)
 			}
 		}
 	}
 
-	return errs
+	return nil
 }
