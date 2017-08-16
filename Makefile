@@ -16,6 +16,9 @@
 # does not yet publish a released e2e container
 # https://github.com/kubernetes/kubernetes/issues/47920
 
+EXAMPLE_FILES = $(wildcard examples/quickstart/*.jsonnet)
+EXAMPLE_OUTPUT = $(patsubst examples/quickstart/%.jsonnet,examples/quickstart/%.json,$(EXAMPLE_FILES))
+
 TARGET = sonobuoy
 GOTARGET = github.com/heptio/$(TARGET)
 REGISTRY ?= gcr.io/heptio-images
@@ -43,6 +46,7 @@ local:
 	$(BUILD)
 
 container: cbuild
+<<<<<<< HEAD
 	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest -t $(REGISTRY)/$(TARGET):$(VERSION) .
 
 cbuild:
@@ -50,9 +54,34 @@ cbuild:
 
 push:
 	gcloud docker -- push $(REGISTRY)/$(TARGET):$(VERSION)
+=======
+	$(MAKE) -C build/sonobuoy container
 
-.PHONY: all container push
+push:
+	$(MAKE) -C build/sonobuoy push
+>>>>>>> testing
+
+.PHONY: all container push generate-examples
 
 clean:
 	rm -f $(TARGET)
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET):latest $(REGISTRY)/$(TARGET):$(VERSION) || true
+	rm -f /examples/quickstart/*.json
+
+generate-examples: $(EXAMPLE_OUTPUT)
+
+examples/quickstart/%.json: examples/quickstart/%.jsonnet
+	jsonnet -J /usr/local/lib/jsonnet/ksonnet-lib -o $@ $<
+<<<<<<< HEAD
+=======
+
+clean:
+	$(MAKE) -C build/sonobuoy clean
+	$(MAKE) -C build/kube-conformance clean
+	$(MAKE) -C build/systemd-logs clean
+<<<<<<< HEAD
+	rm -f /examples/quickstart/*.json
+=======
+	rm -f ./examples/quickstart/*.json
+>>>>>>> e68ddf3... testing
+>>>>>>> testing
