@@ -21,18 +21,23 @@ GOTARGET = github.com/heptio/$(TARGET)
 REGISTRY ?= gcr.io/heptio-images
 IMAGE = $(REGISTRY)/$(TARGET)
 DIR := ${CURDIR}
-VERSION ?= v0.8.0
-
 DOCKER ?= docker
+
+GIT_VERSION ?= $(shell git describe --always --dirty)
+IMAGE_VERSION ?= $(shell git describe --always --dirty | sed 's/^v//')
+GIT_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
+GIT_REF = $(shell git rev-parse --short=8 --verify HEAD)
 
 BUILDMNT = /go/src/$(GOTARGET)
 BUILD_IMAGE ?= golang:1.8
-BUILDCMD = go build -o $(TARGET) -v -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET)"
+BUILDCMD = go build -o $(TARGET) -v -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET):$(GIT_REF)"
 BUILD = $(BUILDCMD) $(GOTARGET)/cmd/sonobuoy
 
 TESTARGS ?= -v -timeout 60s
 TEST = go test $(TEST_PKGS) $(TESTARGS)
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
+
+.PHONY: all container push clean cbuild test local
 
 all: container
 
@@ -43,16 +48,25 @@ local:
 	$(BUILD)
 
 container: cbuild
-	$(DOCKER) build -t $(REGISTRY)/$(TARGET):latest -t $(REGISTRY)/$(TARGET):$(VERSION) .
+	$(DOCKER) build \
+		-t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \
+		-t $(REGISTRY)/$(TARGET):$(GIT_BRANCH) \
+		-t $(REGISTRY)/$(TARGET):$(GIT_REF) \
+		.
 
 cbuild:
 	$(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c '$(BUILD) && $(TEST)'
 
 push:
-	gcloud docker -- push $(REGISTRY)/$(TARGET):$(VERSION)
-
-.PHONY: all container push
+	$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_BRANCH)
+	$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_REF)
+	if git describe --tags --exact-match >/dev/null 2>&1; \
+	then \
+		$(DOCKER) tag $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) $(REGISTRY)/$(TARGET):latest; \
+		$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION); \
+		$(DOCKER) push $(REGISTRY)/$(TARGET):latest; \
+	fi
 
 clean:
 	rm -f $(TARGET)
-	$(DOCKER) rmi $(REGISTRY)/$(TARGET):latest $(REGISTRY)/$(TARGET):$(VERSION) || true
+	$(DOCKER) rmi $(REGISTRY)/$(TARGET) || true
