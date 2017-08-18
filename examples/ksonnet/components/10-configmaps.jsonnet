@@ -13,6 +13,7 @@
 # limitations under the License.
 
 local k = import "ksonnet.beta.2/k.libsonnet";
+local kubecfg = import "kubecfg.libsonnet";
 local configMap = k.core.v1.configMap;
 
 local conf = {
@@ -100,9 +101,9 @@ local systemdlogsConfig = {
         operator: "Exists",
       },
     ],
-    hostNetwork: "true",
-    hostIPC: "true",
-    hostPID: "true",
+    hostNetwork: true,
+    hostIPC: true,
+    hostPID: true,
     dnsPolicy: "ClusterFirstWithHostNet",
     containers: [
       {
@@ -117,9 +118,9 @@ local systemdlogsConfig = {
             name: "NODE_NAME",
             valueFrom: {
               fieldRef: {
-                apiVersion: "v1"
+                apiVersion: "v1",
+                fieldPath: "spec.nodeName",
               },
-              fieldPath: "spec.nodeName",
             }
           },
           {
@@ -134,7 +135,7 @@ local systemdlogsConfig = {
         image: "gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest",
         imagePullPolicy: "Always",
         securityContext: {
-          privileged: "true",
+          privileged: true,
         },
         volumeMounts: [
           {
@@ -164,8 +165,8 @@ local systemdlogsConfig = {
             valueFrom: {
               fieldRef: {
                 apiVersion: "v1",
+                fieldPath: "spec.nodeName",
               },
-              fieldPath: "spec.nodeName",
             },
           },
           {
@@ -176,7 +177,7 @@ local systemdlogsConfig = {
         image: "gcr.io/heptio-images/sonobuoy:latest",
         imagePullPolicy: "Always",
         securityContext: {
-          privileged: "true",
+          privileged: true,
         },
         volumeMounts: [
           {
@@ -190,25 +191,25 @@ local systemdlogsConfig = {
         ],
       },
     ],
+    volumes: [
+      {
+        name: "root",
+        hostPath: {
+          path: "/",
+        },
+      },
+      {
+        name: "results",
+        emptyDir: {},
+      },
+      {
+        name: "config",
+        configMap: {
+          name: "__SONOBUOY_CONFIGMAP__",
+        },
+      },
+    ],
   },
-  volumes: [
-    {
-      name: "root",
-      hostPath: {
-        path: "/",
-      },
-    },
-    {
-      name: "results",
-      emptyDir: {},
-    },
-    {
-      name: "config",
-      configMap: {
-        name: "__SONOBUOY_CONFIGMAP__",
-      },
-    },
-  ],
 };
 
 local e2eConfig = {
@@ -264,8 +265,8 @@ local e2eConfig = {
             valueFrom: {
               fieldRef: {
                 apiVersion: "v1",
+                fieldPath: "spec.nodeName",
               },
-              fieldPath: "spec.nodeName",
             },
           },
           {
@@ -287,32 +288,32 @@ local e2eConfig = {
         ],
       },
     ],
-  },
-  volumes: [
-    {
-      name: "results",
-      emptyDir: {},
-    },
-    {
-      name: "config",
-      configMap: {
-        # This will be rewritten when the JobPlugin driver goes to launch the pod.
-        name: "__SONOBUOY_CONFIGMAP__",
+    volumes: [
+      {
+        name: "results",
+        emptyDir: {},
       },
-    },
-  ],
+      {
+        name: "config",
+        configMap: {
+          # This will be rewritten when the JobPlugin driver goes to launch the pod.
+          name: "__SONOBUOY_CONFIGMAP__",
+        },
+      },
+    ],
+  },
 };
 
 local plugins = {
-  "systemdlogs.json": std.toString(systemdlogsConfig),
-  "e2e.json": std.toString(e2eConfig),
+  "systemdlogs.yaml": kubecfg.manifestYaml(systemdlogsConfig),
+  "e2e.yaml": kubecfg.manifestYaml(e2eConfig),
 };
 
 local sonobuoyConfig = configMap.new() +
     configMap.mixin.metadata.name(conf.sonobuoyCfg.name) +
     configMap.mixin.metadata.namespace(conf.namespace) +
     configMap.mixin.metadata.labels(conf.labels) +
-    configMap.data({"config.json": std.toString(sonobuoyConfigData)});
+    configMap.data({"config.json": kubecfg.manifestJson(sonobuoyConfigData)});
 
 local pluginConfigs = configMap.new() +
     configMap.mixin.metadata.name(conf.pluginsCfg.name) +
