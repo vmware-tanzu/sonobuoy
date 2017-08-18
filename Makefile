@@ -11,13 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
 # Note the only reason we are creating this is because upstream
 # does not yet publish a released e2e container
 # https://github.com/kubernetes/kubernetes/issues/47920
 
-EXAMPLE_FILES = $(wildcard examples/quickstart/*.jsonnet)
-EXAMPLE_OUTPUT = $(patsubst examples/quickstart/%.jsonnet,examples/quickstart/%.json,$(EXAMPLE_FILES))
+EXAMPLE_FILES = $(wildcard examples/ksonnet/components/*.jsonnet)
+EXAMPLE_OUTPUT = examples/quickstart/aggregate.yaml $(patsubst examples/ksonnet/components/%.jsonnet,examples/quickstart/components/%.yaml,$(EXAMPLE_FILES))
 KSONNET_BUILD_IMAGE = ksonnet/ksonnet-lib:beta.2
 
 TARGET = sonobuoy
@@ -40,6 +40,15 @@ BUILD = $(BUILDCMD) $(GOTARGET)/cmd/sonobuoy
 TESTARGS ?= -v -timeout 60s
 TEST = go test $(TEST_PKGS) $(TESTARGS)
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
+
+WORKDIR ?= /sonobuoy
+RBAC_ENABLED ?= 1
+KUBECFG_CMD = $(DOCKER) run \
+  -v $(DIR):$(WORKDIR) \
+	--workdir $(WORKDIR) \
+	--rm \
+	$(KSONNET_BUILD_IMAGE) \
+	kubecfg show -o yaml -V RBAC_ENABLED=$(RBAC_ENABLED) -J $(WORKDIR) -o yaml $< > $@
 
 .PHONY: all container push clean cbuild test local generate-examples
 
@@ -76,9 +85,15 @@ push:
 clean:
 	rm -f $(TARGET)
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET) || true
-	rm -f ./examples/quickstart/*.json
+	find ./examples/ -type f -name '*.yaml' -delete
 
-generate-examples: $(EXAMPLE_OUTPUT)
+generate-examples: latest-ksonnet $(EXAMPLE_OUTPUT)
 
-examples/quickstart/%.json: examples/quickstart/%.jsonnet
-	$(DOCKER) run -v $(DIR):/sonobuoy --workdir /sonobuoy --rm $(KSONNET_BUILD_IMAGE) jsonnet -o $@ $<
+examples/quickstart/components/%.yaml: examples/ksonnet/components/%.jsonnet
+	$(KUBECFG_CMD)
+
+examples/quickstart/%.yaml: examples/ksonnet/%.jsonnet
+	$(KUBECFG_CMD)
+
+latest-ksonnet:
+	$(DOCKER) pull $(KSONNET_BUILD_IMAGE)
