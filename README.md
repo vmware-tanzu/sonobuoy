@@ -81,7 +81,12 @@ To view the output, copy the output directory from the main Sonobuoy pod to some
 kubectl cp heptio-sonobuoy/sonobuoy:/tmp/sonobuoy ./results --namespace=heptio-sonobuoy
 ```
 
-This should copy a single `.tar.gz` snapshot from the Sonobuoy pod into your local `./results` directory.  For information on the contents of the snapshot see the [snapshot documentation](docs/snapshot.md).
+This should copy a single `.tar.gz` snapshot from the Sonobuoy pod into your local `./results` directory. You can extract its contents into `/.results` with:
+```
+tar xzf ./results/*.tar.gz
+```
+
+For information on the contents of the snapshot, see the [snapshot documentation](docs/snapshot.md).
 
 *NOTE: At this time, the layout of the contents of the tarball is subject to change.*
 
