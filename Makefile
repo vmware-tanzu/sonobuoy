@@ -16,6 +16,10 @@
 # does not yet publish a released e2e container
 # https://github.com/kubernetes/kubernetes/issues/47920
 
+EXAMPLE_FILES = $(wildcard examples/quickstart/*.jsonnet)
+EXAMPLE_OUTPUT = $(patsubst examples/quickstart/%.jsonnet,examples/quickstart/%.json,$(EXAMPLE_FILES))
+KSONNET_BUILD_IMAGE = ksonnet/ksonnet-lib:beta.2
+
 TARGET = sonobuoy
 GOTARGET = github.com/heptio/$(TARGET)
 REGISTRY ?= gcr.io/heptio-images
@@ -37,7 +41,7 @@ TESTARGS ?= -v -timeout 60s
 TEST = go test $(TEST_PKGS) $(TESTARGS)
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
 
-.PHONY: all container push clean cbuild test local
+.PHONY: all container push clean cbuild test local generate-examples
 
 all: container
 
@@ -70,3 +74,9 @@ push:
 clean:
 	rm -f $(TARGET)
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET) || true
+	rm -f ./examples/quickstart/*.json
+
+generate-examples: $(EXAMPLE_OUTPUT)
+
+examples/quickstart/%.json: examples/quickstart/%.jsonnet
+	$(DOCKER) run -v $(DIR):/sonobuoy --workdir /sonobuoy --rm $(KSONNET_BUILD_IMAGE) jsonnet -o $@ $<
