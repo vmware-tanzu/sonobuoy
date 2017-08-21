@@ -1,0 +1,35 @@
+{
+   "apiVersion": "v1",
+   "items": [
+      {
+         "apiVersion": "v1",
+         "data": {
+            "config.json": "{\"Description\": \"EXAMPLE\", \"Filters\": {\"LabelSelector\": \"\", \"Namespaces\": \".*\"}, \"PluginNamespace\": \"heptio-sonobuoy\", \"Plugins\": [{\"name\": \"systemd_logs\"}, {\"name\": \"e2e\"}], \"Resources\": [\"CertificateSigningRequests\", \"ClusterRoleBindings\", \"ClusterRoles\", \"ComponentStatuses\", \"Nodes\", \"PersistentVolumes\", \"PodSecurityPolicies\", \"ServerVersion\", \"StorageClasses\", \"ThirdPartyResources\", \"ConfigMaps\", \"DaemonSets\", \"Deployments\", \"Endpoints\", \"Events\", \"HorizontalPodAutoscalers\", \"Ingresses\", \"Jobs\", \"LimitRanges\", \"PersistentVolumeClaims\", \"Pods\", \"PodLogs\", \"PodDisruptionBudgets\", \"PodPresets\", \"PodTemplates\", \"ReplicaSets\", \"ReplicationControllers\", \"ResourceQuotas\", \"RoleBindings\", \"Roles\", \"ServiceAccounts\", \"Services\", \"StatefulSets\"], \"ResultsDir\": \"/tmp/sonobuoy\", \"Server\": {\"advertiseaddress\": \"sonobuoy-master:8080\", \"bindaddress\": \"0.0.0.0\", \"bindport\": 8080, \"timeoutseconds\": 3600}, \"Version\": \"v0.8.0\"}"
+         },
+         "kind": "ConfigMap",
+         "metadata": {
+            "labels": {
+               "component": "sonobuoy"
+            },
+            "name": "sonobuoy-config-cm",
+            "namespace": "heptio-sonobuoy"
+         }
+      },
+      {
+         "apiVersion": "v1",
+         "data": {
+            "e2e.json": "{\"driver\": \"Job\", \"name\": \"e2e\", \"resultType\": \"e2e\", \"spec\": {\"containers\": [{\"env\": [{\"name\": \"E2E_FOCUS\", \"value\": \"Pods should be submitted and removed\"}], \"image\": \"gcr.io/heptio-images/kube-conformance:latest\", \"imagePullPolicy\": \"Always\", \"name\": \"e2e\", \"volumeMounts\": [{\"mountPath\": \"/tmp/results\", \"name\": \"results\"}]}, {\"command\": [\"sh\", \"-c\", \"/sonobuoy worker global -v 5 --logtostderr\"], \"env\": [{\"name\": \"NODE_NAME\", \"valueFrom\": {\"fieldRef\": {\"apiVersion\": \"v1\", \"fieldPath\": \"spec.nodeName\"}}}, {\"name\": \"RESULTS_DIR\", \"value\": \"/tmp/results\"}], \"image\": \"gcr.io/heptio-images/sonobuoy:latest\", \"imagePullPolicy\": \"Always\", \"name\": \"sonobuoy-worker\", \"volumeMounts\": [{\"mountPath\": \"/etc/sonobuoy\", \"name\": \"config\"}, {\"mountPath\": \"/tmp/results\", \"name\": \"results\"}]}], \"restartPolicy\": \"Never\", \"serviceAccountName\": \"sonobuoy-serviceaccount\", \"tolerations\": [{\"effect\": \"NoSchedule\", \"key\": \"node-role.kubernetes.io/master\", \"operator\": \"Exists\"}, {\"key\": \"CriticalAddonsOnly\", \"operator\": \"Exists\"}], \"volumes\": [{\"emptyDir\": { }, \"name\": \"results\"}, {\"configMap\": {\"name\": \"__SONOBUOY_CONFIGMAP__\"}, \"name\": \"config\"}]}}",
+            "systemdlogs.json": "{\"driver\": \"DaemonSet\", \"name\": \"systemd_logs\", \"resultType\": \"systemd_logs\", \"spec\": {\"containers\": [{\"command\": [\"sh\", \"-c\", \"/get_systemd_logs.sh && sleep 3600\"], \"env\": [{\"name\": \"NODE_NAME\", \"valueFrom\": {\"fieldRef\": {\"apiVersion\": \"v1\", \"fieldPath\": \"spec.nodeName\"}}}, {\"name\": \"RESULTS_DIR\", \"value\": \"/tmp/results\"}, {\"name\": \"CHROOT_DIR\", \"value\": \"/node\"}], \"image\": \"gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest\", \"imagePullPolicy\": \"Always\", \"name\": \"systemd-logs\", \"securityContext\": {\"privileged\": true}, \"volumeMounts\": [{\"mountPath\": \"/node\", \"name\": \"root\"}, {\"mountPath\": \"/tmp/results\", \"name\": \"results\"}, {\"mountPath\": \"/etc/sonobuoy\", \"name\": \"config\"}]}, {\"command\": [\"sh\", \"-c\", \"/sonobuoy worker single-node -v 5 --logtostderr && sleep 3600\"], \"env\": [{\"name\": \"NODE_NAME\", \"valueFrom\": {\"fieldRef\": {\"apiVersion\": \"v1\", \"fieldPath\": \"spec.nodeName\"}}}, {\"name\": \"RESULTS_DIR\", \"value\": \"/tmp/results\"}], \"image\": \"gcr.io/heptio-images/sonobuoy:latest\", \"imagePullPolicy\": \"Always\", \"name\": \"sonobuoy-worker\", \"securityContext\": {\"privileged\": true}, \"volumeMounts\": [{\"mountPath\": \"/tmp/results\", \"name\": \"results\"}, {\"mountPath\": \"/etc/sonobuoy\", \"name\": \"config\"}]}], \"dnsPolicy\": \"ClusterFirstWithHostNet\", \"hostIPC\": true, \"hostNetwork\": true, \"hostPID\": true, \"tolerations\": [{\"effect\": \"NoSchedule\", \"key\": \"node-role.kubernetes.io/master\", \"operator\": \"Exists\"}, {\"key\": \"CriticalAddonsOnly\", \"operator\": \"Exists\"}], \"volumes\": [{\"hostPath\": {\"path\": \"/\"}, \"name\": \"root\"}, {\"emptyDir\": { }, \"name\": \"results\"}, {\"configMap\": {\"name\": \"__SONOBUOY_CONFIGMAP__\"}, \"name\": \"config\"}]}}"
+         },
+         "kind": "ConfigMap",
+         "metadata": {
+            "labels": {
+               "component": "sonobuoy"
+            },
+            "name": "sonobuoy-plugins-cm",
+            "namespace": "heptio-sonobuoy"
+         }
+      }
+   ],
+   "kind": "List"
+}

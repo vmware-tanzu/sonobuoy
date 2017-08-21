@@ -32,13 +32,11 @@ This guide executes a Sonobuoy run on your cluster, and records the following re
 
 * *You should have `kubectl` installed.* If not, follow the instructions for [installing via Homebrew (MacOS)][6] or [building the binary (Linux)][7].
 
-
 ### 1. Download
 Clone or fork the Sonobuoy repo:
 ```
 git clone git@github.com:heptio/sonobuoy.git
 ```
-
 
 ### 2. Run
 
@@ -68,7 +66,7 @@ If you see the log line `no-exit was specified, sonobuoy is now blocking`, the S
 >
 > *Troubleshooting errors from `kubectl logs`*:
 >    * `plugin <name> does not exist`
->           
+>
 >       * Delete the `sonobuoy` pod via `kubectl delete pod sonobuoy --namespace heptio-sonobuoy` and rerun the `kubectl apply` command above. This error occurs when Sonobuoy's ConfigMap creations are not completed before its pod creation. While the YAML files in `examples/quickstart` use numeric prefixes ("00-", "10-", etc.) to specify the order of resource creation, `kubectl apply` is asynchronous and can result in dependency issues.
 >
 >    * Other errors
@@ -103,7 +101,7 @@ kubectl delete -f examples/quickstart/
 
 ## Troubleshooting
 
-If you encounter any problems that the documentation does not address, [file an issue][10].  
+If you encounter any problems that the documentation does not address, [file an issue][10].
 
 ## Contributing
 
