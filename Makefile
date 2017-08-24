@@ -80,8 +80,6 @@ push:
 		$(DOCKER) push $(REGISTRY)/$(TARGET):latest; \
 	fi
 
-	gcloud docker -- push $(REGISTRY)/$(TARGET):$(VERSION)
-
 clean:
 	rm -f $(TARGET)
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET) || true
