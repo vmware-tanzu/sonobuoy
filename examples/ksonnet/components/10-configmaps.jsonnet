@@ -13,6 +13,7 @@
 # limitations under the License.
 
 local k = import "ksonnet.beta.2/k.libsonnet";
+local kubecfg = import "kubecfg.libsonnet";
 local configMap = k.core.v1.configMap;
 
 local conf = {
@@ -304,15 +305,15 @@ local e2eConfig = {
 };
 
 local plugins = {
-  "systemdlogs.json": std.toString(systemdlogsConfig),
-  "e2e.json": std.toString(e2eConfig),
+  "systemdlogs.yaml": kubecfg.manifestYaml(systemdlogsConfig),
+  "e2e.yaml": kubecfg.manifestYaml(e2eConfig),
 };
 
 local sonobuoyConfig = configMap.new() +
     configMap.mixin.metadata.name(conf.sonobuoyCfg.name) +
     configMap.mixin.metadata.namespace(conf.namespace) +
     configMap.mixin.metadata.labels(conf.labels) +
-    configMap.data({"config.json": std.toString(sonobuoyConfigData)});
+    configMap.data({"config.json": kubecfg.manifestJson(sonobuoyConfigData)});
 
 local pluginConfigs = configMap.new() +
     configMap.mixin.metadata.name(conf.pluginsCfg.name) +

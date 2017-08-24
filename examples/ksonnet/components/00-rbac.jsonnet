@@ -68,8 +68,12 @@ local clusterRole =
         cr.rulesType.verbs("*"),
     ]);
 
+local optRbacObj =
+  if std.extVar("RBAC_ENABLED") != "0"
+  then [clusterRoleBinding, clusterRole]
+  else [];
+
 k.core.v1.list.new([
-    namespace,
-    serviceaccount,
-    clusterRoleBinding,
-    clusterRole,])
+  namespace,
+  serviceaccount
+] + optRbacObj)
