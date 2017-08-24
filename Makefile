@@ -29,7 +29,7 @@ DOCKER ?= docker
 
 GIT_VERSION ?= $(shell git describe --always --dirty)
 IMAGE_VERSION ?= $(shell git describe --always --dirty | sed 's/^v//')
-GIT_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
+IMAGE_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF = $(shell git rev-parse --short=8 --verify HEAD)
 
 BUILDMNT = /go/src/$(GOTARGET)
@@ -54,7 +54,7 @@ local:
 container: cbuild
 	$(DOCKER) build \
 		-t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \
-		-t $(REGISTRY)/$(TARGET):$(GIT_BRANCH) \
+		-t $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH) \
 		-t $(REGISTRY)/$(TARGET):$(GIT_REF) \
 		.
 
@@ -62,7 +62,7 @@ cbuild:
 	$(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c '$(BUILD) && $(TEST)'
 
 push:
-	$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_BRANCH)
+	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH)
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_REF)
 	if git describe --tags --exact-match >/dev/null 2>&1; \
 	then \
