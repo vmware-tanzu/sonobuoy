@@ -70,7 +70,7 @@ local conf = {
         },
         {
             name: "output-volume",
-            hostPath: {path: "/tmp/sonobuoy"},
+            emptyDir: {},
         },
     ],
     name: "sonobuoy",

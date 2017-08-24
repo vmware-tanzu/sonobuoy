@@ -20,13 +20,13 @@ Once the configs are loaded (in either case), Sonobuoy parses them and gathers d
 
 | | Overview|Path on Cluster Node|[STANDALONE]<br>JSON example(s)|[CONTAINERIZED]<br>YAML manifest example(s)
 |---|---|---|---|---|
-|*Data configuration*| What Sonobuoy records, how, and where. |*ANY of the following*:<br>(1) `config.json` in the directory where `sonobuoy` is executed<br>(2) `/etc/sonobuoy/config.json`<br>(3) `$SONOBUOY_CONFIG`<br><br>|[`config.json`][10]|<br> [`examples/quickstart/10-configmaps.yaml`][11]<br><br>*The YAML file is basically a wrapper for the `config.json` file, which allows it to be properly mounted onto the cluster's Sonobuoy pod.* <br><br>
-|*Plugin configuration*|Settings for each plugin integration.|*ANY of the following*:<br>(1) `/etc/sonobuoy/plugins.d`<br>(2) `$HOME/.sonobuoy/plugins.d`<br>(3) `./plugins.d`<br>(4) `PluginSearchPath` (override from the data configuration) <br><br>| There is a YAML config for each plugin:<br>(1) [`plugins.d/e2e.yaml`][16]<br>(2)[`plugins.d/systemdlogs.yaml`][17]|<br>[`examples/quickstart/10-configmaps.yaml`][11]
-|*Kubernetes component definitions*|The various K8s objects that need to be defined for Sonobuoy to run as a containerized app.|N/A (manifest only)|N/A|The example splits this into two manifests:<br>(1) [`rbac.yaml`][12]<br>(2) [`pod.yaml`][13]|
+|*Data configuration*| What Sonobuoy records, how, and where. |*ANY of the following*:<br>(1) `config.json` in the directory where `sonobuoy` is executed<br>(2) `/etc/sonobuoy/config.json`<br>(3) `$SONOBUOY_CONFIG`<br><br>|[`config.json`][10]|<br> [`examples/quickstart/components/10-configmaps.yaml`][11]<br><br>*The YAML file is basically a wrapper for the `config.json` file, which allows it to be properly mounted onto the cluster's Sonobuoy pod.* <br><br>
+|*Plugin configuration*|Settings for each plugin integration.|*ANY of the following*:<br>(1) `/etc/sonobuoy/plugins.d`<br>(2) `$HOME/.sonobuoy/plugins.d`<br>(3) `./plugins.d`<br>(4) `PluginSearchPath` (override from the data configuration) <br><br>| There is a YAML config for each plugin:<br>(1) [`plugins.d/e2e.yaml`][16]<br>(2)[`plugins.d/systemdlogs.yaml`][17]|<br>[`examples/quickstart/components/10-configmaps.yaml`][11]<br><br>*Same comment about the YAML file as above.*
+|*Kubernetes component definitions*|The various K8s objects that need to be defined for Sonobuoy to run as a containerized app.|N/A (manifest only)|N/A|The example splits this into two manifests:<br>(1) [`examples/quickstart/components/00-rbac.yaml`][12]<br>(2) [`examples/quickstart/components/20-pod.yaml`][13]|
 
 
 
-*NOTE: The configuration for the containerized example is split into three manifests for the reader's sake---one covering the data and plugin configs, and two covering the Kubernetes component definitions. However, all of these specifications would still work if consolidated into one YAML file, as long as RBAC settings are defined first.*
+*NOTE: The configuration for the containerized example is split into three manifests for the reader's sake---one covering the data and plugin configs, and two covering the Kubernetes component definitions. However, all of these specifications would still work if consolidated into one YAML file (as in [`examples/quickstart/aggregate.yaml`][18]), as long as any RBAC settings are defined first. *
 
 
 ## Data configuration
@@ -130,11 +130,11 @@ For more details on creating custom plugins, see the [plugin reference][9].
 
 ### Overview
 
-*This section of the configuration is only applicable when Sonobuoy is run as a containerized pod.*
+*This section of the configuration is only applicable when running Sonobuoy as a containerized pod.*
 
-While the other configuration sections control Sonobuoy's data collection, this part defines the required Kubernetes resources to actually run Sonobuoy on the cluster. In the quickstart example, it is split into two manifests:
-1. `rbac.yaml`: This sets up gives Sonobuoy the necessary permissions to query the API server.
-2. `pod.yaml`: This sets up the Sonobuoy Pod and associated Service.
+While the other configuration sections control Sonobuoy's data collection, this part defines the Kubernetes resources required to actually run Sonobuoy on your cluster. In the [`examples/quickstart/components`][19] example, it is split into two manifests:
+1. `00-rbac.yaml`: This sets up gives Sonobuoy the necessary permissions to query the API server.
+2. `20-pod.yaml`: This sets up the Sonobuoy Pod and associated Service.
 
 ### RBAC
 
@@ -175,10 +175,12 @@ However, ensure that your pod declaration has addressed the following aspects, w
 [8]: #pod
 [9]: plugins.md
 [10]: /config.json
-[11]: /examples/quickstart/10-configmaps.yaml
-[12]: /examples/quickstart/rbac.yaml
-[13]: /examples/quickstart/pod.yaml
+[11]: /examples/quickstart/components/10-configmaps.yaml
+[12]: /examples/quickstart/components/00-rbac.yaml
+[13]: /examples/quickstart/components/20-pod.yaml
 [14]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 [15]: https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/
 [16]: /plugins.d/e2e.yaml
 [17]: plugins.d/systemdlogs.yaml
+[18]: /examples/quickstart/aggregate.yaml
+[19]: /examples/quickstart/components

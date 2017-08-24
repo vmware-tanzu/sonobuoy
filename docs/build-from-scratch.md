@@ -65,7 +65,7 @@ The results will be placed in the `ResultsDir` specified by `config.json`, where
 > * Which container image is being used
 > * Where your Sonobuoy output will be written
 
-You should create a directory for your YAML manifest files. Feel free to use the [provided manifests][8] as a template to get started.
+You should create a directory for your YAML manifest files. Feel free to use the [provided manifests][8] as a template to get started, or the [ksonnet files][9] to autogenerate the YAML more quickly.
 
 *Standup*
 ```
@@ -88,3 +88,4 @@ kubectl delete -f <YAML_CONFIG_DIR>
 [6]: /docs/plugins.md#overview
 [7]: configuration.md#sonobuoy-config
 [8]: /examples/quickstart
+[9]: /examples/ksonnet
