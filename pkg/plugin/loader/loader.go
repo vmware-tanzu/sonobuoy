@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/ghodss/yaml"
-	"github.com/golang/glog"
+	"github.com/sirupsen/logrus"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/daemonset"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/job"
@@ -44,7 +44,7 @@ func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.S
 
 	for _, dir := range searchPath {
 		wd, _ := os.Getwd()
-		glog.Infof("Scanning plugins in %v (pwd: %v)", dir, wd)
+		logrus.Infof("Scanning plugins in %v (pwd: %v)", dir, wd)
 
 		// We only care about configured plugin directories that exist,
 		// since we may have a broad search path.
@@ -123,7 +123,7 @@ func scanPlugins(dir string) ([]plugin.Definition, error) {
 
 		pluginDef, err := loaderFn(y)
 		if err != nil {
-			glog.Warningf("Error unmarshalling bytes at %v: %v", fullPath, err)
+			logrus.Warningf("Error unmarshalling bytes at %v: %v", fullPath, err)
 			continue
 		}
 
@@ -132,7 +132,7 @@ func scanPlugins(dir string) ([]plugin.Definition, error) {
 		// they'll get an error then.
 		err = loadPluginDefinition(pluginDef)
 		if err != nil {
-			glog.Warningf("Error loading plugin at %v: %v", fullPath, err)
+			logrus.Warningf("Error loading plugin at %v: %v", fullPath, err)
 			continue
 		}
 
@@ -193,7 +193,7 @@ func loadPluginDefinition(ret *plugin.Definition) error {
 	// Decode *that* yaml into a Pod
 	var placeholderPod v1.Pod
 	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), placeholderPodYaml, &placeholderPod); err != nil {
-		glog.Fatalf("Could not decode pod spec: %v", err)
+		logrus.Fatalf("Could not decode pod spec: %v", err)
 	}
 	ret.PodSpec = placeholderPod.Spec
 

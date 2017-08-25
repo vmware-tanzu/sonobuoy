@@ -21,7 +21,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/golang/glog"
+	"github.com/sirupsen/logrus"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -43,7 +43,7 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 		return errors.WithStack(err)
 	}
 
-	glog.Info("Collecting Pod Logs...")
+	logrus.Info("Collecting Pod Logs...")
 
 	// 2 - Foreach pod, dump each of its containers' logs in a tree in the following location:
 	//   pods/:podname/logs/:containername.txt
