@@ -19,17 +19,16 @@ package errlog
 import (
 	"fmt"
 
-	"github.com/golang/glog"
+	"github.com/sirupsen/logrus"
 )
 
 var DebugOutput = false
 
 func LogError(err error) {
 	if DebugOutput {
-		// Print the error message (%v) and the stack trace (%+v) of
-		// the error in the same log statement
-		glog.ErrorDepth(1, fmt.Sprintf("%v\n%+v", err, err))
+		// Print the error message with the stack trace (%+v) in the "trace" field
+		logrus.WithField("trace", fmt.Sprintf("%+v", err)).Error(err)
 	} else {
-		glog.ErrorDepth(1, err.Error())
+		logrus.Error(err.Error())
 	}
 }

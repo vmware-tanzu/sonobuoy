@@ -21,7 +21,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/golang/glog"
+	"github.com/sirupsen/logrus"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -194,7 +194,7 @@ func queryNonNsResource(resourceKind string, kubeClient kubernetes.Interface) (r
 // writing them out to <resultsdir>/resources/ns/<ns>/*.json
 // TODO: Eliminate dependencies from config.Config and pass in data
 func QueryNSResources(kubeClient kubernetes.Interface, recorder *QueryRecorder, ns string, cfg *config.Config) error {
-	glog.Infof("Running ns query (%v)", ns)
+	logrus.Infof("Running ns query (%v)", ns)
 
 	// 1. Create the parent directory we will use to store the results
 	outdir := path.Join(cfg.OutputDir(), NSResourceLocation, ns)
@@ -206,7 +206,7 @@ func QueryNSResources(kubeClient kubernetes.Interface, recorder *QueryRecorder, 
 	opts := metav1.ListOptions{}
 	if len(cfg.Filters.LabelSelector) > 0 {
 		if _, err := labels.Parse(cfg.Filters.LabelSelector); err != nil {
-			glog.Warningf("Labelselector %v failed to parse with error %v", cfg.Filters.LabelSelector, err)
+			logrus.Warningf("Labelselector %v failed to parse with error %v", cfg.Filters.LabelSelector, err)
 		} else {
 			opts.LabelSelector = cfg.Filters.LabelSelector
 		}
@@ -243,7 +243,7 @@ func QueryNSResources(kubeClient kubernetes.Interface, recorder *QueryRecorder, 
 // them out to <resultsdir>/resources/non-ns/*.json
 // TODO: Eliminate dependencies from config.Config and pass in data
 func QueryClusterResources(kubeClient kubernetes.Interface, recorder *QueryRecorder, cfg *config.Config) error {
-	glog.Infof("Running non-ns query")
+	logrus.Infof("Running non-ns query")
 
 	resources := cfg.FilterResources(config.ClusterResources)
 
