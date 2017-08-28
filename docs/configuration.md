@@ -72,6 +72,7 @@ See [Parameter Reference][3] for a more detailed description of each setting.
         "RoleBindings",
         "Roles",
         "Secrets",
+        "ServerGroups",
         "ServiceAccounts",
         "Services",
         "StatefulSets"
