@@ -81,6 +81,11 @@ See [Parameter Reference][3] for a more detailed description of each setting.
         "LabelSelector": "",
         "Namespaces": ".*"
     },
+    "Limits": {
+        "PodLogs": {
+            "LimitTime": "24h"
+        }
+    },
     "Server": {
         "advertiseaddress": "",
         "bindaddress": "0.0.0.0",
@@ -105,6 +110,8 @@ See [Parameter Reference][3] for a more detailed description of each setting.
 | Resources | String Array | An array containing all possible resources | *See the [sample JSON][2] above for a list of all available resource types.*<br><br>Indicates to Sonobuoy what type of data it should be recording |
 | Filters.LabelSelector | String | "" | Uses standard Kubernetes [label selector syntax][14] to filter which resource objects are recorded |
 | Filters.Namespaces | String | ".*" | Uses regex on namespaces to filter which resource objects are recorded |
+| Limits.PodLogs.LimitTime | String | "" | Limits how far back in time to gather Pod Logs, leave blank for no limit (e.g. "24h", "60m". See https://golang.org/pkg/time/#ParseDuration for details.) |
+| Limits.PodLogs.LimitSize | String | "" | Limits the size of Pod Logs to gather, per container, leave blank for no limit (e.g. "10 MB", "1 GB", etc.) |
 | Server.advertiseaddress | String | `$SONOBUOY_ADVERTISE_IP` &#124;&#124; the current server's `os.Hostname()`| *Only used if Sonobuoy dispatches agent pods to collect node-specific information*<br><br>The IP address that remote Sonobuoy agents send information back to, in order for disparate data to be aggregated into a single report |
 | Server.bindaddress | String | "0.0.0.0" | *See `Server.advertiseaddress` for context.*<br><br>If data aggregation is required, an HTTP server is started to handle the worker requests. This is the address that server binds to. |
 | Server.bindport | Int | 8080 | The port for the HTTP server mentioned in *Server.bindaddress*. |
