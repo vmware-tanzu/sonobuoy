@@ -3,7 +3,8 @@
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
 	"Packages": [
-		"./..."
+		"./pkg/...",
+		"./cmd/..."
 	],
 	"Deps": [
 		{
@@ -207,6 +208,11 @@
 			"Rev": "4d0e916071f68db74f8a73926335f809396d6b42"
 		},
 		{
+			"ImportPath": "github.com/rifflock/lfshook",
+			"Comment": "1.7-2-g271f866",
+			"Rev": "271f86636484f5892d5d85f8f0e6c77316bc2a49"
+		},
+		{
 			"ImportPath": "github.com/satori/go.uuid",
 			"Comment": "v1.1.0-8-g5bf94b6",
 			"Rev": "5bf94b69c6b68ee1b541973bb8e1144db23a194b"
@@ -214,6 +220,11 @@
 		{
 			"ImportPath": "github.com/sethgrid/pester",
 			"Rev": "4f4c0a67b6496764028e1ab9fd8dfb630282ed2f"
+		},
+		{
+			"ImportPath": "github.com/sirupsen/logrus",
+			"Comment": "v1.0.3-11-g89742ae",
+			"Rev": "89742aefa4b206dcf400792f3bd35b542998eb3b"
 		},
 		{
 			"ImportPath": "github.com/spf13/afero",
