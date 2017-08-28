@@ -34,6 +34,7 @@
         "ResourceQuotas",
         "RoleBindings",
         "Roles",
+        "ServerGroups",
         "ServiceAccounts",
         "Services",
         "StatefulSets"

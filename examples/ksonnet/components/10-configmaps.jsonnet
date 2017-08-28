@@ -64,6 +64,7 @@ local sonobuoyConfigData = {
         "ResourceQuotas",
         "RoleBindings",
         "Roles",
+        "ServerGroups",
         "ServiceAccounts",
         "Services",
         "StatefulSets"
