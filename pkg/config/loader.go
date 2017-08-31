@@ -19,6 +19,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -89,8 +90,35 @@ func LoadConfig() (*Config, error) {
 
 	// 5 - Load any plugins we have
 	err = loadAllPlugins(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	// 6 - Return any validation errors
+	validationErrs := cfg.Validate()
+	if len(validationErrs) > 0 {
+		errstrs := make([]string, len(validationErrs))
+		for i := range validationErrs {
+			errstrs[i] = validationErrs[i].Error()
+		}
+
+		return nil, errors.Errorf("invalid configuration: %v", strings.Join(errstrs, ", "))
+	}
 
 	return cfg, err
+}
+
+// Validate returns a list of errors for the configuration, if any are found.
+func (cfg *Config) Validate() (errors []error) {
+	if _, defaulted, err := cfg.Limits.PodLogs.sizeLimitBytes(); err != nil && !defaulted {
+		errors = append(errors, err)
+	}
+
+	if _, defaulted, err := cfg.Limits.PodLogs.timeLimitDuration(); err != nil && !defaulted {
+		errors = append(errors, err)
+	}
+
+	return errors
 }
 
 // LoadClient creates a kube-clientset, using given sonobuoy configuration

@@ -20,10 +20,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -44,6 +45,8 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 	}
 
 	logrus.Info("Collecting Pod Logs...")
+	limitBytes := cfg.Limits.PodLogs.SizeLimitBytes(0)
+	limitTime := int64(cfg.Limits.PodLogs.TimeLimitDuration(0) / time.Second)
 
 	// 2 - Foreach pod, dump each of its containers' logs in a tree in the following location:
 	//   pods/:podname/logs/:containername.txt
@@ -52,7 +55,9 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 			body, err := kubeClient.CoreV1().Pods(ns).GetLogs(
 				pod.Name,
 				&v1.PodLogOptions{
-					Container: container.Name,
+					Container:    container.Name,
+					LimitBytes:   &limitBytes,
+					SinceSeconds: &limitTime,
 				},
 			).Do().Raw()
 

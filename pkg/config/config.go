@@ -18,7 +18,9 @@ package config
 
 import (
 	"path"
+	"time"
 
+	"github.com/c2h5oh/datasize"
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/satori/go.uuid"
@@ -111,6 +113,8 @@ type Config struct {
 	///////////////////////////////////////////////
 	Filters FilterOptions `json:"Filters" mapstructure:"Filters"`
 
+	Limits LimitConfig `json:"Limits" mapstructure:"Limits"`
+
 	///////////////////////////////////////////////
 	// plugin configurations settings
 	///////////////////////////////////////////////
@@ -119,6 +123,18 @@ type Config struct {
 	PluginSearchPath []string                 `json:"PluginSearchPath" mapstructure:"PluginSearchPath"`
 	PluginNamespace  string                   `json:"PluginNamespace" mapstructure:"PluginNamespace"`
 	LoadedPlugins    []plugin.Interface       // this is assigned when plugins are loaded.
+}
+
+// LimitConfig is a configuration on the limits of sizes of various responses.
+type LimitConfig struct {
+	PodLogs SizeOrTimeLimitConfig `json:"PodLogs" mapstructure:"PodLogs"`
+}
+
+// SizeOrTimeLimitConfig represents configuration that limits the size of
+// something either by a total disk size, or by a length of time.
+type SizeOrTimeLimitConfig struct {
+	LimitSize string `json:"LimitSize" mapstructure:"LimitSize"`
+	LimitTime string `json:"LimitTime" mapstructure:"LimitTime"`
 }
 
 // FilterResources is a utility function used to parse Resources
@@ -139,6 +155,52 @@ func (cfg *Config) FilterResources(filter []string) map[string]bool {
 // UUID for this run.
 func (cfg *Config) OutputDir() string {
 	return path.Join(cfg.ResultsDir, cfg.UUID)
+}
+
+// SizeLimitBytes returns how many bytes the configuration is set to limit,
+// returning defaultVal if not set.
+func (c SizeOrTimeLimitConfig) SizeLimitBytes(defaultVal int64) int64 {
+	val, defaulted, err := c.sizeLimitBytes()
+
+	// Ignore error, since we should have already caught it in validation
+	if err != nil || defaulted {
+		return defaultVal
+	}
+
+	return val
+}
+
+func (c SizeOrTimeLimitConfig) sizeLimitBytes() (val int64, defaulted bool, err error) {
+	str := c.LimitSize
+	if str == "" {
+		return 0, true, nil
+	}
+
+	var bs datasize.ByteSize
+	err = bs.UnmarshalText([]byte(str))
+	return int64(bs.Bytes()), false, err
+}
+
+// TimeLimitDuration returns the duration the configuration is set to limit, returning defaultVal if not set.
+func (c SizeOrTimeLimitConfig) TimeLimitDuration(defaultVal time.Duration) time.Duration {
+	val, defaulted, err := c.timeLimitDuration()
+
+	// Ignore error, since we should have already caught it in validation
+	if err != nil || defaulted {
+		return defaultVal
+	}
+
+	return val
+}
+
+func (c SizeOrTimeLimitConfig) timeLimitDuration() (val time.Duration, defaulted bool, err error) {
+	str := c.LimitTime
+	if str == "" {
+		return 0, true, nil
+	}
+
+	val, err = time.ParseDuration(str)
+	return val, false, err
 }
 
 // NewWithDefaults returns a newly-constructed Config object with default values.

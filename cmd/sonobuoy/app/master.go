@@ -22,6 +22,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/discovery"
 	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -47,7 +48,7 @@ func runMaster(cmd *cobra.Command, args []string) {
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		errlog.LogError(err)
+		errlog.LogError(errors.Wrap(err, "error loading sonobuoy configuration"))
 		os.Exit(1)
 	}
 
