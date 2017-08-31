@@ -20,9 +20,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -43,7 +43,7 @@ import (
 func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, outdir string) error {
 	// Construct a list of things we'll need to dispatch
 	if len(plugins) == 0 {
-		glog.Info("Skipping host data gathering: no plugins defined")
+		logrus.Info("Skipping host data gathering: no plugins defined")
 		return nil
 	}
 
@@ -62,7 +62,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		expectedResults = append(expectedResults, p.ExpectedResults(nodes.Items)...)
 	}
 
-	glog.V(5).Infof("Starting server Expected Results: %v", expectedResults)
+	logrus.Infof("Starting server Expected Results: %v", expectedResults)
 
 	// 1. Await results from each plugin
 	aggr := NewAggregator(outdir+"/plugins", expectedResults)
@@ -84,7 +84,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 	// 3. Launch each plugin, to dispatch workers which submit the results back
 	for _, p := range plugins {
-		glog.Infof("Running (%v) plugin", p.GetName())
+		logrus.Infof("Running (%v) plugin", p.GetName())
 		err := p.Run(client)
 		// Have the plugin monitor for errors
 		go p.Monitor(client, nodes.Items, monitorCh)

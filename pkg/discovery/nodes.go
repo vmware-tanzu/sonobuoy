@@ -21,8 +21,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/golang/glog"
 	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -38,7 +38,7 @@ type nodeData struct {
 // kubernetes API.  That is, its `healthz` and `configz` endpoints, which are
 // not "resources" per se, although they are accessible through the apiserver.
 func gatherNodeData(kubeClient kubernetes.Interface, cfg *config.Config) error {
-	glog.Info("Collecting Node Configuration and Health...")
+	logrus.Info("Collecting Node Configuration and Health...")
 
 	nodelist, err := kubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
 	if err != nil {
@@ -52,7 +52,7 @@ func gatherNodeData(kubeClient kubernetes.Interface, cfg *config.Config) error {
 		restclient := kubeClient.CoreV1().RESTClient()
 
 		out := path.Join(cfg.OutputDir(), HostsLocation, node.Name)
-		glog.V(3).Infof("Creating host results for %v under %v\n", node.Name, out)
+		logrus.Infof("Creating host results for %v under %v\n", node.Name, out)
 		if err = os.MkdirAll(out, 0755); err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func gatherNodeData(kubeClient kubernetes.Interface, cfg *config.Config) error {
 			if result, err := request.Do().Raw(); err == nil {
 				json.Unmarshal(result, &configz)
 			} else {
-				glog.Warningf("Could not get configz endpoint for node %v: %v", node.Name, err)
+				logrus.Warningf("Could not get configz endpoint for node %v: %v", node.Name, err)
 			}
 
 			return configz, err
@@ -87,7 +87,7 @@ func gatherNodeData(kubeClient kubernetes.Interface, cfg *config.Config) error {
 				result.StatusCode(&healthstatus)
 				health["status"] = healthstatus
 			} else {
-				glog.Warningf("Could not get healthz endpoint for node %v: %v", node.Name, result.Error())
+				logrus.Warningf("Could not get healthz endpoint for node %v: %v", node.Name, result.Error())
 			}
 			return health, err
 		})

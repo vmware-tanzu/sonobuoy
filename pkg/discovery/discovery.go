@@ -23,17 +23,43 @@ import (
 	"path"
 	"time"
 
-	"github.com/golang/glog"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	pluginaggregation "github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 	"github.com/pkg/errors"
+	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
 	"github.com/viniciuschiele/tarx"
 	"k8s.io/client-go/kubernetes"
 )
 
 // Run is the main entrypoint for discovery
 func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
+	t := time.Now()
+
+	// 1. Create the directory which will store the results, including the
+	// `meta` directory inside it (which we always need regardless of
+	// config)
+	outpath := path.Join(cfg.ResultsDir, cfg.UUID)
+	metapath := path.Join(outpath, MetaLocation)
+	err := os.MkdirAll(metapath, 0755)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// Write logs to the configured results location. All log levels
+	// should write to the same log file
+	pathmap := make(lfshook.PathMap)
+	logfile := path.Join(metapath, "run.log")
+	for _, level := range logrus.AllLevels {
+		pathmap[level] = logfile
+	}
+
+	// Configure the logrus hook
+	hook := lfshook.NewHook(pathmap)
+	hook.SetFormatter(&logrus.JSONFormatter{})
+	logrus.AddHook(hook)
+
 	// closure used to collect and report errors.
 	trackErrorsFor := func(action string) func(error) {
 		return func(err error) {
@@ -44,19 +70,8 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
 		}
 	}
 
-	t := time.Now()
-	// 1. Get the list of namespaces and apply the regex filter on the namespace
+	// 2. Get the list of namespaces and apply the regex filter on the namespace
 	nslist := FilterNamespaces(kubeClient, cfg.Filters.Namespaces)
-
-	// 2. Create the directory which will store the results, including the
-	// `meta` directory inside it (which we always need regardless of
-	// config)
-	outpath := path.Join(cfg.ResultsDir, cfg.UUID)
-	metapath := path.Join(outpath, MetaLocation)
-	err := os.MkdirAll(metapath, 0755)
-	if err != nil {
-		panic(err.Error())
-	}
 
 	// 3. Dump the config.json we used to run our test
 	if blob, err := json.Marshal(cfg); err == nil {
@@ -94,10 +109,10 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
 	tb := cfg.ResultsDir + "/" + t.Format("200601021504") + "_sonobuoy_" + cfg.UUID + ".tar.gz"
 	err = tarx.Compress(tb, outpath, &tarx.CompressOptions{Compression: tarx.Gzip})
 	if err == nil {
-		err = os.RemoveAll(outpath)
+		defer os.RemoveAll(outpath)
 	}
 	trackErrorsFor("assembling results tarball")(err)
-	glog.Infof("Results available at %v", tb)
+	logrus.Infof("Results available at %v", tb)
 
 	return errCount
 }

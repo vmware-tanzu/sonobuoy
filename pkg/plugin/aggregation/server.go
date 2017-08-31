@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/golang/glog"
+	"github.com/sirupsen/logrus"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
 )
@@ -100,7 +100,7 @@ func (s *Server) Start() error {
 	}
 	defer l.Close()
 
-	glog.Infof("Listening for incoming results on %v\n", s.BindAddr)
+	logrus.Infof("Listening for incoming results on %v\n", s.BindAddr)
 
 	done := make(chan error)
 	go func() {
@@ -158,7 +158,7 @@ func (s *Server) nodeResultsHandler(w http.ResponseWriter, r *http.Request) {
 	node, file := parts[0], parts[1]
 	resultType, extension := parseFileName(file)
 
-	glog.Infof("got %v result from %v\n", resultType, node)
+	logrus.Infof("got %v result from %v\n", resultType, node)
 
 	result := &plugin.Result{
 		ResultType: resultType,
@@ -182,7 +182,7 @@ func (s *Server) nodeResultsHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) globalResultsHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) != 1 {
-		glog.Warningf("Returning 404 for request to %v", r.URL.Path)
+		logrus.Warningf("Returning 404 for request to %v", r.URL.Path)
 		http.NotFound(w, r)
 		return
 	}
@@ -191,7 +191,7 @@ func (s *Server) globalResultsHandler(w http.ResponseWriter, r *http.Request) {
 	// the HTTP path. (As opposed to POST, where typically the clients would post
 	// to a base URL and the server picks the final resource path.)
 	if r.Method != http.MethodPut {
-		glog.Warningf("Got unsupported method %v from request to %v", r.Method, r.URL.Path)
+		logrus.Warningf("Got unsupported method %v from request to %v", r.Method, r.URL.Path)
 		http.Error(
 			w,
 			fmt.Sprintf("Unsupported method %s.  Supported methods are: %v", r.Method, http.MethodPut),
@@ -201,7 +201,7 @@ func (s *Server) globalResultsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resultType, extension := parseFileName(parts[0])
-	glog.Infof("got %v result\n", resultType)
+	logrus.Infof("got %v result\n", resultType)
 
 	result := &plugin.Result{
 		NodeName:   "",

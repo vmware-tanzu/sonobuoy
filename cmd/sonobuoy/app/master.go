@@ -19,10 +19,10 @@ package app
 import (
 	"os"
 
-	"github.com/golang/glog"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/discovery"
 	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -64,7 +64,7 @@ func runMaster(cmd *cobra.Command, args []string) {
 	}
 
 	if noExit {
-		glog.Info("no-exit was specified, sonobuoy is now blocking")
+		logrus.Info("no-exit was specified, sonobuoy is now blocking")
 		select {}
 	}
 
