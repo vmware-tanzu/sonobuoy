@@ -21,6 +21,9 @@ import (
 	"os"
 	"path"
 	"time"
+
+	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/pkg/errors"
 )
 
 type QueryRecorder struct {
@@ -42,6 +45,9 @@ type queryData struct {
 }
 
 func (q *QueryRecorder) RecordQuery(name string, namespace string, duration time.Duration, recerr error) {
+	if recerr != nil {
+		errlog.LogError(errors.Wrapf(recerr, "error querying %v", name))
+	}
 	summary := &queryData{
 		QueryObj:    name,
 		Namespace:   namespace,

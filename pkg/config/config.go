@@ -35,7 +35,6 @@ var ClusterResources = []string{
 	"Nodes",
 	"PersistentVolumes",
 	"PodSecurityPolicies",
-	"ServerVersion",
 	"StorageClasses",
 	"ThirdPartyResources",
 }
@@ -55,7 +54,6 @@ var NamespacedResources = []string{
 	"LimitRanges",
 	"PersistentVolumeClaims",
 	"PodDisruptionBudgets",
-	"PodLogs",
 	"PodPresets",
 	"PodTemplates",
 	"Pods",
@@ -68,6 +66,14 @@ var NamespacedResources = []string{
 	"ServiceAccounts",
 	"Services",
 	"StatefulSets",
+}
+
+// SpecialResources are resources that aren't queried (or stored) the same was
+// as the rest, so need special casing for querying them.
+var SpecialResources = []string{
+	"PodLogs",
+	"ServerGroups",
+	"ServerVersion",
 }
 
 // FilterOptions allow operators to select sets to include in a report
@@ -147,6 +153,7 @@ func NewWithDefaults() *Config {
 
 	cfg.Resources = ClusterResources
 	cfg.Resources = append(cfg.Resources, NamespacedResources...)
+	cfg.Resources = append(cfg.Resources, SpecialResources...)
 
 	cfg.PluginNamespace = metav1.NamespaceSystem
 
