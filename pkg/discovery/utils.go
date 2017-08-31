@@ -22,8 +22,8 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/golang/glog"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -35,7 +35,7 @@ func FilterNamespaces(kubeClient kubernetes.Interface, filter string) []string {
 	nslist, err := kubeClient.CoreV1().Namespaces().List(metav1.ListOptions{})
 	if err == nil {
 		for _, ns := range nslist.Items {
-			glog.V(5).Infof("Namespace %v Matched=%v", ns.Name, re.MatchString(ns.Name))
+			logrus.Infof("Namespace %v Matched=%v", ns.Name, re.MatchString(ns.Name))
 			if re.MatchString(ns.Name) {
 				validns = append(validns, ns.Name)
 			}
