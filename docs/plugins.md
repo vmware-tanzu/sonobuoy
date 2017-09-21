@@ -161,7 +161,7 @@ See the [`/build`][14] directory for the source code used to build these plugins
 [2]: #under-the-hood
 [3]: #example
 [4]: #parameter-reference
-[5]: available-plugins
+[5]: #available-plugins
 [6]: img/sonobuoy-plugins.png
 [7]: /pkg/plugin/driver
 [8]: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
