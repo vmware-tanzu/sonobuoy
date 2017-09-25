@@ -17,11 +17,13 @@ limitations under the License.
 package v1beta1
 
 import (
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// +genclient=true
-// +nonNamespaced=true
+// +genclient
+// +genclient:nonNamespaced
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // StorageClass describes the parameters for a class of storage for
 // which PersistentVolumes can be dynamically provisioned.
@@ -42,7 +44,24 @@ type StorageClass struct {
 	// create volumes of this storage class.
 	// +optional
 	Parameters map[string]string `json:"parameters,omitempty" protobuf:"bytes,3,rep,name=parameters"`
+
+	// Dynamically provisioned PersistentVolumes of this storage class are
+	// created with this reclaimPolicy. Defaults to Delete.
+	// +optional
+	ReclaimPolicy *v1.PersistentVolumeReclaimPolicy `json:"reclaimPolicy,omitempty" protobuf:"bytes,4,opt,name=reclaimPolicy,casttype=k8s.io/api/core/v1.PersistentVolumeReclaimPolicy"`
+
+	// Dynamically provisioned PersistentVolumes of this storage class are
+	// created with these mountOptions, e.g. ["ro", "soft"]. Not validated -
+	// mount of the PVs will simply fail if one is invalid.
+	// +optional
+	MountOptions []string `json:"mountOptions,omitempty" protobuf:"bytes,5,opt,name=mountOptions"`
+
+	// AllowVolumeExpansion shows whether the storage class allow volume expand
+	// +optional
+	AllowVolumeExpansion *bool `json:"allowVolumeExpansion,omitempty" protobuf:"varint,6,opt,name=allowVolumeExpansion"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // StorageClassList is a collection of storage classes.
 type StorageClassList struct {
