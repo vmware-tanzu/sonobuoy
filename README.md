@@ -120,11 +120,12 @@ Thanks for taking the time to join our community and start contributing!
 Conduct][12] before contributing.
 * See [CONTRIBUTING.md][11] for instructions on the
 developer certificate of origin that we require.
+* There is a [mailing list][16] and [Slack channel][17] if you want to interact with 
+other members of the community
 
 #### Pull requests
 
 * We welcome pull requests. Feel free to dig through the [issues][10] and jump in.
-
 
 ## Changelog
 
@@ -146,3 +147,5 @@ See [the list of releases](/CHANGELOG.md) to find out about feature changes.
 [13]: /docs/conformance-testing.md
 [14]: https://github.com/systemd/systemd
 [15]: #3-tear-down
+[16]: https://groups.google.com/forum/#!forum/heptio-sonobuoy
+[17]: https://kubernetes.slack.com/messages/sonobuoy
