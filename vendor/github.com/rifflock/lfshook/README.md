@@ -5,7 +5,7 @@ Sometimes developers like to write directly to a file on the filesystem. This is
 ## Example
 ```go
 import (
-	log "github.com/sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	"github.com/rifflock/lfshook"
 )
 
@@ -17,7 +17,7 @@ func NewLogger( config map[string]interface{} ) *log.Logger {
 	}
 
 	Log = log.New()
-	Log.SetFormatter(&log.JSONFormatter{})
+	Log.Formatter = new(log.JSONFormatter)
 	Log.Hooks.Add(lfshook.NewHook(lfshook.PathMap{
 		log.InfoLevel : "/var/log/info.log",
 		log.ErrorLevel : "/var/log/error.log",
