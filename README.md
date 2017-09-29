@@ -15,6 +15,15 @@ Its selective data dumps of Kubernetes resource objects and cluster nodes allow 
 * Workload debugging
 * Custom data collection via extensible plugins
 
+## Up and running
+
+To easily get a Sonobuoy scan started on your cluster, use the browser-based [Sonobuoy Scanner tool][18]. Sonobuoy Scanner also provides a more user-friendly way of viewing your scan results.
+
+*Note that Sonobuoy Scanner runs conformance tests only. To learn how to run Sonobuoy with your own YAML files, which allows for further configuration and customization, see the [Quickstart][19] section below.*
+
+![tarball overview screenshot][20]
+
+
 ## Quickstart
 
 > Heptio provides prebuilt Sonobuoy container images in its Google Container Registry (*gcr.io/heptio-images*). For the sake of faster setup on your cluster, **this quickstart pulls from this registry to skip the container build process**. You can use this same process to deploy Sonobuoy to production.
@@ -120,7 +129,7 @@ Thanks for taking the time to join our community and start contributing!
 Conduct][12] before contributing.
 * See [CONTRIBUTING.md][11] for instructions on the
 developer certificate of origin that we require.
-* There is a [mailing list][16] and [Slack channel][17] if you want to interact with 
+* There is a [mailing list][16] and [Slack channel][17] if you want to interact with
 other members of the community
 
 #### Pull requests
@@ -149,3 +158,6 @@ See [the list of releases](/CHANGELOG.md) to find out about feature changes.
 [15]: #3-tear-down
 [16]: https://groups.google.com/forum/#!forum/heptio-sonobuoy
 [17]: https://kubernetes.slack.com/messages/sonobuoy
+[18]: https://scanner.heptio.com/
+[19]: #quickstart
+[20]: docs/img/scanner.gif
