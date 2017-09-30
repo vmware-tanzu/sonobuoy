@@ -44,7 +44,7 @@ To customize the set of tests that will be run as part of the report, the follow
 [3]: https://kubernetes.io/docs/admin/node-conformance/
 [4]: https://github.com/kubernetes/community/blob/master/contributors/devel/e2e-tests.md#conformance-tests
 [5]: plugins.md
-[6]: https://github.com/heptio/sonobuoy/blob/master/build/Dockerfile
+[6]: https://github.com/heptio/sonobuoy/blob/master/Dockerfile
 [7]: https://github.com/heptio/sonobuoy/blob/master/plugins.d/e2e.yaml
 [8]: https://github.com/heptio/sonobuoy/blob/master/examples/quickstart/components/10-configmaps.yaml#L81
 [9]: https://github.com/heptio/sonobuoy/blob/master/examples/quickstart/components/10-configmaps.yaml#L71
