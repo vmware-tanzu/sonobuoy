@@ -39,7 +39,6 @@ data:
             "LimitRanges",
             "PersistentVolumeClaims",
             "Pods",
-            "PodLogs",
             "PodDisruptionBudgets",
             "PodPresets",
             "PodTemplates",
@@ -80,7 +79,7 @@ data:
       - env:
         - name: E2E_FOCUS
           value: Pods should be submitted and removed
-        image: gcr.io/heptio-images/kube-conformance:latest
+        image: gcr.io/heptio-images/kube-conformance:v1.8.0
         imagePullPolicy: Always
         name: e2e
         volumeMounts:
