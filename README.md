@@ -160,4 +160,4 @@ See [the list of releases](/CHANGELOG.md) to find out about feature changes.
 [17]: https://kubernetes.slack.com/messages/sonobuoy
 [18]: https://scanner.heptio.com/
 [19]: #quickstart
-[20]: docs/img/scanner.gif
+[20]: docs/img/scanner.png
