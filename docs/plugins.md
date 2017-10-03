@@ -82,56 +82,56 @@ See [Parameter Reference][4] for descriptions of each of the important config ke
 
 ```
 spec:
+  serviceAccountName: sonobuoy-serviceaccount
   tolerations:
   - key: node-role.kubernetes.io/master
     operator: Exists
     effect: NoSchedule
   - key: CriticalAddonsOnly
     operator: Exists
-
   restartPolicy: Never
-
   containers:
   # (1) This container runs the actual end-to-end tests.
   - name: e2e
     image: gcr.io/heptio-images/kube-conformance:latest
-    imagePullPolicy: IfNotPresent
+    imagePullPolicy: Always
+    # NOTE: Full conformance can take a while depending on your cluster size.
+    # As a result, only a single test is set atm to verify correctness.
+    # Operators that want the complete test results can comment out the
+    # env section.
     env:
     - name: E2E_FOCUS
       value: "Pods should be submitted and removed"
     volumeMounts:
     - name: results
       mountPath: /tmp/results
-
   # (2) This container is the Sonobuoy worker that handles uploads.
-  - name: job
+  - name: sonobuoy-worker
     command:
     - sh
     - -c
-    - /sonobuoy worker job -v 5 --logtostderr && sleep 3600
-
+    - /sonobuoy worker global -v 5 --logtostderr
     env:
     - name: NODE_NAME
       valueFrom:
         fieldRef:
           apiVersion: v1
           fieldPath: spec.nodeName
-
+    - name: RESULTS_DIR
+      value: /tmp/results
     image: gcr.io/heptio-images/sonobuoy:latest
     imagePullPolicy: Always
-
     volumeMounts:
     - name: config
       mountPath: /etc/sonobuoy
     - name: results
       mountPath: /tmp/results
-
   volumes:
   - name: results
     emptyDir: {}
-
   - name: config
     configMap:
+      # This will be rewritten when the JobPlugin driver goes to launch the pod.
       name: __SONOBUOY_CONFIGMAP__
 ```
 
