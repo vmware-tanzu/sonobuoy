@@ -36,6 +36,7 @@ import (
 func GatherResults(waitfile string, url string) error {
 	var inputFileName []byte
 	var err error
+	var outfile *os.File
 
 	// just loop looking for a file.
 	done := false
@@ -60,9 +61,16 @@ func GatherResults(waitfile string, url string) error {
 		url += "." + filenameParts[1]
 	}
 
+	defer func() {
+		if outfile != nil {
+			outfile.Close()
+		}
+	}()
+
 	// transmit back the results file.
 	return DoRequest(url, func() (io.Reader, error) {
-		outfile, err := os.Open(s)
+		outfile, err = os.Open(s)
 		return outfile, errors.WithStack(err)
 	})
+
 }
