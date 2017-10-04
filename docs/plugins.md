@@ -168,7 +168,7 @@ See the [`/build`][14] directory for the source code used to build these plugins
 [9]: /plugins.d/e2e.yaml
 [10]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#taints-and-tolerations-beta-feature
 [11]: /plugins.d/systemdlogs.yaml
-[12]: /examples/quickstart
+[12]: /examples/quickstart.yaml
 [13]: https://github.com/heptio/sonobuoy-plugin-systemd-logs/blob/master/get_systemd_logs.sh
 [14]: /build
 [15]: conformance-testing.md#integration-with-sonobuoy
