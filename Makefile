@@ -17,7 +17,7 @@
 # https://github.com/kubernetes/kubernetes/issues/47920
 
 EXAMPLE_FILES = $(wildcard examples/ksonnet/components/*.jsonnet)
-EXAMPLE_OUTPUT = examples/quickstart/aggregate.yaml $(patsubst examples/ksonnet/components/%.jsonnet,examples/quickstart/components/%.yaml,$(EXAMPLE_FILES))
+EXAMPLE_OUTPUT = examples/quickstart/aggregate.yaml
 KSONNET_BUILD_IMAGE = ksonnet/ksonnet-lib:beta.2
 
 TARGET = sonobuoy
@@ -87,10 +87,7 @@ clean:
 
 generate-examples: latest-ksonnet $(EXAMPLE_OUTPUT)
 
-examples/quickstart/components/%.yaml: examples/ksonnet/components/%.jsonnet
-	$(KUBECFG_CMD)
-
-examples/quickstart/%.yaml: examples/ksonnet/%.jsonnet
+examples/quickstart/%.yaml: examples/ksonnet/%.jsonnet examples/ksonnet/components/*.jsonnet
 	$(KUBECFG_CMD)
 
 latest-ksonnet:

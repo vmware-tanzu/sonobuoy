@@ -60,7 +60,7 @@ Generate the YAML examples:
 make generate-examples
 ```
 
-This should create a collection of YAML files in your `examples/quickstart` directory. Note that the `components` sub-directory exists to help you understand Sonobuoy's different working parts, but is not necessary to run Sonobuoy itself.
+This should create a collection of YAML files in your `examples/quickstart` directory.
 
 To actually deploy a Sonobuoy pod to your cluster, run the following command in the Sonobuoy root directory:
 ```

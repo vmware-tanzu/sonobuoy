@@ -140,7 +140,7 @@ data:
               fieldPath: spec.nodeName
         - name: RESULTS_DIR
           value: /tmp/results
-        image: gcr.io/heptio-images/sonobuoy:latest
+        image: gcr.io/heptio-images/sonobuoy:master
         imagePullPolicy: Always
         name: sonobuoy-worker
         volumeMounts:
@@ -206,7 +206,7 @@ data:
               fieldPath: spec.nodeName
         - name: RESULTS_DIR
           value: /tmp/results
-        image: gcr.io/heptio-images/sonobuoy:latest
+        image: gcr.io/heptio-images/sonobuoy:master
         imagePullPolicy: Always
         name: sonobuoy-worker
         securityContext:
@@ -262,7 +262,7 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: gcr.io/heptio-images/sonobuoy:latest
+    image: gcr.io/heptio-images/sonobuoy:master
     imagePullPolicy: Always
     name: kube-sonobuoy
     volumeMounts:
