@@ -174,7 +174,7 @@ local systemdlogsConfig = {
             value: "/tmp/results",
           },
         ],
-        image: "gcr.io/heptio-images/sonobuoy:latest",
+        image: "gcr.io/heptio-images/sonobuoy:master",
         imagePullPolicy: "Always",
         securityContext: {
           privileged: true,
@@ -274,7 +274,7 @@ local e2eConfig = {
             value: "/tmp/results",
           },
         ],
-        image: "gcr.io/heptio-images/sonobuoy:latest",
+        image: "gcr.io/heptio-images/sonobuoy:master",
         imagePullPolicy: "Always",
         volumeMounts: [
           {

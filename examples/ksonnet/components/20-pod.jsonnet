@@ -42,7 +42,7 @@ local conf = {
     master: {
         name: "kube-sonobuoy",
         command: ["/bin/bash", "-c", "/sonobuoy master --no-exit=true -v 3 --logtostderr"],
-        image: "gcr.io/heptio-images/sonobuoy:latest",
+        image: "gcr.io/heptio-images/sonobuoy:master",
         imagePullPolicy: "Always",
         volumeMounts: [
             {
