@@ -27,11 +27,11 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/ghodss/yaml"
-	"github.com/sirupsen/logrus"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/daemonset"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/job"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -49,6 +49,7 @@ func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.S
 		// We only care about configured plugin directories that exist,
 		// since we may have a broad search path.
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			logrus.Infof("Directory (%v) does not exist", dir)
 			continue
 		}
 
@@ -80,7 +81,7 @@ func loadPlugin(namespace string, dfn plugin.Definition, masterAddress string) (
 	cfg := &plugin.WorkerConfig{
 		ResultType: dfn.ResultType,
 	}
-
+	logrus.Infof("Loading plugin driver %v", dfn.Driver)
 	switch dfn.Driver {
 	case "DaemonSet":
 		cfg.MasterURL = "http://" + masterAddress + "/api/v1/results/by-node"
@@ -111,6 +112,7 @@ func scanPlugins(dir string) ([]plugin.Definition, error) {
 		case ".json":
 			loaderFn = loadJSON
 		default:
+			logrus.Warningf("Unsupported plugin file detected %v", file.Name())
 			continue
 		}
 
