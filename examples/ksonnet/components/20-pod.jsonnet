@@ -51,7 +51,7 @@ local conf = {
             },
             {
                 name: $.volumes[1].name,
-                mountPath: "/etc/sonobuoy/plugins.d",
+                mountPath: "/plugins.d",
             },
             {
                 name: $.volumes[2].name,
