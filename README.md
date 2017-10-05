@@ -15,6 +15,17 @@ Its selective data dumps of Kubernetes resource objects and cluster nodes allow 
 * Workload debugging
 * Custom data collection via extensible plugins
 
+## Supported Versions
+
+*NOTE: The table below only applies to the e2e conformance tests.*
+
+To ensure that your cluster is running the appropriate Kubernetes version for your Sonobuoy release, see the second column of the table below. Otherwise you may encounter the documented issues.
+
+| Sonobuoy Version / Conformance Version | Required K8s Cluster Version | Known Issues |
+|---|---|---|
+| v0.9.0 / 1.8 | >= 1.7 | For earlier cluster versions (e.g. 1.6), the [*downward-api* tests](https://github.com/kubernetes/kubernetes/blob/master/test/e2e/common/downward_api.go) fail because they leverage some API fields that don't exist until 1.7. |
+| v0.8.0 / 1.7 | N/A | N/A |
+
 ## Up and running
 
 To easily get a Sonobuoy scan started on your cluster, use the browser-based [Sonobuoy Scanner tool][18]. Sonobuoy Scanner also provides a more user-friendly way of viewing your scan results.
