@@ -87,7 +87,7 @@ clean:
 
 generate-examples: latest-ksonnet $(EXAMPLE_OUTPUT)
 
-$(EXAMPLE_OUTPUT): examples/ksonnet/quickstart.jsonnet
+$(EXAMPLE_OUTPUT): examples/ksonnet/*.jsonnet examples/ksonnet/components/*.jsonnet
 	$(KUBECFG_CMD)
 
 latest-ksonnet:
