@@ -1,13 +1,13 @@
 # Examples
 
 This directory contains:
-* `ksonnet/` - You can autogenerate sample YAML manifests (e.g. `quickstart.yaml`) with the [ksonnet][0] files in this sub-directory. To do so, execute the `make generate-examples` command in the root of the Sonobuoy repo.
+* `ksonnet/` - You can autogenerate sample YAML manifests (e.g. `quickstart.yaml`) with the [ksonnet][0] files in this sub-directory. To do so, execute the `make generate` command in the root of the Sonobuoy repo.
 
 * `quickstart.yaml` - You can use this YAML config file to quickly deploy a containerized Sonobuoy pod on your cluster.
 
 ## ksonnet/
 
-Sonobuoy's `make generate-examples` command compiles `*.jsonnet` files into YAML. This compilation process uses the [`kubecfg`][2] executable in the [official ksonnet Docker image][1].
+Sonobuoy's `make generate` command compiles `*.jsonnet` files into YAML. This compilation process uses the [`kubecfg`][2] executable in the [official ksonnet Docker image][1].
 
 This sub-directory is itself broken down into:
 * `/components` - Each of the files in this directory covers a fairly distinct part of Sonobuoy's setup. The YAML that they generate is a more human-friendly way of viewing how Sonobuoy's component resources are set up.
