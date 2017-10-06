@@ -38,8 +38,7 @@ To easily get a Sonobuoy scan started on your cluster, use the browser-based [So
 ## Quickstart
 
 > Heptio provides prebuilt Sonobuoy container images in its Google Container Registry (*gcr.io/heptio-images*). For the sake of faster setup on your cluster, **this quickstart pulls from this registry to skip the container build process**. You can use this same process to deploy Sonobuoy to production.
->
-> See [Build From Scratch][4] for instructions on building Sonobuoy yourself.
+
 
 This guide executes a Sonobuoy run on your cluster, and records the following results:
 * Basic info about your cluster's hosts, Kubernetes resources, and versions.
@@ -68,7 +67,7 @@ The environment variable you set here indicates whether RBAC-related resources s
 
 Generate the YAML example:
 ```
-make generate-examples
+make generate
 ```
 
 This should create `examples/quickstart.yaml`.
@@ -155,7 +154,6 @@ See [the list of releases](/CHANGELOG.md) to find out about feature changes.
 [1]: https://jenkins.i.heptio.com/buildStatus/icon?job=sonobuoy-deployer
 [2]: https://jenkins.i.heptio.com/job/sonobuoy-deployer/
 [3]: https://github.com/kubernetes/kubernetes
-[4]: /docs/build-from-scratch.md
 [5]: http://docs.heptio.com/content/tutorials/aws-cloudformation-k8s.html
 [6]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [7]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
