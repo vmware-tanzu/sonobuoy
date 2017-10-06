@@ -21,9 +21,10 @@ import (
 	"path"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/conversion"
@@ -113,10 +114,17 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 	switch resourceKind {
 	case "ConfigMaps":
 		return kubeClient.CoreV1().ConfigMaps(ns).List(opts)
+	case "ControllerRevisions":
+		return kubeClient.Apps().ControllerRevisions(ns).List(opts)
 	case "CronJobs":
 		return kubeClient.BatchV2alpha1().CronJobs(ns).List(opts)
 	case "DaemonSets":
-		return kubeClient.Extensions().DaemonSets(ns).List(opts)
+		lst, err := kubeClient.Apps().DaemonSets(ns).List(opts)
+		if err != nil {
+			// TODO: remove once 1.7 is no longer supported
+			return kubeClient.Extensions().DaemonSets(ns).List(opts)
+		}
+		return lst, err
 	case "Deployments":
 		return kubeClient.Apps().Deployments(ns).List(opts)
 	case "Endpoints":
@@ -131,6 +139,8 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 		return kubeClient.Batch().Jobs(ns).List(opts)
 	case "LimitRanges":
 		return kubeClient.CoreV1().LimitRanges(ns).List(opts)
+	case "NetworkPolicies":
+		return kubeClient.Networking().NetworkPolicies(ns).List(opts)
 	case "PersistentVolumeClaims":
 		return kubeClient.CoreV1().PersistentVolumeClaims(ns).List(opts)
 	case "Pods":
@@ -142,7 +152,12 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 	case "PodTemplates":
 		return kubeClient.CoreV1().PodTemplates(ns).List(opts)
 	case "ReplicaSets":
-		return kubeClient.Extensions().ReplicaSets(ns).List(opts)
+		lst, err := kubeClient.Apps().ReplicaSets(ns).List(opts)
+		if err != nil {
+			// TODO: remove once 1.7 is no longer supported
+			return kubeClient.Extensions().ReplicaSets(ns).List(opts)
+		}
+		return lst, err
 	case "ReplicationControllers":
 		return kubeClient.CoreV1().ReplicationControllers(ns).List(opts)
 	case "ResourceQuotas":
@@ -160,7 +175,7 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 	case "StatefulSets":
 		return kubeClient.Apps().StatefulSets(ns).List(opts)
 	default:
-		return nil, errors.Errorf("don't know how to handle namespaced resource %v", resourceKind)
+		return nil, errors.Errorf("Unsupported resource %v", resourceKind)
 	}
 }
 
@@ -175,6 +190,13 @@ func queryNonNsResource(resourceKind string, kubeClient kubernetes.Interface) (r
 		return kubeClient.Rbac().ClusterRoles().List(metav1.ListOptions{})
 	case "ComponentStatuses":
 		return kubeClient.CoreV1().ComponentStatuses().List(metav1.ListOptions{})
+	case "CustomResourceDefinitions":
+		// TODO : This should get cleaned up in future revisions.
+		apiextensionsclientset := apiextensionsclient.New(kubeClient.CoreV1().RESTClient())
+		if apiextensionsclientset != nil {
+			return apiextensionsclientset.Apiextensions().CustomResourceDefinitions().List(metav1.ListOptions{})
+		}
+		return nil, errors.Errorf("Failed to create extensions client for CRDs")
 	case "Nodes":
 		return kubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
 	case "PersistentVolumes":
