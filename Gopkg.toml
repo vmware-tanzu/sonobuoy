@@ -72,3 +72,7 @@
 [[constraint]]
   name = "k8s.io/client-go"
   branch = "release-5.0"
+
+[[constraint]]
+  branch = "release-1.8"
+  name = "k8s.io/apiextensions-apiserver"
