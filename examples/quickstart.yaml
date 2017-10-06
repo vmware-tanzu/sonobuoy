@@ -65,12 +65,12 @@ data:
             "ClusterRoleBindings",
             "ClusterRoles",
             "ComponentStatuses",
+            "CustomResourceDefinitions",
             "Nodes",
             "PersistentVolumes",
             "PodSecurityPolicies",
             "ServerVersion",
             "StorageClasses",
-            "ThirdPartyResources",
             "ConfigMaps",
             "DaemonSets",
             "Deployments",
@@ -83,7 +83,6 @@ data:
             "PersistentVolumeClaims",
             "Pods",
             "PodDisruptionBudgets",
-            "PodPresets",
             "PodTemplates",
             "ReplicaSets",
             "ReplicationControllers",
@@ -102,7 +101,7 @@ data:
             "bindport": 8080,
             "timeoutseconds": 3600
         },
-        "Version": "v0.8.0"
+        "Version": "v0.9.0"
     }
 kind: ConfigMap
 metadata:
