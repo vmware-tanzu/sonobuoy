@@ -50,15 +50,12 @@ KUBECFG_CMD = $(DOCKER) run \
 	$(KSONNET_BUILD_IMAGE) \
 	kubecfg show -o yaml -V RBAC_ENABLED=$(RBAC_ENABLED) -J $(WORKDIR) -o yaml $< > $@
 
-.PHONY: all container push clean cbuild test local generate-examples
+.PHONY: all container push clean cbuild test local generate
 
 all: container
 
 test:
-	$(TEST)
-
-local:
-	$(BUILD)
+	$(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c '$(TEST)'
 
 container: cbuild
 	$(DOCKER) build \
@@ -85,7 +82,7 @@ clean:
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET) || true
 	find ./examples/ -type f -name '*.yaml' -delete
 
-generate-examples: latest-ksonnet $(EXAMPLE_OUTPUT)
+generate: latest-ksonnet $(EXAMPLE_OUTPUT)
 
 $(EXAMPLE_OUTPUT): examples/ksonnet/*.jsonnet examples/ksonnet/components/*.jsonnet
 	$(KUBECFG_CMD)
