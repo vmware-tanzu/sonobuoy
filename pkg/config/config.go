@@ -27,6 +27,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+///////////////////////////////////////////////////////
+// Note: The described resources are a 1:1 match
+// with kubectl UX for consistent user experience.
+// xref: https://kubernetes.io/docs/api-reference/v1.8/
+///////////////////////////////////////////////////////
+
 // ClusterResources is the list of API resources that are scoped to the entire
 // cluster (ie. not to any particular namespace)
 var ClusterResources = []string{
@@ -34,6 +40,7 @@ var ClusterResources = []string{
 	"ClusterRoleBindings",
 	"ClusterRoles",
 	"ComponentStatuses",
+	"CustomResourceDefinitions",
 	"Nodes",
 	"PersistentVolumes",
 	"PodSecurityPolicies",
@@ -45,7 +52,8 @@ var ClusterResources = []string{
 // kubernetes namespace.
 var NamespacedResources = []string{
 	"ConfigMaps",
-	//"CronJobs",
+	"ControllerRevisions",
+	"CronJobs",
 	"DaemonSets",
 	"Deployments",
 	"Endpoints",
@@ -54,6 +62,7 @@ var NamespacedResources = []string{
 	"Ingresses",
 	"Jobs",
 	"LimitRanges",
+	"NetworkPolicies",
 	"PersistentVolumeClaims",
 	"PodDisruptionBudgets",
 	"PodPresets",
@@ -113,6 +122,9 @@ type Config struct {
 	///////////////////////////////////////////////
 	Filters FilterOptions `json:"Filters" mapstructure:"Filters"`
 
+	///////////////////////////////////////////////
+	// Limit options
+	///////////////////////////////////////////////
 	Limits LimitConfig `json:"Limits" mapstructure:"Limits"`
 
 	///////////////////////////////////////////////
