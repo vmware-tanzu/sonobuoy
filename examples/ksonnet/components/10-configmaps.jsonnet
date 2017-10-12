@@ -232,7 +232,7 @@ local e2eConfig = {
     containers: [
       {
         name: "e2e",
-        image: "gcr.io/heptio-images/kube-conformance:v1.8.0",
+        image: "gcr.io/heptio-images/kube-conformance:v1.8",
         imagePullPolicy: "Always",
         # NOTE: Full conformance can take a while depending on your cluster size.
         # As a result, only a single test is set atm to verify correctness.

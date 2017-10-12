@@ -121,7 +121,7 @@ data:
       - env:
         - name: E2E_FOCUS
           value: Pods should be submitted and removed
-        image: gcr.io/heptio-images/kube-conformance:v1.8.0
+        image: gcr.io/heptio-images/kube-conformance:v1.8
         imagePullPolicy: Always
         name: e2e
         volumeMounts:
