@@ -90,7 +90,7 @@ See [Parameter Reference][3] for a more detailed description of each setting.
         "advertiseaddress": "",
         "bindaddress": "0.0.0.0",
         "bindport": 8080,
-        "timeoutseconds": 300
+        "timeoutseconds": 5400
     },
     "Plugins": [
         {"name": "e2e"},
@@ -115,7 +115,7 @@ See [Parameter Reference][3] for a more detailed description of each setting.
 | Server.advertiseaddress | String | `$SONOBUOY_ADVERTISE_IP` &#124;&#124; the current server's `os.Hostname()`| *Only used if Sonobuoy dispatches agent pods to collect node-specific information*<br><br>The IP address that remote Sonobuoy agents send information back to, in order for disparate data to be aggregated into a single report |
 | Server.bindaddress | String | "0.0.0.0" | *See `Server.advertiseaddress` for context.*<br><br>If data aggregation is required, an HTTP server is started to handle the worker requests. This is the address that server binds to. |
 | Server.bindport | Int | 8080 | The port for the HTTP server mentioned in *Server.bindaddress*. |
-| Server.timeoutseconds | Int | 300 (5 min) | *See `Server.advertiseaddress` for context.*<br><br>This determines how long the master Sonobuoy pod should wait to hear back from the dispatched agents. |
+| Server.timeoutseconds | Int | 5400 (90 min) | *See `Server.advertiseaddress` for context.*<br><br>This determines how long the master Sonobuoy pod should wait to hear back from the dispatched agents. |
 | Plugins | Array of plugin descriptions: `{"name": <PLUGIN_NAME>}` | `[]` | The list of Sonobuoy plugins enabled for custom data collection. See the [plugins reference][9] for details.|
 | PluginSearchPath | String Array | `"./plugins.d", "/etc/sonobuoy/plugins.d", "~/sonobuoy/plugins.d"` | The paths where Sonobuoy should look for its plugin configs
 

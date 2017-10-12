@@ -75,7 +75,7 @@ local sonobuoyConfigData = {
         advertiseaddress: "sonobuoy-master:8080",
         bindaddress: "0.0.0.0",
         bindport: 8080,
-        timeoutseconds: 3600
+        timeoutseconds: 5400
     },
     PluginNamespace: "heptio-sonobuoy",
     Plugins: [
