@@ -54,7 +54,7 @@ This guide executes a Sonobuoy run on your cluster, and records the following re
 ### 1. Download
 Clone or fork the Sonobuoy repo:
 ```
-git clone git@github.com:heptio/sonobuoy.git
+git clone https://github.com/heptio/sonobuoy.git 
 ```
 
 ### 2. Run
