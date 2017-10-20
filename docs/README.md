@@ -1,7 +1,6 @@
 # Documentation Index
 
 ## Setting up
- * [Build From Scratch](build-from-scratch.md)
  * [Configuration](configuration.md)
  * [Pre-generated YAML](/examples/quickstart.yaml)
  * [Snapshot Layout](snapshot.md)
