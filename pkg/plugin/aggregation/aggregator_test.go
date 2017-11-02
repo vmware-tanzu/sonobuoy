@@ -209,7 +209,7 @@ func makeTarWithContents(t *testing.T, filename string, fileContents []byte) (ta
 	tardir := path.Join(dir, "results")
 	err = os.Mkdir(tardir, 0755)
 	if err != nil {
-		t.Fatal("Could not create results directory %v: %v", tardir, err)
+		t.Fatalf("Could not create results directory %v: %v", tardir, err)
 		return
 	}
 
