@@ -37,7 +37,7 @@ func TestSaveAndLoad(t *testing.T) {
 		}
 		defer os.Remove("./config.json")
 	} else {
-		t.Fatalf("Failed to serialize ", err)
+		t.Fatalf("Failed to serialize %v", err)
 	}
 
 	cfg2, err := LoadConfig()
@@ -145,7 +145,7 @@ func TestLoadAllPlugins(t *testing.T) {
 	}
 
 	if len(dsplugin.GetPodSpec().Containers) != 2 {
-		t.Fatalf("JobPlugin should have 1 container, got 2", len(jobplugin.GetPodSpec().Containers))
+		t.Fatalf("JobPlugin should have 2 containers, got %d", len(jobplugin.GetPodSpec().Containers))
 	}
 
 	firstContainerName = jobplugin.GetPodSpec().Containers[0].Name
