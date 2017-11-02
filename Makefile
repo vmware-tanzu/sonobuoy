@@ -50,14 +50,16 @@ KUBECFG_CMD = $(DOCKER) run \
 	$(KSONNET_BUILD_IMAGE) \
 	kubecfg show -o yaml -V RBAC_ENABLED=$(RBAC_ENABLED) -J $(WORKDIR) -o yaml $< > $@
 
+DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
+
 .PHONY: all container push clean cbuild test local generate
 
 all: container
 
-test:
-	$(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c '$(TEST)'
+test: cbuild
+	 $(DOCKER_BUILD) '$(TEST)'
 
-container: cbuild
+container: test
 	$(DOCKER) build \
 		-t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \
 		-t $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH) \
@@ -65,7 +67,7 @@ container: cbuild
 		.
 
 cbuild:
-	$(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c '$(BUILD) && $(TEST)'
+	$(DOCKER_BUILD) '$(BUILD)'
 
 push:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH)

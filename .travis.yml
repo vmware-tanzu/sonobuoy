@@ -1,0 +1,12 @@
+sudo: required
+language: go
+services:
+  - docker
+install: true
+
+jobs:
+  include:
+    - stage: test
+      script: make test
+    # - stage: push
+    #   script: echo "TODO"
