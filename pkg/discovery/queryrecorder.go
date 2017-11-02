@@ -26,10 +26,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+// QueryRecorder records a sequence of queries
 type QueryRecorder struct {
 	queries []*queryData
 }
 
+// NewQueryRecorder returns a new empty QueryRecorder
 func NewQueryRecorder() *QueryRecorder {
 	return &QueryRecorder{
 		queries: make([]*queryData, 0),
@@ -44,6 +46,7 @@ type queryData struct {
 	Error       error  `json:"error,omitempty"`
 }
 
+// RecordQuery transcribes a query by name, namespace, duration and error
 func (q *QueryRecorder) RecordQuery(name string, namespace string, duration time.Duration, recerr error) {
 	if recerr != nil {
 		errlog.LogError(errors.Wrapf(recerr, "error querying %v", name))
@@ -58,6 +61,7 @@ func (q *QueryRecorder) RecordQuery(name string, namespace string, duration time
 	q.queries = append(q.queries, summary)
 }
 
+// DumpQueryData writes query information out to a file at the give filepath
 func (q *QueryRecorder) DumpQueryData(filepath string) error {
 	// Ensure the leading path is created
 	err := os.MkdirAll(path.Dir(filepath), 0755)

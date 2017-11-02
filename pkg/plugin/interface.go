@@ -116,7 +116,7 @@ type AggregationConfig struct {
 // WorkerConfig is the file given to the sonobuoy worker to configure it to phone home.
 type WorkerConfig struct {
 	// MasterURL is the URL we talk to for submitting results
-	MasterURL string `json:"masterurl,omitempty mapstructure:"masterurl""`
+	MasterURL string `json:"masterurl,omitempty" mapstructure:"masterurl"`
 	// NodeName is the node name we should call ourselves when sending results
 	NodeName string `json:"nodename,omitempty" mapstructure:"nodename"`
 	// ResultsDir is the directory that's expected to contain the host's root filesystem
