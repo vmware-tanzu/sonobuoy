@@ -38,15 +38,22 @@ BUILDCMD = go build -o $(TARGET) -v -ldflags "-X github.com/heptio/sonobuoy/pkg/
 BUILD = $(BUILDCMD) $(GOTARGET)/cmd/sonobuoy
 
 TESTARGS ?= -v -timeout 60s
-TEST = go test $(TEST_PKGS) $(TESTARGS)
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
+TEST = go test $(TEST_PKGS) $(TESTARGS)
+
+VET = go vet $(TEST_PKGS)
+
+# Vendor this someday
+INSTALL_GOLINT = go get -u github.com/golang/lint/golint
+GOLINT_FLAGS ?= -set_exit_status
+LINT = $(INSTALL_GOLINT) && golint $(GOLINT_FLAGS) $(TEST_PKGS)
 
 WORKDIR ?= /sonobuoy
 RBAC_ENABLED ?= 1
 KUBECFG_CMD = $(DOCKER) run \
   -v $(DIR):$(WORKDIR) \
 	--workdir $(WORKDIR) \
-	--rm \
+-	--rm \
 	$(KSONNET_BUILD_IMAGE) \
 	kubecfg show -o yaml -V RBAC_ENABLED=$(RBAC_ENABLED) -J $(WORKDIR) -o yaml $< > $@
 
@@ -56,8 +63,14 @@ DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_
 
 all: container
 
-test: cbuild
-	 $(DOCKER_BUILD) '$(TEST)'
+test: cbuild vet
+	$(DOCKER_BUILD) '$(TEST)'
+
+lint:
+	$(DOCKER_BUILD) '$(LINT)'
+
+vet:
+	$(DOCKER_BUILD) '$(VET)'
 
 container: test
 	$(DOCKER) build \

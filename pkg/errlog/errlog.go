@@ -22,8 +22,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// DebugOutput controls whether to output the trace of every error
 var DebugOutput = false
 
+// LogError logs an error, optionally with a tracelog
 func LogError(err error) {
 	if DebugOutput {
 		// Print the error message with the stack trace (%+v) in the "trace" field
