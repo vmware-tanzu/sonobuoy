@@ -12,15 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM buildpack-deps:jessie-scm
+FROM gcr.io/heptio-images/golang:1.9-alpine3.6
 MAINTAINER Timothy St. Clair "tstclair@heptio.com"
 
-RUN apt-get update && apt-get -y --no-install-recommends install \
-    ca-certificates \
-    && rm -rf /var/cache/apt/* \
-    && rm -rf /var/lib/apt/lists/*
-ADD sonobuoy /sonobuoy
+RUN apk add --no-cache ca-certificates
+ADD sonobuoy /sonobuoy 
 ADD scripts/run_master.sh /run_master.sh
-#USER nobody:nobody
+# TODO - Verify execution is fine as nobody user to drop privs
+# USER nobody:nobody
 
 CMD ["/bin/sh", "-c", "/run_master.sh"]
