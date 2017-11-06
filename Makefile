@@ -33,7 +33,7 @@ IMAGE_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF = $(shell git rev-parse --short=8 --verify HEAD)
 
 BUILDMNT = /go/src/$(GOTARGET)
-BUILD_IMAGE ?= golang:1.8
+BUILD_IMAGE ?= gcr.io/heptio-images/golang:1.9-alpine3.6
 BUILDCMD = go build -o $(TARGET) -v -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET):$(GIT_REF)"
 BUILD = $(BUILDCMD) $(GOTARGET)/cmd/sonobuoy
 
@@ -44,16 +44,15 @@ TEST = go test $(TEST_PKGS) $(TESTARGS)
 VET = go vet $(TEST_PKGS)
 
 # Vendor this someday
-INSTALL_GOLINT = go get -u github.com/golang/lint/golint
 GOLINT_FLAGS ?= -set_exit_status
-LINT = $(INSTALL_GOLINT) && golint $(GOLINT_FLAGS) $(TEST_PKGS)
+LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 
 WORKDIR ?= /sonobuoy
 RBAC_ENABLED ?= 1
 KUBECFG_CMD = $(DOCKER) run \
   -v $(DIR):$(WORKDIR) \
 	--workdir $(WORKDIR) \
--	--rm \
+	--rm \
 	$(KSONNET_BUILD_IMAGE) \
 	kubecfg show -o yaml -V RBAC_ENABLED=$(RBAC_ENABLED) -J $(WORKDIR) -o yaml $< > $@
 
