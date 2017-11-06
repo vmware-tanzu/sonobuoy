@@ -3,3 +3,6 @@
 
 # we output results to this directory by default
 /results
+
+# Development manifest
+examples/dev.yaml
