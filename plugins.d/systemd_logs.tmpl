@@ -1,0 +1,87 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: "sonobuoy-systemd-logs-config-{{.SessionID}}"
+  annotations:
+    "sonobuoy-plugin": "systemd_logs"
+    "sonobuoy-driver": "DaemonSet"
+    "sonobuoy-result-type": "systemd_logs"
+  labels:
+    component: sonobuoy
+    tier: analysis
+    "sonobuoy-run": "{{.SessionID}}"
+  namespace: {{.Namespace}}
+spec:
+  selector:
+    "sonobuoy-run": "{{.SessionID}}"
+  template:
+    metadata:
+      component: sonobuoy
+      tier: analysis
+      "sonobuoy-run": "{{.SessionID}}"
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
+      hostNetwork: true
+      hostIPC: true
+      hostPID: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: systemd-logs
+        command:
+        - sh
+        - -c
+        - /get_systemd_logs.sh && sleep 3600
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: RESULTS_DIR
+          value: /tmp/results
+        - name: CHROOT_DIR
+          value: /node
+        image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /node
+          name: root
+        - mountPath: /tmp/results
+          name: results
+        - mountPath: /etc/sonobuoy
+          name: config
+      - name: sonobuoy-worker
+        command:
+        - sh
+        - -c
+        - /sonobuoy worker single-node -v 5 --logtostderr && sleep 3600
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: RESULTS_DIR
+          value: /tmp/results
+        - name: MASTER_URL
+          value: "{{.MasterAddress}}"
+        image: gcr.io/heptio-images/sonobuoy:latest
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /tmp/results
+          name: results
+      volumes:
+      - name: root
+        hostPath:
+          path: /
+      - name: results
+        emptyDir: {}

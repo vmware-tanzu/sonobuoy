@@ -1,6 +1,15 @@
-name: e2e
-driver: Job
-resultType: e2e
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "sonobuoy-e2e-job-{{.SessionID}}"
+  annotations:
+    "sonobuoy-plugin": "e2e"
+    "sonobuoy-driver": "Job"
+  labels:
+    component: sonobuoy
+  tier: analysis
+  "sonobuoy-run": "{{.SessionID}}"
+  namespace: "{{.Namespace}}"
 spec:
   serviceAccountName: sonobuoy-serviceaccount
   tolerations:
@@ -37,17 +46,15 @@ spec:
           fieldPath: spec.nodeName
     - name: RESULTS_DIR
       value: /tmp/results
+    - name: MASTER_URL
+      value: "{{.MasterAddress}}"
+    - name: RESULT_TYPE
+      value: "e2e"
     image: gcr.io/heptio-images/sonobuoy:latest
     imagePullPolicy: Always
     volumeMounts:
-    - name: config
-      mountPath: /etc/sonobuoy
     - name: results
       mountPath: /tmp/results
   volumes:
   - name: results
     emptyDir: {}
-  - name: config
-    configMap:
-      # This will be rewritten when the JobPlugin driver goes to launch the pod.
-      name: __SONOBUOY_CONFIGMAP__

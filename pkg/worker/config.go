@@ -47,6 +47,7 @@ func LoadConfig() (*plugin.WorkerConfig, error) {
 	viper.BindEnv("masterurl", "MASTER_URL")
 	viper.BindEnv("nodename", "NODE_NAME")
 	viper.BindEnv("resultsdir", "RESULTS_DIR")
+	viper.BindEnv("resulttype", "RESULT_TYPE")
 
 	setConfigDefaults(config)
 

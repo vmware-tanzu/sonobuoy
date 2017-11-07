@@ -17,22 +17,22 @@ limitations under the License.
 package loader
 
 import (
-	"encoding/json"
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+	"text/template"
 
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes/scheme"
-
-	"github.com/ghodss/yaml"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/daemonset"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/job"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 // LoadAllPlugins loads all plugins by finding plugin definitions in the given
@@ -53,12 +53,12 @@ func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.S
 			continue
 		}
 
-		p, err := scanPlugins(dir)
+		definitions, err := scanPlugins(dir)
 		if err != nil {
 			return ret, err
 		}
 
-		defns = append(defns, p...)
+		defns = append(defns, definitions...)
 	}
 
 	for _, selection := range selections {
@@ -78,9 +78,8 @@ func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.S
 // loadPlugin loads an individual plugin by instantiating a plugin driver with
 // the settings from the given plugin definition and selection
 func loadPlugin(namespace string, dfn plugin.Definition, masterAddress string) (plugin.Interface, error) {
-	cfg := &plugin.WorkerConfig{
-		ResultType: dfn.ResultType,
-	}
+	// TODO(chuckha): We don't use the cfg for anything except passing a string around. Consider removing this struct.
+	cfg := &plugin.WorkerConfig{}
 	logrus.Infof("Loading plugin driver %v", dfn.Driver)
 	switch dfn.Driver {
 	case "DaemonSet":
@@ -97,107 +96,55 @@ func loadPlugin(namespace string, dfn plugin.Definition, masterAddress string) (
 // scanPlugins looks for Plugin Definition files in the given directory,
 // and returns an array of PluginDefinition structs.
 func scanPlugins(dir string) ([]plugin.Definition, error) {
-	var plugins []plugin.Definition
+	var pluginDfns []plugin.Definition
 
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return plugins, err
+		return nil, errors.Wrap(err, "failed to read plugin directory")
 	}
 
 	for _, file := range files {
-		var loaderFn loader
-		switch filepath.Ext(file.Name()) {
-		case ".yaml":
-			loaderFn = loadYAML
-		case ".json":
-			loaderFn = loadJSON
-		default:
-			logrus.Warningf("Unsupported plugin file detected %v", file.Name())
+		if filepath.Ext(file.Name()) != ".tmpl" {
+			logrus.WithField("filename", file.Name()).Info("unknown template type")
 			continue
 		}
 
-		// Read the file into memory
+		// Read the template file into memory
 		fullPath := path.Join(dir, file.Name())
-		y, err := ioutil.ReadFile(fullPath)
+		pluginTemplate, err := ioutil.ReadFile(fullPath)
 		if err != nil {
-			return plugins, err
+			return nil, err
 		}
-
-		pluginDef, err := loaderFn(y)
+		dfn, err := loadTemplate(pluginTemplate)
 		if err != nil {
-			logrus.Warningf("Error unmarshalling bytes at %v: %v", fullPath, err)
+			logrus.WithError(err).WithField("filename", file.Name()).Info("failed to load plugin")
 			continue
 		}
-
-		// Load it into a proper PluginDefinition.  If we can't, just
-		// warn.  If they've selected this plugin in their config,
-		// they'll get an error then.
-		err = loadPluginDefinition(pluginDef)
-		if err != nil {
-			logrus.Warningf("Error loading plugin at %v: %v", fullPath, err)
-			continue
-		}
-
-		plugins = append(plugins, *pluginDef)
+		pluginDfns = append(pluginDfns, *dfn)
 	}
 
-	return plugins, err
+	return pluginDfns, err
 }
 
-type loader func([]byte) (*plugin.Definition, error)
-
-func loadYAML(yamlBytes []byte) (*plugin.Definition, error) {
-	var ret plugin.Definition
-	err := yaml.Unmarshal(yamlBytes, &ret)
-	return &ret, err
-}
-
-func loadJSON(jsonBytes []byte) (*plugin.Definition, error) {
-	var ret plugin.Definition
-	err := json.Unmarshal(jsonBytes, &ret)
-	return &ret, err
-}
-
-// loadPluginDefinition takes a plugin.Definition and makes a real plugin.Definition
-func loadPluginDefinition(ret *plugin.Definition) error {
-	// Validate it
-	if ret.Driver == "" {
-		return errors.Errorf("No driver specified in plugin file")
-	}
-	if ret.ResultType == "" {
-		return errors.Errorf("No resultType specified in plugin file")
-	}
-	if ret.Name == "" {
-		return errors.Errorf("No name specified in plugin file")
-	}
-	if ret.RawPodSpec == nil {
-		return errors.Errorf("No pod spec specified in plugin file")
-	}
-
-	// Construct a pod spec from the ConfigMap data. We can't decode it
-	// directly since a PodSpec is not a runtime.Object (it doesn't
-	// have ObjectMeta attributes like Kind and Metadata), so we:
-
-	// make a fake pod as a map[string]interface{}, and load the
-	// plugin config into its spec
-	placeholderPodMap := map[string]interface{}{
-		"apiVersion": "v1",
-		"kind":       "Pod",
-		"spec":       ret.RawPodSpec,
-	}
-
-	// serialize the result into YAML
-	placeholderPodYaml, err := yaml.Marshal(placeholderPodMap)
+func loadTemplate(tmpl []byte) (*plugin.Definition, error) {
+	t, err := template.New("plugin").Parse(string(tmpl))
 	if err != nil {
-		return err
+		return nil, errors.Wrap(err, "failed to parse template")
 	}
-
-	// Decode *that* yaml into a Pod
-	var placeholderPod v1.Pod
-	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), placeholderPodYaml, &placeholderPod); err != nil {
-		logrus.Fatalf("Could not decode pod spec: %v", err)
+	var b bytes.Buffer
+	// We just trying to get a kubernetes object here we don't really care about values rn
+	err = t.Execute(&b, &plugin.DefinitionTemplateData{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to execute template")
 	}
-	ret.PodSpec = placeholderPod.Spec
-
-	return nil
+	var x unstructured.Unstructured
+	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &x); err != nil {
+		return nil, errors.Wrap(err, "failed to turn executed template into an unstructured")
+	}
+	return &plugin.Definition{
+		Driver:     x.GetAnnotations()["sonobuoy-driver"],
+		Name:       x.GetAnnotations()["sonobuoy-plugin"],
+		ResultType: x.GetAnnotations()["sonobuoy-result-type"],
+		Template:   t,
+	}, nil
 }
