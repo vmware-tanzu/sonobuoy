@@ -18,6 +18,7 @@
 
 EXAMPLE_FILES = $(wildcard examples/ksonnet/components/*.jsonnet)
 EXAMPLE_OUTPUT = examples/quickstart.yaml
+DEV_OUTPUT = examples/dev.yaml
 KSONNET_BUILD_IMAGE = ksonnet/ksonnet-lib:beta.2
 
 TARGET = sonobuoy
@@ -98,7 +99,12 @@ clean:
 
 generate: latest-ksonnet $(EXAMPLE_OUTPUT)
 
-$(EXAMPLE_OUTPUT): examples/ksonnet/*.jsonnet examples/ksonnet/components/*.jsonnet
+$(EXAMPLE_OUTPUT): examples/ksonnet/quickstart.jsonnet examples/ksonnet/components/*.jsonnet
+	$(KUBECFG_CMD)
+
+dev: latest-ksonnet $(DEV_OUTPUT)
+
+$(DEV_OUTPUT): examples/ksonnet/dev.jsonnet examples/ksonnet/components/*.jsonnet
 	$(KUBECFG_CMD)
 
 latest-ksonnet:

@@ -16,4 +16,4 @@ local rbac = import "examples/ksonnet/components/00-rbac.jsonnet";
 local configmaps = import "examples/ksonnet/components/10-configmaps.jsonnet";
 local pod = import "examples/ksonnet/components/20-pod.jsonnet";
 
-rbac + configmaps + pod.objects()
+rbac + configmaps + pod.objects(pullPolicy="IfNotPresent", debug=true)
