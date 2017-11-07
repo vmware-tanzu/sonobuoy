@@ -33,12 +33,13 @@ IMAGE_VERSION ?= $(shell git describe --always --dirty)
 IMAGE_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF = $(shell git rev-parse --short=8 --verify HEAD)
 
+VERBOSE ?= "-v"
 BUILDMNT = /go/src/$(GOTARGET)
 BUILD_IMAGE ?= gcr.io/heptio-images/golang:1.9-alpine3.6
-BUILDCMD = go build -o $(TARGET) -v -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET):$(GIT_REF)"
+BUILDCMD = go build -o $(TARGET) $(VERBOSE) -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET):$(GIT_REF)"
 BUILD = $(BUILDCMD) $(GOTARGET)/cmd/sonobuoy
 
-TESTARGS ?= -v -timeout 60s
+TESTARGS ?= $(VERBOSE) -timeout 60s
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
 TEST = go test $(TEST_PKGS) $(TESTARGS)
 

@@ -142,6 +142,13 @@ developer certificate of origin that we require.
 * There is a [mailing list][16] and [Slack channel][17] if you want to interact with
 other members of the community
 
+#### Testing
+
+You can run sonobuoy's tests with `make test`. This will spin up local docker
+containers to run the test suite.
+
+For quieter tests, use `VERBOSE="" make test`
+
 #### Pull requests
 
 * We welcome pull requests. Feel free to dig through the [issues][10] and jump in.
