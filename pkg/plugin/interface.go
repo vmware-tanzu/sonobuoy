@@ -19,6 +19,7 @@ package plugin
 import (
 	"io"
 	"path"
+	"text/template"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -45,23 +46,22 @@ type Interface interface {
 	GetResultType() string
 	// GetName returns the name of this plugin
 	GetName() string
-	// GetPodSpec returns the pod spec for this plugins
-	GetPodSpec() *v1.PodSpec
-	// GetSessionID returns a distinct identifier for this plugin in this
-	// sonobuoy session (for instance, for labeling resources created by
-	// this plugin.)
-	GetSessionID() string
+}
+
+// A required piece of data to render the template found in Definition.
+type DefinitionTemplateData struct {
+	SessionID     string
+	MasterAddress string
+	Namespace     string
 }
 
 // Definition defines a plugin's features, method of launch, and other
 // metadata about it.
 type Definition struct {
-	Driver     string                 `json:"driver"`
-	Name       string                 `json:"name"`
-	ResultType string                 `json:"resultType"`
-	RawPodSpec map[string]interface{} `json:"spec"`
-
-	PodSpec v1.PodSpec // This is filled in by the plugin loader, since deserializing a pod spec is nontrivial
+	Driver     string
+	Name       string
+	ResultType string
+	Template   *template.Template
 }
 
 // ExpectedResult is an expected result that a plugin will submit.  This is so
