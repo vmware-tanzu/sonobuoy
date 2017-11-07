@@ -18,7 +18,5 @@ MAINTAINER Timothy St. Clair "tstclair@heptio.com"
 RUN apk add --no-cache ca-certificates
 ADD sonobuoy /sonobuoy 
 ADD scripts/run_master.sh /run_master.sh
-# TODO - Verify execution is fine as nobody user to drop privs
-# USER nobody:nobody
-
+WORKDIR /
 CMD ["/bin/sh", "-c", "/run_master.sh"]
