@@ -7,8 +7,8 @@ metadata:
     "sonobuoy-driver": "Job"
   labels:
     component: sonobuoy
-  tier: analysis
-  "sonobuoy-run": "{{.SessionID}}"
+    tier: analysis
+    "sonobuoy-run": "{{.SessionID}}"
   namespace: "{{.Namespace}}"
 spec:
   serviceAccountName: sonobuoy-serviceaccount
