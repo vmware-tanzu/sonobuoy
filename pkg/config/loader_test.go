@@ -130,26 +130,9 @@ func TestLoadAllPlugins(t *testing.T) {
 		t.Fatalf("First result of LoadAllPlugins has the wrong name: %v != systemd_logs", name)
 	}
 
-	if len(dsplugin.GetPodSpec().Containers) != 2 {
-		t.Fatalf("DaemonSetPlugin should have 2 containers, got %v", len(dsplugin.GetPodSpec().Containers))
-	}
-
-	firstContainerName := dsplugin.GetPodSpec().Containers[0].Name
-	if firstContainerName != "systemd-logs" {
-		t.Fatalf("systemd_logs plugin had unexpected container name (%v != %v)", firstContainerName, "systemd-logs")
-	}
-
 	jobplugin := plugins[1]
 	if name := jobplugin.GetName(); name != "e2e" {
 		t.Fatalf("Second result of LoadAllPlugins has the wrong name: %v != e2e", name)
 	}
 
-	if len(dsplugin.GetPodSpec().Containers) != 2 {
-		t.Fatalf("JobPlugin should have 2 containers, got %d", len(jobplugin.GetPodSpec().Containers))
-	}
-
-	firstContainerName = jobplugin.GetPodSpec().Containers[0].Name
-	if firstContainerName != "e2e" {
-		t.Fatalf("e2e plugin had unexpected container name (%v != %v)", firstContainerName, "e2e")
-	}
 }

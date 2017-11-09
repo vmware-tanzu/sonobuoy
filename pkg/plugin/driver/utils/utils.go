@@ -18,13 +18,24 @@ package utils
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	gouuid "github.com/satori/go.uuid"
 
 	v1 "k8s.io/api/core/v1"
 )
+
+// GetSessionID generates a new session id.
+// This is essentially an instance of a running plugin.
+func GetSessionID() string {
+	uuid := gouuid.NewV4()
+	ret := make([]byte, hex.EncodedLen(8))
+	hex.Encode(ret, uuid.Bytes()[0:8])
+	return string(ret)
+}
 
 // IsPodFailing returns whether a plugin's pod is failing and isn't likely to
 // succeed.
@@ -77,18 +88,4 @@ func MakeErrorResult(resultType string, errdata map[string]interface{}, nodeName
 		NodeName:   nodeName,
 		Extension:  ".json",
 	}
-}
-
-// ApplyDefaultLabels applies a default label set to the given
-// map[string]string.  All our resources should have a commmon label set,
-// particularly a unique sesssion ID for sonobuoy run. This can allow fallback
-// cleanup for this session by deleting any resources with
-// `sonobuoy-run=<sessionID>`
-func ApplyDefaultLabels(p plugin.Interface, labels map[string]string) map[string]string {
-	labels["component"] = "sonobuoy"
-	labels["tier"] = "analysis"
-	labels["sonobuoy-run"] = p.GetSessionID()
-	labels["sonobuoy-plugin"] = p.GetName()
-
-	return labels
 }
