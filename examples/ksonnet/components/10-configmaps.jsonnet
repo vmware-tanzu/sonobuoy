@@ -15,6 +15,8 @@
 local k = import "ksonnet.beta.2/k.libsonnet";
 local kubecfg = import "kubecfg.libsonnet";
 local configMap = k.core.v1.configMap;
+local c = k.core.v1.pod.mixin.spec.containersType;
+local ds = k.extensions.v1beta1.daemonSet;
 
 local conf = {
     namespace: "heptio-sonobuoy",
@@ -65,254 +67,196 @@ local sonobuoyConfigData = {
         "ServerGroups",
         "ServiceAccounts",
         "Services",
-        "StatefulSets"
+        "StatefulSets",
     ],
     Filters: {
     LabelSelector: "",
-    Namespaces: ".*"
+    Namespaces: ".*",
     },
     Server: {
         advertiseaddress: "sonobuoy-master:8080",
         bindaddress: "0.0.0.0",
         bindport: 8080,
-        timeoutseconds: 5400
+        timeoutseconds: 5400,
     },
     PluginNamespace: "heptio-sonobuoy",
     Plugins: [
-          {name: "systemd_logs"},
-          {name: "e2e"}
-    ]
+          { name: "systemd_logs" },
+          { name: "e2e" },
+    ],
 };
 
-local systemdlogsConfig = {
-  name: "systemd_logs",
-  driver: "DaemonSet",
-  resultType: "systemd_logs",
-  spec: {
-    tolerations: [
-      {
+local tolerations = [
+    {
         key: "node-role.kubernetes.io/master",
         operator: "Exists",
         effect: "NoSchedule",
-      },
-      {
+    },
+    {
         key: "CriticalAddonsOnly",
         operator: "Exists",
-      },
-    ],
-    hostNetwork: true,
-    hostIPC: true,
-    hostPID: true,
-    dnsPolicy: "ClusterFirstWithHostNet",
-    containers: [
-      {
-        name: "systemd-logs",
-        command: [
-          "sh",
-          "-c",
-          "/get_systemd_logs.sh && sleep 3600"
-        ],
-        env: [
-          {
-            name: "NODE_NAME",
-            valueFrom: {
-              fieldRef: {
-                apiVersion: "v1",
-                fieldPath: "spec.nodeName",
-              },
-            }
-          },
-          {
-            name: "RESULTS_DIR",
-            value: "/tmp/results",
-          },
-          {
-            name: "CHROOT_DIR",
-            value: "/node",
-          },
-        ],
-        image: "gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest",
-        imagePullPolicy: "Always",
-        securityContext: {
-          privileged: true,
-        },
-        volumeMounts: [
-          {
-            mountPath: "/node",
-            name: "root",
-          },
-          {
-            mountPath: "/tmp/results",
-            name: "results",
-          },
-          {
-            mountPath: "/etc/sonobuoy",
-            name: "config",
-          },
-        ],
-      },
-      {
-        name: "sonobuoy-worker",
-        command: [
-          "sh",
-          "-c",
-          "/sonobuoy worker single-node -v 5 --logtostderr && sleep 3600",
-        ],
-        env: [
-          {
-            name: "NODE_NAME",
-            valueFrom: {
-              fieldRef: {
-                apiVersion: "v1",
-                fieldPath: "spec.nodeName",
-              },
-            },
-          },
-          {
-            name: "RESULTS_DIR",
-            value: "/tmp/results",
-          },
-        ],
-        image: "gcr.io/heptio-images/sonobuoy:master",
-        imagePullPolicy: "Always",
-        securityContext: {
-          privileged: true,
-        },
-        volumeMounts: [
-          {
-            mountPath: "/tmp/results",
-            name: "results",
-          },
-          {
-            mountPath: "/etc/sonobuoy",
-            name: "config",
-          },
-        ],
-      },
-    ],
-    volumes: [
-      {
-        name: "root",
-        hostPath: {
-          path: "/",
-        },
-      },
-      {
-        name: "results",
-        emptyDir: {},
-      },
-      {
-        name: "config",
-        configMap: {
-          name: "__SONOBUOY_CONFIGMAP__",
-        },
-      },
-    ],
-  },
-};
+    },
+];
 
-local e2eConfig = {
-  name: "e2e",
-  driver: "Job",
-  resultType: "e2e",
-  spec: {
+local systemdconf = {
+    pluginName: "systemd_logs",
+    name: "sonobuoy-systemd-logs-config-{{.SessionID}}",
+    annotations: {
+        "sonobuoy-plugin": $.pluginName,
+        "sonobuoy-driver": "DaemonSet",
+        "sonobuoy-result-type": $.pluginName,
+    },
+    labels: {
+        component: "sonobuoy",
+        tier: "analysis",
+        "sonobuoy-run": "{{.SessionID}}",
+    },
+    namespace: "{{.Namespace}}",
+
     serviceAccountName: "sonobuoy-serviceaccount",
-    tolerations: [
-      {
-        key: "node-role.kubernetes.io/master",
-        operator: "Exists",
-        effect: "NoSchedule",
-      },
-      {
-        key: "CriticalAddonsOnly",
-        operator: "Exists",
-      },
-    ],
-    restartPolicy: "Never",
-    containers: [
-      {
-        name: "e2e",
-        image: "gcr.io/heptio-images/kube-conformance:v1.8",
-        imagePullPolicy: "Always",
-        # NOTE: Full conformance can take a while depending on your cluster size.
-        # As a result, only a single test is set atm to verify correctness.
-        # Operators that want the complete test results can comment out the
-        # env section.
-        env: [
-          {
-            name: "E2E_FOCUS",
-            value: "Pods should be submitted and removed",
-          },
-        ],
-        volumeMounts: [
-          {
-            name: "results",
-            mountPath: "/tmp/results",
-          },
-        ],
-      },
-      {
+
+    rootDir: "/node",
+    resultsDir: "/tmp/results",
+    selector: {
+        "sonobuoy-run": "{{.SessionID}}",
+    },
+    systemd: {
+        name: "systemd-logs",
+        image: "gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest",
+        command: ["sh", "-c", "/get_systemd_logs.sh && sleep 3600"],
+    },
+    workerContainer: {
         name: "sonobuoy-worker",
-        command: [
-          "sh",
-          "-c",
-          "/sonobuoy worker global -v 5 --logtostderr",
-        ],
-        env: [
-          {
-            name: "NODE_NAME",
-            valueFrom: {
-              fieldRef: {
-                apiVersion: "v1",
-                fieldPath: "spec.nodeName",
-              },
-            },
-          },
-          {
-            name: "RESULTS_DIR",
-            value: "/tmp/results",
-          },
-        ],
         image: "gcr.io/heptio-images/sonobuoy:master",
-        imagePullPolicy: "Always",
-        volumeMounts: [
-          {
-            name: "config",
-            mountPath: "/etc/sonobuoy",
-          },
-          {
-            name: "results",
-            mountPath: "/tmp/results",
-          },
-        ],
-      },
-    ],
-    volumes: [
-      {
-        name: "results",
-        emptyDir: {},
-      },
-      {
-        name: "config",
-        configMap: {
-          # This will be rewritten when the JobPlugin driver goes to launch the pod.
-          name: "__SONOBUOY_CONFIGMAP__",
-        },
-      },
-    ],
-  },
+        command: ["sh", "-c", "/sonobuoy worker single-node -v 5 --logtostderr && sleep 3600"],
+    },
 };
+
+local systemdContainer =
+    c.new(systemdconf.systemd.name, systemdconf.systemd.image) +
+    c.imagePullPolicy("Always") +
+    c.command(systemdconf.systemd.command) +
+    c.env([
+        c.envType.fromFieldPath("NODE_NAME", "spec.nodeName"),
+        c.envType.new("RESULTS_DIR", systemdconf.resultsDir),
+        c.envType.new("CHROOT_DIR", systemdconf.rootDir),
+    ]) +
+    c.mixin.securityContext.privileged(true) +
+    c.volumeMounts([
+        c.volumeMountsType.new("results", systemdconf.resultsDir),
+        c.volumeMountsType.new("root", systemdconf.rootDir),
+    ]);
+
+local systemdWorker =
+    c.new(systemdconf.workerContainer.name, systemdconf.workerContainer.image) +
+    c.imagePullPolicy("Always") +
+    c.command(systemdconf.workerContainer.command) +
+    c.env([
+        c.envType.fromFieldPath("NODE_NAME", "spec.nodeName"),
+        c.envType.new("RESULTS_DIR", systemdconf.resultsDir),
+        c.envType.new("MASTER_URL", "{{.MasterAddress}}"),
+        c.envType.new("RESULT_TYPE", systemdconf.pluginName),
+    ]) +
+    c.volumeMounts([
+        c.volumeMountsType.new("results", systemdconf.resultsDir),
+    ]);
+
+local systemdDaemonSet =
+    ds.new() +
+    ds.mixin.metadata.name(systemdconf.name) +
+    ds.mixin.metadata.annotations(systemdconf.annotations) +
+    ds.mixin.metadata.labels(systemdconf.labels) +
+    ds.mixin.metadata.namespace(systemdconf.namespace) +
+    ds.mixin.spec.selector.matchLabels(systemdconf.selector) +
+    ds.mixin.spec.template.metadata.labels(systemdconf.labels) +
+    ds.mixin.spec.template.spec.containers([systemdContainer, systemdWorker]) +
+    ds.mixin.spec.template.spec.volumes([
+        ds.mixin.spec.template.spec.volumesType.fromEmptyDir("results"),
+        ds.mixin.spec.template.spec.volumesType.fromHostPath("root", "/"),
+    ]);
+
+
+local pluginconf = {
+    pluginName: "e2e",
+    name: "sonobuoy-e2e-job-{{.SessionID}}",
+    annotations: {
+        "sonobuoy-plugin": $.pluginName,
+        "sonobuoy-driver": "Job",
+        "sonobuoy-result-type": $.pluginName,
+    },
+    labels: {
+        component: "sonobuoy",
+        tier: "analysis",
+        "sonobuoy-run": "{{.SessionID}}",
+    },
+    namespace: "{{.Namespace}}",
+
+    serviceAccountName: "sonobuoy-serviceaccount",
+
+    resultsDir: "/tmp/results",
+
+    e2ec: {
+        name: $.pluginName,
+        image: "gcr.io/heptio-images/kube-conformance:latest",
+    },
+    workerContainer: {
+        name: "sonobuoy-worker",
+        image: "gcr.io/heptio-images/sonobuoy:master",
+        command: ["sh", "-c", "/sonobuoy worker global -v 5 --logtostderr"],
+    },
+};
+
+local e2eContainer =
+    c.new(pluginconf.e2ec.name, pluginconf.e2ec.image) +
+    c.imagePullPolicy("Always") +
+    c.env([
+        c.envType.new("E2E_FOCUS", "Pods should be submitted and removed"),
+    ]) +
+    c.volumeMounts([
+        c.volumeMountsType.new("results", pluginconf.resultsDir),
+    ]);
+
+local e2eWorker =
+    c.new(pluginconf.workerContainer.name, pluginconf.workerContainer.image) +
+    c.imagePullPolicy("Always") +
+    c.command(pluginconf.workerContainer.command) +
+    c.env([
+        c.envType.fromFieldPath("NODE_NAME", "spec.nodeName"),
+        c.envType.new("RESULTS_DIR", pluginconf.resultsDir),
+        c.envType.new("MASTER_URL", "{{.MasterAddress}}"),
+        c.envType.new("RESULT_TYPE", pluginconf.pluginName),
+    ]) +
+    c.volumeMounts([
+        c.volumeMountsType.new("results", pluginconf.resultsDir),
+    ]);
+
+local e2epod =
+    local p = k.core.v1.pod;
+    p.new() +
+    // Metaddata
+    p.mixin.metadata.name(pluginconf.pluginName) +
+    p.mixin.metadata.annotations(pluginconf.annotations) +
+    p.mixin.metadata.labels(pluginconf.labels) +
+    p.mixin.metadata.namespace(pluginconf.namespace) +
+    // Spec
+    p.mixin.spec.serviceAccountName(pluginconf.serviceAccountName) +
+    p.mixin.spec.tolerations(tolerations) +
+    p.mixin.spec.restartPolicy("Never") +
+    p.mixin.spec.containers([e2eContainer, e2eWorker]) +
+    p.mixin.spec.volumes([
+        p.mixin.spec.volumesType.fromEmptyDir("results"),
+    ]);
 
 local plugins = {
-  "systemdlogs.yaml": kubecfg.manifestYaml(systemdlogsConfig),
-  "e2e.yaml": kubecfg.manifestYaml(e2eConfig),
+  "systemd_logs.tmpl": kubecfg.manifestYaml(systemdDaemonSet),
+  "e2e.tmpl": kubecfg.manifestYaml(e2epod),
 };
 
 local sonobuoyConfig = configMap.new() +
     configMap.mixin.metadata.name(conf.sonobuoyCfg.name) +
     configMap.mixin.metadata.namespace(conf.namespace) +
     configMap.mixin.metadata.labels(conf.labels) +
-    configMap.data({"config.json": kubecfg.manifestJson(sonobuoyConfigData)});
+    configMap.data({ "config.json": kubecfg.manifestJson(sonobuoyConfigData) });
 
 local pluginConfigs = configMap.new() +
     configMap.mixin.metadata.name(conf.pluginsCfg.name) +

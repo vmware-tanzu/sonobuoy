@@ -47,12 +47,12 @@ local clusterRoleBinding =
     crb.new() +
     crb.mixin.metadata.mixinInstance(conf.metadata) +
     # TODO: replace with `crb.mixinroleRef.kind("ClusterRole") when https://github.com/ksonnet/ksonnet-lib/issues/53 closes.
-    {roleRef: {kind: "ClusterRole"}} +
+    { roleRef: { kind: "ClusterRole" } } +
     crb.mixin.roleRef.apiGroup("rbac.authorization.k8s.io") +
     crb.mixin.roleRef.name(conf.serviceAccount.name) +
     crb.subjects([
         # TODO: replace with `crb.subjectsType.kind("ServiceAccount")` when https://github.com/ksonnet/ksonnet-lib/issues/43 closes.
-        {kind: "ServiceAccount"} +
+        { kind: "ServiceAccount" } +
         crb.subjectsType.name(conf.serviceAccount.name) +
         crb.subjectsType.namespace(conf.namespace),
     ]);
@@ -75,5 +75,5 @@ local optRbacObj =
 
 k.core.v1.list.new([
   namespace,
-  serviceaccount
+  serviceaccount,
 ] + optRbacObj)

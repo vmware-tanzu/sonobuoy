@@ -50,7 +50,7 @@ local conf(opts) = {
           "/sonobuoy master --no-exit=true -v ",
           if opts.debug then "5" else "3",
           " --logtostderr",
-          if opts.debug then " --debug" else ""
+          if opts.debug then " --debug" else "",
         ]),
       ],
       imagePullPolicy: opts.pullPolicy,
@@ -88,7 +88,7 @@ local conf(opts) = {
 
 
 {
-  objects(pullPolicy="Always", debug=false) ::
+  objects(pullPolicy="Always", debug=false)::
     local opts = {
       pullPolicy: pullPolicy,
       debug: debug,
@@ -118,6 +118,5 @@ local conf(opts) = {
       svc.mixin.metadata.labels(myconf.labels) +
       svc.mixin.spec.type(myconf.service.type);
 
-    k.core.v1.list.new([sonobuoyPod, sonobuoyService])
+    k.core.v1.list.new([sonobuoyPod, sonobuoyService]),
 }
-
