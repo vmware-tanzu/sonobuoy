@@ -51,10 +51,6 @@ func LoadConfig() (*plugin.WorkerConfig, error) {
 
 	setConfigDefaults(config)
 
-	if err = viper.ReadInConfig(); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
 	if err = viper.Unmarshal(config); err != nil {
 		return nil, errors.WithStack(err)
 	}
