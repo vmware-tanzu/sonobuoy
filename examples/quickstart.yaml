@@ -116,41 +116,29 @@ data:
     apiVersion: v1
     kind: Pod
     metadata:
-      name: "sonobuoy-e2e-job-{{.SessionID}}"
       annotations:
-        "sonobuoy-plugin": "e2e"
-        "sonobuoy-driver": "Job"
-        "sonobuoy-result-type": "e2e"
+        sonobuoy-driver: Job
+        sonobuoy-plugin: e2e
+        sonobuoy-result-type: e2e
       labels:
         component: sonobuoy
-      tier: analysis
-      "sonobuoy-run": "{{.SessionID}}"
-      namespace: "{{.Namespace}}"
+        sonobuoy-run: '{{.SessionID}}'
+        tier: analysis
+      name: e2e
+      namespace: '{{.Namespace}}'
     spec:
-      serviceAccountName: sonobuoy-serviceaccount
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: NoSchedule
-      - key: CriticalAddonsOnly
-        operator: Exists
-      restartPolicy: Never
       containers:
-      - name: e2e
+      - env:
+        - name: E2E_FOCUS
+          value: Pods should be submitted and removed
         image: gcr.io/heptio-images/kube-conformance:latest
         imagePullPolicy: Always
-        # NOTE: Full conformance can take a while depending on your cluster size.
-        # As a result, only a single test is set atm to verify correctness.
-        # Operators that want the complete test results can comment out the
-        # env section.
-        env:
-        - name: E2E_FOCUS
-          value: "Pods should be submitted and removed"
+        name: e2e
         volumeMounts:
-        - name: results
-          mountPath: /tmp/results
-      - name: sonobuoy-worker
-        command:
+        - mountPath: /tmp/results
+          name: results
+          readOnly: false
+      - command:
         - sh
         - -c
         - /sonobuoy worker global -v 5 --logtostderr
@@ -158,60 +146,58 @@ data:
         - name: NODE_NAME
           valueFrom:
             fieldRef:
-              apiVersion: v1
               fieldPath: spec.nodeName
         - name: RESULTS_DIR
           value: /tmp/results
         - name: MASTER_URL
-          value: "{{.MasterAddress}}"
+          value: '{{.MasterAddress}}'
         - name: RESULT_TYPE
-          value: "e2e"
+          value: e2e
         image: gcr.io/heptio-images/sonobuoy:master
         imagePullPolicy: Always
+        name: sonobuoy-worker
         volumeMounts:
-        - name: results
-          mountPath: /tmp/results
+        - mountPath: /tmp/results
+          name: results
+          readOnly: false
+      restartPolicy: Never
+      serviceAccountName: sonobuoy-serviceaccount
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
       volumes:
-      - name: results
-        emptyDir: {}
+      - emptyDir: {}
+        name: results
   systemd_logs.tmpl: |
     apiVersion: extensions/v1beta1
     kind: DaemonSet
     metadata:
-      name: "sonobuoy-systemd-logs-config-{{.SessionID}}"
       annotations:
-        "sonobuoy-plugin": "systemd_logs"
-        "sonobuoy-driver": "DaemonSet"
-        "sonobuoy-result-type": "systemd_logs"
+        sonobuoy-driver: DaemonSet
+        sonobuoy-plugin: systemd_logs
+        sonobuoy-result-type: systemd_logs
       labels:
         component: sonobuoy
+        sonobuoy-run: '{{.SessionID}}'
         tier: analysis
-        "sonobuoy-run": "{{.SessionID}}"
-      namespace: {{.Namespace}}
+      name: sonobuoy-systemd-logs-config-{{.SessionID}}
+      namespace: '{{.Namespace}}'
     spec:
       selector:
         matchLabels:
-          "sonobuoy-run": "{{.SessionID}}"
+          sonobuoy-run: '{{.SessionID}}'
       template:
         metadata:
           labels:
             component: sonobuoy
+            sonobuoy-run: '{{.SessionID}}'
             tier: analysis
-            "sonobuoy-run": "{{.SessionID}}"
         spec:
-          tolerations:
-          - key: node-role.kubernetes.io/master
-            operator: Exists
-            effect: NoSchedule
-          - key: CriticalAddonsOnly
-            operator: Exists
-          hostNetwork: true
-          hostIPC: true
-          hostPID: true
-          dnsPolicy: ClusterFirstWithHostNet
           containers:
-          - name: systemd-logs
-            command:
+          - command:
             - sh
             - -c
             - /get_systemd_logs.sh && sleep 3600
@@ -219,7 +205,6 @@ data:
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
-                  apiVersion: v1
                   fieldPath: spec.nodeName
             - name: RESULTS_DIR
               value: /tmp/results
@@ -227,15 +212,17 @@ data:
               value: /node
             image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
             imagePullPolicy: Always
+            name: systemd-logs
             securityContext:
               privileged: true
             volumeMounts:
-            - mountPath: /node
-              name: root
             - mountPath: /tmp/results
               name: results
-          - name: sonobuoy-worker
-            command:
+              readOnly: false
+            - mountPath: /node
+              name: root
+              readOnly: false
+          - command:
             - sh
             - -c
             - /sonobuoy worker single-node -v 5 --logtostderr && sleep 3600
@@ -243,26 +230,26 @@ data:
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
-                  apiVersion: v1
                   fieldPath: spec.nodeName
             - name: RESULTS_DIR
               value: /tmp/results
             - name: MASTER_URL
-              value: "{{.MasterAddress}}"
+              value: '{{.MasterAddress}}'
+            - name: RESULT_TYPE
+              value: systemd_logs
             image: gcr.io/heptio-images/sonobuoy:master
             imagePullPolicy: Always
-            securityContext:
-              privileged: true
+            name: sonobuoy-worker
             volumeMounts:
             - mountPath: /tmp/results
               name: results
+              readOnly: false
           volumes:
-          - name: root
-            hostPath:
+          - emptyDir: {}
+            name: results
+          - hostPath:
               path: /
-          - name: results
-            emptyDir: {}
-
+            name: root
 kind: ConfigMap
 metadata:
   labels:
