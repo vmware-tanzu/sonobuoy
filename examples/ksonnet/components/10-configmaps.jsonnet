@@ -29,6 +29,8 @@ local conf = {
     labels: {
         component: "sonobuoy",
     },
+    resultsDir: "/tmp/results",
+    sonobuoyImage: "gcr.io/heptio-images/sonobuoy:master",
 };
 
 local sonobuoyConfigData = {
@@ -89,7 +91,6 @@ local sonobuoyConfigData = {
 local tolerations = [
     {
         key: "node-role.kubernetes.io/master",
-        operator: "Exists",
         effect: "NoSchedule",
     },
     {
@@ -98,37 +99,45 @@ local tolerations = [
     },
 ];
 
+# Plugin configuration
+local pluginConf = {
+    resultsDir: "/tmp/results",
+    namespace: "{{.Namespace}}",
+    serviceAccountName: "sonobuoy-serviceaccount",
+};
+local globalWorker = {
+    name: "sonobuoy-worker",
+    image: conf.sonobuoyImage,
+    command: ["sh", "-c", "/sonobuoy worker global -v 5 --logtostderr"],
+};
+local singleNodeWorker = {
+    name: "sonobuoy-worker",
+    image: conf.sonobuoyImage,
+    command: ["sh", "-c", "/sonobuoy worker single-node -v 5 --logtostderr && sleep 3600"],
+};
+local sonobuoyLabels = {
+    component: "sonobuoy",
+    tier: "analysis",
+    "sonobuoy-run": "{{.SessionID}}",
+};
+
+## systemd_logs plugin
 local systemdconf = {
+    name: "systemd-logs",
     pluginName: "systemd_logs",
-    name: "sonobuoy-systemd-logs-config-{{.SessionID}}",
     annotations: {
         "sonobuoy-plugin": $.pluginName,
         "sonobuoy-driver": "DaemonSet",
         "sonobuoy-result-type": $.pluginName,
     },
-    labels: {
-        component: "sonobuoy",
-        tier: "analysis",
-        "sonobuoy-run": "{{.SessionID}}",
-    },
-    namespace: "{{.Namespace}}",
-
-    serviceAccountName: "sonobuoy-serviceaccount",
-
     rootDir: "/node",
-    resultsDir: "/tmp/results",
     selector: {
         "sonobuoy-run": "{{.SessionID}}",
     },
     systemd: {
-        name: "systemd-logs",
+        name: "sonobuoy-systemd-logs-config-{{.SessionID}}",
         image: "gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest",
         command: ["sh", "-c", "/get_systemd_logs.sh && sleep 3600"],
-    },
-    workerContainer: {
-        name: "sonobuoy-worker",
-        image: "gcr.io/heptio-images/sonobuoy:master",
-        command: ["sh", "-c", "/sonobuoy worker single-node -v 5 --logtostderr && sleep 3600"],
     },
 };
 
@@ -138,111 +147,101 @@ local systemdContainer =
     c.command(systemdconf.systemd.command) +
     c.env([
         c.envType.fromFieldPath("NODE_NAME", "spec.nodeName"),
-        c.envType.new("RESULTS_DIR", systemdconf.resultsDir),
+        c.envType.new("RESULTS_DIR", pluginConf.resultsDir),
         c.envType.new("CHROOT_DIR", systemdconf.rootDir),
     ]) +
     c.mixin.securityContext.privileged(true) +
     c.volumeMounts([
-        c.volumeMountsType.new("results", systemdconf.resultsDir),
+        c.volumeMountsType.new("results", pluginConf.resultsDir),
         c.volumeMountsType.new("root", systemdconf.rootDir),
     ]);
 
-local systemdWorker =
-    c.new(systemdconf.workerContainer.name, systemdconf.workerContainer.image) +
+local systemdWorkerContainer =
+    c.new(singleNodeWorker.name, singleNodeWorker.image) +
     c.imagePullPolicy("Always") +
-    c.command(systemdconf.workerContainer.command) +
+    c.command(singleNodeWorker.command) +
     c.env([
         c.envType.fromFieldPath("NODE_NAME", "spec.nodeName"),
-        c.envType.new("RESULTS_DIR", systemdconf.resultsDir),
+        c.envType.new("RESULTS_DIR", pluginConf.resultsDir),
         c.envType.new("MASTER_URL", "{{.MasterAddress}}"),
         c.envType.new("RESULT_TYPE", systemdconf.pluginName),
     ]) +
     c.volumeMounts([
-        c.volumeMountsType.new("results", systemdconf.resultsDir),
+        c.volumeMountsType.new("results", pluginConf.resultsDir),
     ]);
 
 local systemdDaemonSet =
     ds.new() +
     ds.mixin.metadata.name(systemdconf.name) +
     ds.mixin.metadata.annotations(systemdconf.annotations) +
-    ds.mixin.metadata.labels(systemdconf.labels) +
-    ds.mixin.metadata.namespace(systemdconf.namespace) +
+    ds.mixin.metadata.labels(sonobuoyLabels) +
+    ds.mixin.metadata.namespace(pluginConf.namespace) +
     ds.mixin.spec.selector.matchLabels(systemdconf.selector) +
-    ds.mixin.spec.template.metadata.labels(systemdconf.labels) +
-    ds.mixin.spec.template.spec.containers([systemdContainer, systemdWorker]) +
+    ds.mixin.spec.template.metadata.labels(sonobuoyLabels) +
+    ds.mixin.spec.template.spec.containers([systemdContainer, systemdWorkerContainer]) +
+    ds.mixin.spec.template.spec.tolerations(tolerations) +
+    ds.mixin.spec.template.spec.hostIpc(true) +
+    ds.mixin.spec.template.spec.hostNetwork(true) +
+    ds.mixin.spec.template.spec.hostPid(true) +
+    ds.mixin.spec.template.spec.dnsPolicy("ClusterFirstWithHostNet") +
     ds.mixin.spec.template.spec.volumes([
         ds.mixin.spec.template.spec.volumesType.fromEmptyDir("results"),
         ds.mixin.spec.template.spec.volumesType.fromHostPath("root", "/"),
     ]);
 
-
-local pluginconf = {
+## e2e plugin
+local e2eConf = {
+    jobName: "sonobuoy-e2e-job-{{.SessionID}}",
     pluginName: "e2e",
-    name: "sonobuoy-e2e-job-{{.SessionID}}",
     annotations: {
         "sonobuoy-plugin": $.pluginName,
         "sonobuoy-driver": "Job",
         "sonobuoy-result-type": $.pluginName,
     },
-    labels: {
-        component: "sonobuoy",
-        tier: "analysis",
-        "sonobuoy-run": "{{.SessionID}}",
-    },
-    namespace: "{{.Namespace}}",
-
-    serviceAccountName: "sonobuoy-serviceaccount",
-
-    resultsDir: "/tmp/results",
 
     e2ec: {
-        name: $.pluginName,
+        name: "e2e",
         image: "gcr.io/heptio-images/kube-conformance:latest",
-    },
-    workerContainer: {
-        name: "sonobuoy-worker",
-        image: "gcr.io/heptio-images/sonobuoy:master",
-        command: ["sh", "-c", "/sonobuoy worker global -v 5 --logtostderr"],
     },
 };
 
 local e2eContainer =
-    c.new(pluginconf.e2ec.name, pluginconf.e2ec.image) +
+    c.new(e2eConf.e2ec.name, e2eConf.e2ec.image) +
     c.imagePullPolicy("Always") +
     c.env([
         c.envType.new("E2E_FOCUS", "Pods should be submitted and removed"),
     ]) +
     c.volumeMounts([
-        c.volumeMountsType.new("results", pluginconf.resultsDir),
+        c.volumeMountsType.new("results", pluginConf.resultsDir),
     ]);
 
-local e2eWorker =
-    c.new(pluginconf.workerContainer.name, pluginconf.workerContainer.image) +
+local e2eworkerContainer =
+    c.new(globalWorker.name, globalWorker.image) +
     c.imagePullPolicy("Always") +
-    c.command(pluginconf.workerContainer.command) +
+    c.command(globalWorker.command) +
     c.env([
         c.envType.fromFieldPath("NODE_NAME", "spec.nodeName"),
-        c.envType.new("RESULTS_DIR", pluginconf.resultsDir),
+        c.envType.new("RESULTS_DIR", pluginConf.resultsDir),
         c.envType.new("MASTER_URL", "{{.MasterAddress}}"),
-        c.envType.new("RESULT_TYPE", pluginconf.pluginName),
+        c.envType.new("RESULT_TYPE", e2eConf.pluginName),
     ]) +
     c.volumeMounts([
-        c.volumeMountsType.new("results", pluginconf.resultsDir),
+        c.volumeMountsType.new("results", pluginConf.resultsDir),
     ]);
 
 local e2epod =
     local p = k.core.v1.pod;
     p.new() +
     // Metaddata
-    p.mixin.metadata.name(pluginconf.pluginName) +
-    p.mixin.metadata.annotations(pluginconf.annotations) +
-    p.mixin.metadata.labels(pluginconf.labels) +
-    p.mixin.metadata.namespace(pluginconf.namespace) +
+    p.mixin.metadata.name(e2eConf.jobName) +
+    p.mixin.metadata.annotations(e2eConf.annotations) +
+    p.mixin.metadata.labels(sonobuoyLabels) +
+    p.mixin.metadata.namespace(pluginConf.namespace) +
     // Spec
-    p.mixin.spec.serviceAccountName(pluginconf.serviceAccountName) +
+    p.mixin.spec.serviceAccountName(pluginConf.serviceAccountName) +
     p.mixin.spec.tolerations(tolerations) +
     p.mixin.spec.restartPolicy("Never") +
-    p.mixin.spec.containers([e2eContainer, e2eWorker]) +
+    p.mixin.spec.containers([e2eContainer, e2eworkerContainer]) +
     p.mixin.spec.volumes([
         p.mixin.spec.volumesType.fromEmptyDir("results"),
     ]);

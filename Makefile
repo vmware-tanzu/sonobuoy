@@ -21,6 +21,9 @@ EXAMPLE_OUTPUT = examples/quickstart.yaml
 DEV_OUTPUT = examples/dev.yaml
 KSONNET_BUILD_IMAGE = ksonnet/ksonnet-lib:beta.2
 
+PLUGINS = $(wildcard plugins.d/*.jsonnet)
+PLUGINS_OUTPUT = $(patsubst plugins.d/%.jsonnet,plugins.d/%.tmpl,$(PLUGINS))
+
 TARGET = sonobuoy
 GOTARGET = github.com/heptio/$(TARGET)
 REGISTRY ?= gcr.io/heptio-images
@@ -62,7 +65,7 @@ KUBECFG_CMD = $(DOCKER) run \
 
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 
-.PHONY: all container push clean cbuild test local generate
+.PHONY: all container push clean cbuild test local generate plugins
 
 all: container
 
@@ -99,6 +102,11 @@ clean:
 	rm -f $(TARGET)
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET) || true
 	find ./examples/ -type f -name '*.yaml' -delete
+
+plugins: $(PLUGINS_OUTPUT)
+
+plugins.d/%.tmpl: plugins.d/%.jsonnet
+	$(KUBECFG_CMD)
 
 generate: latest-ksonnet $(EXAMPLE_OUTPUT)
 

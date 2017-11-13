@@ -108,6 +108,7 @@ func TestLoadAllPlugins(t *testing.T) {
 		PluginSelections: []plugin.Selection{
 			plugin.Selection{Name: "systemd_logs"},
 			plugin.Selection{Name: "e2e"},
+			plugin.Selection{Name: "heptio-e2e"},
 		},
 	}
 
@@ -121,18 +122,25 @@ func TestLoadAllPlugins(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	plugins := cfg.getPlugins()
-	if len(plugins) != 2 {
-		t.Fatalf("Should have constructed 2 plugins, got %v", len(plugins))
+	if len(plugins) != len(cfg.PluginSelections) {
+		t.Fatalf("Should have constructed %v plugins, got %v", len(cfg.PluginSelections), len(plugins))
 	}
 
-	dsplugin := plugins[0]
-	if name := dsplugin.GetName(); name != "systemd_logs" {
-		t.Fatalf("First result of LoadAllPlugins has the wrong name: %v != systemd_logs", name)
+	// Get the names of all the loaded plugins for output on test failure.
+	pluginNames := make([]string, len(plugins))
+	for i, plugin := range plugins {
+		pluginNames[i] = plugin.GetName()
 	}
 
-	jobplugin := plugins[1]
-	if name := jobplugin.GetName(); name != "e2e" {
-		t.Fatalf("Second result of LoadAllPlugins has the wrong name: %v != e2e", name)
+	for _, selection := range cfg.PluginSelections {
+		found := false
+		for _, loadedPlugin := range plugins {
+			if loadedPlugin.GetName() == selection.Name {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("Expected to find %v in %v", selection.Name, pluginNames)
+		}
 	}
-
 }
