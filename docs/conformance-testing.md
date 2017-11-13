@@ -46,5 +46,5 @@ To customize the set of tests that will be run as part of the report, the follow
 [5]: plugins.md
 [6]: https://github.com/kubernetes/kubernetes/issues/49313
 [7]: https://github.com/heptio/sonobuoy/blob/master/plugins.d/e2e.yaml
-[8]: https://github.com/heptio/sonobuoy/blob/master/examples/quickstart.yaml#L124
-[9]: https://github.com/heptio/sonobuoy/blob/master/examples/quickstart.yaml#L103
+[8]: https://github.com/heptio/sonobuoy/blob/master/examples/quickstart.yaml#L133
+[9]: https://github.com/heptio/sonobuoy/blob/master/examples/quickstart.yaml#L102
