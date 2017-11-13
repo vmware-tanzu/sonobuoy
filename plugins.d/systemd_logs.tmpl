@@ -1,38 +1,30 @@
+---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: "sonobuoy-systemd-logs-config-{{.SessionID}}"
   annotations:
-    "sonobuoy-plugin": "systemd_logs"
-    "sonobuoy-driver": "DaemonSet"
-    "sonobuoy-result-type": "systemd_logs"
+    sonobuoy-driver: DaemonSet
+    sonobuoy-plugin: systemd_logs
+    sonobuoy-result-type: systemd_logs
   labels:
     component: sonobuoy
+    sonobuoy-run: '{{.SessionID}}'
     tier: analysis
-    "sonobuoy-run": "{{.SessionID}}"
-  namespace: {{.Namespace}}
+  name: systemd-logs
+  namespace: '{{.Namespace}}'
 spec:
   selector:
-    "sonobuoy-run": "{{.SessionID}}"
+    matchLabels:
+      sonobuoy-run: '{{.SessionID}}'
   template:
     metadata:
-      component: sonobuoy
-      tier: analysis
-      "sonobuoy-run": "{{.SessionID}}"
+      labels:
+        component: sonobuoy
+        sonobuoy-run: '{{.SessionID}}'
+        tier: analysis
     spec:
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: NoSchedule
-      - key: CriticalAddonsOnly
-        operator: Exists
-      hostNetwork: true
-      hostIPC: true
-      hostPID: true
-      dnsPolicy: ClusterFirstWithHostNet
       containers:
-      - name: systemd-logs
-        command:
+      - command:
         - sh
         - -c
         - /get_systemd_logs.sh && sleep 3600
@@ -40,7 +32,6 @@ spec:
         - name: NODE_NAME
           valueFrom:
             fieldRef:
-              apiVersion: v1
               fieldPath: spec.nodeName
         - name: RESULTS_DIR
           value: /tmp/results
@@ -48,17 +39,17 @@ spec:
           value: /node
         image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
         imagePullPolicy: Always
+        name: sonobuoy-systemd-logs-config-{{.SessionID}}
         securityContext:
           privileged: true
         volumeMounts:
-        - mountPath: /node
-          name: root
         - mountPath: /tmp/results
           name: results
-        - mountPath: /etc/sonobuoy
-          name: config
-      - name: sonobuoy-worker
-        command:
+          readOnly: false
+        - mountPath: /node
+          name: root
+          readOnly: false
+      - command:
         - sh
         - -c
         - /sonobuoy worker single-node -v 5 --logtostderr && sleep 3600
@@ -66,22 +57,32 @@ spec:
         - name: NODE_NAME
           valueFrom:
             fieldRef:
-              apiVersion: v1
               fieldPath: spec.nodeName
         - name: RESULTS_DIR
           value: /tmp/results
         - name: MASTER_URL
-          value: "{{.MasterAddress}}"
-        image: gcr.io/heptio-images/sonobuoy:latest
+          value: '{{.MasterAddress}}'
+        - name: RESULT_TYPE
+          value: systemd_logs
+        image: gcr.io/heptio-images/sonobuoy:master
         imagePullPolicy: Always
-        securityContext:
-          privileged: true
+        name: sonobuoy-worker
         volumeMounts:
         - mountPath: /tmp/results
           name: results
+          readOnly: false
+      dnsPolicy: ClusterFirstWithHostNet
+      hostIPC: true
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      - key: CriticalAddonsOnly
+        operator: Exists
       volumes:
-      - name: root
-        hostPath:
+      - emptyDir: {}
+        name: results
+      - hostPath:
           path: /
-      - name: results
-        emptyDir: {}
+        name: root
