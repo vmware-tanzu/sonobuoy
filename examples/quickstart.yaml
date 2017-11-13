@@ -124,7 +124,7 @@ data:
         component: sonobuoy
         sonobuoy-run: '{{.SessionID}}'
         tier: analysis
-      name: e2e
+      name: sonobuoy-e2e-job-{{.SessionID}}
       namespace: '{{.Namespace}}'
     spec:
       containers:
@@ -165,7 +165,6 @@ data:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
-        operator: Exists
       - key: CriticalAddonsOnly
         operator: Exists
       volumes:
@@ -183,7 +182,7 @@ data:
         component: sonobuoy
         sonobuoy-run: '{{.SessionID}}'
         tier: analysis
-      name: sonobuoy-systemd-logs-config-{{.SessionID}}
+      name: systemd-logs
       namespace: '{{.Namespace}}'
     spec:
       selector:
@@ -212,7 +211,7 @@ data:
               value: /node
             image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
             imagePullPolicy: Always
-            name: systemd-logs
+            name: sonobuoy-systemd-logs-config-{{.SessionID}}
             securityContext:
               privileged: true
             volumeMounts:
@@ -244,6 +243,15 @@ data:
             - mountPath: /tmp/results
               name: results
               readOnly: false
+          dnsPolicy: ClusterFirstWithHostNet
+          hostIPC: true
+          hostNetwork: true
+          hostPID: true
+          tolerations:
+          - effect: NoSchedule
+            key: node-role.kubernetes.io/master
+          - key: CriticalAddonsOnly
+            operator: Exists
           volumes:
           - emptyDir: {}
             name: results
