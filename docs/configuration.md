@@ -21,7 +21,7 @@ Once the configs are loaded (in either case), Sonobuoy parses them and gathers d
 | | Overview|Path on Cluster Node|[STANDALONE]<br>JSON example(s)|[CONTAINERIZED]<br>YAML manifest example(s)
 |---|---|---|---|---|
 |*Data configuration*| What Sonobuoy records, how, and where. |*ANY of the following*:<br>(1) `config.json` in the directory where `sonobuoy` is executed<br>(2) `/etc/sonobuoy/config.json`<br>(3) `$SONOBUOY_CONFIG`<br><br>|[`config.json`][10]|<br> [`examples/ksonnet/components/10-configmaps.jsonnet`][11]<br><br>*The jsonnet file is basically a wrapper for the `config.json` file, which allows it to be properly mounted onto the cluster's Sonobuoy pod.* <br><br>
-|*Plugin configuration*|Settings for each plugin integration.|*ANY of the following*:<br>(1) `/etc/sonobuoy/plugins.d`<br>(2) `$HOME/.sonobuoy/plugins.d`<br>(3) `./plugins.d`<br>(4) `PluginSearchPath` (override from the data configuration) <br><br>| There is a YAML config for each plugin:<br>(1) [`plugins.d/e2e.yaml`][16]<br>(2)[`plugins.d/systemdlogs.yaml`][17]|<br>[`examples/ksonnet/components/10-configmaps.jsonnet`][11]<br><br>*Same comment about the jsonnet file as above.*
+|*Plugin configuration*|Settings for each plugin integration.|*ANY of the following*:<br>(1) `/etc/sonobuoy/plugins.d`<br>(2) `$HOME/.sonobuoy/plugins.d`<br>(3) `./plugins.d`<br>(4) `PluginSearchPath` (override from the data configuration) <br><br>| There is a templatized YAML config for each plugin:<br>(1) [`plugins.d/e2e.tmpl`][16]<br>(2) [`plugins.d/systemd_logs.tmpl`][17]<br>(3) [`plugins.d/heptio-e2e.tmpl`][20]|<br>[`examples/ksonnet/components/10-configmaps.jsonnet`][11]<br><br>*Same comment about the jsonnet file as above.*
 |*Kubernetes component definitions*|The various K8s objects that need to be defined for Sonobuoy to run as a containerized app.|N/A (manifest only)|N/A|The example splits this into two manifests:<br>(1) [`examples/ksonnet/components/00-rbac.jsonnet`][12]<br>(2) [`examples/ksonnet/components/20-pod.jsonnet`][13]|
 
 
@@ -188,7 +188,8 @@ However, ensure that your pod declaration has addressed the following aspects, w
 [13]: /examples/ksonnet/components/20-pod.jsonnet
 [14]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 [15]: https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/
-[16]: /plugins.d/e2e.yaml
-[17]: plugins.d/systemdlogs.yaml
+[16]: /plugins.d/e2e.tmpl
+[17]: /plugins.d/systemd_logs.tmpl
 [18]: /examples/quickstart.yaml
 [19]: /examples/ksonnet/components
+[20]: /plugins.d/heptio-e2e.tmpl
