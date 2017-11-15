@@ -164,7 +164,7 @@ For noiser tests, use `VERBOSE=true make test`
 
 ## Changelog
 
-See [the list of releases](/CHANGELOG.md) to find out about feature changes.
+See [the list of releases](https://github.com/heptio/sonobuoy/releases) to find out about feature changes.
 
 [0]: https://github.com/heptio
 [1]: https://jenkins.i.heptio.com/buildStatus/icon?job=sonobuoy-deployer
