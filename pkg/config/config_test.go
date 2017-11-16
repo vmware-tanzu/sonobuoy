@@ -37,14 +37,3 @@ func TestDefaults(t *testing.T) {
 		t.Fatalf("Defaults should match but didn't")
 	}
 }
-
-func TestFilters(t *testing.T) {
-	cfg1 := NewWithDefaults()
-	checkresources := cfg1.FilterResources(ClusterResources)
-
-	for _, felement := range ClusterResources {
-		if checkresources[felement] == false {
-			t.Fatalf("Failed to properly filter")
-		}
-	}
-}
