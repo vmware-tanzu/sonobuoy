@@ -113,7 +113,7 @@ generate: latest-ksonnet $(EXAMPLE_OUTPUT)
 $(EXAMPLE_OUTPUT): examples/ksonnet/quickstart.jsonnet examples/ksonnet/components/*.jsonnet
 	$(KUBECFG_CMD)
 
-dev: latest-ksonnet $(DEV_OUTPUT)
+dev: latest-ksonnet $(DEV_OUTPUT) container
 
 $(DEV_OUTPUT): examples/ksonnet/dev.jsonnet examples/ksonnet/components/*.jsonnet
 	$(KUBECFG_CMD)
