@@ -24,7 +24,6 @@ import (
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/satori/go.uuid"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 ///////////////////////////////////////////////////////
@@ -44,6 +43,8 @@ var ClusterResources = []string{
 	"Nodes",
 	"PersistentVolumes",
 	"PodSecurityPolicies",
+	"ServerGroups",
+	"ServerVersion",
 	"StorageClasses",
 	"ThirdPartyResources",
 }
@@ -65,6 +66,7 @@ var NamespacedResources = []string{
 	"NetworkPolicies",
 	"PersistentVolumeClaims",
 	"PodDisruptionBudgets",
+	"PodLogs",
 	"PodPresets",
 	"PodTemplates",
 	"Pods",
@@ -77,14 +79,6 @@ var NamespacedResources = []string{
 	"ServiceAccounts",
 	"Services",
 	"StatefulSets",
-}
-
-// SpecialResources are resources that aren't queried (or stored) the same was
-// as the rest, so need special casing for querying them.
-var SpecialResources = []string{
-	"PodLogs",
-	"ServerGroups",
-	"ServerVersion",
 }
 
 // FilterOptions allow operators to select sets to include in a report
@@ -150,13 +144,12 @@ type SizeOrTimeLimitConfig struct {
 }
 
 // FilterResources is a utility function used to parse Resources
-func (cfg *Config) FilterResources(filter []string) map[string]bool {
-	results := make(map[string]bool)
-
+func (cfg *Config) FilterResources(filter []string) []string {
+	var results []string
 	for _, felement := range filter {
 		for _, check := range cfg.Resources {
 			if felement == check {
-				results[felement] = true
+				results = append(results, felement)
 			}
 		}
 	}
@@ -227,9 +220,8 @@ func NewWithDefaults() *Config {
 
 	cfg.Resources = ClusterResources
 	cfg.Resources = append(cfg.Resources, NamespacedResources...)
-	cfg.Resources = append(cfg.Resources, SpecialResources...)
 
-	cfg.PluginNamespace = metav1.NamespaceSystem
+	cfg.PluginNamespace = "heptio-sonobuoy"
 
 	cfg.Aggregation.BindAddress = "0.0.0.0"
 	cfg.Aggregation.BindPort = 8080

@@ -18,6 +18,7 @@ package discovery
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -71,8 +72,9 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
 	}
 
 	// 2. Get the list of namespaces and apply the regex filter on the namespace
-	nslist := FilterNamespaces(kubeClient, cfg.Filters.Namespaces)
-
+	nsfilter := fmt.Sprintf("%s|%s", cfg.Filters.Namespaces, cfg.PluginNamespace)
+	logrus.Infof("Filtering namespaces based on the following regex:%s", nsfilter)
+	nslist := FilterNamespaces(kubeClient, nsfilter)
 	// 3. Dump the config.json we used to run our test
 	if blob, err := json.Marshal(cfg); err == nil {
 		if err = ioutil.WriteFile(path.Join(metapath, "config.json"), blob, 0644); err != nil {
