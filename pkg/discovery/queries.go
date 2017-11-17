@@ -234,25 +234,29 @@ func QueryNSResources(kubeClient kubernetes.Interface, recorder *QueryRecorder, 
 		}
 	}
 
-	resources := cfg.FilterResources(config.NamespacedResources)
-
-	// 3. Execute the ns-query
-	for resourceKind := range resources {
-		lister := func() (runtime.Object, error) { return queryNsResource(ns, resourceKind, opts, kubeClient) }
-		query := func() (time.Duration, error) { return objListQuery(outdir+"/", resourceKind+".json", lister) }
-		timedQuery(recorder, resourceKind, ns, query)
+	var resources []string
+	if cfg.PluginNamespace == ns {
+		resources = config.NamespacedResources
+	} else {
+		resources = cfg.FilterResources(config.NamespacedResources)
 	}
 
-	specialResources := cfg.FilterResources(config.SpecialResources)
-	if specialResources["PodLogs"] {
-		start := time.Now()
-		err := gatherPodLogs(kubeClient, ns, opts, cfg)
-		if err != nil {
-			return err
+	// 3. Execute the ns-query
+	for _, resourceKind := range resources {
+		switch resourceKind {
+		case "PodLogs":
+			start := time.Now()
+			err := gatherPodLogs(kubeClient, ns, opts, cfg)
+			if err != nil {
+				return err
+			}
+			duration := time.Since(start)
+			recorder.RecordQuery("PodLogs", ns, duration, err)
+		default:
+			lister := func() (runtime.Object, error) { return queryNsResource(ns, resourceKind, opts, kubeClient) }
+			query := func() (time.Duration, error) { return objListQuery(outdir+"/", resourceKind+".json", lister) }
+			timedQuery(recorder, resourceKind, ns, query)
 		}
-
-		duration := time.Since(start)
-		recorder.RecordQuery("PodLogs", ns, duration, err)
 	}
 
 	return nil
@@ -275,39 +279,36 @@ func QueryClusterResources(kubeClient kubernetes.Interface, recorder *QueryRecor
 	}
 
 	// 2. Execute the non-ns-query
-	for resourceKind := range resources {
-		lister := func() (runtime.Object, error) { return queryNonNsResource(resourceKind, kubeClient) }
-		query := func() (time.Duration, error) { return objListQuery(outdir+"/", resourceKind+".json", lister) }
-		timedQuery(recorder, resourceKind, "", query)
-	}
+	for _, resourceKind := range resources {
+		switch resourceKind {
+		case "Nodes":
+			// cfg.Nodes configures whether users want to gather the Nodes resource in the
+			// cluster, but we also use that option to guide whether we get node data such
+			// as configz and healthz endpoints.
 
-	// cfg.Nodes configures whether users want to gather the Nodes resource in the
-	// cluster, but we also use that option to guide whether we get node data such
-	// as configz and healthz endpoints.
-	if resources["Nodes"] {
-		// NOTE: Node data collection is an aggregated time b/c propagating that detail back up
-		// is odd and would pollute some of the output.
-		start := time.Now()
-		err := gatherNodeData(kubeClient, cfg)
-		duration := time.Since(start)
-		recorder.RecordQuery("Nodes", "", duration, err)
-	}
-
-	specialResources := cfg.FilterResources(config.SpecialResources)
-	if specialResources["ServerVersion"] {
-		objqry := func() (interface{}, error) { return kubeClient.Discovery().ServerVersion() }
-		query := func() (time.Duration, error) {
-			return untypedQuery(cfg.OutputDir(), "serverversion.json", objqry)
+			// NOTE: Node data collection is an aggregated time b/c propagating that detail back up
+			// is odd and would pollute some of the output.
+			start := time.Now()
+			err := gatherNodeData(kubeClient, cfg)
+			duration := time.Since(start)
+			recorder.RecordQuery("Nodes", "", duration, err)
+		case "ServerVersion":
+			objqry := func() (interface{}, error) { return kubeClient.Discovery().ServerVersion() }
+			query := func() (time.Duration, error) {
+				return untypedQuery(cfg.OutputDir(), "serverversion.json", objqry)
+			}
+			timedQuery(recorder, "serverversion", "", query)
+		case "ServerGroups":
+			objqry := func() (interface{}, error) { return kubeClient.Discovery().ServerGroups() }
+			query := func() (time.Duration, error) {
+				return untypedQuery(cfg.OutputDir(), "servergroups.json", objqry)
+			}
+			timedQuery(recorder, "servergroups", "", query)
+		default:
+			lister := func() (runtime.Object, error) { return queryNonNsResource(resourceKind, kubeClient) }
+			query := func() (time.Duration, error) { return objListQuery(outdir+"/", resourceKind+".json", lister) }
+			timedQuery(recorder, resourceKind, "", query)
 		}
-		timedQuery(recorder, "serverversion", "", query)
-	}
-
-	if specialResources["ServerGroups"] {
-		objqry := func() (interface{}, error) { return kubeClient.Discovery().ServerGroups() }
-		query := func() (time.Duration, error) {
-			return untypedQuery(cfg.OutputDir(), "servergroups.json", objqry)
-		}
-		timedQuery(recorder, "servergroups", "", query)
 	}
 
 	return nil
