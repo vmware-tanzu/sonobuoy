@@ -281,17 +281,6 @@ func QueryClusterResources(kubeClient kubernetes.Interface, recorder *QueryRecor
 	// 2. Execute the non-ns-query
 	for _, resourceKind := range resources {
 		switch resourceKind {
-		case "Nodes":
-			// cfg.Nodes configures whether users want to gather the Nodes resource in the
-			// cluster, but we also use that option to guide whether we get node data such
-			// as configz and healthz endpoints.
-
-			// NOTE: Node data collection is an aggregated time b/c propagating that detail back up
-			// is odd and would pollute some of the output.
-			start := time.Now()
-			err := gatherNodeData(kubeClient, cfg)
-			duration := time.Since(start)
-			recorder.RecordQuery("Nodes", "", duration, err)
 		case "ServerVersion":
 			objqry := func() (interface{}, error) { return kubeClient.Discovery().ServerVersion() }
 			query := func() (time.Duration, error) {
@@ -304,6 +293,18 @@ func QueryClusterResources(kubeClient kubernetes.Interface, recorder *QueryRecor
 				return untypedQuery(cfg.OutputDir(), "servergroups.json", objqry)
 			}
 			timedQuery(recorder, "servergroups", "", query)
+		case "Nodes":
+			// cfg.Nodes configures whether users want to gather the Nodes resource in the
+			// cluster, but we also use that option to guide whether we get node data such
+			// as configz and healthz endpoints.
+
+			// NOTE: Node data collection is an aggregated time b/c propagating that detail back up
+			// is odd and would pollute some of the output.
+			start := time.Now()
+			err := gatherNodeData(kubeClient, cfg)
+			duration := time.Since(start)
+			recorder.RecordQuery("Nodes", "", duration, err)
+			fallthrough
 		default:
 			lister := func() (runtime.Object, error) { return queryNonNsResource(resourceKind, kubeClient) }
 			query := func() (time.Duration, error) { return objListQuery(outdir+"/", resourceKind+".json", lister) }
