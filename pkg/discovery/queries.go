@@ -25,6 +25,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/conversion"
@@ -116,7 +117,7 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 		return kubeClient.CoreV1().ConfigMaps(ns).List(opts)
 	case "ControllerRevisions":
 		lst, err := kubeClient.AppsV1beta2().ControllerRevisions(ns).List(opts)
-		if err != nil {
+		if apierrors.IsNotFound(err) {
 			return kubeClient.AppsV1beta1().ControllerRevisions(ns).List(opts)
 		}
 		return lst, err
@@ -124,13 +125,13 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 		return kubeClient.BatchV1beta1().CronJobs(ns).List(opts)
 	case "DaemonSets":
 		lst, err := kubeClient.AppsV1beta2().DaemonSets(ns).List(opts)
-		if err != nil {
+		if apierrors.IsNotFound(err) {
 			return kubeClient.ExtensionsV1beta1().DaemonSets(ns).List(opts)
 		}
 		return lst, err
 	case "Deployments":
 		lst, err := kubeClient.AppsV1beta2().Deployments(ns).List(opts)
-		if err != nil {
+		if apierrors.IsNotFound(err) {
 			return kubeClient.AppsV1beta1().Deployments(ns).List(opts)
 		}
 		return lst, err
@@ -160,7 +161,7 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 		return kubeClient.CoreV1().PodTemplates(ns).List(opts)
 	case "ReplicaSets":
 		lst, err := kubeClient.AppsV1beta2().ReplicaSets(ns).List(opts)
-		if err != nil {
+		if apierrors.IsNotFound(err) {
 			return kubeClient.ExtensionsV1beta1().ReplicaSets(ns).List(opts)
 		}
 		return lst, err
@@ -170,13 +171,13 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 		return kubeClient.CoreV1().ResourceQuotas(ns).List(opts)
 	case "RoleBindings":
 		lst, err := kubeClient.RbacV1().RoleBindings(ns).List(opts)
-		if err != nil {
+		if apierrors.IsNotFound(err) {
 			return kubeClient.RbacV1beta1().RoleBindings(ns).List(opts)
 		}
 		return lst, err
 	case "Roles":
 		lst, err := kubeClient.RbacV1().Roles(ns).List(opts)
-		if err != nil {
+		if apierrors.IsNotFound(err) {
 			return kubeClient.RbacV1beta1().Roles(ns).List(opts)
 		}
 		return lst, err
@@ -188,7 +189,7 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 		return kubeClient.CoreV1().Services(ns).List(opts)
 	case "StatefulSets":
 		lst, err := kubeClient.AppsV1beta2().StatefulSets(ns).List(opts)
-		if err != nil {
+		if apierrors.IsNotFound(err) {
 			return kubeClient.AppsV1beta1().StatefulSets(ns).List(opts)
 		}
 		return lst, err
@@ -204,13 +205,13 @@ func queryNonNsResource(resourceKind string, kubeClient kubernetes.Interface) (r
 		return kubeClient.CertificatesV1beta1().CertificateSigningRequests().List(metav1.ListOptions{})
 	case "ClusterRoleBindings":
 		lst, err := kubeClient.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{})
-		if err != nil {
+		if apierrors.IsNotFound(err) {
 			return kubeClient.RbacV1beta1().ClusterRoleBindings().List(metav1.ListOptions{})
 		}
 		return lst, err
 	case "ClusterRoles":
 		lst, err := kubeClient.RbacV1().ClusterRoles().List(metav1.ListOptions{})
-		if err != nil {
+		if apierrors.IsNotFound(err) {
 			return kubeClient.RbacV1beta1().ClusterRoles().List(metav1.ListOptions{})
 		}
 		return lst, err
@@ -231,7 +232,7 @@ func queryNonNsResource(resourceKind string, kubeClient kubernetes.Interface) (r
 		return kubeClient.ExtensionsV1beta1().PodSecurityPolicies().List(metav1.ListOptions{})
 	case "StorageClasses":
 		lst, err := kubeClient.StorageV1().StorageClasses().List(metav1.ListOptions{})
-		if err != nil {
+		if apierrors.IsNotFound(err) {
 			return kubeClient.StorageV1beta1().StorageClasses().List(metav1.ListOptions{})
 		}
 		return lst, err
