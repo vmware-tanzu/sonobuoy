@@ -115,47 +115,53 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 	case "ConfigMaps":
 		return kubeClient.CoreV1().ConfigMaps(ns).List(opts)
 	case "ControllerRevisions":
-		return kubeClient.Apps().ControllerRevisions(ns).List(opts)
-	case "CronJobs":
-		return kubeClient.BatchV2alpha1().CronJobs(ns).List(opts)
-	case "DaemonSets":
-		lst, err := kubeClient.Apps().DaemonSets(ns).List(opts)
+		lst, err := kubeClient.AppsV1beta2().ControllerRevisions(ns).List(opts)
 		if err != nil {
-			// TODO: remove once 1.7 is no longer supported
-			return kubeClient.Extensions().DaemonSets(ns).List(opts)
+			return kubeClient.AppsV1beta1().ControllerRevisions(ns).List(opts)
+		}
+		return lst, err
+	case "CronJobs":
+		return kubeClient.BatchV1beta1().CronJobs(ns).List(opts)
+	case "DaemonSets":
+		lst, err := kubeClient.AppsV1beta2().DaemonSets(ns).List(opts)
+		if err != nil {
+			return kubeClient.ExtensionsV1beta1().DaemonSets(ns).List(opts)
 		}
 		return lst, err
 	case "Deployments":
-		return kubeClient.Apps().Deployments(ns).List(opts)
+		lst, err := kubeClient.AppsV1beta2().Deployments(ns).List(opts)
+		if err != nil {
+			return kubeClient.AppsV1beta1().Deployments(ns).List(opts)
+		}
+		return lst, err
 	case "Endpoints":
 		return kubeClient.CoreV1().Endpoints(ns).List(opts)
 	case "Events":
 		return kubeClient.CoreV1().Events(ns).List(opts)
 	case "HorizontalPodAutoscalers":
-		return kubeClient.Autoscaling().HorizontalPodAutoscalers(ns).List(opts)
+		return kubeClient.AutoscalingV1().HorizontalPodAutoscalers(ns).List(opts)
 	case "Ingresses":
-		return kubeClient.Extensions().Ingresses(ns).List(opts)
+		return kubeClient.ExtensionsV1beta1().Ingresses(ns).List(opts)
 	case "Jobs":
-		return kubeClient.Batch().Jobs(ns).List(opts)
+		return kubeClient.BatchV1().Jobs(ns).List(opts)
 	case "LimitRanges":
 		return kubeClient.CoreV1().LimitRanges(ns).List(opts)
 	case "NetworkPolicies":
-		return kubeClient.Networking().NetworkPolicies(ns).List(opts)
+		return kubeClient.NetworkingV1().NetworkPolicies(ns).List(opts)
 	case "PersistentVolumeClaims":
 		return kubeClient.CoreV1().PersistentVolumeClaims(ns).List(opts)
 	case "Pods":
 		return kubeClient.CoreV1().Pods(ns).List(opts)
 	case "PodDisruptionBudgets":
-		return kubeClient.Policy().PodDisruptionBudgets(ns).List(opts)
+		return kubeClient.PolicyV1beta1().PodDisruptionBudgets(ns).List(opts)
 	case "PodPresets":
-		return kubeClient.Settings().PodPresets(ns).List(opts)
+		return kubeClient.SettingsV1alpha1().PodPresets(ns).List(opts)
 	case "PodTemplates":
 		return kubeClient.CoreV1().PodTemplates(ns).List(opts)
 	case "ReplicaSets":
-		lst, err := kubeClient.Apps().ReplicaSets(ns).List(opts)
+		lst, err := kubeClient.AppsV1beta2().ReplicaSets(ns).List(opts)
 		if err != nil {
-			// TODO: remove once 1.7 is no longer supported
-			return kubeClient.Extensions().ReplicaSets(ns).List(opts)
+			return kubeClient.ExtensionsV1beta1().ReplicaSets(ns).List(opts)
 		}
 		return lst, err
 	case "ReplicationControllers":
@@ -163,9 +169,17 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 	case "ResourceQuotas":
 		return kubeClient.CoreV1().ResourceQuotas(ns).List(opts)
 	case "RoleBindings":
-		return kubeClient.Rbac().RoleBindings(ns).List(opts)
+		lst, err := kubeClient.RbacV1().RoleBindings(ns).List(opts)
+		if err != nil {
+			return kubeClient.RbacV1beta1().RoleBindings(ns).List(opts)
+		}
+		return lst, err
 	case "Roles":
-		return kubeClient.Rbac().Roles(ns).List(opts)
+		lst, err := kubeClient.RbacV1().Roles(ns).List(opts)
+		if err != nil {
+			return kubeClient.RbacV1beta1().Roles(ns).List(opts)
+		}
+		return lst, err
 	case "Secrets":
 		return kubeClient.CoreV1().Secrets(ns).List(opts)
 	case "ServiceAccounts":
@@ -173,7 +187,11 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 	case "Services":
 		return kubeClient.CoreV1().Services(ns).List(opts)
 	case "StatefulSets":
-		return kubeClient.Apps().StatefulSets(ns).List(opts)
+		lst, err := kubeClient.AppsV1beta2().StatefulSets(ns).List(opts)
+		if err != nil {
+			return kubeClient.AppsV1beta1().StatefulSets(ns).List(opts)
+		}
+		return lst, err
 	default:
 		return nil, errors.Errorf("Unsupported resource %v", resourceKind)
 	}
@@ -183,18 +201,26 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 func queryNonNsResource(resourceKind string, kubeClient kubernetes.Interface) (runtime.Object, error) {
 	switch resourceKind {
 	case "CertificateSigningRequests":
-		return kubeClient.Certificates().CertificateSigningRequests().List(metav1.ListOptions{})
+		return kubeClient.CertificatesV1beta1().CertificateSigningRequests().List(metav1.ListOptions{})
 	case "ClusterRoleBindings":
-		return kubeClient.Rbac().ClusterRoleBindings().List(metav1.ListOptions{})
+		lst, err := kubeClient.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{})
+		if err != nil {
+			return kubeClient.RbacV1beta1().ClusterRoleBindings().List(metav1.ListOptions{})
+		}
+		return lst, err
 	case "ClusterRoles":
-		return kubeClient.Rbac().ClusterRoles().List(metav1.ListOptions{})
+		lst, err := kubeClient.RbacV1().ClusterRoles().List(metav1.ListOptions{})
+		if err != nil {
+			return kubeClient.RbacV1beta1().ClusterRoles().List(metav1.ListOptions{})
+		}
+		return lst, err
 	case "ComponentStatuses":
 		return kubeClient.CoreV1().ComponentStatuses().List(metav1.ListOptions{})
 	case "CustomResourceDefinitions":
 		// TODO : This should get cleaned up in future revisions.
 		apiextensionsclientset := apiextensionsclient.New(kubeClient.CoreV1().RESTClient())
 		if apiextensionsclientset != nil {
-			return apiextensionsclientset.Apiextensions().CustomResourceDefinitions().List(metav1.ListOptions{})
+			return apiextensionsclientset.ApiextensionsV1beta1().CustomResourceDefinitions().List(metav1.ListOptions{})
 		}
 		return nil, errors.Errorf("Failed to create extensions client for CRDs")
 	case "Nodes":
@@ -202,11 +228,15 @@ func queryNonNsResource(resourceKind string, kubeClient kubernetes.Interface) (r
 	case "PersistentVolumes":
 		return kubeClient.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
 	case "PodSecurityPolicies":
-		return kubeClient.Extensions().PodSecurityPolicies().List(metav1.ListOptions{})
+		return kubeClient.ExtensionsV1beta1().PodSecurityPolicies().List(metav1.ListOptions{})
 	case "StorageClasses":
-		return kubeClient.Storage().StorageClasses().List(metav1.ListOptions{})
+		lst, err := kubeClient.StorageV1().StorageClasses().List(metav1.ListOptions{})
+		if err != nil {
+			return kubeClient.StorageV1beta1().StorageClasses().List(metav1.ListOptions{})
+		}
+		return lst, err
 	case "ThirdPartyResources":
-		return kubeClient.Extensions().ThirdPartyResources().List(metav1.ListOptions{})
+		return kubeClient.ExtensionsV1beta1().ThirdPartyResources().List(metav1.ListOptions{})
 	default:
 		return nil, errors.Errorf("don't know how to handle non-namespaced resource %v", resourceKind)
 	}
