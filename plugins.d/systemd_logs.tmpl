@@ -78,6 +78,7 @@ spec:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+        operator: Exists
       - key: CriticalAddonsOnly
         operator: Exists
       volumes:
