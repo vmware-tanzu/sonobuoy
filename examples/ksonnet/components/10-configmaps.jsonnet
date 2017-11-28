@@ -35,7 +35,7 @@ local conf = {
 
 local sonobuoyConfigData = {
     Description: "EXAMPLE",
-    Version: "v0.9.0",
+    Version: "v0.10.0",
     ResultsDir: "/tmp/sonobuoy",
     Resources: [
         "CertificateSigningRequests",
