@@ -2,7 +2,7 @@
 /sonobuoy
 
 # we output results to this directory by default
-/results
+/archive
 
 # Development manifest
 examples/dev.yaml
