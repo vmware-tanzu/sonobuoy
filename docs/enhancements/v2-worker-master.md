@@ -59,6 +59,7 @@ existing users.
   directly
 * (Ancillary) Prevent simultaneous or poorly-cleaned up Sonobuoy runs from
   interfering with each other
+* Transition should be seamless for existing plugin authors
 
 ### Non-goals
 
@@ -78,9 +79,10 @@ authenticate the server by a vendored CA certificate, and the server will
 authenticate the client through an individually assigned client certificates.
 
 The CA certificate and client certificate will be added to the JSON config blob
-all nodes are defined, not baked into the images themselves. Every master run
-should create a brand-new certificate authority and credentials. This ensures
-duplicate or overlapping runs cannot interfere with each other.
+all nodes are defined, not baked into the images themselves. The node private
+key will be transmitted as a Kubernetes secret. Every master run should create a
+brand-new certificate authority and credentials. This ensures duplicate or
+overlapping runs cannot interfere with each other.
 
 The code for communicating this information back will be isolated to a specific
 package that other projects can use to write their own workers that don't use
@@ -98,8 +100,6 @@ our containers.
 
 ## Unresolved Questions
 
-* Is it worth bumping to `/api/v2` over this change?
 * No Metadata other than node name and plug-in name is currently collected. If
   at some point we wish to do this, there will not be any out-of-band way to
   collect this other than URL parameters or headers.
-* Do we want to support sending partial results?
