@@ -16,9 +16,9 @@
 # does not yet publish a released e2e container
 # https://github.com/kubernetes/kubernetes/issues/47920
 
-EXAMPLE_FILES = $(wildcard examples/ksonnet/components/*.jsonnet)
-EXAMPLE_OUTPUT = examples/quickstart.yaml
-DEV_OUTPUT = examples/dev.yaml
+EXAMPLES = $(wildcard examples/ksonnet/*.jsonnet)
+EXAMPLES_OUTPUT = $(patsubst examples/ksonnet/%.jsonnet,examples/%.yaml,$(EXAMPLES))
+
 KSONNET_BUILD_IMAGE = ksonnet/ksonnet-lib:beta.2
 
 PLUGINS = $(wildcard plugins.d/*.jsonnet)
@@ -103,19 +103,16 @@ clean:
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET) || true
 	find ./examples/ -type f -name '*.yaml' -delete
 
+generate: latest-ksonnet examples plugins
+
 plugins: $(PLUGINS_OUTPUT)
 
 plugins.d/%.tmpl: plugins.d/%.jsonnet
 	$(KUBECFG_CMD)
 
-generate: latest-ksonnet $(EXAMPLE_OUTPUT)
+examples: $(EXAMPLES_OUTPUT)
 
-$(EXAMPLE_OUTPUT): examples/ksonnet/quickstart.jsonnet examples/ksonnet/components/*.jsonnet
-	$(KUBECFG_CMD)
-
-dev: latest-ksonnet $(DEV_OUTPUT) container
-
-$(DEV_OUTPUT): examples/ksonnet/dev.jsonnet examples/ksonnet/components/*.jsonnet
+examples/%.yaml: examples/ksonnet/%.jsonnet
 	$(KUBECFG_CMD)
 
 latest-ksonnet:
