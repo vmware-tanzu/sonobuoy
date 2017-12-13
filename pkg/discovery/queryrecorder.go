@@ -28,18 +28,18 @@ import (
 
 // QueryRecorder records a sequence of queries
 type QueryRecorder struct {
-	queries []*queryData
+	queries []*QueryData
 }
 
 // NewQueryRecorder returns a new empty QueryRecorder
 func NewQueryRecorder() *QueryRecorder {
 	return &QueryRecorder{
-		queries: make([]*queryData, 0),
+		queries: make([]*QueryData, 0),
 	}
 }
 
-// queryData captures the results of the run for post-processing
-type queryData struct {
+// QueryData captures the results of the run for post-processing
+type QueryData struct {
 	QueryObj    string `json:"queryobj,omitempty"`
 	Namespace   string `json:"namespace,omitempty"`
 	ElapsedTime string `json:"time,omitempty"`
@@ -51,7 +51,7 @@ func (q *QueryRecorder) RecordQuery(name string, namespace string, duration time
 	if recerr != nil {
 		errlog.LogError(errors.Wrapf(recerr, "error querying %v", name))
 	}
-	summary := &queryData{
+	summary := &QueryData{
 		QueryObj:    name,
 		Namespace:   namespace,
 		ElapsedTime: duration.String(),
