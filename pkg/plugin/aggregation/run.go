@@ -17,6 +17,8 @@ limitations under the License.
 package aggregation
 
 import (
+	"context"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -75,11 +77,14 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		doneAggr <- true
 	}()
 
-	// 2. Launch the aggregation server
-	srv := NewServer(cfg.BindAddress+":"+strconv.Itoa(cfg.BindPort), aggr.HandleHTTPResult)
+	// 2. Launch the aggregation servers
+	srv := &http.Server{
+		Addr:    cfg.BindAddress + ":" + strconv.Itoa(cfg.BindPort),
+		Handler: NewHandler(aggr.HandleHTTPResult),
+	}
 	doneServ := make(chan error)
 	go func() {
-		doneServ <- srv.Start()
+		doneServ <- srv.ListenAndServe()
 	}()
 
 	// 3. Launch each plugin, to dispatch workers which submit the results back
@@ -105,7 +110,9 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// 5. Wait for aggr to show that all results are accounted for
 	select {
 	case <-timeout:
-		srv.Stop()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		srv.Shutdown(ctx)
+		defer cancel()
 		stopWaitCh <- true
 		return errors.Errorf("timed out waiting for plugins, shutting down HTTP server")
 	case err := <-doneServ:
