@@ -2,11 +2,12 @@
 
 - [Filename](#filename)
 - [Contents](#contents)
-	- [/resources](#resources)
 	- [/hosts](#hosts)
-	- [/podlogs](#podlogs)
-	- [/plugins](#plugins)
 	- [/meta](#meta)
+	- [/plugins](#plugins)
+	- [/podlogs](#podlogs)
+	- [/resources](#resources)
+	- [/servergroups.json](#servergroups.json)
 	- [/serverversion.json](#serverversionjson)
 - [File formats](#file-formats)
 
@@ -24,17 +25,6 @@ The top-level directories in the results tarball look like the following:
 
 ![tarball overview screenshot][3]
 
-### /resources
-
-The `/resources` directory contains JSON-serialized Kubernetes objects, taken from querying the Kubernetes REST API. The directory has the following structure:
-
-- `/resources/ns/<namespace>/<type>.json` - For all resources that belong to a namespace, where `<namespace>` is the namespace of that resource (eg. `kube-system`), and `<type>` is the type of resource, pluralized (eg. `Pods`).
-- `/resources/cluster/<type>.json` - For all resources that don't belong to a namespace, where `<type>` is the type of resource, pluralized (eg. `Nodes`).
-
-This looks like the following:
-
-![tarball resources screenshot][4]
-
 ### /hosts
 
 The `/hosts` directory contains information gathered about each host in the system by directly querying their HTTP endpoints.  *This is distinct from information you'd find in `/resources/cluster/Nodes.json`*, because it contains things like health and configuration for each host, which aren't part of the Kubernetes API objects.
@@ -46,15 +36,16 @@ This looks like the following:
 
 ![tarball hosts screenshot][5]
 
-### /podlogs
+### /meta
 
-The `/podlogs` directory contains logs for each pod found during the Sonobuoy run, similarly to what you would get with `kubectl logs -n <namespace> <pod> <container>`.
+The `/meta` directory contains metadata about this Sonobuoy run, including configuration and query runtime.
 
-- `/podlogs/<namespace>/<podname>/<containername>.log` - Contains the logs for the each container, for each pod in each namespace.
+- `/meta/query-time.json` - Contains metadata about how long each query took, example: `{"queryobj":"Pods","time":12.345ms"}`
+- `/meta/config.json` - A copy of the Sonobuoy configuration that was set up when this run was created, but with unspecified values filled in with explicit defaults, and with a `UUID` field in the root JSON, set to a randomly generated UUID created for that Sonobuoy run.
 
 This looks like the following:
 
-![tarball podlogs screenshot][6]
+![tarball meta screenshot][8]
 
 ### /plugins
 
@@ -74,16 +65,30 @@ This looks like the following:
 
 ![tarball plugins screenshot][7]
 
-### /meta
+### /podlogs
 
-The `/meta` directory contains metadata about this Sonobuoy run, including configuration and query runtime.
+The `/podlogs` directory contains logs for each pod found during the Sonobuoy run, similarly to what you would get with `kubectl logs -n <namespace> <pod> <container>`.
 
-- `/meta/query-time.json` - Contains metadata about how long each query took, example: `{"queryobj":"Pods","time":12.345ms"}`
-- `/meta/config.json` - A copy of the Sonobuoy configuration that was set up when this run was created, but with unspecified values filled in with explicit defaults, and with a `UUID` field in the root JSON, set to a randomly generated UUID created for that Sonobuoy run.
+- `/podlogs/<namespace>/<podname>/<containername>.log` - Contains the logs for the each container, for each pod in each namespace.
 
 This looks like the following:
 
-![tarball meta screenshot][8]
+![tarball podlogs screenshot][6]
+
+### /resources
+
+The `/resources` directory contains JSON-serialized Kubernetes objects, taken from querying the Kubernetes REST API. The directory has the following structure:
+
+- `/resources/ns/<namespace>/<type>.json` - For all resources that belong to a namespace, where `<namespace>` is the namespace of that resource (eg. `kube-system`), and `<type>` is the type of resource, pluralized (eg. `Pods`).
+- `/resources/cluster/<type>.json` - For all resources that don't belong to a namespace, where `<type>` is the type of resource, pluralized (eg. `Nodes`).
+
+This looks like the following:
+
+![tarball resources screenshot][4]
+
+### /servergroups.json
+
+`/servergroups.json` lists the Kubernetes APIs that the cluster supports.
 
 ### /serverversion.json
 
