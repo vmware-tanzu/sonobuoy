@@ -18,37 +18,32 @@ package aggregation
 
 import (
 	"fmt"
-	"net"
 	"net/http"
 	"strings"
 
-	"github.com/sirupsen/logrus"
 	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
-// Server is a net/http server that can handle API requests for aggregation of
-// results from nodes, sending them back over the Results channel
-type Server struct {
-	// BindAddr is the address for the HTTP server to listen on, eg. 0.0.0.0:8080
-	BindAddr string
+// Handler is a net/http Handler that can handle API requests for aggregation of
+// results from nodes, calling the provided callback with the results
+type Handler struct {
+	mux *http.ServeMux
 	// ResultsCallback is the function that is called when a result is checked in.
 	ResultsCallback func(*plugin.Result, http.ResponseWriter)
-
-	stopCh  chan bool
-	readyCh chan bool
 }
 
-// NewServer constructs a new aggregation server which will listen for results
-// on `bindAddr` and pass them to the given results callback.
-func NewServer(bindAddr string, resultsCallback func(*plugin.Result, http.ResponseWriter)) *Server {
-	return &Server{
-		BindAddr:        bindAddr,
+// NewHandler constructs a new aggregation handler which will handler results
+// and pass them to the given results callback.
+func NewHandler(resultsCallback func(*plugin.Result, http.ResponseWriter)) http.Handler {
+	handler := &Handler{
+		mux:             http.NewServeMux(),
 		ResultsCallback: resultsCallback,
-
-		stopCh:  make(chan bool),
-		readyCh: make(chan bool, 1),
 	}
+	handler.mux.Handle("/", http.NotFoundHandler())
+	handler.mux.Handle(resultsByNode, http.StripPrefix(resultsByNode, http.HandlerFunc(handler.nodeResultsHandler)))
+	handler.mux.Handle(resultsGlobal, http.StripPrefix(resultsGlobal, http.HandlerFunc(handler.globalResultsHandler)))
+	return handler
 }
 
 const (
@@ -63,71 +58,9 @@ const (
 	resultsGlobal = "/api/v1/results/global/"
 )
 
-// Stop stops a running Server
-func (s *Server) Stop() {
-	s.stopCh <- true
-}
-
-// Start starts this HTTP server, binding it to s.BindAddr and sending results
-// over the s.Results channel. The first argument is the stop channel, which
-// when written to will stop the server and close the HTTP socket. The second
-// argument is the "ready" channel, which this function will write to once the
-// HTTP server is ready for connections.
-func (s *Server) Start() error {
-	mux := http.NewServeMux()
-	mux.Handle("/", http.NotFoundHandler())
-
-	// We handle /api/v1/results/by-node here, but we strip the prefix so that the
-	// handling function only has to do some simple string splitting to get the node name.
-	// An example call may look like `PUT /api/v1/results/by-node/node1/systemd_logs`,
-	// which indicates that these are systemd_logs results for node1.
-	mux.Handle(resultsByNode, http.StripPrefix(resultsByNode, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.nodeResultsHandler(w, r)
-	})))
-	// Same thing with /api/v1/results/global
-	mux.Handle(resultsGlobal, http.StripPrefix(resultsGlobal, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.globalResultsHandler(w, r)
-	})))
-	srv := &http.Server{
-		Addr:    s.BindAddr,
-		Handler: mux,
-	}
-
-	l, err := net.Listen("tcp", s.BindAddr)
-
-	if err != nil {
-		return errors.Errorf("could not listen on %v: %v", s.BindAddr, err)
-	}
-	defer l.Close()
-
-	logrus.Infof("Listening for incoming results on %v\n", s.BindAddr)
-
-	done := make(chan error)
-	go func() {
-		done <- srv.Serve(l)
-	}()
-	// Let clients know they can send requests now (it's not perfect since the
-	// above goroutine may not schedule right away, but it's the best we can do
-	// and helps in testing.)
-	s.readyCh <- true
-
-	select {
-	case <-s.stopCh:
-		// Calling l.Close should make the http.Serve() above return
-		l.Close()
-		<-done
-	case err = <-done:
-		break
-	}
-
-	return err
-}
-
-// WaitUntilReady blocks until the server is listening on its configured
-// address. This must only be called once for each time Start() is called, or
-// it will block indefinitely.
-func (s *Server) WaitUntilReady() {
-	<-s.readyCh
+// ServeHTTP implements the Handler interface, handling aggregation requests
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.mux.ServeHTTP(w, r)
 }
 
 // nodeResultsHandler handles requests to post results by node. Path must be
@@ -135,7 +68,7 @@ func (s *Server) WaitUntilReady() {
 // :nodename/:type. The only supported method is PUT, this does not support
 // reading existing data.  Example: PUT
 // node1.cluster.local/api/v1/results/by-node/systemd_logs
-func (s *Server) nodeResultsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) nodeResultsHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.SplitN(r.URL.Path, "/", 2)
 	if len(parts) != 2 {
 		http.NotFound(w, r)
@@ -170,7 +103,7 @@ func (s *Server) nodeResultsHandler(w http.ResponseWriter, r *http.Request) {
 	// Trigger our callback with this checkin record (which should write the file
 	// out.) The callback is responsible for doing a 409 conflict if results are
 	// given twice for the same node, etc.
-	s.ResultsCallback(result, w)
+	h.ResultsCallback(result, w)
 	r.Body.Close()
 }
 
@@ -179,7 +112,7 @@ func (s *Server) nodeResultsHandler(w http.ResponseWriter, r *http.Request) {
 // method is PUT, this does not support reading existing data.
 //
 // Example: PUT node1.cluster.local/api/v1/results/global/e2e
-func (s *Server) globalResultsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) globalResultsHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) != 1 {
 		logrus.Warningf("Returning 404 for request to %v", r.URL.Path)
@@ -213,7 +146,7 @@ func (s *Server) globalResultsHandler(w http.ResponseWriter, r *http.Request) {
 	// Trigger our callback with this checkin record (which should write the file
 	// out.) The callback is responsible for doing a 409 conflict if results are
 	// given twice for the same node, etc.
-	s.ResultsCallback(result, w)
+	h.ResultsCallback(result, w)
 	r.Body.Close()
 }
 

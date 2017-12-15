@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"net/http/httptest"
 	"os"
 	"strconv"
 	"testing"
@@ -55,7 +56,8 @@ func TestStress(t *testing.T) {
 
 	// Launch the aggregator and server
 	aggr := NewAggregator(dir+"/results", expected)
-	srv := NewServer(bindAddr, aggr.HandleHTTPResult)
+	handler := NewHandler(aggr.HandleHTTPResult)
+	srv := httptest.NewServer(handler)
 
 	stopCh := make(chan bool)
 	timeoutCh := make(chan bool, 1)
@@ -69,13 +71,8 @@ func TestStress(t *testing.T) {
 		aggr.Wait(stopCh)
 		doneCh <- true
 	}()
-	go func() {
-		srvDoneCh <- srv.Start()
-	}()
 
-	// Wait until the server is ready, then send the results in the background
-	srv.WaitUntilReady()
-	sendResults(t, numResults)
+	sendResults(t, srv.URL, numResults)
 
 	// Wait for the results to be finished.
 	select {
@@ -87,11 +84,11 @@ func TestStress(t *testing.T) {
 	}
 }
 
-func sendResults(t *testing.T, n int) {
+func sendResults(t *testing.T, baseURL string, n int) {
 	// Put <numResults> requests in a channel
 	for i := 0; i < n; i++ {
 		go func(i int) {
-			url := "http://" + bindAddr + "/api/v1/results/by-node/node" + strconv.Itoa(i) + "/fake"
+			url := baseURL + "/api/v1/results/by-node/node" + strconv.Itoa(i) + "/fake"
 			err := worker.DoRequest(url, func() (io.Reader, error) {
 				return bytes.NewReader([]byte("hello")), nil
 			})
