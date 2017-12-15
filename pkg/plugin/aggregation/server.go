@@ -25,18 +25,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Server is a net/http server that can handle API requests for aggregation of
-// results from nodes, sending them back over the Results channel
-type AggregationHandler struct {
+// Handler is a net/http Handler that can handle API requests for aggregation of
+// results from nodes, calling the provided callback with the results
+type Handler struct {
 	mux *http.ServeMux
 	// ResultsCallback is the function that is called when a result is checked in.
 	ResultsCallback func(*plugin.Result, http.ResponseWriter)
 }
 
-// NewServer constructs a new aggregation server which will listen for results
-// on `bindAddr` and pass them to the given results callback.
+// NewHandler constructs a new aggregation handler which will handler results
+// and pass them to the given results callback.
 func NewHandler(resultsCallback func(*plugin.Result, http.ResponseWriter)) http.Handler {
-	handler := &AggregationHandler{
+	handler := &Handler{
 		mux:             http.NewServeMux(),
 		ResultsCallback: resultsCallback,
 	}
@@ -58,13 +58,9 @@ const (
 	resultsGlobal = "/api/v1/results/global/"
 )
 
-// Start starts this HTTP server, binding it to s.BindAddr and sending results
-// over the s.Results channel. The first argument is the stop channel, which
-// when written to will stop the server and close the HTTP socket. The second
-// argument is the "ready" channel, which this function will write to once the
-// HTTP server is ready for connections.
-func (a *AggregationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	a.mux.ServeHTTP(w, r)
+// ServeHTTP implements the Handler interface, handling aggregation requests
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.mux.ServeHTTP(w, r)
 }
 
 // nodeResultsHandler handles requests to post results by node. Path must be
@@ -72,7 +68,7 @@ func (a *AggregationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // :nodename/:type. The only supported method is PUT, this does not support
 // reading existing data.  Example: PUT
 // node1.cluster.local/api/v1/results/by-node/systemd_logs
-func (s *AggregationHandler) nodeResultsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) nodeResultsHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.SplitN(r.URL.Path, "/", 2)
 	if len(parts) != 2 {
 		http.NotFound(w, r)
@@ -107,7 +103,7 @@ func (s *AggregationHandler) nodeResultsHandler(w http.ResponseWriter, r *http.R
 	// Trigger our callback with this checkin record (which should write the file
 	// out.) The callback is responsible for doing a 409 conflict if results are
 	// given twice for the same node, etc.
-	s.ResultsCallback(result, w)
+	h.ResultsCallback(result, w)
 	r.Body.Close()
 }
 
@@ -116,7 +112,7 @@ func (s *AggregationHandler) nodeResultsHandler(w http.ResponseWriter, r *http.R
 // method is PUT, this does not support reading existing data.
 //
 // Example: PUT node1.cluster.local/api/v1/results/global/e2e
-func (s *AggregationHandler) globalResultsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) globalResultsHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) != 1 {
 		logrus.Warningf("Returning 404 for request to %v", r.URL.Path)
@@ -150,7 +146,7 @@ func (s *AggregationHandler) globalResultsHandler(w http.ResponseWriter, r *http
 	// Trigger our callback with this checkin record (which should write the file
 	// out.) The callback is responsible for doing a 409 conflict if results are
 	// given twice for the same node, etc.
-	s.ResultsCallback(result, w)
+	h.ResultsCallback(result, w)
 	r.Body.Close()
 }
 
