@@ -19,10 +19,10 @@ package worker
 import (
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path"
-	"strconv"
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -41,9 +41,9 @@ func TestRun(t *testing.T) {
 		})
 	}
 
-	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator) {
+	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator, baseURL string) {
 		for _, h := range hosts {
-			url := "http://:" + strconv.Itoa(aggregatorPort) + "/api/v1/results/by-node/" + h + "/systemd_logs.json"
+			url := baseURL + "/api/v1/results/by-node/" + h + "/systemd_logs.json"
 
 			withTempDir(t, func(tmpdir string) {
 				ioutil.WriteFile(tmpdir+"/systemd_logs", []byte("{}"), 0755)
@@ -60,14 +60,14 @@ func TestRun(t *testing.T) {
 }
 
 func TestRunGlobal(t *testing.T) {
-	url := "http://:" + strconv.Itoa(aggregatorPort) + "/api/v1/results/global/systemd_logs"
 
 	// Create an expectedResults array
 	expectedResults := []plugin.ExpectedResult{
 		plugin.ExpectedResult{ResultType: "systemd_logs"},
 	}
 
-	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator) {
+	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator, baseURL string) {
+		url := baseURL + "/api/v1/results/global/systemd_logs"
 		withTempDir(t, func(tmpdir string) {
 			ioutil.WriteFile(tmpdir+"/systemd_logs.json", []byte("{}"), 0755)
 			ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs.json"), 0755)
@@ -82,14 +82,14 @@ func TestRunGlobal(t *testing.T) {
 }
 
 func TestRunGlobal_noExtension(t *testing.T) {
-	url := "http://:" + strconv.Itoa(aggregatorPort) + "/api/v1/results/global/systemd_logs"
 
 	// Create an expectedResults array
 	expectedResults := []plugin.ExpectedResult{
 		plugin.ExpectedResult{ResultType: "systemd_logs"},
 	}
 
-	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator) {
+	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator, baseURL string) {
+		url := baseURL + "/api/v1/results/global/systemd_logs"
 		withTempDir(t, func(tmpdir string) {
 			ioutil.WriteFile(tmpdir+"/systemd_logs", []byte("{}"), 0755)
 			ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs"), 0755)
@@ -125,26 +125,17 @@ func withTempDir(t *testing.T, callback func(tmpdir string)) {
 	callback(tmpdir)
 }
 
-func withAggregator(t *testing.T, expectedResults []plugin.ExpectedResult, callback func(*aggregation.Aggregator)) {
+func withAggregator(t *testing.T, expectedResults []plugin.ExpectedResult, callback func(*aggregation.Aggregator, string)) {
 	withTempDir(t, func(tmpdir string) {
 		// Reset the default transport to clear any connection pooling
 		http.DefaultTransport = &http.Transport{}
 
 		// Configure the aggregator
 		aggr := aggregation.NewAggregator(tmpdir, expectedResults)
-		srv := aggregation.NewServer(":"+strconv.Itoa(aggregatorPort), aggr.HandleHTTPResult)
+		handler := aggregation.NewHandler(aggr.HandleHTTPResult)
+		srv := httptest.NewServer(handler)
+		defer srv.Close()
 
-		// Run the aggregation server
-		done := make(chan error)
-		go func() {
-			done <- srv.Start()
-		}()
-		defer func() {
-			srv.Stop()
-			<-done
-		}()
-		srv.WaitUntilReady()
-
-		callback(aggr)
+		callback(aggr, srv.URL)
 	})
 }

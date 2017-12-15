@@ -19,10 +19,10 @@ package aggregation
 import (
 	"bytes"
 	"io/ioutil"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path"
-	"strconv"
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -35,8 +35,8 @@ func TestAggregation(t *testing.T) {
 		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
 	}
 	// Happy path
-	withAggregator(t, expected, func(agg *Aggregator) {
-		resp := doRequest(t, "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
+	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+		resp := doRequest(t, srv, "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
 		if resp.StatusCode != 200 {
 			body, _ := ioutil.ReadAll(resp.Body)
 			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
@@ -58,8 +58,8 @@ func TestAggregation_noExtension(t *testing.T) {
 		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
 	}
 
-	withAggregator(t, expected, func(agg *Aggregator) {
-		resp := doRequest(t, "PUT", "/api/v1/results/by-node/node1/systemd_logs", []byte("foo"))
+	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+		resp := doRequest(t, srv, "PUT", "/api/v1/results/by-node/node1/systemd_logs", []byte("foo"))
 		if resp.StatusCode != 200 {
 			body, _ := ioutil.ReadAll(resp.Body)
 			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
@@ -84,8 +84,8 @@ func TestAggregation_tarfile(t *testing.T) {
 	fileBytes := []byte("foo")
 	tarBytes := makeTarWithContents(t, "inside_tar.txt", fileBytes)
 
-	withAggregator(t, expected, func(agg *Aggregator) {
-		resp := doRequest(t, "PUT", "/api/v1/results/global/e2e.tar.gz", tarBytes)
+	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+		resp := doRequest(t, srv, "PUT", "/api/v1/results/global/e2e.tar.gz", tarBytes)
 		if resp.StatusCode != 200 {
 			body, _ := ioutil.ReadAll(resp.Body)
 			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
@@ -110,8 +110,8 @@ func TestAggregation_wrongnodes(t *testing.T) {
 		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
 	}
 
-	withAggregator(t, expected, func(agg *Aggregator) {
-		resp := doRequest(t, "PUT", "/api/v1/results/by-node/node10/systemd_logs.json", []byte("foo"))
+	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+		resp := doRequest(t, srv, "PUT", "/api/v1/results/by-node/node10/systemd_logs.json", []byte("foo"))
 		if resp.StatusCode != 403 {
 			t.Errorf("Expected a 403 forbidden for checking in an unexpected node, got %v", resp.StatusCode)
 		}
@@ -127,15 +127,15 @@ func TestAggregation_duplicates(t *testing.T) {
 		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
 		plugin.ExpectedResult{NodeName: "node12", ResultType: "systemd_logs"},
 	}
-	withAggregator(t, expected, func(agg *Aggregator) {
+	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
 		// Check in a node
-		resp := doRequest(t, "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
+		resp := doRequest(t, srv, "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
 		if resp.StatusCode != 200 {
 			t.Errorf("Got non-200 response from server: %v", resp.StatusCode)
 		}
 
 		// Check in the same node again, should conflict
-		resp = doRequest(t, "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
+		resp = doRequest(t, srv, "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
 		if resp.StatusCode != 409 {
 			t.Errorf("Expected a 409 conflict for checking in a duplicate node, got %v", resp.StatusCode)
 		}
@@ -151,7 +151,7 @@ func TestAggregation_errors(t *testing.T) {
 		plugin.ExpectedResult{ResultType: "e2e"},
 	}
 
-	withAggregator(t, expected, func(agg *Aggregator) {
+	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
 		resultsCh := make(chan *plugin.Result)
 		go agg.IngestResults(resultsCh)
 
@@ -170,7 +170,7 @@ func TestAggregation_errors(t *testing.T) {
 	})
 }
 
-func withAggregator(t *testing.T, expected []plugin.ExpectedResult, callback func(*Aggregator)) {
+func withAggregator(t *testing.T, expected []plugin.ExpectedResult, callback func(*Aggregator, *httptest.Server)) {
 	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
 	if err != nil {
 		t.Fatal("Could not create temp directory")
@@ -180,20 +180,13 @@ func withAggregator(t *testing.T, expected []plugin.ExpectedResult, callback fun
 	defer os.RemoveAll(dir)
 
 	agg := NewAggregator(dir, expected)
-	srv := NewServer(":"+strconv.Itoa(testPort), agg.HandleHTTPResult)
+	handler := NewHandler(agg.HandleHTTPResult)
+	srv := httptest.NewServer(handler)
+	defer srv.Close()
 
 	// Run the server, ensuring it's fully stopped before returning
-	done := make(chan error)
-	go func() {
-		done <- srv.Start()
-	}()
-	defer func() {
-		srv.Stop()
-		<-done
-	}()
 
-	srv.WaitUntilReady()
-	callback(agg)
+	callback(agg, srv)
 }
 
 // Create a gzipped tar file with the given filename (and contents) inside it,
