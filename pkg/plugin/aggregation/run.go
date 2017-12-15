@@ -17,7 +17,6 @@ limitations under the License.
 package aggregation
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 	"time"
@@ -101,18 +100,12 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	go aggr.IngestResults(monitorCh)
 
 	// Ensure we only wait for results for a certain time
-	timeout := make(chan bool, 1)
-	go func() {
-		time.Sleep(time.Duration(cfg.TimeoutSeconds) * time.Second)
-		timeout <- true
-	}()
+	timeout := time.After(time.Duration(cfg.TimeoutSeconds) * time.Second)
 
 	// 5. Wait for aggr to show that all results are accounted for
 	select {
 	case <-timeout:
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		srv.Shutdown(ctx)
-		defer cancel()
+		srv.Close()
 		stopWaitCh <- true
 		return errors.Errorf("timed out waiting for plugins, shutting down HTTP server")
 	case err := <-doneServ:
