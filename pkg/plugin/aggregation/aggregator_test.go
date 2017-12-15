@@ -30,36 +30,17 @@ import (
 	"github.com/viniciuschiele/tarx"
 )
 
-func TestAggregation(t *testing.T) {
-	expected := []plugin.ExpectedResult{
-		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
-	}
-	// Happy path
-	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
-		resp := doRequest(t, srv, "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
-		if resp.StatusCode != 200 {
-			body, _ := ioutil.ReadAll(resp.Body)
-			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
-		}
-
-		if result, ok := agg.Results["systemd_logs/node1"]; ok {
-			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path()) + ".json")
-			if string(bytes) != "foo" {
-				t.Errorf("results for node1 incorrect (got %v): %v", string(bytes), err)
-			}
-		} else {
-			t.Errorf("AggregationServer didn't record a result for node1. Got: %+v", agg.Results)
-		}
-	})
-}
-
 func TestAggregation_noExtension(t *testing.T) {
 	expected := []plugin.ExpectedResult{
 		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
 	}
 
 	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
-		resp := doRequest(t, srv, "PUT", "/api/v1/results/by-node/node1/systemd_logs", []byte("foo"))
+		URL, err := NodeResultURL(srv.URL, "node1", "systemd_logs")
+		if err != nil {
+			t.Fatalf("couldn't get test server URL: %v", err)
+		}
+		resp := doRequest(t, srv.Client(), "PUT", URL, []byte("foo"))
 		if resp.StatusCode != 200 {
 			body, _ := ioutil.ReadAll(resp.Body)
 			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
@@ -85,7 +66,11 @@ func TestAggregation_tarfile(t *testing.T) {
 	tarBytes := makeTarWithContents(t, "inside_tar.txt", fileBytes)
 
 	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
-		resp := doRequest(t, srv, "PUT", "/api/v1/results/global/e2e.tar.gz", tarBytes)
+		URL, err := GlobalResultURL(srv.URL, "e2e")
+		if err != nil {
+			t.Fatalf("couldn't get test server URL: %v", err)
+		}
+		resp := doRequest(t, srv.Client(), "PUT", URL, tarBytes)
 		if resp.StatusCode != 200 {
 			body, _ := ioutil.ReadAll(resp.Body)
 			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
@@ -111,7 +96,12 @@ func TestAggregation_wrongnodes(t *testing.T) {
 	}
 
 	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
-		resp := doRequest(t, srv, "PUT", "/api/v1/results/by-node/node10/systemd_logs.json", []byte("foo"))
+		URL, err := GlobalResultURL(srv.URL, "e2e")
+		if err != nil {
+			t.Fatalf("couldn't get test server URL: %v", err)
+
+		}
+		resp := doRequest(t, srv.Client(), "PUT", URL, []byte("foo"))
 		if resp.StatusCode != 403 {
 			t.Errorf("Expected a 403 forbidden for checking in an unexpected node, got %v", resp.StatusCode)
 		}
@@ -128,14 +118,19 @@ func TestAggregation_duplicates(t *testing.T) {
 		plugin.ExpectedResult{NodeName: "node12", ResultType: "systemd_logs"},
 	}
 	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+		URL, err := GlobalResultURL(srv.URL, "e2e")
+		if err != nil {
+			t.Fatalf("couldn't get test server URL: %v", err)
+
+		}
 		// Check in a node
-		resp := doRequest(t, srv, "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
+		resp := doRequest(t, srv.Client(), "PUT", URL, []byte("foo"))
 		if resp.StatusCode != 200 {
 			t.Errorf("Got non-200 response from server: %v", resp.StatusCode)
 		}
 
 		// Check in the same node again, should conflict
-		resp = doRequest(t, srv, "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
+		resp = doRequest(t, srv.Client(), "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
 		if resp.StatusCode != 409 {
 			t.Errorf("Expected a 409 conflict for checking in a duplicate node, got %v", resp.StatusCode)
 		}

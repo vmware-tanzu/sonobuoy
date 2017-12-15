@@ -39,7 +39,7 @@ var (
 	// Only used for route reversals
 	r           = mux.NewRouter()
 	nodeRoute   = r.Path(resultsByNode).BuildOnly()
-	globalRoute = r.Path(resultsByNode).BuildOnly()
+	globalRoute = r.Path(resultsGlobal).BuildOnly()
 )
 
 // Handler is a net/http Handler that can handle API requests for aggregation of
