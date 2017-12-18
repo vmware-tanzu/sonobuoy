@@ -45,6 +45,6 @@ To customize the set of tests that will be run as part of the report, the follow
 [4]: https://github.com/kubernetes/community/blob/master/contributors/devel/e2e-tests.md#conformance-tests
 [5]: plugins.md
 [6]: https://github.com/kubernetes/kubernetes/issues/49313
-[7]: https://github.com/heptio/sonobuoy/blob/master/plugins.d/e2e.yaml
-[8]: https://github.com/heptio/sonobuoy/blob/master/examples/quickstart.yaml#L133
-[9]: https://github.com/heptio/sonobuoy/blob/master/examples/quickstart.yaml#L102
+[7]: ../plugins.d/e2e.tmpl
+[8]: ../examples/quickstart.yaml#L133
+[9]: ../examples/quickstart.yaml#L102
