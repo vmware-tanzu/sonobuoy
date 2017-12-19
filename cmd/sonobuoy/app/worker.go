@@ -17,6 +17,7 @@ limitations under the License.
 package app
 
 import (
+	"net/http"
 	"os"
 	"strings"
 
@@ -94,7 +95,7 @@ func runGatherSingleNode(cmd *cobra.Command, args []string) {
 	// http://sonobuoy-master:8080/api/v1/results/by-node/node1/systemd_logs
 	url := cfg.MasterURL + "/" + cfg.NodeName + "/" + cfg.ResultType
 
-	err = worker.GatherResults(cfg.ResultsDir+"/done", url)
+	err = worker.GatherResults(cfg.ResultsDir+"/done", url, http.DefaultClient)
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
@@ -113,7 +114,7 @@ func runGatherGlobal(cmd *cobra.Command, args []string) {
 	// http://sonobuoy-master:8080/api/v1/results/global/systemd_logs
 	url := cfg.MasterURL + "/" + cfg.ResultType
 
-	err = worker.GatherResults(cfg.ResultsDir+"/done", url)
+	err = worker.GatherResults(cfg.ResultsDir+"/done", url, http.DefaultClient)
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
