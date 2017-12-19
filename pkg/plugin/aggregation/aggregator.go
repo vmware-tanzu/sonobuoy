@@ -23,6 +23,7 @@ package aggregation
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -196,10 +197,45 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 		a.resultEvents <- result
 	}()
 
+	if result.MimeType == "application/gzip" {
+
+		resultsDir := path.Join(a.OutputDir, result.Path())
+		if err := os.MkdirAll(resultsDir, 0755); err != nil {
+			err = errors.Wrapf(err, "could not make directory %v", resultsDir)
+			errlog.LogError(err)
+			return err
+		}
+
+		// write gzip to a temp file
+		tempFile, err := ioutil.TempFile("", "aggregator-gzip")
+		if err != nil {
+			err = errors.Wrapf(err, "could not make tempfile for gzip")
+			errlog.LogError(err)
+			return err
+		}
+		defer tempFile.Close()
+		// Remove the temp file when we're done
+		defer os.Remove(tempFile.Name())
+		if _, err = io.Copy(tempFile, result.Body); err != nil {
+			err = errors.Wrapf(err, "could not write gzip to file")
+			errlog.LogError(err)
+			return err
+		}
+
+		err = tarx.Extract(tempFile.Name(), resultsDir, &tarx.ExtractOptions{})
+		if err != nil {
+			err = errors.Wrapf(err, "could not extract tar file %v", tempFile.Name())
+			errlog.LogError(err)
+			return err
+		}
+
+		return nil
+	}
+
 	// Create the output directory for the result.  Will be of the
 	// form .../plugins/:results_type/:node.json (for DaemonSet plugins) or
 	// .../plugins/:results_type.json (for Job plugins)
-	resultsFile := path.Join(a.OutputDir, result.Path()+result.Extension)
+	resultsFile := path.Join(a.OutputDir, result.Path())
 	resultsDir := path.Dir(resultsFile)
 	logrus.Infof("Creating directory %v", resultsDir)
 	if err := os.MkdirAll(resultsDir, 0755); err != nil {
@@ -209,48 +245,21 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 	}
 
 	// Write the results file out and close it
-	err := func() error {
-		f, err := os.Create(resultsFile)
-		if err != nil {
-			err = errors.Wrapf(err, "could not open output file %v for writing", resultsFile)
-			errlog.LogError(err)
-			return err
-		}
-		defer f.Close()
-
-		// Copy the request body into the file
-		_, err = io.Copy(f, result.Body)
-		if err != nil {
-			err = errors.Wrapf(err, "error writing plugin result")
-			errlog.LogError(err)
-			return err
-		}
-
-		return nil
-	}()
+	f, err := os.Create(resultsFile)
 	if err != nil {
+		err = errors.Wrapf(err, "could not open output file %v for writing", resultsFile)
+		errlog.LogError(err)
 		return err
 	}
 
-	// If it's a tarball, extract it
-	if result.Extension == ".tar.gz" {
-		resultsDir := path.Join(a.OutputDir, result.Path())
+	defer f.Close()
 
-		err = tarx.Extract(resultsFile, resultsDir, &tarx.ExtractOptions{})
-		if err != nil {
-			err = errors.Wrapf(err, "could not extract tar file %v", resultsFile)
-			errlog.LogError(err)
-			return err
-		}
-
-		err = os.Remove(resultsFile)
-		if err != nil {
-			return err
-		}
-
-		logrus.Infof("extracted results tarball into %v", resultsDir)
-	} else {
-		logrus.Infof("wrote results to %v", resultsFile)
+	// Copy the request body into the file
+	_, err = io.Copy(f, result.Body)
+	if err != nil {
+		err = errors.Wrapf(err, "error writing plugin result")
+		errlog.LogError(err)
+		return err
 	}
 
 	return nil
