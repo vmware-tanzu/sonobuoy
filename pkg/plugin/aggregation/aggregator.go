@@ -213,6 +213,7 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 			errlog.LogError(err)
 			return err
 		}
+
 		defer tempFile.Close()
 		// Remove the temp file when we're done
 		defer os.Remove(tempFile.Name())
@@ -222,6 +223,7 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 			return err
 		}
 
+		// extract to the working directory
 		err = tarx.Extract(tempFile.Name(), resultsDir, &tarx.ExtractOptions{})
 		if err != nil {
 			err = errors.Wrapf(err, "could not extract tar file %v", tempFile.Name())

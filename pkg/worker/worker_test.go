@@ -43,7 +43,10 @@ func TestRun(t *testing.T) {
 
 	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator, baseURL string) {
 		for _, h := range hosts {
-			url := baseURL + "/api/v1/results/by-node/" + h + "/systemd_logs.json"
+			url, err := aggregation.NodeResultURL(baseURL, h, "systemd_logs")
+			if err != nil {
+				t.Fatalf("unexpected error getting node result url %v", err)
+			}
 
 			withTempDir(t, func(tmpdir string) {
 				ioutil.WriteFile(tmpdir+"/systemd_logs", []byte("{}"), 0755)
@@ -53,7 +56,7 @@ func TestRun(t *testing.T) {
 					t.Fatalf("Got error running agent: %v", err)
 				}
 
-				ensureExists(t, path.Join(aggr.OutputDir, "systemd_logs", "results", "node1.json"))
+				ensureExists(t, path.Join(aggr.OutputDir, "systemd_logs", "results", "node1"))
 			})
 		}
 	})
@@ -67,7 +70,11 @@ func TestRunGlobal(t *testing.T) {
 	}
 
 	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator, baseURL string) {
-		url := baseURL + "/api/v1/results/global/systemd_logs"
+		url, err := aggregation.GlobalResultURL(baseURL, "systemd_logs")
+		if err != nil {
+			t.Fatalf("unexpected error getting global result url %v", err)
+		}
+
 		withTempDir(t, func(tmpdir string) {
 			ioutil.WriteFile(tmpdir+"/systemd_logs.json", []byte("{}"), 0755)
 			ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs.json"), 0755)
@@ -76,7 +83,7 @@ func TestRunGlobal(t *testing.T) {
 				t.Fatalf("Got error running agent: %v", err)
 			}
 
-			ensureExists(t, path.Join(aggr.OutputDir, "systemd_logs", "results.json"))
+			ensureExists(t, path.Join(aggr.OutputDir, "systemd_logs", "results"))
 		})
 	})
 }
@@ -89,7 +96,10 @@ func TestRunGlobal_noExtension(t *testing.T) {
 	}
 
 	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator, baseURL string) {
-		url := baseURL + "/api/v1/results/global/systemd_logs"
+		url, err := aggregation.GlobalResultURL(baseURL, "systemd_logs")
+		if err != nil {
+			t.Fatalf("unexpected error getting global result url %v", err)
+		}
 		withTempDir(t, func(tmpdir string) {
 			ioutil.WriteFile(tmpdir+"/systemd_logs", []byte("{}"), 0755)
 			ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs"), 0755)
