@@ -20,6 +20,7 @@ import (
 	"io"
 	"io/ioutil"
 	"mime"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -38,7 +39,7 @@ func init() {
 // 1. Output data will be placed into an agreed upon results directory.
 // 2. The Job will wait for a done file
 // 3. The done file contains a single string of the results to be sent to the master
-func GatherResults(waitfile string, url string) error {
+func GatherResults(waitfile string, url string, client *http.Client) error {
 	var inputFileName []byte
 	var err error
 	var outfile *os.File
@@ -71,7 +72,7 @@ func GatherResults(waitfile string, url string) error {
 	}()
 
 	// transmit back the results file.
-	return DoRequest(url, func() (io.Reader, string, error) {
+	return DoRequest(url, client, func() (io.Reader, string, error) {
 		outfile, err = os.Open(s)
 		return outfile, mimeType, errors.WithStack(err)
 	})
