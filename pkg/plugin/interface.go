@@ -77,7 +77,7 @@ type ExpectedResult struct {
 type Result struct {
 	NodeName   string
 	ResultType string
-	Extension  string
+	MimeType   string
 	Body       io.Reader
 	Error      string
 }

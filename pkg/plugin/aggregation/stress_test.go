@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"strconv"
@@ -72,7 +73,7 @@ func TestStress(t *testing.T) {
 		doneCh <- true
 	}()
 
-	sendResults(t, srv.URL, numResults)
+	sendResults(t, srv.URL, srv.Client(), numResults)
 
 	// Wait for the results to be finished.
 	select {
@@ -84,13 +85,13 @@ func TestStress(t *testing.T) {
 	}
 }
 
-func sendResults(t *testing.T, baseURL string, n int) {
+func sendResults(t *testing.T, baseURL string, client *http.Client, n int) {
 	// Put <numResults> requests in a channel
 	for i := 0; i < n; i++ {
 		go func(i int) {
 			url := baseURL + "/api/v1/results/by-node/node" + strconv.Itoa(i) + "/fake"
-			err := worker.DoRequest(url, func() (io.Reader, error) {
-				return bytes.NewReader([]byte("hello")), nil
+			err := worker.DoRequest(url, client, func() (io.Reader, string, error) {
+				return bytes.NewReader([]byte("hello")), "", nil
 			})
 			if err != nil {
 				t.Errorf("Error doing request to %v: %v\n", url, err)

@@ -50,58 +50,86 @@ func TestStart(t *testing.T) {
 	defer srv.Close()
 
 	// Expect a 404 and no results
-	response := doRequest(t, srv, "PUT", "/not/found", expectedJSON)
+	response := doRequest(t, srv.Client(), "PUT", srv.URL+"/some/garbage", expectedJSON)
 	if response.StatusCode != 404 {
 		t.Fatalf("Expected a 404 response, got %v", response.StatusCode)
-		t.Fail()
 	}
 	if len(checkins) > 0 {
 		t.Fatalf("Request to a wrong URL should not have resulted in a node check-in")
-		t.Fail()
 	}
 
-	// PUT is all that is accepted
-	response = doRequest(t, srv, "POST", "/api/v1/results/by-node/testnode/systemd_logs", expectedJSON)
-	if response.StatusCode != 405 {
-		t.Fatalf("Expected a 405 response, got %v", response.StatusCode)
-		t.Fail()
+	URL, err := NodeResultURL(srv.URL, "testnode", "systemd_logs")
+	if err != nil {
+		t.Fatalf("error getting node result URL %v", err)
+	}
+
+	response = doRequest(t, srv.Client(), "POST", URL, expectedJSON)
+	if response.StatusCode > 499 || response.StatusCode < 400 {
+		t.Fatalf("Expected a 4xx response, got %v", response.StatusCode)
 	}
 	if len(checkins) > 0 {
 		t.Fatalf("Request with wrong HTTP method should not have resulted in a node check-in")
-		t.Fail()
 	}
 
 	// Happy path
-	response = doRequest(t, srv, "PUT", "/api/v1/results/by-node/testnode/systemd_logs", expectedJSON)
+	response = doRequest(t, srv.Client(), "PUT", URL, expectedJSON)
 	if response.StatusCode != 200 {
 		t.Fatalf("Client got non-200 status from server: %v", response.StatusCode)
-		t.Fail()
 	}
 
 	if _, ok := checkins[expectedResult]; !ok {
 		t.Fatalf("Valid request for %v did not get recorded", expectedResult)
-		t.Fail()
+	}
+
+	URL, err = GlobalResultURL(srv.URL, "gztest")
+	if err != nil {
+		t.Fatalf("error getting global result URL %v", err)
+	}
+
+	mimeType := "application/gzip"
+	headers := http.Header{}
+	headers.Set("content-type", mimeType)
+
+	response = doRequestWithHeaders(t, srv.Client(), "PUT", URL, expectedJSON, headers)
+	if response.StatusCode != 200 {
+		t.Fatalf("Client got non-200 status from server: %v", response.StatusCode)
+	}
+	if _, ok := checkins[expectedResult]; !ok {
+		t.Fatalf("Valid request for %v did not get recorded", expectedResult)
+	}
+
+	expectedResult = "gztest/results"
+
+	// Happy path with gzip
+	res, ok := checkins[expectedResult]
+	if !ok {
+		t.Fatalf("Valid request for %v did not get recorded", expectedResult)
+	}
+	if res.MimeType != mimeType {
+		t.Fatalf("expected mime type %s, got %s", mimeType, res.MimeType)
 	}
 }
 
-func doRequest(t *testing.T, srv *httptest.Server, method, path string, body []byte) *http.Response {
-	// Make a new HTTP transport for every request, this avoids issues where HTTP
-	// connection keep-alive leaves connections running to old server instances.
-	// (We can take the performance hit since it's just tests.)
+func doRequestWithHeaders(t *testing.T, client *http.Client, method, reqURL string, body []byte, headers http.Header) *http.Response {
 	req, err := http.NewRequest(
 		method,
-		srv.URL+path,
+		reqURL,
 		bytes.NewReader(body),
 	)
+	req.Header = headers
 	if err != nil {
 		t.Fatalf("error constructing request: %v", err)
 		t.Fail()
 	}
 
-	resp, err := srv.Client().Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("error performing request: %v", err)
 		t.Fail()
 	}
 	return resp
+}
+
+func doRequest(t *testing.T, client *http.Client, method, reqURL string, body []byte) *http.Response {
+	return doRequestWithHeaders(t, client, method, reqURL, body, http.Header{})
 }
