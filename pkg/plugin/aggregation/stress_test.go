@@ -38,8 +38,6 @@ var timeoutSeconds = 10
 var bindAddr = ":8080"
 
 func TestStress(t *testing.T) {
-	// TODO
-	t.Skip("stress test disabled ## DO NOT COMMIT ##")
 	// Create temp dir for results
 	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
 	if err != nil {
@@ -91,8 +89,8 @@ func sendResults(t *testing.T, baseURL string, n int) {
 	for i := 0; i < n; i++ {
 		go func(i int) {
 			url := baseURL + "/api/v1/results/by-node/node" + strconv.Itoa(i) + "/fake"
-			err := worker.DoRequest(url, func() (io.Reader, error) {
-				return bytes.NewReader([]byte("hello")), nil
+			err := worker.DoRequest(url, func() (io.Reader, string, error) {
+				return bytes.NewReader([]byte("hello")), "", nil
 			})
 			if err != nil {
 				t.Errorf("Error doing request to %v: %v\n", url, err)

@@ -19,13 +19,18 @@ package worker
 import (
 	"io"
 	"io/ioutil"
+	"mime"
 	"os"
-	"strings"
+	"path/filepath"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
+
+func init() {
+	mime.AddExtensionType(".gz", "application/gzip")
+}
 
 // GatherResults is the consumer of a co-scheduled container that agrees on the following
 // contract:
@@ -55,11 +60,9 @@ func GatherResults(waitfile string, url string) error {
 	s := string(inputFileName)
 	logrus.Infof("Detected done file, transmitting: (%v)", s)
 
-	// Append a file extension, if there is one
-	filenameParts := strings.SplitN(s, ".", 2)
-	if len(filenameParts) == 2 {
-		url += "." + filenameParts[1]
-	}
+	// Set content type
+	extension := filepath.Ext(s)
+	mimeType := mime.TypeByExtension(extension)
 
 	defer func() {
 		if outfile != nil {
@@ -68,9 +71,9 @@ func GatherResults(waitfile string, url string) error {
 	}()
 
 	// transmit back the results file.
-	return DoRequest(url, func() (io.Reader, error) {
+	return DoRequest(url, func() (io.Reader, string, error) {
 		outfile, err = os.Open(s)
-		return outfile, errors.WithStack(err)
+		return outfile, mimeType, errors.WithStack(err)
 	})
 
 }

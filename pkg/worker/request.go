@@ -32,8 +32,8 @@ import (
 // error message if the callback fails. (This way, problems gathering data
 // don't result in the server waiting forever for results that will never
 // come.)
-func DoRequest(url string, callback func() (io.Reader, error)) error {
-	input, err := callback()
+func DoRequest(url string, callback func() (io.Reader, string, error)) error {
+	input, mimeType, err := callback()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "error gathering host data"))
 
@@ -47,6 +47,7 @@ func DoRequest(url string, callback func() (io.Reader, error)) error {
 			return errors.WithStack(err)
 		}
 		req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(errbody))
+		req.Header.Add("content-type", mimeType)
 		if err != nil {
 			return errors.WithStack(err)
 		}
