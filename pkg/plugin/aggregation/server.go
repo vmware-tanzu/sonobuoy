@@ -72,6 +72,7 @@ func (h *Handler) resultsHandler(w http.ResponseWriter, r *http.Request) {
 		ResultType: vars["plugin"], // will be empty string in global case
 		NodeName:   vars["node"],
 		Body:       r.Body,
+		MimeType:   r.Header.Get("content-type"),
 	}
 
 	// Trigger our callback with this checkin record (which should write the file
@@ -81,7 +82,7 @@ func (h *Handler) resultsHandler(w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 }
 
-// NodeResultURL is the URL that results for a given node result. Takes the baseURL (http[s]://hostname:port/,
+// NodeResultURL is the URL that results for a given node result. Takes the baseURL (http[s]://hostname:por/,
 // with trailing slash) nodeName, pluginName, and an optional extension. If multiple
 // extensions are provided, only the first one is used.
 func NodeResultURL(baseURL, nodeName, pluginName string) (string, error) {
