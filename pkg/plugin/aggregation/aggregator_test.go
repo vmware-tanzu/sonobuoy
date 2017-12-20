@@ -35,16 +35,21 @@ func TestAggregation(t *testing.T) {
 	expected := []plugin.ExpectedResult{
 		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
 	}
-	// Happy path
+
 	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
-		resp := doRequest(t, srv, "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
+		URL, err := NodeResultURL(srv.URL, "node1", "systemd_logs")
+		if err != nil {
+			t.Fatalf("couldn't get test server URL: %v", err)
+		}
+
+		resp := doRequest(t, srv.Client(), "PUT", URL, []byte("foo"))
 		if resp.StatusCode != 200 {
 			body, _ := ioutil.ReadAll(resp.Body)
 			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
 		}
 
 		if result, ok := agg.Results["systemd_logs/node1"]; ok {
-			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path()) + ".json")
+			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path()))
 			if string(bytes) != "foo" {
 				t.Errorf("results for node1 incorrect (got %v): %v", string(bytes), err)
 			}
@@ -60,7 +65,11 @@ func TestAggregation_noExtension(t *testing.T) {
 	}
 
 	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
-		resp := doRequest(t, srv, "PUT", "/api/v1/results/by-node/node1/systemd_logs", []byte("foo"))
+		URL, err := NodeResultURL(srv.URL, "node1", "systemd_logs")
+		if err != nil {
+			t.Fatalf("couldn't get test server URL: %v", err)
+		}
+		resp := doRequest(t, srv.Client(), "PUT", URL, []byte("foo"))
 		if resp.StatusCode != 200 {
 			body, _ := ioutil.ReadAll(resp.Body)
 			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
@@ -120,6 +129,7 @@ func TestAggregation_wrongnodes(t *testing.T) {
 	}
 
 	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+		URL, err := NodeResultURL(srv.URL, "randomnodename", "systemd_logs")
 		if err != nil {
 			t.Fatalf("couldn't get test server URL: %v", err)
 
@@ -147,7 +157,7 @@ func TestAggregation_duplicates(t *testing.T) {
 
 		}
 		// Check in a node
-		resp := doRequest(t, srv, "PUT", "/api/v1/results/by-node/node1/systemd_logs.json", []byte("foo"))
+		resp := doRequest(t, srv.Client(), "PUT", URL, []byte("foo"))
 		if resp.StatusCode != 200 {
 			t.Errorf("Got non-200 response from server: %v", resp.StatusCode)
 		}
