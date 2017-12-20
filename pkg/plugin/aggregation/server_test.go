@@ -93,9 +93,8 @@ func TestStart(t *testing.T) {
 		t.Fatalf("error getting global result URL %v", err)
 	}
 
-	mimeType := "application/gzip"
 	headers := http.Header{}
-	headers.Set("content-type", mimeType)
+	headers.Set("content-type", gzipMimeType)
 
 	response = doRequestWithHeaders(t, srv.Client(), "PUT", URL, expectedJSON, headers)
 	if response.StatusCode != 200 {

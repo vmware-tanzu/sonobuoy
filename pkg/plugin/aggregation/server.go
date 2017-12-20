@@ -22,6 +22,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -82,17 +83,17 @@ func (h *Handler) resultsHandler(w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 }
 
-// NodeResultURL is the URL that results for a given node result. Takes the baseURL (http[s]://hostname:por/,
+// NodeResultURL is the URL for results for a given node result. Takes the baseURL (http[s]://hostname:port/,
 // with trailing slash) nodeName, pluginName, and an optional extension. If multiple
 // extensions are provided, only the first one is used.
 func NodeResultURL(baseURL, nodeName, pluginName string) (string, error) {
 	base, err := url.Parse(baseURL)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "couldn't get node result URL")
 	}
 	path, err := nodeRoute.URLPath("node", nodeName, "plugin", pluginName)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "couldn't get node result URL")
 	}
 	path.Scheme = base.Scheme
 	path.Host = base.Host
@@ -106,13 +107,14 @@ func NodeResultURL(baseURL, nodeName, pluginName string) (string, error) {
 func GlobalResultURL(baseURL, pluginName string) (string, error) {
 	base, err := url.Parse(baseURL)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "couldn't get global result URL ")
 	}
 	path, err := globalRoute.URLPath("plugin", pluginName)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "couldn't get global result URL ")
 	}
 	path.Scheme = base.Scheme
+	// Host includes port
 	path.Host = base.Host
 	return path.String(), nil
 

@@ -36,6 +36,10 @@ import (
 	"github.com/viniciuschiele/tarx"
 )
 
+const (
+	gzipMimeType = "application/gzip"
+)
+
 // Aggregator is responsible for taking results from an HTTP server (configured
 // elsewhere), saving them to the filesystem, and keeping track of what has
 // been seen so far, so that we can return when all expected results are
@@ -197,72 +201,54 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 		a.resultEvents <- result
 	}()
 
-	if result.MimeType == "application/gzip" {
+	var resultsDir string
+	var outFile *os.File
+	var err error
 
-		resultsDir := path.Join(a.OutputDir, result.Path())
-		if err := os.MkdirAll(resultsDir, 0755); err != nil {
-			err = errors.Wrapf(err, "could not make directory %v", resultsDir)
-			errlog.LogError(err)
-			return err
-		}
-
-		// write gzip to a temp file
-		tempFile, err := ioutil.TempFile("", "aggregator-gzip")
+	if result.MimeType == gzipMimeType {
+		resultsDir = path.Join(a.OutputDir, result.Path())
+		// Gzip gets a temp file
+		outFile, err = ioutil.TempFile("", "aggregator-gzip")
 		if err != nil {
-			err = errors.Wrapf(err, "could not make tempfile for gzip")
-			errlog.LogError(err)
-			return err
+			return errors.Wrapf(err, "could not make tempfile for gzip")
 		}
 
-		defer tempFile.Close()
+		defer outFile.Close()
 		// Remove the temp file when we're done
-		defer os.Remove(tempFile.Name())
-		if _, err = io.Copy(tempFile, result.Body); err != nil {
-			err = errors.Wrapf(err, "could not write gzip to file")
-			errlog.LogError(err)
-			return err
-		}
-
-		// extract to the working directory
-		err = tarx.Extract(tempFile.Name(), resultsDir, &tarx.ExtractOptions{})
+		defer os.Remove(outFile.Name())
+	} else {
+		// Create the output directory for the result.  Will be of the
+		// form .../plugins/:results_type/:node.json (for DaemonSet plugins) or
+		// .../plugins/:results_type.json (for Job plugins)
+		resultsFile := path.Join(a.OutputDir, result.Path())
+		resultsDir = path.Dir(resultsFile)
+		outFile, err = os.Create(resultsFile)
 		if err != nil {
-			err = errors.Wrapf(err, "could not extract tar file %v", tempFile.Name())
-			errlog.LogError(err)
-			return err
+			return errors.Wrapf(err, "couldn't create results file %v", resultsFile)
 		}
-
-		return nil
+		defer outFile.Close()
 	}
 
-	// Create the output directory for the result.  Will be of the
-	// form .../plugins/:results_type/:node.json (for DaemonSet plugins) or
-	// .../plugins/:results_type.json (for Job plugins)
-	resultsFile := path.Join(a.OutputDir, result.Path())
-	resultsDir := path.Dir(resultsFile)
 	logrus.Infof("Creating directory %v", resultsDir)
 	if err := os.MkdirAll(resultsDir, 0755); err != nil {
-		err = errors.Wrapf(err, "could not make directory %v", resultsDir)
 		errlog.LogError(err)
 		return err
 	}
 
-	// Write the results file out and close it
-	f, err := os.Create(resultsFile)
-	if err != nil {
-		err = errors.Wrapf(err, "could not open output file %v for writing", resultsFile)
-		errlog.LogError(err)
+	if _, err = io.Copy(outFile, result.Body); err != nil {
+		err = errors.Wrapf(err, "could not write body to file %v", outFile.Name())
 		return err
 	}
 
-	defer f.Close()
-
-	// Copy the request body into the file
-	_, err = io.Copy(f, result.Body)
-	if err != nil {
-		err = errors.Wrapf(err, "error writing plugin result")
-		errlog.LogError(err)
-		return err
+	if result.MimeType == gzipMimeType {
+		// extract to the working directory
+		err = tarx.Extract(outFile.Name(), resultsDir, &tarx.ExtractOptions{})
+		if err != nil {
+			err = errors.Wrapf(err, "could not extract tar file %v", outFile.Name())
+			return err
+		}
 	}
 
 	return nil
+
 }
