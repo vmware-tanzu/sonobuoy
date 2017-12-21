@@ -112,7 +112,7 @@ If you see the log line `no-exit was specified, sonobuoy is now blocking`, the S
 
 To view the output, copy the output directory from the main Sonobuoy pod to somewhere local:
 ```
-kubectl cp heptio-sonobuoy/sonobuoy:/tmp/sonobuoy ./results --namespace=heptio-sonobuoy
+kubectl cp heptio-sonobuoy/sonobuoy:/tmp/sonobuoy ./archive --namespace=heptio-sonobuoy
 ```
 
 This should copy a single `.tar.gz` snapshot from the Sonobuoy pod into your local `./results` directory. You can extract its contents into `/.results` with:
