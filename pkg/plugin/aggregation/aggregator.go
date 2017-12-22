@@ -21,8 +21,6 @@ limitations under the License.
 package aggregation
 
 import (
-	"archive/tar"
-	"compress/gzip"
 	"fmt"
 	"io"
 	"net/http"
@@ -31,6 +29,7 @@ import (
 	"sync"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/tarball"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -234,43 +233,8 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 func (a *Aggregator) handleArchiveResult(result *plugin.Result) error {
 	resultsDir := path.Join(a.OutputDir, result.Path())
 
-	gzStream, err := gzip.NewReader(result.Body)
-	if err != nil {
-		return errors.Wrapf(err, "couldn't uncompress result %v", result.Path())
-	}
-
-	tarchive := tar.NewReader(gzStream)
-	for {
-		header, err := tarchive.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return errors.Wrapf(err, "error decoding tarball for result %v", result.Path())
-		}
-
-		switch header.Typeflag {
-		case tar.TypeDir:
-			if err := os.MkdirAll(path.Join(resultsDir, header.Name), os.FileMode(header.Mode)); err != nil {
-				return errors.Wrapf(err, "error decoding tarball for result (mkdir) %v", result.Path())
-			}
-		case tar.TypeReg, tar.TypeRegA:
-			filePath := path.Join(resultsDir, header.Name)
-			// Directory should come first, but some tarballes are malformed
-			if err := os.MkdirAll(path.Dir(filePath), 0755); err != nil {
-				return errors.Wrapf(err, "error decoding tarball for result (mkdir) %v", result.Path())
-			}
-			file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.FileMode(header.Mode))
-			if err != nil {
-				return errors.Wrapf(err, "error decoding tarball for result (open) %v", result.Path())
-			}
-			if _, err := io.CopyN(file, tarchive, header.Size); err != nil {
-				return errors.Wrapf(err, "error decoding tarball for result (copy) %v", result.Path())
-			}
-		default:
-			logrus.Warningf("skipping tarball result %v of type %v", header.Name, header.Typeflag)
-		}
-	}
-
-	return nil
+	return errors.Wrapf(
+		tarball.DecodeTarball(result.Body, resultsDir),
+		"couldn't decode result %v", result.Path(),
+	)
 }
