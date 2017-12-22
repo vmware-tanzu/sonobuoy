@@ -66,8 +66,9 @@ func DoRequest(url string, client *http.Client, callback func() (io.Reader, stri
 	if err != nil {
 		return errors.Wrapf(err, "error constructing master request to %v", url)
 	}
+	req.Header.Add("content-type", mimeType)
 
-	resp, err := pesterClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return errors.Wrapf(err, "error dialing master at %v", url)
 	}
@@ -75,6 +76,5 @@ func DoRequest(url string, client *http.Client, callback func() (io.Reader, stri
 		// TODO: retry logic for something like a 429 or otherwise
 		return errors.Errorf("got a %v response when dialing master to %v", resp.StatusCode, url)
 	}
-
 	return nil
 }

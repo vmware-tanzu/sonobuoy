@@ -43,7 +43,7 @@ func TestRun(t *testing.T) {
 
 	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator, srv *httptest.Server) {
 		for _, h := range hosts {
-			url, err := aggregation.NodeResultURL(srv.URL, h, "systemd_logs")
+			URL, err := aggregation.NodeResultURL(srv.URL, h, "systemd_logs")
 			if err != nil {
 				t.Fatalf("unexpected error getting node result url %v", err)
 			}
@@ -51,7 +51,7 @@ func TestRun(t *testing.T) {
 			withTempDir(t, func(tmpdir string) {
 				ioutil.WriteFile(tmpdir+"/systemd_logs", []byte("{}"), 0755)
 				ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs"), 0755)
-				err := GatherResults(tmpdir+"/done", url, srv.Client())
+				err := GatherResults(tmpdir+"/done", URL, srv.Client())
 				if err != nil {
 					t.Fatalf("Got error running agent: %v", err)
 				}
@@ -112,8 +112,6 @@ func TestRunGlobal_noExtension(t *testing.T) {
 		})
 	})
 }
-
-const aggregatorPort = 8090
 
 func ensureExists(t *testing.T, filepath string) {
 	if _, err := os.Stat(filepath); err != nil && os.IsNotExist(err) {

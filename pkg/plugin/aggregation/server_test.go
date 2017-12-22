@@ -111,8 +111,8 @@ func TestStart(t *testing.T) {
 	if !ok {
 		t.Fatalf("Valid request for %v did not get recorded", expectedResult)
 	}
-	if res.MimeType != mimeType {
-		t.Fatalf("expected mime type %s, got %s", mimeType, res.MimeType)
+	if res.MimeType != gzipMimeType {
+		t.Fatalf("expected mime type %s, got %s", gzipMimeType, res.MimeType)
 	}
 }
 

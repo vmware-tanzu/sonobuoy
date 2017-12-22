@@ -21,19 +21,18 @@ limitations under the License.
 package aggregation
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
 	"sync"
 
-	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/viniciuschiele/tarx"
 )
 
 const (
@@ -126,7 +125,6 @@ func (a *Aggregator) HandleHTTPResult(result *plugin.Result, w http.ResponseWrit
 
 	// Make sure we were expecting this result
 	if !a.isResultExpected(result) {
-		logrus.Warningf("Got unexpected result %v", resultID)
 		http.Error(
 			w,
 			fmt.Sprintf("Result %v unexpected", resultID),
@@ -147,9 +145,11 @@ func (a *Aggregator) HandleHTTPResult(result *plugin.Result, w http.ResponseWrit
 	}
 
 	if err := a.handleResult(result); err != nil {
+		errMsg := fmt.Sprintf("Error handling result %v: %v", resultID, err)
+		logrus.Info(errMsg)
 		http.Error(
 			w,
-			fmt.Sprintf("Error handling result %v: %v", resultID, err),
+			errMsg,
 			http.StatusInternalServerError,
 		)
 		return
@@ -201,54 +201,76 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 		a.resultEvents <- result
 	}()
 
-	var resultsDir string
-	var outFile *os.File
-	var err error
-
 	if result.MimeType == gzipMimeType {
-		resultsDir = path.Join(a.OutputDir, result.Path())
-		// Gzip gets a temp file
-		outFile, err = ioutil.TempFile("", "aggregator-gzip")
-		if err != nil {
-			return errors.Wrapf(err, "could not make tempfile for gzip")
-		}
-
-		defer outFile.Close()
-		// Remove the temp file when we're done
-		defer os.Remove(outFile.Name())
-	} else {
-		// Create the output directory for the result.  Will be of the
-		// form .../plugins/:results_type/:node.json (for DaemonSet plugins) or
-		// .../plugins/:results_type.json (for Job plugins)
-		resultsFile := path.Join(a.OutputDir, result.Path())
-		resultsDir = path.Dir(resultsFile)
-		outFile, err = os.Create(resultsFile)
-		if err != nil {
-			return errors.Wrapf(err, "couldn't create results file %v", resultsFile)
-		}
-		defer outFile.Close()
+		return a.handleArchiveResult(result)
 	}
 
-	logrus.Infof("Creating directory %v", resultsDir)
+	// Create the output directory for the result.  Will be of the
+	// form .../plugins/:results_type/:node.json (for DaemonSet plugins) or
+	// .../plugins/:results_type.json (for Job plugins)
+	resultsFile := path.Join(a.OutputDir, result.Path())
+	resultsDir := path.Dir(resultsFile)
+
 	if err := os.MkdirAll(resultsDir, 0755); err != nil {
-		errlog.LogError(err)
+		errors.Wrapf(err, "couldn't create directory %v", resultsDir)
 		return err
 	}
+
+	outFile, err := os.Create(resultsFile)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't create results file %v", resultsFile)
+	}
+	defer outFile.Close()
 
 	if _, err = io.Copy(outFile, result.Body); err != nil {
 		err = errors.Wrapf(err, "could not write body to file %v", outFile.Name())
 		return err
 	}
 
-	if result.MimeType == gzipMimeType {
-		// extract to the working directory
-		err = tarx.Extract(outFile.Name(), resultsDir, &tarx.ExtractOptions{})
+	return nil
+
+}
+
+func (a *Aggregator) handleArchiveResult(result *plugin.Result) error {
+	resultsDir := path.Join(a.OutputDir, result.Path())
+
+	gzStream, err := gzip.NewReader(result.Body)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't uncompress result %v", result.Path())
+	}
+
+	tarchive := tar.NewReader(gzStream)
+	for {
+		header, err := tarchive.Next()
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
-			err = errors.Wrapf(err, "could not extract tar file %v", outFile.Name())
-			return err
+			return errors.Wrapf(err, "error decoding tarball for result %v", result.Path())
+		}
+
+		switch header.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(path.Join(resultsDir, header.Name), os.FileMode(header.Mode)); err != nil {
+				return errors.Wrapf(err, "error decoding tarball for result (mkdir) %v", result.Path())
+			}
+		case tar.TypeReg, tar.TypeRegA:
+			filePath := path.Join(resultsDir, header.Name)
+			// Directory should come first, but some tarballes are malformed
+			if err := os.MkdirAll(path.Dir(filePath), 0755); err != nil {
+				return errors.Wrapf(err, "error decoding tarball for result (mkdir) %v", result.Path())
+			}
+			file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.FileMode(header.Mode))
+			if err != nil {
+				return errors.Wrapf(err, "error decoding tarball for result (open) %v", result.Path())
+			}
+			if _, err := io.CopyN(file, tarchive, header.Size); err != nil {
+				return errors.Wrapf(err, "error decoding tarball for result (copy) %v", result.Path())
+			}
+		default:
+			logrus.Warningf("skipping tarball result %v of type %v", header.Name, header.Typeflag)
 		}
 	}
 
 	return nil
-
 }
