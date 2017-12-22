@@ -32,8 +32,9 @@ import (
 // error message if the callback fails. (This way, problems gathering data
 // don't result in the server waiting forever for results that will never
 // come.)
-func DoRequest(url string, callback func() (io.Reader, error)) error {
-	input, err := callback()
+func DoRequest(url string, client *http.Client, callback func() (io.Reader, string, error)) error {
+	input, mimeType, err := callback()
+	pesterClient := pester.NewExtendedClient(client)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "error gathering host data"))
 
@@ -47,12 +48,13 @@ func DoRequest(url string, callback func() (io.Reader, error)) error {
 			return errors.WithStack(err)
 		}
 		req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(errbody))
+		req.Header.Add("content-type", mimeType)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 
 		// And if we can't even do that, log it.
-		resp, err := pester.Do(req)
+		resp, err := pesterClient.Do(req)
 		if err != nil || resp.StatusCode != http.StatusOK {
 			errlog.LogError(errors.Wrapf(err, "could not send error message to master URL (%v)", url))
 		}
@@ -64,8 +66,9 @@ func DoRequest(url string, callback func() (io.Reader, error)) error {
 	if err != nil {
 		return errors.Wrapf(err, "error constructing master request to %v", url)
 	}
+	req.Header.Add("content-type", mimeType)
 
-	resp, err := pester.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return errors.Wrapf(err, "error dialing master at %v", url)
 	}
@@ -73,6 +76,5 @@ func DoRequest(url string, callback func() (io.Reader, error)) error {
 		// TODO: retry logic for something like a 429 or otherwise
 		return errors.Errorf("got a %v response when dialing master to %v", resp.StatusCode, url)
 	}
-
 	return nil
 }

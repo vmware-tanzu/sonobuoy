@@ -28,11 +28,14 @@ import (
 	"path"
 	"sync"
 
-	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/tarball"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/viniciuschiele/tarx"
+)
+
+const (
+	gzipMimeType = "application/gzip"
 )
 
 // Aggregator is responsible for taking results from an HTTP server (configured
@@ -121,7 +124,6 @@ func (a *Aggregator) HandleHTTPResult(result *plugin.Result, w http.ResponseWrit
 
 	// Make sure we were expecting this result
 	if !a.isResultExpected(result) {
-		logrus.Warningf("Got unexpected result %v", resultID)
 		http.Error(
 			w,
 			fmt.Sprintf("Result %v unexpected", resultID),
@@ -142,9 +144,11 @@ func (a *Aggregator) HandleHTTPResult(result *plugin.Result, w http.ResponseWrit
 	}
 
 	if err := a.handleResult(result); err != nil {
+		errMsg := fmt.Sprintf("Error handling result %v: %v", resultID, err)
+		logrus.Info(errMsg)
 		http.Error(
 			w,
-			fmt.Sprintf("Error handling result %v: %v", resultID, err),
+			errMsg,
 			http.StatusInternalServerError,
 		)
 		return
@@ -196,62 +200,41 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 		a.resultEvents <- result
 	}()
 
+	if result.MimeType == gzipMimeType {
+		return a.handleArchiveResult(result)
+	}
+
 	// Create the output directory for the result.  Will be of the
 	// form .../plugins/:results_type/:node.json (for DaemonSet plugins) or
 	// .../plugins/:results_type.json (for Job plugins)
-	resultsFile := path.Join(a.OutputDir, result.Path()+result.Extension)
+	resultsFile := path.Join(a.OutputDir, result.Path())
 	resultsDir := path.Dir(resultsFile)
-	logrus.Infof("Creating directory %v", resultsDir)
+
 	if err := os.MkdirAll(resultsDir, 0755); err != nil {
-		err = errors.Wrapf(err, "could not make directory %v", resultsDir)
-		errlog.LogError(err)
+		errors.Wrapf(err, "couldn't create directory %v", resultsDir)
 		return err
 	}
 
-	// Write the results file out and close it
-	err := func() error {
-		f, err := os.Create(resultsFile)
-		if err != nil {
-			err = errors.Wrapf(err, "could not open output file %v for writing", resultsFile)
-			errlog.LogError(err)
-			return err
-		}
-		defer f.Close()
-
-		// Copy the request body into the file
-		_, err = io.Copy(f, result.Body)
-		if err != nil {
-			err = errors.Wrapf(err, "error writing plugin result")
-			errlog.LogError(err)
-			return err
-		}
-
-		return nil
-	}()
+	outFile, err := os.Create(resultsFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "couldn't create results file %v", resultsFile)
 	}
+	defer outFile.Close()
 
-	// If it's a tarball, extract it
-	if result.Extension == ".tar.gz" {
-		resultsDir := path.Join(a.OutputDir, result.Path())
-
-		err = tarx.Extract(resultsFile, resultsDir, &tarx.ExtractOptions{})
-		if err != nil {
-			err = errors.Wrapf(err, "could not extract tar file %v", resultsFile)
-			errlog.LogError(err)
-			return err
-		}
-
-		err = os.Remove(resultsFile)
-		if err != nil {
-			return err
-		}
-
-		logrus.Infof("extracted results tarball into %v", resultsDir)
-	} else {
-		logrus.Infof("wrote results to %v", resultsFile)
+	if _, err = io.Copy(outFile, result.Body); err != nil {
+		err = errors.Wrapf(err, "could not write body to file %v", outFile.Name())
+		return err
 	}
 
 	return nil
+
+}
+
+func (a *Aggregator) handleArchiveResult(result *plugin.Result) error {
+	resultsDir := path.Join(a.OutputDir, result.Path())
+
+	return errors.Wrapf(
+		tarball.DecodeTarball(result.Body, resultsDir),
+		"couldn't decode result %v", result.Path(),
+	)
 }

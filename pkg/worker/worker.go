@@ -19,13 +19,19 @@ package worker
 import (
 	"io"
 	"io/ioutil"
+	"mime"
+	"net/http"
 	"os"
-	"strings"
+	"path/filepath"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
+
+func init() {
+	mime.AddExtensionType(".gz", "application/gzip")
+}
 
 // GatherResults is the consumer of a co-scheduled container that agrees on the following
 // contract:
@@ -33,7 +39,7 @@ import (
 // 1. Output data will be placed into an agreed upon results directory.
 // 2. The Job will wait for a done file
 // 3. The done file contains a single string of the results to be sent to the master
-func GatherResults(waitfile string, url string) error {
+func GatherResults(waitfile string, url string, client *http.Client) error {
 	var inputFileName []byte
 	var err error
 	var outfile *os.File
@@ -55,11 +61,9 @@ func GatherResults(waitfile string, url string) error {
 	s := string(inputFileName)
 	logrus.Infof("Detected done file, transmitting: (%v)", s)
 
-	// Append a file extension, if there is one
-	filenameParts := strings.SplitN(s, ".", 2)
-	if len(filenameParts) == 2 {
-		url += "." + filenameParts[1]
-	}
+	// Set content type
+	extension := filepath.Ext(s)
+	mimeType := mime.TypeByExtension(extension)
 
 	defer func() {
 		if outfile != nil {
@@ -68,9 +72,9 @@ func GatherResults(waitfile string, url string) error {
 	}()
 
 	// transmit back the results file.
-	return DoRequest(url, func() (io.Reader, error) {
+	return DoRequest(url, client, func() (io.Reader, string, error) {
 		outfile, err = os.Open(s)
-		return outfile, errors.WithStack(err)
+		return outfile, mimeType, errors.WithStack(err)
 	})
 
 }

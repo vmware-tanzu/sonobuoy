@@ -110,6 +110,18 @@
   version = "v0.1.0"
 
 [[projects]]
+  name = "github.com/gorilla/context"
+  packages = ["."]
+  revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
+  version = "v1.1"
+
+[[projects]]
+  name = "github.com/gorilla/mux"
+  packages = ["."]
+  revision = "7f08801859139f86dfafd1c296e2cba9a80d292e"
+  version = "v1.6.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/gregjones/httpcache"
   packages = [".","diskcache"]
@@ -334,6 +346,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "63835f464d653e62cd629d1cd34ac43e215f50ea8894d966fd34d50af4cde39a"
+  inputs-digest = "8facf8e1be2d5d97b71887a0f862eb96760ec1035557dc105fca11cb4738c0b2"
   solver-name = "gps-cdcl"
   solver-version = 1

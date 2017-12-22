@@ -86,6 +86,6 @@ func MakeErrorResult(resultType string, errdata map[string]interface{}, nodeName
 		Error:      errstr,
 		ResultType: resultType,
 		NodeName:   nodeName,
-		Extension:  ".json",
+		MimeType:   "application/json",
 	}
 }
