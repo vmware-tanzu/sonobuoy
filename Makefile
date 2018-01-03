@@ -45,7 +45,7 @@ BUILDCMD = go build -o $(TARGET) $(VERBOSE_FLAG) -ldflags "-X github.com/heptio/
 BUILD = $(BUILDCMD) $(GOTARGET)
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
-TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/... $(GOTARGET)/results/...
+TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
 TEST = go test $(TEST_PKGS) $(TESTARGS)
 
 VET = go vet $(TEST_PKGS)
