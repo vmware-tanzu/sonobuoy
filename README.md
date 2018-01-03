@@ -21,11 +21,10 @@ Its selective data dumps of Kubernetes resource objects and cluster nodes allow 
 
 To ensure that your cluster is running the appropriate Kubernetes version for your Sonobuoy release, see the second column of the table below. Otherwise you may encounter the documented issues.
 
-| Sonobuoy Version / Conformance Version | Required K8s Cluster Version | Known Issues |
+| Sonobuoy Version | Supported K8s Cluster Versions | Note(s) |
 |---|---|---|
-| v0.10.0 / 1.8 | >= 1.7 | For earlier cluster versions (e.g. 1.6), some issues may exist. |
-| v0.9.0 / 1.8 | >= 1.7 | For earlier cluster versions (e.g. 1.6), some issues may exist. |
-| v0.8.0 / 1.7 | N/A | N/A |
+| master | 1.9 <= X <= TBD | Under development |
+| v0.10.x | 1.7 <= X <= 1.9 | Verify your kube-conformance container version matches cluster version |
 
 ## Prerequisites
 
