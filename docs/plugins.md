@@ -170,8 +170,6 @@ The current, default set of Sonobuoy plugins are available in the `plugins.d` di
 | [`e2e`][9] | Run Kubernetes end-to-end tests (e.g. conformance) and gather the results. | [heptio/kube-conformance][17] | `E2E_*` variables configure the end-to-end tests. See the [conformance testing guide][15] for details. |
 | [`bulkhead`][19] | Perform CIS Benchmark scans from each node using Aqua Security's [`kube-bench`][20] tool. | [bgeesaman/sonobuoy-plugin-bulkhead][19] | (1) `RESULTS_DIR`|
 
-See the [`/build`][14] directory for the source code used to build these plugins (specifically, their "producer" containers).
-
 [0]: #overview
 [1]: #developer-plugin-definition
 [2]: #under-the-hood
