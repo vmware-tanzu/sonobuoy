@@ -101,7 +101,7 @@ data:
             "bindport": 8080,
             "timeoutseconds": 5400
         },
-        "Version": "v0.10.0"
+        "Version": "v0.11.0"
     }
 kind: ConfigMap
 metadata:
@@ -130,7 +130,7 @@ data:
       containers:
       - env:
         - name: E2E_FOCUS
-          value: Pods should be submitted and removed
+          value: Conformance
         image: gcr.io/heptio-images/kube-conformance:latest
         imagePullPolicy: Always
         name: e2e
@@ -153,7 +153,7 @@ data:
           value: '{{.MasterAddress}}'
         - name: RESULT_TYPE
           value: e2e
-        image: gcr.io/heptio-images/sonobuoy:v0.10.0
+        image: gcr.io/heptio-images/sonobuoy:latest
         imagePullPolicy: Always
         name: sonobuoy-worker
         volumeMounts:
@@ -237,7 +237,7 @@ data:
               value: '{{.MasterAddress}}'
             - name: RESULT_TYPE
               value: systemd_logs
-            image: gcr.io/heptio-images/sonobuoy:v0.10.0
+            image: gcr.io/heptio-images/sonobuoy:latest
             imagePullPolicy: Always
             name: sonobuoy-worker
             volumeMounts:
@@ -287,7 +287,7 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: gcr.io/heptio-images/sonobuoy:v0.10.0
+    image: gcr.io/heptio-images/sonobuoy:latest
     imagePullPolicy: Always
     name: kube-sonobuoy
     volumeMounts:
