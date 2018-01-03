@@ -130,7 +130,7 @@ data:
       containers:
       - env:
         - name: E2E_FOCUS
-          value: Pods should be submitted and removed
+          value: Conformance
         image: gcr.io/heptio-images/kube-conformance:latest
         imagePullPolicy: Always
         name: e2e
