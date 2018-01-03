@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"io"
 	"os"
@@ -155,8 +156,20 @@ func ExtractIntoStruct(predicate func(string) bool, path string, info os.FileInf
 		if !ok {
 			return errors.New("info.Sys() is not a reader")
 		}
+		// TODO(chuckha) there must be a better way
+		if strings.HasSuffix(path, "xml") {
+			decoder := xml.NewDecoder(reader)
+			err := decoder.Decode(object)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
+		// If it's not xml it's probably json
 		decoder := json.NewDecoder(reader)
 		err := decoder.Decode(object)
+
 		if err != nil {
 			return err
 		}
