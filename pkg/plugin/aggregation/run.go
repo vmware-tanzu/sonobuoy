@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/heptio/sonobuoy/pkg/backplane/ca"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -76,10 +77,22 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		doneAggr <- true
 	}()
 
+	certauth, err := ca.NewAuthority()
+	if err != nil {
+		return errors.Wrap(err, "couldn't create a new certificate authority")
+	}
+
+	// TODO what should the name be?
+	tlsCfg, err := certauth.MakeServerConfig("sonobuoy-server")
+	if err != nil {
+		return errors.Wrap(err, "couldn't get a server certificate")
+	}
+
 	// 2. Launch the aggregation servers
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", cfg.BindAddress, cfg.BindPort),
-		Handler: NewHandler(aggr.HandleHTTPResult),
+		Addr:      fmt.Sprintf("%s:%d", cfg.BindAddress, cfg.BindPort),
+		Handler:   NewHandler(aggr.HandleHTTPResult),
+		TLSConfig: tlsCfg,
 	}
 
 	doneServ := make(chan error)
