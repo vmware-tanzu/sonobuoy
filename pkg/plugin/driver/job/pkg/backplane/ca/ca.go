@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"math/big"
+	"net"
 	"time"
 
 	"github.com/pkg/errors"
@@ -35,6 +36,8 @@ type Authority struct {
 	lastSerial *big.Int
 }
 
+// NewAuthority creates a new certificate authority. A new private key and root certificate will
+// be generated but not returned.
 func NewAuthority() (*Authority, error) {
 	privKey, err := rsa.GenerateKey(rand.Reader, rsaBits)
 	if err != nil {
@@ -66,6 +69,8 @@ func (a *Authority) makeCert(pub crypto.PublicKey, mut func(*x509.Certificate)) 
 		KeyUsage:              0,
 		ExtKeyUsage:           []x509.ExtKeyUsage{},
 		BasicConstraintsValid: true,
+		// For testing and local access
+		IPAddresses: []net.IP{net.ParseIP("127.0.0.1")},
 	}
 	mut(&tmpl)
 	parent := a.cert
@@ -94,10 +99,19 @@ func (a *Authority) nextSerial() *big.Int {
 	return a.lastSerial.Add(a.lastSerial, big.NewInt(1))
 }
 
+// CACert is the root certificate of the CA.
 func (a *Authority) CACert() *x509.Certificate {
 	return a.cert
 }
 
+func (a *Authority) CACertPool() *x509.CertPool {
+	pool := x509.NewCertPool()
+	pool.AddCert(a.CACert())
+	return pool
+}
+
+// ServerKey makes a client cert signed by out root CA. The returned certificate
+// has a chain including the root CA cert.
 func (a *Authority) ServerKey(name string) (*tls.Certificate, error) {
 	privKey, err := rsa.GenerateKey(rand.Reader, rsaBits)
 	if err != nil {
@@ -117,6 +131,27 @@ func (a *Authority) ServerKey(name string) (*tls.Certificate, error) {
 	}, nil
 }
 
+// MakeServerConfig makes a new server certificate, then returns a TLS config that uses it
+// and will verify peer certificates
+func (a *Authority) MakeServerConfig(name string) (*tls.Config, error) {
+	cert, err := a.ServerKey(name)
+	if err != nil {
+		return nil, err
+	}
+
+	pool := x509.NewCertPool()
+	pool.AddCert(a.cert)
+
+	return &tls.Config{
+		Certificates: []tls.Certificate{*cert},
+		ServerName:   name,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    pool,
+	}, nil
+}
+
+// ClientKey makes a client cert signed by out root CA. The returned certificate
+// has a chain including the root CA
 func (a *Authority) ClientKey(name string) (*tls.Certificate, error) {
 	privKey, err := rsa.GenerateKey(rand.Reader, rsaBits)
 	if err != nil {

@@ -1,9 +1,14 @@
 package ca
 
 import (
+	"fmt"
+	"io/ioutil"
 	"math/big"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"crypto/tls"
 	"crypto/x509"
 )
 
@@ -30,8 +35,7 @@ func TestCA(t *testing.T) {
 		t.Fatalf("Couldn't create certificate authority")
 	}
 
-	capool := x509.NewCertPool()
-	capool.AddCert(auth.CACert())
+	capool := auth.CACertPool()
 
 	srvName := "master.sonobuoy.local"
 	srvCert, err := auth.ServerKey(srvName)
@@ -64,6 +68,63 @@ func TestCA(t *testing.T) {
 		if err != nil {
 			t.Errorf("Expected client key to verify, got error %v", err)
 		}
+	}
+}
+
+func TestServer(t *testing.T) {
+	auth, err := NewAuthority()
+	if err != nil {
+		t.Fatalf("Couldn't create certificate authority")
+	}
+
+	testString := "Whose woods these are, I think I know.\n"
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, testString)
+	})
+
+	srvName := "test.sonobouy.local"
+	cfg, err := auth.MakeServerConfig(srvName)
+	if err != nil {
+		t.Fatalf("Couldn't get server config %v", err)
+
+	}
+	srv := httptest.NewUnstartedServer(handler)
+	srv.TLS = cfg
+	srv.StartTLS()
+	defer srv.Close()
+
+	resp, err := srv.Client().Get(srv.URL + "/test")
+	if err == nil {
+		defer resp.Body.Close()
+		t.Fatalf("made request without cert, should've gotten error")
+	}
+
+	clientCert, err := auth.ClientKey("client1.local")
+	if err != nil {
+		t.Fatalf("couldn't get client cert %v", err)
+	}
+
+	client := srv.Client()
+	client.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			Certificates: []tls.Certificate{*clientCert},
+			RootCAs:      auth.CACertPool(),
+		},
+	}
+
+	resp, err = srv.Client().Get(srv.URL + "/test")
+	if err != nil {
+		t.Fatalf("expected client error to be null, got %v", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("couldn't read body: %v", err)
+	}
+
+	if string(respBody) != testString {
+		t.Errorf("expected %s, got %s", testString, respBody)
 	}
 
 }
