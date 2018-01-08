@@ -147,6 +147,21 @@ func (r *Reader) WalkFiles(walkfn filepath.WalkFunc) error {
 
 // Functions to be used within a walkfn
 
+// ExtractBytes pulls out bytes into a buffer for any path matching file.
+func ExtractBytes(file string, path string, info os.FileInfo, buf *bytes.Buffer) error {
+	if file == path {
+		reader, ok := info.Sys().(io.Reader)
+		if !ok {
+			return errors.New("info.Sys() is not a reader")
+		}
+		_, err := buf.ReadFrom(reader)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // ExtractIntoStruct takes a predicate function and some file information
 // and decodes the contents of the file that matches the predicate into the
 // interface passed in (generally a pointer to a struct/slice).
@@ -193,6 +208,10 @@ func ExtractConfig(path string, info os.FileInfo, conf *config.Config) error {
 }
 
 // Functions for helping with backwards compatibility
+
+func (a *Reader) Metadata() string {
+	return metadataDir
+}
 
 func (a *Reader) ServerVersionFile() string {
 	switch a.Version {
