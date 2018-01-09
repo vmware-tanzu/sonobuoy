@@ -116,7 +116,7 @@ kubectl cp heptio-sonobuoy/sonobuoy:/tmp/sonobuoy ./archive --namespace=heptio-s
 
 This should copy a single `.tar.gz` snapshot from the Sonobuoy pod into your local `./archive` directory. You can extract its contents into `./results` with:
 ```
-mkdir ./results; tar xzf ./results/*.tar.gz -C ./results
+mkdir ./results; tar xzf ./archive/*.tar.gz -C ./results
 ```
 
 For information on the contents of the snapshot, see the [snapshot documentation](docs/snapshot.md).
