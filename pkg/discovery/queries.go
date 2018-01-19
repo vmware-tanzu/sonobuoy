@@ -116,23 +116,39 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 	case "ConfigMaps":
 		return kubeClient.CoreV1().ConfigMaps(ns).List(opts)
 	case "ControllerRevisions":
-		lst, err := kubeClient.AppsV1beta2().ControllerRevisions(ns).List(opts)
+		lst, err := kubeClient.AppsV1().ControllerRevisions(ns).List(opts)
 		if apierrors.IsNotFound(err) {
-			return kubeClient.AppsV1beta1().ControllerRevisions(ns).List(opts)
+			lst, err := kubeClient.AppsV1beta2().ControllerRevisions(ns).List(opts)
+			if apierrors.IsNotFound(err) {
+				return kubeClient.AppsV1beta1().ControllerRevisions(ns).List(opts)
+			}
+			return lst, err
 		}
 		return lst, err
 	case "CronJobs":
-		return kubeClient.BatchV1beta1().CronJobs(ns).List(opts)
-	case "DaemonSets":
-		lst, err := kubeClient.AppsV1beta2().DaemonSets(ns).List(opts)
+		lst, err := kubeClient.BatchV1beta1().CronJobs(ns).List(opts)
 		if apierrors.IsNotFound(err) {
-			return kubeClient.ExtensionsV1beta1().DaemonSets(ns).List(opts)
+			return kubeClient.BatchV2alpha1().CronJobs(ns).List(opts)
+		}
+		return lst, err
+	case "DaemonSets":
+		lst, err := kubeClient.AppsV1().DaemonSets(ns).List(opts)
+		if apierrors.IsNotFound(err) {
+			lst, err := kubeClient.AppsV1beta2().DaemonSets(ns).List(opts)
+			if apierrors.IsNotFound(err) {
+				return kubeClient.ExtensionsV1beta1().DaemonSets(ns).List(opts)
+			}
+			return lst, err
 		}
 		return lst, err
 	case "Deployments":
-		lst, err := kubeClient.AppsV1beta2().Deployments(ns).List(opts)
+		lst, err := kubeClient.AppsV1().Deployments(ns).List(opts)
 		if apierrors.IsNotFound(err) {
-			return kubeClient.AppsV1beta1().Deployments(ns).List(opts)
+			lst, err := kubeClient.AppsV1beta2().Deployments(ns).List(opts)
+			if apierrors.IsNotFound(err) {
+				return kubeClient.AppsV1beta1().Deployments(ns).List(opts)
+			}
+			return lst, err
 		}
 		return lst, err
 	case "Endpoints":
@@ -160,9 +176,13 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 	case "PodTemplates":
 		return kubeClient.CoreV1().PodTemplates(ns).List(opts)
 	case "ReplicaSets":
-		lst, err := kubeClient.AppsV1beta2().ReplicaSets(ns).List(opts)
+		lst, err := kubeClient.AppsV1().ReplicaSets(ns).List(opts)
 		if apierrors.IsNotFound(err) {
-			return kubeClient.ExtensionsV1beta1().ReplicaSets(ns).List(opts)
+			lst, err := kubeClient.AppsV1beta2().ReplicaSets(ns).List(opts)
+			if apierrors.IsNotFound(err) {
+				return kubeClient.ExtensionsV1beta1().ReplicaSets(ns).List(opts)
+			}
+			return lst, err
 		}
 		return lst, err
 	case "ReplicationControllers":
@@ -172,13 +192,21 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 	case "RoleBindings":
 		lst, err := kubeClient.RbacV1().RoleBindings(ns).List(opts)
 		if apierrors.IsNotFound(err) {
-			return kubeClient.RbacV1beta1().RoleBindings(ns).List(opts)
+			lst, err := kubeClient.RbacV1beta1().RoleBindings(ns).List(opts)
+			if apierrors.IsNotFound(err) {
+				return kubeClient.RbacV1alpha1().RoleBindings(ns).List(opts)
+			}
+			return lst, err
 		}
 		return lst, err
 	case "Roles":
 		lst, err := kubeClient.RbacV1().Roles(ns).List(opts)
 		if apierrors.IsNotFound(err) {
-			return kubeClient.RbacV1beta1().Roles(ns).List(opts)
+			lst, err := kubeClient.RbacV1beta1().Roles(ns).List(opts)
+			if apierrors.IsNotFound(err) {
+				return kubeClient.RbacV1alpha1().Roles(ns).List(opts)
+			}
+			return lst, err
 		}
 		return lst, err
 	case "Secrets":
@@ -188,9 +216,13 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 	case "Services":
 		return kubeClient.CoreV1().Services(ns).List(opts)
 	case "StatefulSets":
-		lst, err := kubeClient.AppsV1beta2().StatefulSets(ns).List(opts)
+		lst, err := kubeClient.AppsV1().StatefulSets(ns).List(opts)
 		if apierrors.IsNotFound(err) {
-			return kubeClient.AppsV1beta1().StatefulSets(ns).List(opts)
+			lst, err := kubeClient.AppsV1beta2().StatefulSets(ns).List(opts)
+			if apierrors.IsNotFound(err) {
+				return kubeClient.AppsV1beta1().StatefulSets(ns).List(opts)
+			}
+			return lst, err
 		}
 		return lst, err
 	default:
@@ -206,13 +238,21 @@ func queryNonNsResource(resourceKind string, kubeClient kubernetes.Interface) (r
 	case "ClusterRoleBindings":
 		lst, err := kubeClient.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{})
 		if apierrors.IsNotFound(err) {
-			return kubeClient.RbacV1beta1().ClusterRoleBindings().List(metav1.ListOptions{})
+			lst, err := kubeClient.RbacV1beta1().ClusterRoleBindings().List(metav1.ListOptions{})
+			if apierrors.IsNotFound(err) {
+				return kubeClient.RbacV1alpha1().ClusterRoleBindings().List(metav1.ListOptions{})
+			}
+			return lst, err
 		}
 		return lst, err
 	case "ClusterRoles":
 		lst, err := kubeClient.RbacV1().ClusterRoles().List(metav1.ListOptions{})
 		if apierrors.IsNotFound(err) {
-			return kubeClient.RbacV1beta1().ClusterRoles().List(metav1.ListOptions{})
+			lst, err := kubeClient.RbacV1beta1().ClusterRoles().List(metav1.ListOptions{})
+			if apierrors.IsNotFound(err) {
+				return kubeClient.RbacV1alpha1().ClusterRoles().List(metav1.ListOptions{})
+			}
+			return lst, err
 		}
 		return lst, err
 	case "ComponentStatuses":
@@ -236,8 +276,6 @@ func queryNonNsResource(resourceKind string, kubeClient kubernetes.Interface) (r
 			return kubeClient.StorageV1beta1().StorageClasses().List(metav1.ListOptions{})
 		}
 		return lst, err
-	case "ThirdPartyResources":
-		return kubeClient.ExtensionsV1beta1().ThirdPartyResources().List(metav1.ListOptions{})
 	default:
 		return nil, errors.Errorf("don't know how to handle non-namespaced resource %v", resourceKind)
 	}

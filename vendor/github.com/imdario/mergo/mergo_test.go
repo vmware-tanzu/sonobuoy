@@ -6,12 +6,11 @@
 package mergo
 
 import (
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"reflect"
 	"testing"
 	"time"
-
-	"gopkg.in/yaml.v1"
 )
 
 type simpleTest struct {
@@ -22,6 +21,14 @@ type complexTest struct {
 	St simpleTest
 	sz int
 	ID string
+}
+
+type mapTest struct {
+	M map[int]int
+}
+
+type ifcTest struct {
+	I interface{}
 }
 
 type moreComplextText struct {
@@ -218,29 +225,114 @@ func TestPointerStructNil(t *testing.T) {
 	}
 }
 
-func TestSliceStruct(t *testing.T) {
-	a := sliceTest{}
-	b := sliceTest{[]int{1, 2, 3}}
-	if err := Merge(&a, b); err != nil {
+func testSlice(t *testing.T, a []int, b []int) {
+	bc := b
+	e := append(a, b...)
+
+	sa := sliceTest{a}
+	sb := sliceTest{b}
+	if err := Merge(&sa, sb); err != nil {
 		t.FailNow()
 	}
-	if len(b.S) != 3 {
-		t.FailNow()
+	if !reflect.DeepEqual(sb.S, bc) {
+		t.Fatalf("Source slice was modified %d != %d", sb.S, bc)
 	}
-	if len(a.S) != len(b.S) {
-		t.Fatalf("b not merged in a proper way %d != %d", len(a.S), len(b.S))
+	if !reflect.DeepEqual(sa.S, e) {
+		t.Fatalf("b not merged in a proper way %d != %d", sa.S, e)
 	}
 
-	a = sliceTest{[]int{1}}
-	b = sliceTest{[]int{1, 2, 3}}
+	ma := map[string][]int{"S": a}
+	mb := map[string][]int{"S": b}
+	if err := Merge(&ma, mb); err != nil {
+		t.FailNow()
+	}
+	if !reflect.DeepEqual(mb["S"], bc) {
+		t.Fatalf("Source slice was modified %d != %d", mb["S"], bc)
+	}
+	if !reflect.DeepEqual(ma["S"], e) {
+		t.Fatalf("b not merged in a proper way %d != %d", ma["S"], e)
+	}
+
+	if a == nil {
+		// test case with missing dst key
+		ma := map[string][]int{}
+		mb := map[string][]int{"S": b}
+		if err := Merge(&ma, mb); err != nil {
+			t.FailNow()
+		}
+		if !reflect.DeepEqual(mb["S"], bc) {
+			t.Fatalf("Source slice was modified %d != %d", mb["S"], bc)
+		}
+		if !reflect.DeepEqual(ma["S"], e) {
+			t.Fatalf("b not merged in a proper way %d != %d", ma["S"], e)
+		}
+	}
+
+	if b == nil {
+		// test case with missing src key
+		ma := map[string][]int{"S": a}
+		mb := map[string][]int{}
+		if err := Merge(&ma, mb); err != nil {
+			t.FailNow()
+		}
+		if !reflect.DeepEqual(mb["S"], bc) {
+			t.Fatalf("Source slice was modified %d != %d", mb["S"], bc)
+		}
+		if !reflect.DeepEqual(ma["S"], e) {
+			t.Fatalf("b not merged in a proper way %d != %d", ma["S"], e)
+		}
+	}
+}
+
+func TestSlice(t *testing.T) {
+	testSlice(t, nil, []int{1, 2, 3})
+	testSlice(t, []int{}, []int{1, 2, 3})
+	testSlice(t, []int{1}, []int{2, 3})
+	testSlice(t, []int{1}, []int{})
+	testSlice(t, []int{1}, nil)
+}
+
+func TestEmptyMaps(t *testing.T) {
+	a := mapTest{}
+	b := mapTest{
+		map[int]int{},
+	}
 	if err := Merge(&a, b); err != nil {
+		t.Fail()
+	}
+	if !reflect.DeepEqual(a, b) {
 		t.FailNow()
 	}
-	if len(a.S) != 1 {
+}
+
+func TestEmptyToEmptyMaps(t *testing.T) {
+	a := mapTest{}
+	b := mapTest{}
+	if err := Merge(&a, b); err != nil {
+		t.Fail()
+	}
+	if !reflect.DeepEqual(a, b) {
 		t.FailNow()
 	}
-	if len(a.S) == len(b.S) {
-		t.Fatalf("b merged unexpectedly %d != %d", len(a.S), len(b.S))
+}
+
+func TestEmptyToNotEmptyMaps(t *testing.T) {
+	a := mapTest{map[int]int{
+		1: 2,
+		3: 4,
+	}}
+	aa := mapTest{map[int]int{
+		1: 2,
+		3: 4,
+	}}
+	b := mapTest{
+		map[int]int{},
+	}
+	if err := Merge(&a, b); err != nil {
+		t.Fail()
+	}
+	if !reflect.DeepEqual(a, aa) {
+		t.FailNow()
 	}
 }
 
@@ -318,7 +410,8 @@ func TestYAMLMaps(t *testing.T) {
 	license := loadYAML("testdata/license.yml")
 	ft := thing["fields"].(map[interface{}]interface{})
 	fl := license["fields"].(map[interface{}]interface{})
-	expectedLength := len(ft) + len(fl)
+	// license has one extra field (site) and another already existing in thing (author) that Mergo won't override.
+	expectedLength := len(ft) + len(fl) - 1
 	if err := Merge(&license, thing); err != nil {
 		t.Fatal(err.Error())
 	}
@@ -393,6 +486,45 @@ func TestSimpleMap(t *testing.T) {
 	}
 }
 
+func TestIfcMap(t *testing.T) {
+	a := ifcTest{}
+	b := ifcTest{42}
+	if err := Map(&a, b); err != nil {
+		t.FailNow()
+	}
+	if a.I != 42 {
+		t.Fatalf("b not merged in properly: a.I(%d) != b.I(%d)", a.I, b.I)
+	}
+	if !reflect.DeepEqual(a, b) {
+		t.FailNow()
+	}
+}
+
+func TestIfcMapNoOverwrite(t *testing.T) {
+	a := ifcTest{13}
+	b := ifcTest{42}
+	if err := Map(&a, b); err != nil {
+		t.FailNow()
+	}
+	if a.I != 13 {
+		t.Fatalf("a not left alone: a.I(%d) == b.I(%d)", a.I, b.I)
+	}
+}
+
+func TestIfcMapWithOverwrite(t *testing.T) {
+	a := ifcTest{13}
+	b := ifcTest{42}
+	if err := MapWithOverwrite(&a, b); err != nil {
+		t.FailNow()
+	}
+	if a.I != 42 {
+		t.Fatalf("b not merged in properly: a.I(%d) != b.I(%d)", a.I, b.I)
+	}
+	if !reflect.DeepEqual(a, b) {
+		t.FailNow()
+	}
+}
+
 type pointerMapTest struct {
 	A      int
 	hidden int
@@ -431,6 +563,29 @@ func TestBackAndForth(t *testing.T) {
 	}
 	if bpt.B.Value != pt.B.Value {
 		t.Fatalf("pt not merged in properly: bpt.B.Value(%d) != pt.B.Value(%d)", bpt.B.Value, pt.B.Value)
+	}
+}
+
+func TestEmbeddedPointerUnpacking(t *testing.T) {
+	tests := []struct{ input pointerMapTest }{
+		{pointerMapTest{42, 1, nil}},
+		{pointerMapTest{42, 1, &simpleTest{66}}},
+	}
+	newValue := 77
+	m := map[string]interface{}{
+		"b": map[string]interface{}{
+			"value": newValue,
+		},
+	}
+	for _, test := range tests {
+		pt := test.input
+		if err := MapWithOverwrite(&pt, m); err != nil {
+			t.FailNow()
+		}
+		if pt.B.Value != newValue {
+			t.Fatalf("pt not mapped properly: pt.A.Value(%d) != m[`b`][`value`](%d)", pt.B.Value, newValue)
+		}
+
 	}
 }
 
@@ -522,4 +677,27 @@ func TestUnexportedProperty(t *testing.T) {
 		}
 	}()
 	Merge(&a, b)
+}
+
+type structWithBoolPointer struct {
+	C *bool
+}
+
+func TestBooleanPointer(t *testing.T) {
+	bt, bf := true, false
+	src := structWithBoolPointer{
+		&bt,
+	}
+	dst := structWithBoolPointer{
+		&bf,
+	}
+	if err := Merge(&dst, src); err != nil {
+		t.FailNow()
+	}
+	if dst.C == src.C {
+		t.Fatalf("dst.C should be a different pointer than src.C")
+	}
+	if *dst.C != *src.C {
+		t.Fatalf("dst.C should be true")
+	}
 }
