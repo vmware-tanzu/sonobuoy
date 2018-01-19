@@ -27,7 +27,7 @@ func TestLogEntryWritten(t *testing.T) {
 	}()
 	hook := NewHook(PathMap{
 		logrus.InfoLevel: fname,
-	})
+	}, nil)
 	log.Hooks.Add(hook)
 
 	log.Info(expectedMsg)
