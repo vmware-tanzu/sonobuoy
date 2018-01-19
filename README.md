@@ -156,7 +156,7 @@ other members of the community
 You can run sonobuoy's tests with `make test`. This will spin up local docker
 containers to run the test suite.
 
-For noiser tests, use `VERBOSE=true make test`
+For noisier tests, use `VERBOSE=true make test`
 
 #### Pull requests
 
