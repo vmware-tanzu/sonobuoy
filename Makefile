@@ -69,16 +69,19 @@ KUBECFG_CMD = $(DOCKER) run \
 
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 
-.PHONY: all container push clean cbuild test local generate plugins int
+.PHONY: all container push clean cbuild test local-test local generate plugins int 
 
 all: container
 
-# Unit tests
+local-test: 
+	$(TEST)
+
+# Unit tests 
 test: cbuild vet
 	$(DOCKER_BUILD) '$(TEST)'
 
 # Integration tests
-int: test
+int: cbuild
 	$(DOCKER_BUILD) '$(INT_TEST)'
 
 lint:
