@@ -26,8 +26,8 @@
   name = "github.com/c2h5oh/datasize"
 
 [[constraint]]
-  name = "github.com/ghodss/yaml"
-  version = "1.0.0"
+  name = "github.com/gorilla/mux"
+  version = "1.6.1"
 
 [[constraint]]
   name = "github.com/pkg/errors"
@@ -35,11 +35,11 @@
 
 [[constraint]]
   name = "github.com/rifflock/lfshook"
-  version = "1.7.0"
+  version = "2.2.0"
 
 [[constraint]]
   name = "github.com/satori/go.uuid"
-  version = "1.1.0"
+  version = "1.2.0"
 
 [[constraint]]
   branch = "master"
@@ -47,11 +47,11 @@
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"
-  version = "1.0.3"
+  version = "1.0.4"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/spf13/cobra"
+  version = "0.0.1"
 
 [[constraint]]
   name = "github.com/spf13/viper"
@@ -62,17 +62,17 @@
   name = "github.com/viniciuschiele/tarx"
 
 [[constraint]]
-  branch = "release-1.8"
+  branch = "release-1.9"
   name = "k8s.io/api"
 
 [[constraint]]
-  branch = "release-1.8"
+  branch = "release-1.9"
+  name = "k8s.io/apiextensions-apiserver"
+
+[[constraint]]
+  branch = "release-1.9"
   name = "k8s.io/apimachinery"
 
 [[constraint]]
+  branch = "release-6.0"
   name = "k8s.io/client-go"
-  version = "5.0.1"
-
-[[constraint]]
-  branch = "release-1.8"
-  name = "k8s.io/apiextensions-apiserver"
