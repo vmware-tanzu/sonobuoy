@@ -4,20 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
 )
 
 type tomlValue struct {
-	value    interface{} // string, int64, uint64, float64, bool, time.Time, [] of any of this list
-	position Position
+	value     interface{} // string, int64, uint64, float64, bool, time.Time, [] of any of this list
+	comment   string
+	commented bool
+	position  Position
 }
 
 // Tree is the result of the parsing of a TOML file.
 type Tree struct {
-	values   map[string]interface{} // string -> *tomlValue, *Tree, []*Tree
-	position Position
+	values    map[string]interface{} // string -> *tomlValue, *Tree, []*Tree
+	comment   string
+	commented bool
+	position  Position
 }
 
 func newTree() *Tree {
@@ -66,18 +71,15 @@ func (t *Tree) Keys() []string {
 }
 
 // Get the value at key in the Tree.
-// Key is a dot-separated path (e.g. a.b.c).
+// Key is a dot-separated path (e.g. a.b.c) without single/double quoted strings.
+// If you need to retrieve non-bare keys, use GetPath.
 // Returns nil if the path does not exist in the tree.
 // If keys is of length zero, the current tree is returned.
 func (t *Tree) Get(key string) interface{} {
 	if key == "" {
 		return t
 	}
-	comps, err := parseKey(key)
-	if err != nil {
-		return nil
-	}
-	return t.GetPath(comps)
+	return t.GetPath(strings.Split(key, "."))
 }
 
 // GetPath returns the element in the tree indicated by 'keys'.
@@ -177,13 +179,25 @@ func (t *Tree) GetDefault(key string, def interface{}) interface{} {
 // Key is a dot-separated path (e.g. a.b.c).
 // Creates all necessary intermediate trees, if needed.
 func (t *Tree) Set(key string, value interface{}) {
-	t.SetPath(strings.Split(key, "."), value)
+	t.SetWithComment(key, "", false, value)
+}
+
+// SetWithComment is the same as Set, but allows you to provide comment
+// information to the key, that will be reused by Marshal().
+func (t *Tree) SetWithComment(key string, comment string, commented bool, value interface{}) {
+	t.SetPathWithComment(strings.Split(key, "."), comment, commented, value)
 }
 
 // SetPath sets an element in the tree.
 // Keys is an array of path elements (e.g. {"a","b","c"}).
 // Creates all necessary intermediate trees, if needed.
 func (t *Tree) SetPath(keys []string, value interface{}) {
+	t.SetPathWithComment(keys, "", false, value)
+}
+
+// SetPathWithComment is the same as SetPath, but allows you to provide comment
+// information to the key, that will be reused by Marshal().
+func (t *Tree) SetPathWithComment(keys []string, comment string, commented bool, value interface{}) {
 	subtree := t
 	for _, intermediateKey := range keys[:len(keys)-1] {
 		nextTree, exists := subtree.values[intermediateKey]
@@ -208,13 +222,17 @@ func (t *Tree) SetPath(keys []string, value interface{}) {
 
 	switch value.(type) {
 	case *Tree:
+		tt := value.(*Tree)
+		tt.comment = comment
 		toInsert = value
 	case []*Tree:
 		toInsert = value
 	case *tomlValue:
-		toInsert = value
+		tt := value.(*tomlValue)
+		tt.comment = comment
+		toInsert = tt
 	default:
-		toInsert = &tomlValue{value: value}
+		toInsert = &tomlValue{value: value, comment: comment, commented: commented}
 	}
 
 	subtree.values[keys[len(keys)-1]] = toInsert
@@ -251,8 +269,8 @@ func (t *Tree) createSubTree(keys []string, pos Position) error {
 	return nil
 }
 
-// LoadReader creates a Tree from any io.Reader.
-func LoadReader(reader io.Reader) (tree *Tree, err error) {
+// LoadBytes creates a Tree from a []byte.
+func LoadBytes(b []byte) (tree *Tree, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			if _, ok := r.(runtime.Error); ok {
@@ -261,13 +279,23 @@ func LoadReader(reader io.Reader) (tree *Tree, err error) {
 			err = errors.New(r.(string))
 		}
 	}()
-	tree = parseToml(lexToml(reader))
+	tree = parseToml(lexToml(b))
+	return
+}
+
+// LoadReader creates a Tree from any io.Reader.
+func LoadReader(reader io.Reader) (tree *Tree, err error) {
+	inputBytes, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return
+	}
+	tree, err = LoadBytes(inputBytes)
 	return
 }
 
 // Load creates a Tree from a string.
 func Load(content string) (tree *Tree, err error) {
-	return LoadReader(strings.NewReader(content))
+	return LoadBytes([]byte(content))
 }
 
 // LoadFile creates a Tree from a file.

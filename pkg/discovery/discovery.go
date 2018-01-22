@@ -56,9 +56,8 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
 		pathmap[level] = logfile
 	}
 
-	// Configure the logrus hook
-	hook := lfshook.NewHook(pathmap)
-	hook.SetFormatter(&logrus.JSONFormatter{})
+	hook := lfshook.NewHook(pathmap, &logrus.JSONFormatter{})
+
 	logrus.AddHook(hook)
 
 	// closure used to collect and report errors.

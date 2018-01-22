@@ -1,54 +1,87 @@
 # Local Filesystem Hook for Logrus
 
-Sometimes developers like to write directly to a file on the filesystem. This is a hook for [logrus](https://github.com/Sirupsen/logrus) designed to allow users to do just that.  The log levels are dynamic at instanciation of the hook, so it is capable of logging at some or all levels.
+[![GoDoc](https://godoc.org/github.com/rifflock/lfshook?status.svg)](http://godoc.org/github.com/rifflock/lfshook)
+
+Sometimes developers like to write directly to a file on the filesystem. This is a hook for [`logrus`](https://github.com/sirupsen/logrus) which designed to allow users to do that. The log levels are dynamic at instantiation of the hook, so it is capable of logging at some or all levels.
 
 ## Example
 ```go
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
 )
 
-var Log *log.Logger
+var Log *logrus.Logger
 
-func NewLogger( config map[string]interface{} ) *log.Logger {
+func NewLogger() *logrus.Logger {
 	if Log != nil {
 		return Log
 	}
 
-	Log = log.New()
-	Log.Formatter = new(log.JSONFormatter)
-	Log.Hooks.Add(lfshook.NewHook(lfshook.PathMap{
-		log.InfoLevel : "/var/log/info.log",
-		log.ErrorLevel : "/var/log/error.log",
-	}))
+	pathMap := lfshook.PathMap{
+		logrus.InfoLevel:  "/var/log/info.log",
+		logrus.ErrorLevel: "/var/log/error.log",
+	}
+
+	
+	Log.Hooks.Add(lfshook.NewHook(
+		pathMap,
+		&logrus.JSONFormatter{},
+	))
 	return Log
 }
 ```
 
 ### Formatters
-lfshook will strip colors from any TextFormatter type formatters when writing to local file, because the color codes don't look so great.
+`lfshook` will strip colors from any `TextFormatter` type formatters when writing to local file, because the color codes don't look great in file.
+
+If no formatter is provided via `lfshook.NewHook`, a default text formatter will be used.
 
 ### Log rotation
 In order to enable automatic log rotation it's possible to provide an io.Writer instead of the path string of a log file.
 In combination with pakages like [go-file-rotatelogs](https://github.com/lestrrat/go-file-rotatelogs) log rotation can easily be achieved.
 
 ```go
-  import "github.com/lestrrat/go-file-rotatelogs"
+package main
 
-  path := "/var/log/go.log"
-  writer := rotatelogs.NewRotateLogs(
-    path + ".%Y%m%d%H%M",
-    rotatelogs.WithLinkName(path),
-    rotatelogs.WithMaxAge(time.Duration(86400) * time.Second),
-    rotatelogs.WithRotationTime(time.Duration(604800) * time.Second),
-  )
+import (
+	"github.com/lestrrat/go-file-rotatelogs"
+	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
+)
 
-  log.Hooks.Add(lfshook.NewHook(lfshook.WriterMap{
-    logrus.InfoLevel: writer,
-    logrus.ErrorLevel: writer,
-  }))
+var Log *logrus.Logger
+
+func NewLogger() *logrus.Logger {
+	if Log != nil {
+		return Log
+	}
+
+	path := "/var/log/go.log"
+	writer := rotatelogs.NewRotateLogs(
+		path+".%Y%m%d%H%M",
+		rotatelogs.WithLinkName(path),
+		rotatelogs.WithMaxAge(time.Duration(86400)*time.Second),
+		rotatelogs.WithRotationTime(time.Duration(604800)*time.Second),
+	)
+
+	logrus.Hooks.Add(lfshook.NewHook(
+		lfshook.WriterMap{
+			logrus.InfoLevel:  writer,
+			logrus.ErrorLevel: writer,
+		},
+		&logrus.JSONFormatter,
+	))
+
+	Log = logrus.New()
+	Log.Hooks.Add(lfshook.NewHook(
+		pathMap,
+		&logrus.JSONFormatter{},
+	))
+
+	return Log
+}
 ```
 
 ### Note:
-Whichever user is running the go application must have read/write permissions to the log files selected, or if the files do not yet exists, then to the directory in which the files will be created.
+User who run the go application must have read/write permissions to the selected log files. If the files do not exists yet, then user must have permission to the target directory.

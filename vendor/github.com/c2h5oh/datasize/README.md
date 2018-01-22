@@ -26,7 +26,7 @@ Just like `time` package provides `duration.Nanoseconds() uint64 `, `duration.Ho
 Warning: see limitations at the end of this document about a possible precission loss
 
 ### Parsing strings
-`datasize.ByteSize` implements `TestUnmarshaler` interface and will automatically parse human readable strings into correct values where it is used:
+`datasize.ByteSize` implements `TextUnmarshaler` interface and will automatically parse human readable strings into correct values where it is used:
 * `"10 MB"` -> `10* datasize.MB`
 * `"10240 g"` -> `10 * datasize.TB`
 * `"2000"` -> `2000 * datasize.B`
