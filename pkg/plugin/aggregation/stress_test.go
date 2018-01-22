@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"runtime"
 	"strconv"
 	"testing"
 	"time"
@@ -39,6 +40,9 @@ var timeoutSeconds = 10
 var bindAddr = ":8080"
 
 func TestStress(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		t.Skip("TestStress flakes on darwin architecture")
+	}
 	// Create temp dir for results
 	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
 	if err != nil {
