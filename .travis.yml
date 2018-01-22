@@ -4,4 +4,4 @@ services:
   - docker
 install: true
 
-script: VERBOSE=true make test
+script: VERBOSE=true make int

@@ -46,7 +46,11 @@ BUILD = $(BUILDCMD) $(GOTARGET)
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
-TEST = go test $(TEST_PKGS) $(TESTARGS)
+TEST_CMD = go test $(TESTARGS)
+TEST = $(TEST_CMD) $(TEST_PKGS) 
+
+INT_TEST_PKGS ?= $(GOTARGET)/integration/...
+INT_TEST= $(TEST_CMD) $(INT_TEST_PKGS)
 
 VET = go vet $(TEST_PKGS)
 
@@ -65,12 +69,17 @@ KUBECFG_CMD = $(DOCKER) run \
 
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 
-.PHONY: all container push clean cbuild test local generate plugins
+.PHONY: all container push clean cbuild test local generate plugins int
 
 all: container
 
+# Unit tests
 test: cbuild vet
 	$(DOCKER_BUILD) '$(TEST)'
+
+# Integration tests
+int: test
+	$(DOCKER_BUILD) '$(INT_TEST)'
 
 lint:
 	$(DOCKER_BUILD) '$(LINT)'
