@@ -117,6 +117,8 @@ type WorkerConfig struct {
 	// ResultType is the type of result (to be put in the HTTP URL's path) to be
 	// sent back to sonobuoy.
 	ResultType string `json:"resulttype,omitempty" mapstructure:"resulttype"`
+	CACert     string `json:"cacert,omitempty" mapstructure:"cacert"`
+	ClientCert string `json:"clientcert,omitempty" mapstructure:"clientcert"`
 }
 
 // ID returns a unique identifier for this expected result to distinguish it

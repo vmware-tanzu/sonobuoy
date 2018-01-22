@@ -42,7 +42,7 @@ import (
 // 4. Hook the shared monitoring channel up to aggr's IngestResults() function
 // 5. Block until aggr shows all results accounted for (results come in through
 //    the HTTP callback), stopping the HTTP server on completion
-func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, outdir string) error {
+func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, auth *ca.Authority, outdir string) error {
 	// Construct a list of things we'll need to dispatch
 	if len(plugins) == 0 {
 		logrus.Info("Skipping host data gathering: no plugins defined")
@@ -77,13 +77,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		doneAggr <- true
 	}()
 
-	certauth, err := ca.NewAuthority()
-	if err != nil {
-		return errors.Wrap(err, "couldn't create a new certificate authority")
-	}
-
-	// TODO what should the name be?
-	tlsCfg, err := certauth.MakeServerConfig("sonobuoy-server")
+	tlsCfg, err := auth.MakeServerConfig(cfg.AdvertiseAddress)
 	if err != nil {
 		return errors.Wrap(err, "couldn't get a server certificate")
 	}

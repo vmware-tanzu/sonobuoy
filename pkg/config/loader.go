@@ -89,7 +89,7 @@ func LoadConfig() (*Config, error) {
 	}
 
 	// 5 - Load any plugins we have
-	err = loadAllPlugins(cfg)
+	err = loadAll - Plugins(cfg)
 	if err != nil {
 		return nil, err
 	}
