@@ -17,7 +17,7 @@ limitations under the License.
 // This code runs the aggregation server and sends 1000 simultaneous requests
 // to it to ensure that it can handle load from large clusters.
 
-package aggregation
+package stress
 
 import (
 	"bytes"
@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 	"github.com/heptio/sonobuoy/pkg/worker"
 )
 
@@ -56,8 +57,8 @@ func TestStress(t *testing.T) {
 	}
 
 	// Launch the aggregator and server
-	aggr := NewAggregator(dir+"/results", expected)
-	handler := NewHandler(aggr.HandleHTTPResult)
+	aggr := aggregation.NewAggregator(dir+"/results", expected)
+	handler := aggregation.NewHandler(aggr.HandleHTTPResult)
 	srv := httptest.NewServer(handler)
 
 	stopCh := make(chan bool)
