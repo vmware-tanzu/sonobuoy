@@ -75,7 +75,8 @@ a plugin. It will also allow us to make changes behind the scenes to the
 Sonobuoy execution model without requiring updates to template files.
 
 All this boiler plate isn't just annoying. It paralyses changes to the Sonobuoy
-execution model. Adding
+execution model. Adding any new environment variables or metadata requires
+changing all existing plugin definitions.
 
 ## Objectives
 
@@ -176,7 +177,7 @@ spec:
 
 ### Proposal 2
 
-In this scenario, the user provides a valid Kubernetes API Document.
+In this scenario, the user provides a (templated) valid Kubernetes API Document.
 
 ```yaml
 apiVersion: v1
@@ -212,3 +213,13 @@ of Go structs.
 * Template for plugin drivers is harder write/understand
 * Extension points are fixed: No new Pod attributes could be added outsite of
   `spec` or Labels.
+
+# Results
+
+Proposal 1 accepted. 
+
+## User stories:
+
+1. As a power user, I would like to see the generated YAML for a plugin.yml file.
+2. As a plugin author, I can write a simplified plugin.yml file
+3. As an end user, I should see no changes as a result of this plugin work
