@@ -17,31 +17,28 @@ limitations under the License.
 package loader
 
 import (
-	"bytes"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
-	"text/template"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/daemonset"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/job"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	kuberuntime "k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes/scheme"
-
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	yaml "gopkg.in/yaml.v2"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // LoadAllPlugins loads all plugins by finding plugin definitions in the given
 // directory, taking a user's plugin selections, and a sonobuoy phone home
 // address (host:port) and returning all of the active, configured plugins for
 // this sonobuoy run.
-func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.Selection, masterAddress string) (ret []plugin.Interface, err error) {
-	var defns []plugin.Definition
-
+func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.Selection) (ret []plugin.Interface, err error) {
 	for _, dir := range searchPath {
 		wd, _ := os.Getwd()
 		logrus.Infof("Scanning plugins in %v (pwd: %v)", dir, wd)
@@ -52,99 +49,94 @@ func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.S
 			logrus.Infof("Directory (%v) does not exist", dir)
 			continue
 		}
-
-		definitions, err := scanPlugins(dir)
-		if err != nil {
-			return ret, err
-		}
-
-		defns = append(defns, definitions...)
 	}
-
-	for _, selection := range selections {
-		for _, pluginDef := range defns {
-			if selection.Name == pluginDef.Name {
-				p, err := loadPlugin(namespace, pluginDef, masterAddress)
-				if err != nil {
-					return ret, err
-				}
-				ret = append(ret, p)
-			}
-		}
-	}
-	return ret, nil
+	return []plugin.Interface{}, nil
 }
 
 // loadPlugin loads an individual plugin by instantiating a plugin driver with
 // the settings from the given plugin definition and selection
-func loadPlugin(namespace string, dfn plugin.Definition, masterAddress string) (plugin.Interface, error) {
-	// TODO(chuckha): We don't use the cfg for anything except passing a string around. Consider removing this struct.
-	cfg := &plugin.WorkerConfig{}
-	logrus.Infof("Loading plugin driver %v", dfn.Driver)
-	switch dfn.Driver {
-	case "DaemonSet":
-		cfg.MasterURL = "http://" + masterAddress + "/api/v1/results/by-node"
-		return daemonset.NewPlugin(namespace, dfn, cfg), nil
+// func loadPlugin(namespace string, dfn plugin.Definition, masterAddress string) (plugin.Interface, error) {
+// 	// TODO(chuckha): We don't use the cfg for anything except passing a string around. Consider removing this struct.
+// 	cfg := &plugin.WorkerConfig{}
+// 	logrus.Infof("Loading plugin driver %v", dfn.Driver)
+// 	switch dfn.Driver {
+// 	case "DaemonSet":
+// 		cfg.MasterURL = "http://" + masterAddress + "/api/v1/results/by-node"
+// 		return daemonset.NewPlugin(namespace, dfn, cfg), nil
+// 	case "Job":
+// 		cfg.MasterURL = "http://" + masterAddress + "/api/v1/results/global"
+// 		return job.NewPlugin(namespace, dfn, cfg), nil
+// 	default:
+// 		return nil, errors.Errorf("Unknown driver %v", dfn.Driver)
+// 	}
+// }
+
+func findPlugins(dir string) ([]string, error) {
+	return filepath.Glob(path.Join(dir, "*.yml"))
+}
+
+type pluginDefinition struct {
+	SonobuoyConfig struct {
+		Driver     string `json:"driver"`
+		PluginName string `json:"plugin-name"`
+		ResultType string `json:"result-type"`
+	} `json:"sonobuoy-config"`
+	Spec corev1.Container `json:"spec"`
+}
+
+func loadPlugin(file, namespace string) (plugin.Interface, error) {
+	bytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, errors.Wrapf(err, "couldn't open lugin definition %v", file)
+	}
+
+	// convert to JSON because corev1.Container only has JSON tags
+	var decoded interface{}
+	if err = yaml.Unmarshal(bytes, &decoded); err != nil {
+		return nil, errors.Wrapf(err, "couldn't decode yaml for plugin definition %v", file)
+	}
+
+	decoded = convert(decoded)
+
+	jsonBytes, err := json.Marshal(decoded)
+	if err != nil {
+		return nil, errors.Wrapf(err, "couldn't encode yaml as json for plugin definition %v", file)
+	}
+
+	var internalDef pluginDefinition
+	if err = json.Unmarshal(jsonBytes, &internalDef); err != nil {
+		return nil, errors.Wrapf(err, "couldn't decode json for plugin definition %v", file)
+	}
+
+	pluginDef := plugin.Definition{
+		Name:       internalDef.SonobuoyConfig.PluginName,
+		ResultType: internalDef.SonobuoyConfig.ResultType,
+		Spec:       internalDef.Spec,
+	}
+
+	switch internalDef.SonobuoyConfig.Driver {
 	case "Job":
-		cfg.MasterURL = "http://" + masterAddress + "/api/v1/results/global"
-		return job.NewPlugin(namespace, dfn, cfg), nil
+		return job.NewPlugin(pluginDef, namespace), nil
+	case "DaemonSet":
+		return daemonset.NewPlugin(pluginDef, namespace), nil
 	default:
-		return nil, errors.Errorf("Unknown driver %v", dfn.Driver)
+		return nil, fmt.Errorf("unknown driver %q for plugin definition %v", internalDef.SonobuoyConfig.Driver, file)
 	}
 }
 
-// scanPlugins looks for Plugin Definition files in the given directory,
-// and returns an array of PluginDefinition structs.
-func scanPlugins(dir string) ([]plugin.Definition, error) {
-	var pluginDfns []plugin.Definition
-
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read plugin directory")
-	}
-
-	for _, file := range files {
-		if filepath.Ext(file.Name()) != ".tmpl" {
-			logrus.WithField("filename", file.Name()).Info("unknown template type")
-			continue
+// From https://stackoverflow.com/questions/40737122/convert-yaml-to-json-without-struct-golang
+func convert(i interface{}) interface{} {
+	switch x := i.(type) {
+	case map[interface{}]interface{}:
+		m2 := map[string]interface{}{}
+		for k, v := range x {
+			m2[k.(string)] = convert(v)
 		}
-
-		// Read the template file into memory
-		fullPath := path.Join(dir, file.Name())
-		pluginTemplate, err := ioutil.ReadFile(fullPath)
-		if err != nil {
-			return nil, err
+		return m2
+	case []interface{}:
+		for i, v := range x {
+			x[i] = convert(v)
 		}
-		dfn, err := loadTemplate(pluginTemplate)
-		if err != nil {
-			logrus.WithError(err).WithField("filename", file.Name()).Info("failed to load plugin")
-			continue
-		}
-		pluginDfns = append(pluginDfns, *dfn)
 	}
-
-	return pluginDfns, err
-}
-
-func loadTemplate(tmpl []byte) (*plugin.Definition, error) {
-	t, err := template.New("plugin").Parse(string(tmpl))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse template")
-	}
-	var b bytes.Buffer
-	// We just trying to get a kubernetes object here we don't really care about values rn
-	err = t.Execute(&b, &plugin.DefinitionTemplateData{})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to execute template")
-	}
-	var x unstructured.Unstructured
-	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &x); err != nil {
-		return nil, errors.Wrap(err, "failed to turn executed template into an unstructured")
-	}
-	return &plugin.Definition{
-		Driver:     x.GetAnnotations()["sonobuoy-driver"],
-		Name:       x.GetAnnotations()["sonobuoy-plugin"],
-		ResultType: x.GetAnnotations()["sonobuoy-result-type"],
-		Template:   t,
-	}, nil
+	return i
 }

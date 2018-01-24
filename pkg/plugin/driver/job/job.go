@@ -17,7 +17,6 @@ limitations under the License.
 package job
 
 import (
-	"bytes"
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
@@ -27,17 +26,16 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 // Plugin is a plugin driver that dispatches a single pod to the given
 // kubernetes cluster
 type Plugin struct {
-	Definition      plugin.Definition
-	DfnTemplateData *plugin.DefinitionTemplateData
-	cleanedUp       bool
+	Definition plugin.Definition
+	SessionID  string
+	Namespace  string
+	cleanedUp  bool
 }
 
 // Ensure Plugin implements plugin.Interface
@@ -45,15 +43,12 @@ var _ plugin.Interface = &Plugin{}
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address
-func NewPlugin(namespace string, dfn plugin.Definition, cfg *plugin.WorkerConfig) *Plugin {
+func NewPlugin(dfn plugin.Definition, namespace string) *Plugin {
 	return &Plugin{
 		Definition: dfn,
-		DfnTemplateData: &plugin.DefinitionTemplateData{
-			SessionID:     utils.GetSessionID(),
-			MasterAddress: cfg.MasterURL,
-			Namespace:     namespace,
-		},
-		cleanedUp: false, // be explicit
+		SessionID:  utils.GetSessionID(),
+		Namespace:  namespace,
+		cleanedUp:  false, // be explicit
 	}
 }
 
@@ -72,20 +67,21 @@ func (p *Plugin) GetResultType() string {
 
 // Run dispatches worker pods according to the Job's configuration.
 func (p *Plugin) Run(kubeclient kubernetes.Interface) error {
-	var (
-		b   bytes.Buffer
-		job v1.Pod
-	)
-	p.Definition.Template.Execute(&b, p.DfnTemplateData)
-	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &job); err != nil {
-		return errors.Wrapf(err, "could not decode executed template into a Job for plugin %v", p.GetName())
-	}
+	return errors.New("not implemented")
+	// var (
+	// 	b   bytes.Buffer
+	// 	job v1.Pod
+	// )
+	// p.Definition.Template.Execute(&b, p.DfnTemplateData)
+	// if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &job); err != nil {
+	// 	return errors.Wrapf(err, "could not decode executed template into a Job for plugin %v", p.GetName())
+	// }
 
-	if _, err := kubeclient.CoreV1().Pods(p.DfnTemplateData.Namespace).Create(&job); err != nil {
-		return errors.Wrapf(err, "could not create Job resource for Job plugin %v", p.GetName())
-	}
+	// if _, err := kubeclient.CoreV1().Pods(p.Namespace).Create(&job); err != nil {
+	// 	return errors.Wrapf(err, "could not create Job resource for Job plugin %v", p.GetName())
+	// }
 
-	return nil
+	// return nil
 }
 
 // Monitor adheres to plugin.Interface by ensuring the pod created by the job
@@ -139,7 +135,7 @@ func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
 	// single Pod, to get the restart semantics we want. But later if we
 	// want to make this a real Job, we still need to delete pods manually
 	// after deleting the job.
-	err := kubeclient.CoreV1().Pods(p.DfnTemplateData.Namespace).DeleteCollection(
+	err := kubeclient.CoreV1().Pods(p.Namespace).DeleteCollection(
 		&deleteOptions,
 		listOptions,
 	)
@@ -158,7 +154,7 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 // search.  If no pod is found, or if multiple pods are found, returns an
 // error.
 func (p *Plugin) findPod(kubeclient kubernetes.Interface) (*v1.Pod, error) {
-	pods, err := kubeclient.CoreV1().Pods(p.DfnTemplateData.Namespace).List(p.listOptions())
+	pods, err := kubeclient.CoreV1().Pods(p.Namespace).List(p.listOptions())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -170,8 +166,9 @@ func (p *Plugin) findPod(kubeclient kubernetes.Interface) (*v1.Pod, error) {
 	return &pods.Items[0], nil
 }
 
+// GetSessionID returns the session id associated with the plugin
 func (p *Plugin) GetSessionID() string {
-	return p.DfnTemplateData.SessionID
+	return "" //TODO(EKF) p.DfnTemplateData.SessionID
 }
 
 // GetName returns the name of this Job plugin

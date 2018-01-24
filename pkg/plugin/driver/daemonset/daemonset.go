@@ -17,7 +17,6 @@ limitations under the License.
 package daemonset
 
 import (
-	"bytes"
 	"fmt"
 	"time"
 
@@ -29,17 +28,16 @@ import (
 	v1beta1ext "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 // Plugin is a plugin driver that dispatches containers to each node,
 // expecting each pod to report to the master.
 type Plugin struct {
-	Definition      plugin.Definition
-	DfnTemplateData *plugin.DefinitionTemplateData
-	cleanedUp       bool
+	Definition plugin.Definition
+	SessionID  string
+	Namespace  string
+	cleanedUp  bool
 }
 
 // Ensure DaemonSetPlugin implements plugin.Interface
@@ -47,15 +45,12 @@ var _ plugin.Interface = &Plugin{}
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address
-func NewPlugin(namespace string, dfn plugin.Definition, cfg *plugin.WorkerConfig) *Plugin {
+func NewPlugin(dfn plugin.Definition, namespace string) *Plugin {
 	return &Plugin{
 		Definition: dfn,
-		DfnTemplateData: &plugin.DefinitionTemplateData{
-			SessionID:     utils.GetSessionID(),
-			MasterAddress: cfg.MasterURL,
-			Namespace:     namespace,
-		},
-		cleanedUp: false,
+		SessionID:  utils.GetSessionID(),
+		Namespace:  namespace,
+		cleanedUp:  false,
 	}
 }
 
@@ -80,21 +75,22 @@ func (p *Plugin) GetResultType() string {
 
 // Run dispatches worker pods according to the DaemonSet's configuration.
 func (p *Plugin) Run(kubeclient kubernetes.Interface) error {
-	var (
-		b         bytes.Buffer
-		daemonSet v1beta1ext.DaemonSet
-	)
-	p.Definition.Template.Execute(&b, p.DfnTemplateData)
-	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &daemonSet); err != nil {
-		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
-	}
+	// var (
+	// 	b         bytes.Buffer
+	// 	daemonSet v1beta1ext.DaemonSet
+	// )
+	// p.Definition.Template.Execute(&b, p.DfnTemplateData)
+	// if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &daemonSet); err != nil {
+	// 	return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
+	// }
 
-	// TODO(chuckha): switch to .Apps() once extensions has been deprecated.
-	if _, err := kubeclient.ExtensionsV1beta1().DaemonSets(p.DfnTemplateData.Namespace).Create(&daemonSet); err != nil {
-		return errors.Wrapf(err, "could not create DaemonSet for daemonset plugin %v", p.GetName())
-	}
+	// // TODO(chuckha): switch to .Apps() once extensions has been deprecated.
+	// if _, err := kubeclient.ExtensionsV1beta1().DaemonSets(p.DfnTemplateData.Namespace).Create(&daemonSet); err != nil {
+	// 	return errors.Wrapf(err, "could not create DaemonSet for daemonset plugin %v", p.GetName())
+	// }
 
-	return nil
+	// return nil
+	return errors.New("not implemented")
 }
 
 // Cleanup cleans up the k8s DaemonSet and ConfigMap created by this plugin instance
@@ -110,12 +106,12 @@ func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
 	}
 
 	// Delete the DaemonSet created by this plugin
-	err := kubeclient.ExtensionsV1beta1().DaemonSets(p.DfnTemplateData.Namespace).DeleteCollection(
+	err := kubeclient.ExtensionsV1beta1().DaemonSets(p.Namespace).DeleteCollection(
 		&deleteOptions,
 		listOptions,
 	)
 	if err != nil {
-		errlog.LogError(errors.Wrapf(err, "could not delete DaemonSet-%v for daemonset plugin %v", p.DfnTemplateData.SessionID, p.GetName()))
+		errlog.LogError(errors.Wrapf(err, "could not delete DaemonSet-%v for daemonset plugin %v", p.SessionID, p.GetName()))
 	}
 }
 
@@ -127,7 +123,7 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 
 // findDaemonSet gets the daemonset that we created, using a kubernetes label search
 func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*v1beta1ext.DaemonSet, error) {
-	dsets, err := kubeclient.ExtensionsV1beta1().DaemonSets(p.DfnTemplateData.Namespace).List(p.listOptions())
+	dsets, err := kubeclient.ExtensionsV1beta1().DaemonSets(p.Namespace).List(p.listOptions())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -168,7 +164,7 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 		}
 
 		// Find all the pods configured by this daemonset
-		pods, err := kubeclient.CoreV1().Pods(p.DfnTemplateData.Namespace).List(p.listOptions())
+		pods, err := kubeclient.CoreV1().Pods(p.Namespace).List(p.listOptions())
 		if err != nil {
 			errlog.LogError(errors.Wrapf(err, "could not find pods created by plugin %v, will retry", p.GetName()))
 			// Likewise, if we can't query for pods, just retry next time.
@@ -218,7 +214,7 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 }
 
 func (p *Plugin) GetSessionID() string {
-	return p.DfnTemplateData.SessionID
+	return "" // TODO(EKF) p.DfnTemplateData.SessionID
 }
 
 // GetName returns the name of this DaemonSet plugin

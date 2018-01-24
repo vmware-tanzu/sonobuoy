@@ -19,7 +19,6 @@ package plugin
 import (
 	"io"
 	"path"
-	"text/template"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -48,20 +47,12 @@ type Interface interface {
 	GetName() string
 }
 
-// A required piece of data to render the template found in Definition.
-type DefinitionTemplateData struct {
-	SessionID     string
-	MasterAddress string
-	Namespace     string
-}
-
 // Definition defines a plugin's features, method of launch, and other
 // metadata about it.
 type Definition struct {
-	Driver     string
 	Name       string
 	ResultType string
-	Template   *template.Template
+	Spec       v1.Container
 }
 
 // ExpectedResult is an expected result that a plugin will submit.  This is so
