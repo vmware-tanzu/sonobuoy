@@ -12,17 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Note the only reason we are creating this is because upstream
-# does not yet publish a released e2e container
-# https://github.com/kubernetes/kubernetes/issues/47920
-
-EXAMPLES = $(wildcard examples/ksonnet/*.jsonnet)
-EXAMPLES_OUTPUT = $(patsubst examples/ksonnet/%.jsonnet,examples/%.yaml,$(EXAMPLES))
-
-KSONNET_BUILD_IMAGE = ksonnet/ksonnet-lib:beta.2
-
-PLUGINS = $(wildcard plugins.d/*.jsonnet)
-PLUGINS_OUTPUT = $(patsubst plugins.d/%.jsonnet,plugins.d/%.tmpl,$(PLUGINS))
 
 TARGET = sonobuoy
 GOTARGET = github.com/heptio/$(TARGET)
@@ -59,14 +48,6 @@ GOLINT_FLAGS ?= -set_exit_status
 LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 
 WORKDIR ?= /sonobuoy
-RBAC_ENABLED ?= 1
-KUBECFG_CMD = $(DOCKER) run \
-  -v $(DIR):$(WORKDIR) \
-	--workdir $(WORKDIR) \
-	--rm \
-	$(KSONNET_BUILD_IMAGE) \
-	kubecfg show -o yaml -V RBAC_ENABLED=$(RBAC_ENABLED) -J $(WORKDIR) -o yaml $< > $@
-
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 
 .PHONY: all container push clean cbuild test local-test local generate plugins int 
@@ -113,19 +94,4 @@ push:
 clean:
 	rm -f $(TARGET)
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET) || true
-	find ./examples/ -type f -name '*.yaml' -delete
 
-generate: latest-ksonnet examples plugins
-
-plugins: $(PLUGINS_OUTPUT)
-
-plugins.d/%.tmpl: plugins.d/%.jsonnet
-	$(KUBECFG_CMD)
-
-examples: $(EXAMPLES_OUTPUT)
-
-examples/%.yaml: examples/ksonnet/%.jsonnet
-	$(KUBECFG_CMD)
-
-latest-ksonnet:
-	$(DOCKER) pull $(KSONNET_BUILD_IMAGE)
