@@ -69,18 +69,6 @@ git clone https://github.com/heptio/sonobuoy.git
 
 First, make sure that you're in your Sonobuoy root directory.
 
-If your cluster is not running RBAC, you'll need to regenerate the quickstart YAML files. To determine whether your cluster is running RBAC, run the command below:
-
-```
-export RBAC_ENABLED=$(kubectl api-versions | grep "rbac.authorization.k8s.io/v1" -c)
-```
-
-Use the environment variable you just set to regenerate `examples/quickstart.yaml`:
-
-```
-make generate
-```
-
 Now you're ready to deploy a Sonobuoy pod to your cluster! Run the following command:
 ```
 kubectl apply -f examples/quickstart.yaml
