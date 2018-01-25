@@ -11,23 +11,7 @@
 
 ## Overview
 
-Sonobuoy's configuration can be split into three conceptual parts: (1) data configuration (2) plugin configuration (3) Kubernetes component definitions. Their file format depends on how Sonobuoy is run:
-* **Standalone**: JSON files that live on a cluster node
-* **Containerized**: YAML manifests that are pushed to the API Server using `kubectl`
-
-Once the configs are loaded (in either case), Sonobuoy parses them and gathers data accordingly. If plugins are specified, Sonobuoy [submits worker pods to collect node-specific information][9].
-
-
-| | Overview|Path on Cluster Node|[STANDALONE]<br>JSON example(s)|[CONTAINERIZED]<br>YAML manifest example(s)
-|---|---|---|---|---|
-|*Data configuration*| What Sonobuoy records, how, and where. |*ANY of the following*:<br>(1) `config.json` in the directory where `sonobuoy` is executed<br>(2) `/etc/sonobuoy/config.json`<br>(3) `$SONOBUOY_CONFIG`<br><br>|[`config.json`][10]|<br> [`examples/ksonnet/components/10-configmaps.jsonnet`][11]<br><br>*The jsonnet file is basically a wrapper for the `config.json` file, which allows it to be properly mounted onto the cluster's Sonobuoy pod.* <br><br>
-|*Plugin configuration*|Settings for each plugin integration.|*ANY of the following*:<br>(1) `/etc/sonobuoy/plugins.d`<br>(2) `$HOME/.sonobuoy/plugins.d`<br>(3) `./plugins.d`<br>(4) `PluginSearchPath` (override from the data configuration) <br><br>| There is a templatized YAML config for each plugin:<br>(1) [`plugins.d/e2e.tmpl`][16]<br>(2) [`plugins.d/systemd_logs.tmpl`][17]<br>(3) [`plugins.d/heptio-e2e.tmpl`][20]|<br>[`examples/ksonnet/components/10-configmaps.jsonnet`][11]<br><br>*Same comment about the jsonnet file as above.*
-|*Kubernetes component definitions*|The various K8s objects that need to be defined for Sonobuoy to run as a containerized app.|N/A (manifest only)|N/A|The example splits this into two manifests:<br>(1) [`examples/ksonnet/components/00-rbac.jsonnet`][12]<br>(2) [`examples/ksonnet/components/20-pod.jsonnet`][13]|
-
-
-
-*NOTE: All of these specifications have been consolidated into one YAML file (as in [`examples/quickstart.yaml`][18]), as long as any RBAC settings are defined first. *
-
+TODO - This doc needs to be re-written and greatly simplified to reference the canonical sources, and reflect the updated reality. 
 
 ## Data configuration
 
@@ -37,7 +21,7 @@ See [Parameter Reference][3] for a more detailed description of each setting.
 {
     "UUID": "12345-something-unique",
     "Description": "EXAMPLE",
-    "Version": "v0.3.0",
+    "Version": "v0.11.0",
     "Kubeconfig": "~/.kube/config",
     "ResultsDir": "./results",
     "Resources": [
@@ -136,13 +120,6 @@ For more details on creating custom plugins, see the [plugin reference][9].
 
 ## Kubernetes component definitions
 
-### Overview
-
-*This section of the configuration is only applicable when running Sonobuoy as a containerized pod.*
-
-While the other configuration sections control Sonobuoy's data collection, this part defines the Kubernetes resources required to actually run Sonobuoy on your cluster. In the [`examples/ksonnet/components`][19] example, it is split into two manifests:
-1. `00-rbac.jsonnet`: This sets up gives Sonobuoy the necessary permissions to query the API server.
-2. `20-pod.jsonnet`: This sets up the Sonobuoy Pod and associated Service.
 
 ### RBAC
 
@@ -183,13 +160,9 @@ However, ensure that your pod declaration has addressed the following aspects, w
 [8]: #pod
 [9]: plugins.md
 [10]: /config.json
-[11]: /examples/ksonnet/components/10-configmaps.jsonnet
-[12]: /examples/ksonnet/components/00-rbac.jsonnet
-[13]: /examples/ksonnet/components/20-pod.jsonnet
 [14]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
 [15]: https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/
 [16]: /plugins.d/e2e.tmpl
 [17]: /plugins.d/systemd_logs.tmpl
 [18]: /examples/quickstart.yaml
-[19]: /examples/ksonnet/components
 [20]: /plugins.d/heptio-e2e.tmpl
