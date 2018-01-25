@@ -39,6 +39,7 @@ import (
 // address (host:port) and returning all of the active, configured plugins for
 // this sonobuoy run.
 func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.Selection) (ret []plugin.Interface, err error) {
+	pluginFiles := []string{}
 	for _, dir := range searchPath {
 		wd, _ := os.Getwd()
 		logrus.Infof("Scanning plugins in %v (pwd: %v)", dir, wd)
@@ -49,8 +50,35 @@ func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.S
 			logrus.Infof("Directory (%v) does not exist", dir)
 			continue
 		}
+
+		files, err := findPlugins(dir)
+		if err != nil {
+			return []plugin.Interface{}, errors.Wrapf(err, "couldn't scan %v for plugins", dir)
+		}
+		pluginFiles = append(pluginFiles, files...)
 	}
-	return []plugin.Interface{}, nil
+
+	pluginDefs := []*pluginDefinition{}
+	for _, file := range pluginFiles {
+		pluginDef, err := loadDefinition(file)
+		if err != nil {
+			return []plugin.Interface{}, errors.Wrapf(err, "couldn't load plugin definition %v", file)
+		}
+		pluginDefs = append(pluginDefs, pluginDef)
+	}
+
+	pluginDefs = filterPluginDef(pluginDefs, selections)
+
+	plugins := []plugin.Interface{}
+	for _, def := range pluginDefs {
+		pluginIface, err := loadPlugin(def, namespace)
+		if err != nil {
+			return nil, errors.Wrapf(err, "couldn't load plugin %v", def.SonobuoyConfig.PluginName)
+		}
+		plugins = append(plugins, pluginIface)
+	}
+
+	return plugins, nil
 }
 
 // loadPlugin loads an individual plugin by instantiating a plugin driver with
@@ -75,16 +103,18 @@ func findPlugins(dir string) ([]string, error) {
 	return filepath.Glob(path.Join(dir, "*.yml"))
 }
 
-type pluginDefinition struct {
-	SonobuoyConfig struct {
-		Driver     string `json:"driver"`
-		PluginName string `json:"plugin-name"`
-		ResultType string `json:"result-type"`
-	} `json:"sonobuoy-config"`
-	Spec corev1.Container `json:"spec"`
+type sonobuoyConfig struct {
+	Driver     string `json:"driver"`
+	PluginName string `json:"plugin-name"`
+	ResultType string `json:"result-type"`
 }
 
-func loadPlugin(file, namespace string) (plugin.Interface, error) {
+type pluginDefinition struct {
+	SonobuoyConfig sonobuoyConfig   `json:"sonobuoy-config"`
+	Spec           corev1.Container `json:"spec"`
+}
+
+func loadDefinition(file string) (*pluginDefinition, error) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't open lugin definition %v", file)
@@ -108,20 +138,40 @@ func loadPlugin(file, namespace string) (plugin.Interface, error) {
 		return nil, errors.Wrapf(err, "couldn't decode json for plugin definition %v", file)
 	}
 
+	return &internalDef, nil
+}
+
+func loadPlugin(def *pluginDefinition, namespace string) (plugin.Interface, error) {
 	pluginDef := plugin.Definition{
-		Name:       internalDef.SonobuoyConfig.PluginName,
-		ResultType: internalDef.SonobuoyConfig.ResultType,
-		Spec:       internalDef.Spec,
+		Name:       def.SonobuoyConfig.PluginName,
+		ResultType: def.SonobuoyConfig.ResultType,
+		Spec:       def.Spec,
 	}
 
-	switch internalDef.SonobuoyConfig.Driver {
+	switch def.SonobuoyConfig.Driver {
 	case "Job":
 		return job.NewPlugin(pluginDef, namespace), nil
 	case "DaemonSet":
 		return daemonset.NewPlugin(pluginDef, namespace), nil
 	default:
-		return nil, fmt.Errorf("unknown driver %q for plugin definition %v", internalDef.SonobuoyConfig.Driver, file)
+		return nil, fmt.Errorf("unknown driver %q for plugin %v",
+			def.SonobuoyConfig.Driver, def.SonobuoyConfig.PluginName)
 	}
+}
+
+func filterPluginDef(defs []*pluginDefinition, selections []plugin.Selection) []*pluginDefinition {
+	m := make(map[string]bool)
+	for _, selection := range selections {
+		m[selection.Name] = true
+	}
+
+	filtered := []*pluginDefinition{}
+	for _, def := range defs {
+		if m[def.SonobuoyConfig.PluginName] {
+			filtered = append(filtered, def)
+		}
+	}
+	return filtered
 }
 
 // From https://stackoverflow.com/questions/40737122/convert-yaml-to-json-without-struct-golang

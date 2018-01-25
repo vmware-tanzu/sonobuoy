@@ -92,8 +92,7 @@ func (r *Result) Path() string {
 
 // Selection is the user specified input to load and initialize plugins
 type Selection struct {
-	Name   string                 `json:"name"`
-	Config map[string]interface{} `json:"config,omitempty"`
+	Name string `json:"name"`
 }
 
 // AggregationConfig are the config settings for the server that aggregates plugin results
