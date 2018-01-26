@@ -18,7 +18,6 @@ package job
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -86,8 +85,7 @@ func (p *Plugin) GetResultType() string {
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
 func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 	var b bytes.Buffer
-	// TODO (EKF): Should be YAML once we figure that out
-	container, err := json.Marshal(&p.Definition.Spec)
+	container, err := utils.ContainerToYAML(&p.Definition.Spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
 	}

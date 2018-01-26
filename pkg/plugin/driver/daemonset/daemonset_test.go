@@ -33,7 +33,7 @@ func TestFillTemplate(t *testing.T) {
 		t.Fatalf("Failed to decode template to daemonSet: %v", err)
 	}
 
-	expectedName := fmt.Sprintf("sonobuoy-test-plugin-daemon-set-%v", testDaemonSet.SessionID)
+	expectedName := fmt.Sprintf("sonobuoy-test-plugin--daemon-set-%v", testDaemonSet.SessionID)
 	if daemonSet.Name != expectedName {
 		t.Errorf("Expected daemonSet name %v, got %v", expectedName, daemonSet.Name)
 	}

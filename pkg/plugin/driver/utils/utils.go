@@ -21,6 +21,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	gouuid "github.com/satori/go.uuid"
@@ -88,4 +89,14 @@ func MakeErrorResult(resultType string, errdata map[string]interface{}, nodeName
 		NodeName:   nodeName,
 		MimeType:   "application/json",
 	}
+}
+
+// TemplateFuncs exports (currently singular) functions to be used inside the template
+var TemplateFuncs = map[string]interface{}{
+	"indent": func(i int, input string) string {
+		split := strings.Split(input, "\n")
+		ident := "\n" + strings.Repeat(" ", i)
+		// Don't indent the first line, it's already indented in the template
+		return strings.Join(split, ident)
+	},
 }

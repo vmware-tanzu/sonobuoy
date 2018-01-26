@@ -1,8 +1,13 @@
 package daemonset
 
-import "text/template"
+import (
+	"text/template"
 
-var daemonSetTemplate = template.Must(template.New("daemonSetTemplate").Parse(`
+	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+)
+
+var daemonSetTemplate = template.Must(
+	template.New("jobTemplate").Funcs(utils.TemplateFuncs).Parse(`
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -29,7 +34,7 @@ spec:
         tier: analysis
     spec:
       containers:
-      - {{.ProducerContainer}}
+      - {{.ProducerContainer | indent 8}}
       - command:
         - sh
         - -c
