@@ -25,27 +25,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var genopts ops.GenConfig
-
-var GenCommand = &cobra.Command{
-	Use:   "gen",
-	Short: "Generates a sonobuoy manifest for submission via kubectl",
-	Run:   genManifest,
-}
+var genPluginOpts ops.GenPluginConfig
 
 func init() {
+	cmd := &cobra.Command{
+		Use:   "plugin",
+		Short: "Generates the manifest Sonobuoy uses to run a worker for the given plugin",
+		Run:   genPluginManifest,
+		Args:  cobra.ExactArgs(1),
+	}
 
-	GenCommand.PersistentFlags().StringVar(
-		&genopts.Path, "path", "./",
-		"TBD: location to output",
+	GenCommand.PersistentFlags().StringArrayVarP(
+		&genPluginOpts.Paths, "paths", "p", []string{".", "./plugins.d/"},
+		"the paths to search for the plugins in. Defaults to . and ./plugins.d/",
 	)
 	// TODO: Other options?
-	RootCmd.AddCommand(GenCommand)
+	GenCommand.AddCommand(cmd)
 }
 
-func genManifest(cmd *cobra.Command, args []string) {
+func genPluginManifest(cmd *cobra.Command, args []string) {
+	genPluginOpts.PluginName = args[0]
 	code := 0
-	if err := ops.GenerateManifest(genopts); err != nil {
+	if err := ops.GeneratePluginManifest(genPluginOpts); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to generate sonobuoy manifest"))
 		code = 1
 	}
