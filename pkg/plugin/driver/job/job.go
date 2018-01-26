@@ -19,7 +19,6 @@ package job
 import (
 	"bytes"
 	"fmt"
-	"text/template"
 	"time"
 
 	"github.com/pkg/errors"
@@ -54,8 +53,6 @@ type templateData struct {
 	ProducerContainer string
 	MasterAddress     string
 }
-
-var jobTemplate = template.Must(template.ParseFiles("job.tmpl"))
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address
@@ -109,12 +106,12 @@ func (p *Plugin) FillTemplate(hostname string) (*bytes.Buffer, error) {
 }
 
 // Run dispatches worker pods according to the Job's configuration.
-func (p *Plugin) Run(kubeclient kubernetes.Interface) error {
+func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
 	var (
 		job v1.Pod
 	)
 
-	b, err := p.FillTemplate("") // TODO EKF
+	b, err := p.FillTemplate(hostname) // TODO EKF
 	if err != nil {
 		// Already wrapped sufficiently by FillTemplate
 		return err

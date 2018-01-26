@@ -89,7 +89,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// 3. Launch each plugin, to dispatch workers which submit the results back
 	for _, p := range plugins {
 		logrus.Infof("Running (%v) plugin", p.GetName())
-		err := p.Run(client)
+		err := p.Run(client, cfg.AdvertiseAddress)
 		// Have the plugin monitor for errors
 		go p.Monitor(client, nodes.Items, monitorCh)
 		if err != nil {

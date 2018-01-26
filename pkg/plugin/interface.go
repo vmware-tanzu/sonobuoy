@@ -17,6 +17,7 @@ limitations under the License.
 package plugin
 
 import (
+	"bytes"
 	"io"
 	"path"
 
@@ -29,7 +30,7 @@ import (
 type Interface interface {
 	// Run runs a plugin, declaring all resources it needs, and then
 	// returns.  It does not block and wait until the plugin has finished.
-	Run(kubeClient kubernetes.Interface) error
+	Run(kubeClient kubernetes.Interface, hostname string) error
 	// Cleanup cleans up all resources created by the plugin
 	Cleanup(kubeClient kubernetes.Interface)
 	// Monitor continually checks for problems in the resources created by a
@@ -40,6 +41,8 @@ type Interface interface {
 	// ExpectedResults is an array of Result objects that a plugin should
 	// expect to submit.
 	ExpectedResults(nodes []v1.Node) []ExpectedResult
+	// FillTemplate fills the driver's internal template so it can be presented to the user for `sonobuoy gen`
+	FillTemplate(hostname string) (*bytes.Buffer, error)
 	// GetResultType returns the type of results for this plugin, typically
 	// the same as the plugin name.
 	GetResultType() string

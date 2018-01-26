@@ -1,3 +1,8 @@
+package job
+
+import "text/template"
+
+var jobTemplate = template.Must(template.New("jobTemplate").Parse(`
 ---
 apiVersion: v1
 kind: Pod
@@ -48,3 +53,4 @@ spec:
   volumes:
   - emptyDir: {}
     name: results
+`))

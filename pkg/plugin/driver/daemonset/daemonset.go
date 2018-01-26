@@ -19,7 +19,6 @@ package daemonset
 import (
 	"bytes"
 	"fmt"
-	"text/template"
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
@@ -29,8 +28,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	v1beta1ext "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 // Plugin is a plugin driver that dispatches containers to each node,
@@ -53,8 +54,6 @@ type templateData struct {
 	ProducerContainer string
 	MasterAddress     string
 }
-
-var daemonSetTemplate = template.Must(template.ParseFiles("daemonset.tmpl"))
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address
@@ -110,23 +109,25 @@ func (p *Plugin) FillTemplate(hostname string) (*bytes.Buffer, error) {
 }
 
 // Run dispatches worker pods according to the DaemonSet's configuration.
-func (p *Plugin) Run(kubeclient kubernetes.Interface) error {
-	// var (
-	// 	b         bytes.Buffer
-	// 	daemonSet v1beta1ext.DaemonSet
-	// )
-	// p.Definition.Template.Execute(&b, p.DfnTemplateData)
-	// if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &daemonSet); err != nil {
-	// 	return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
-	// }
+func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
+	var (
+		daemonSet v1beta1ext.DaemonSet
+	)
+	b, err := p.FillTemplate(hostname)
+	if err != nil {
+		// Already wrapped sufficiently by FillTemplate
+		return err
+	}
+	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &daemonSet); err != nil {
+		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
+	}
 
-	// // TODO(chuckha): switch to .Apps() once extensions has been deprecated.
-	// if _, err := kubeclient.ExtensionsV1beta1().DaemonSets(p.DfnTemplateData.Namespace).Create(&daemonSet); err != nil {
-	// 	return errors.Wrapf(err, "could not create DaemonSet for daemonset plugin %v", p.GetName())
-	// }
+	// TODO(chuckha): switch to .Apps() once extensions has been deprecated.
+	if _, err := kubeclient.ExtensionsV1beta1().DaemonSets(p.Namespace).Create(&daemonSet); err != nil {
+		return errors.Wrapf(err, "could not create DaemonSet for daemonset plugin %v", p.GetName())
+	}
 
-	// return nil
-	return errors.New("not implemented")
+	return nil
 }
 
 // Cleanup cleans up the k8s DaemonSet and ConfigMap created by this plugin instance

@@ -1,3 +1,8 @@
+package daemonset
+
+import "text/template"
+
+var daemonSetTemplate = template.Must(template.New("daemonSetTemplate").Parse(`
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -63,3 +68,4 @@ spec:
       - hostPath:
           path: /
         name: root
+`))
