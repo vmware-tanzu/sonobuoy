@@ -17,7 +17,9 @@ limitations under the License.
 package daemonset
 
 import (
+	"bytes"
 	"fmt"
+	"text/template"
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
@@ -42,6 +44,17 @@ type Plugin struct {
 
 // Ensure DaemonSetPlugin implements plugin.Interface
 var _ plugin.Interface = &Plugin{}
+
+type templateData struct {
+	PluginName        string
+	ResultType        string
+	SessionID         string
+	Namespace         string
+	ProducerContainer string
+	MasterAddress     string
+}
+
+var daemonSetTemplate = template.Must(template.ParseFiles("daemonset.tmpl"))
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address
@@ -71,6 +84,29 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 // GetResultType returns the ResultType for this plugin (to adhere to plugin.Interface)
 func (p *Plugin) GetResultType() string {
 	return p.Definition.ResultType
+}
+
+//FillTemplate populates the internal Job YAML template with the values for this particular job.
+func (p *Plugin) FillTemplate(hostname string) (*bytes.Buffer, error) {
+	var b bytes.Buffer
+	container, err := utils.ContainerToJSON(&p.Definition.Spec)
+	if err != nil {
+		return &bytes.Buffer{}, errors.Wrapf(err, "couldn't reserialize container for daemonset %q", p.Definition.Name)
+	}
+
+	vars := templateData{
+		PluginName:        p.Definition.Name,
+		ResultType:        p.Definition.ResultType,
+		SessionID:         p.SessionID,
+		Namespace:         p.Namespace,
+		ProducerContainer: container,
+		MasterAddress:     getMasterAddress(hostname), // TODO(EKF)
+	}
+
+	if err := daemonSetTemplate.Execute(&b, vars); err != nil {
+		return &bytes.Buffer{}, errors.Wrapf(err, "couldn't fill template %q", p.Definition.Name)
+	}
+	return &b, nil
 }
 
 // Run dispatches worker pods according to the DaemonSet's configuration.
@@ -214,10 +250,14 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 }
 
 func (p *Plugin) GetSessionID() string {
-	return "" // TODO(EKF) p.DfnTemplateData.SessionID
+	return p.SessionID
 }
 
 // GetName returns the name of this DaemonSet plugin
 func (p *Plugin) GetName() string {
 	return p.Definition.Name
+}
+
+func getMasterAddress(hostname string) string {
+	return fmt.Sprintf("http://%s/api/v1/results/global", hostname)
 }

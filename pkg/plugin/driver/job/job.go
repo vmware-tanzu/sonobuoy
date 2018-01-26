@@ -17,16 +17,21 @@ limitations under the License.
 package job
 
 import (
+	"bytes"
+	"fmt"
+	"text/template"
 	"time"
+
+	"github.com/pkg/errors"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kuberuntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
-	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"k8s.io/client-go/kubernetes"
 )
 
 // Plugin is a plugin driver that dispatches a single pod to the given
@@ -41,6 +46,17 @@ type Plugin struct {
 // Ensure Plugin implements plugin.Interface
 var _ plugin.Interface = &Plugin{}
 
+type templateData struct {
+	PluginName        string
+	ResultType        string
+	SessionID         string
+	Namespace         string
+	ProducerContainer string
+	MasterAddress     string
+}
+
+var jobTemplate = template.Must(template.ParseFiles("job.tmpl"))
+
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address
 func NewPlugin(dfn plugin.Definition, namespace string) *Plugin {
@@ -50,6 +66,10 @@ func NewPlugin(dfn plugin.Definition, namespace string) *Plugin {
 		Namespace:  namespace,
 		cleanedUp:  false, // be explicit
 	}
+}
+
+func getMasterAddress(hostname string) string {
+	return fmt.Sprintf("http://%s/api/v1/results/by-node", hostname)
 }
 
 // ExpectedResults returns the list of results expected for this plugin. Since
@@ -65,23 +85,50 @@ func (p *Plugin) GetResultType() string {
 	return p.Definition.ResultType
 }
 
+//FillTemplate populates the internal Job YAML template with the values for this particular job.
+func (p *Plugin) FillTemplate(hostname string) (*bytes.Buffer, error) {
+	var b bytes.Buffer
+	container, err := utils.ContainerToJSON(&p.Definition.Spec)
+	if err != nil {
+		return &bytes.Buffer{}, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
+	}
+
+	vars := templateData{
+		PluginName:        p.Definition.Name,
+		ResultType:        p.Definition.ResultType,
+		SessionID:         p.SessionID,
+		Namespace:         p.Namespace,
+		ProducerContainer: container,
+		MasterAddress:     getMasterAddress(hostname), // TODO(EKF)
+	}
+
+	if err := jobTemplate.Execute(&b, vars); err != nil {
+		return &bytes.Buffer{}, errors.Wrapf(err, "couldn't fill template %q", p.Definition.Name)
+	}
+	return &b, nil
+}
+
 // Run dispatches worker pods according to the Job's configuration.
 func (p *Plugin) Run(kubeclient kubernetes.Interface) error {
-	return errors.New("not implemented")
-	// var (
-	// 	b   bytes.Buffer
-	// 	job v1.Pod
-	// )
-	// p.Definition.Template.Execute(&b, p.DfnTemplateData)
-	// if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &job); err != nil {
-	// 	return errors.Wrapf(err, "could not decode executed template into a Job for plugin %v", p.GetName())
-	// }
+	var (
+		job v1.Pod
+	)
 
-	// if _, err := kubeclient.CoreV1().Pods(p.Namespace).Create(&job); err != nil {
-	// 	return errors.Wrapf(err, "could not create Job resource for Job plugin %v", p.GetName())
-	// }
+	b, err := p.FillTemplate("") // TODO EKF
+	if err != nil {
+		// Already wrapped sufficiently by FillTemplate
+		return err
+	}
 
-	// return nil
+	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &job); err != nil {
+		return errors.Wrapf(err, "could not decode executed template into a Job for plugin %v", p.GetName())
+	}
+
+	if _, err := kubeclient.CoreV1().Pods(p.Namespace).Create(&job); err != nil {
+		return errors.Wrapf(err, "could not create Job resource for Job plugin %v", p.GetName())
+	}
+
+	return nil
 }
 
 // Monitor adheres to plugin.Interface by ensuring the pod created by the job
