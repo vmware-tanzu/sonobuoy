@@ -85,6 +85,7 @@ func (p *Plugin) GetResultType() string {
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
 func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 	var b bytes.Buffer
+
 	container, err := utils.ContainerToYAML(&p.Definition.Spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
