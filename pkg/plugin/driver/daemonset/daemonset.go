@@ -26,8 +26,8 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
 	"github.com/pkg/errors"
+	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	v1 "k8s.io/api/core/v1"
-	v1beta1ext "k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 
@@ -112,9 +112,8 @@ func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 
 // Run dispatches worker pods according to the DaemonSet's configuration.
 func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
-	var (
-		daemonSet v1beta1ext.DaemonSet
-	)
+	var daemonSet appsv1beta2.DaemonSet
+
 	b, err := p.FillTemplate(hostname)
 	if err != nil {
 		return errors.Wrap(err, "couldn't fill template")
@@ -123,8 +122,7 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
 		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
 	}
 
-	// TODO(chuckha): switch to .Apps() once extensions has been deprecated.
-	if _, err := kubeclient.ExtensionsV1beta1().DaemonSets(p.Namespace).Create(&daemonSet); err != nil {
+	if _, err := kubeclient.AppsV1beta2().DaemonSets(p.Namespace).Create(&daemonSet); err != nil {
 		return errors.Wrapf(err, "could not create DaemonSet for daemonset plugin %v", p.GetName())
 	}
 
@@ -144,7 +142,7 @@ func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
 	}
 
 	// Delete the DaemonSet created by this plugin
-	err := kubeclient.ExtensionsV1beta1().DaemonSets(p.Namespace).DeleteCollection(
+	err := kubeclient.AppsV1beta2().DaemonSets(p.Namespace).DeleteCollection(
 		&deleteOptions,
 		listOptions,
 	)
@@ -160,8 +158,8 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 }
 
 // findDaemonSet gets the daemonset that we created, using a kubernetes label search
-func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*v1beta1ext.DaemonSet, error) {
-	dsets, err := kubeclient.ExtensionsV1beta1().DaemonSets(p.Namespace).List(p.listOptions())
+func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*appsv1beta2.DaemonSet, error) {
+	dsets, err := kubeclient.AppsV1beta2().DaemonSets(p.Namespace).List(p.listOptions())
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
