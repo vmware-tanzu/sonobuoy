@@ -49,11 +49,5 @@ func GeneratePluginManifest(cfg GenPluginConfig) ([]byte, error) {
 		return nil, fmt.Errorf("expected 1 plugin, got %v", len(plugins))
 	}
 
-	selectedPlugin := plugins[0]
-	bytes, err := selectedPlugin.FillTemplate(placeholderHostname)
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes, nil
+	return plugins[0].FillTemplate(placeholderHostname)
 }

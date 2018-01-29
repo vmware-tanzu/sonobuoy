@@ -116,7 +116,7 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
 	b, err := p.FillTemplate(hostname) // TODO EKF
 	if err != nil {
 		// Already wrapped sufficiently by FillTemplate
-		return err
+		return errors.Wrapf(err, "failed to fill Job template for plugin %v", p.GetName())
 	}
 
 	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &job); err != nil {
