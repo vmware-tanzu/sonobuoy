@@ -9,6 +9,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/daemonset"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/job"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -76,13 +77,15 @@ func TestLoadValidPlugin(t *testing.T) {
 
 func TestLoadJobPlugin(t *testing.T) {
 	namespace := "loader_test"
-	jobDef := &pluginDefinition{
-		SonobuoyConfig: sonobuoyConfig{
+	jobDef := &manifest.Manifest{
+		SonobuoyConfig: manifest.SonobuoyConfig{
 			Driver:     "Job",
 			PluginName: "test-job-plugin",
 		},
-		Spec: corev1.Container{
-			Image: "gcr.io/heptio-images/heptio-e2e:master",
+		Spec: manifest.Container{
+			Container: corev1.Container{
+				Image: "gcr.io/heptio-images/heptio-e2e:master",
+			},
 		},
 	}
 
@@ -111,13 +114,15 @@ func TestLoadJobPlugin(t *testing.T) {
 
 func TestLoadDaemonSet(t *testing.T) {
 	namespace := "loader_test"
-	daemonDef := &pluginDefinition{
-		SonobuoyConfig: sonobuoyConfig{
+	daemonDef := &manifest.Manifest{
+		SonobuoyConfig: manifest.SonobuoyConfig{
 			Driver:     "DaemonSet",
 			PluginName: "test-daemon-set-plugin",
 		},
-		Spec: corev1.Container{
-			Image: "gcr.io/heptio-images/heptio-e2e:master",
+		Spec: manifest.Container{
+			Container: corev1.Container{
+				Image: "gcr.io/heptio-images/heptio-e2e:master",
+			},
 		},
 	}
 
@@ -144,9 +149,9 @@ func TestLoadDaemonSet(t *testing.T) {
 }
 
 func TestFilterList(t *testing.T) {
-	definitions := []*pluginDefinition{
-		{SonobuoyConfig: sonobuoyConfig{PluginName: "test1"}},
-		{SonobuoyConfig: sonobuoyConfig{PluginName: "test2"}},
+	definitions := []*manifest.Manifest{
+		{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "test1"}},
+		{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "test2"}},
 	}
 
 	selections := []plugin.Selection{
@@ -154,7 +159,7 @@ func TestFilterList(t *testing.T) {
 		{Name: "test3"},
 	}
 
-	expected := []*pluginDefinition{definitions[0]}
+	expected := []*manifest.Manifest{definitions[0]}
 	filtered := filterPluginDef(definitions, selections)
 	if !reflect.DeepEqual(filtered, expected) {
 		t.Errorf("expected %+#v, got %+#v", expected, filtered)

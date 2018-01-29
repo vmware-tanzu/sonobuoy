@@ -20,6 +20,7 @@ import (
 	"io"
 	"path"
 
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -54,7 +55,7 @@ type Interface interface {
 type Definition struct {
 	Name       string
 	ResultType string
-	Spec       v1.Container
+	Spec       manifest.Container
 }
 
 // ExpectedResult is an expected result that a plugin will submit.  This is so

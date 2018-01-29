@@ -17,7 +17,6 @@ limitations under the License.
 package loader
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -26,11 +25,11 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/daemonset"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/job"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	yaml "gopkg.in/yaml.v2"
-	corev1 "k8s.io/api/core/v1"
+	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 )
 
 // LoadAllPlugins loads all plugins by finding plugin definitions in the given
@@ -57,13 +56,13 @@ func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.S
 		pluginDefinitionFiles = append(pluginDefinitionFiles, files...)
 	}
 
-	pluginDefinitions := []*pluginDefinition{}
+	pluginDefinitions := []*manifest.Manifest{}
 	for _, file := range pluginDefinitionFiles {
-		pluginDef, err := loadDefinition(file)
+		pluginDefinition, err := loadDefinition(file)
 		if err != nil {
 			return []plugin.Interface{}, errors.Wrapf(err, "couldn't load plugin definition %v", file)
 		}
-		pluginDefinitions = append(pluginDefinitions, pluginDef)
+		pluginDefinitions = append(pluginDefinitions, pluginDefinition)
 	}
 
 	pluginDefinitions = filterPluginDef(pluginDefinitions, selections)
@@ -99,45 +98,21 @@ func findPlugins(dir string) ([]string, error) {
 	return plugins, nil
 }
 
-type sonobuoyConfig struct {
-	Driver     string `json:"driver"`
-	PluginName string `json:"plugin-name"`
-	ResultType string `json:"result-type"`
-}
-
-type pluginDefinition struct {
-	SonobuoyConfig sonobuoyConfig   `json:"sonobuoy-config"`
-	Spec           corev1.Container `json:"spec"`
-}
-
-func loadDefinition(file string) (*pluginDefinition, error) {
+func loadDefinition(file string) (*manifest.Manifest, error) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't open lugin definition %v", file)
+		return nil, errors.Wrapf(err, "couldn't open plugin definition %v", file)
 	}
 
-	// convert to JSON because corev1.Container only has JSON tags
-	var decoded interface{}
-	if err = yaml.Unmarshal(bytes, &decoded); err != nil {
-		return nil, errors.Wrapf(err, "couldn't decode yaml for plugin definition %v", file)
-	}
-
-	decoded = convert(decoded)
-
-	jsonBytes, err := json.Marshal(decoded)
-	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't encode yaml as json for plugin definition %v", file)
-	}
-
-	var internalDef pluginDefinition
-	if err = json.Unmarshal(jsonBytes, &internalDef); err != nil {
+	var def manifest.Manifest
+	if err = kuberuntime.DecodeInto(manifest.Decoder, bytes, &def); err != nil {
 		return nil, errors.Wrapf(err, "couldn't decode json for plugin definition %v", file)
 	}
 
-	return &internalDef, nil
+	return &def, nil
 }
 
-func loadPlugin(def *pluginDefinition, namespace string) (plugin.Interface, error) {
+func loadPlugin(def *manifest.Manifest, namespace string) (plugin.Interface, error) {
 	pluginDef := plugin.Definition{
 		Name:       def.SonobuoyConfig.PluginName,
 		ResultType: def.SonobuoyConfig.ResultType,
@@ -155,13 +130,13 @@ func loadPlugin(def *pluginDefinition, namespace string) (plugin.Interface, erro
 	}
 }
 
-func filterPluginDef(defs []*pluginDefinition, selections []plugin.Selection) []*pluginDefinition {
+func filterPluginDef(defs []*manifest.Manifest, selections []plugin.Selection) []*manifest.Manifest {
 	m := make(map[string]bool)
 	for _, selection := range selections {
 		m[selection.Name] = true
 	}
 
-	filtered := []*pluginDefinition{}
+	filtered := []*manifest.Manifest{}
 	for _, def := range defs {
 		if m[def.SonobuoyConfig.PluginName] {
 			filtered = append(filtered, def)

@@ -18,13 +18,13 @@ package daemonset
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/pkg/errors"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	v1 "k8s.io/api/core/v1"
@@ -90,7 +90,7 @@ func (p *Plugin) GetResultType() string {
 func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 	var b bytes.Buffer
 	// TODO (EKF): Should be YAML once we figure that out
-	container, err := json.Marshal(&p.Definition.Spec)
+	container, err := kuberuntime.Encode(manifest.Encoder, &p.Definition.Spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't reserialize container for daemonset %q", p.Definition.Name)
 	}

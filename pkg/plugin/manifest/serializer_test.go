@@ -1,4 +1,4 @@
-package utils
+package manifest
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
+	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 )
 
 func TestContainerToYAML(t *testing.T) {
@@ -15,13 +16,16 @@ func TestContainerToYAML(t *testing.T) {
 		expectedImage = "gcr.io/heptio/test-image:master"
 		expectedCmd   = []string{"echo", "Hello world!"}
 	)
-	container := &v1.Container{
-		Name:    expectedName,
-		Image:   expectedImage,
-		Command: expectedCmd,
+	container := &Container{
+		Container: v1.Container{
+			Name:    expectedName,
+			Image:   expectedImage,
+			Command: expectedCmd,
+		},
 	}
 
-	yamlDoc, err := ContainerToYAML(container)
+	yamlDoc, err := kuberuntime.Encode(Encoder, container)
+
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}

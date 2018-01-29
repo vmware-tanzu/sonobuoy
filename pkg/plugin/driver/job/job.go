@@ -31,6 +31,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 )
 
 // Plugin is a plugin driver that dispatches a single pod to the given
@@ -86,7 +87,7 @@ func (p *Plugin) GetResultType() string {
 func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 	var b bytes.Buffer
 
-	container, err := utils.ContainerToYAML(&p.Definition.Spec)
+	container, err := kuberuntime.Encode(manifest.Encoder, &p.Definition.Spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
 	}
