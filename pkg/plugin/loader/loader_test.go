@@ -21,7 +21,7 @@ func TestFindPlugins(t *testing.T) {
 	}
 
 	expected := []string{
-		"testdata/plugin.d/daemonset.yml",
+		"testdata/plugin.d/daemonset.yaml",
 		"testdata/plugin.d/invalid.yml",
 		"testdata/plugin.d/job.yml",
 	}
@@ -57,7 +57,7 @@ func TestLoadValidPlugin(t *testing.T) {
 		t.Errorf("expected name gcr.io/heptio-images/heptio-e2e:master, got %q", jobDef.Spec.Image)
 	}
 
-	daemonDefFile := "testdata/plugin.d/daemonset.yml"
+	daemonDefFile := "testdata/plugin.d/daemonset.yaml"
 	daemonDef, err := loadDefinition(daemonDefFile)
 	if err != nil {
 		t.Fatalf("Unexpected error creating job plugin: %v", err)

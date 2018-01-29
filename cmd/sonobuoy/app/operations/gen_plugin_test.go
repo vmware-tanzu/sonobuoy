@@ -1,7 +1,6 @@
 package operations
 
 import (
-	"bytes"
 	"testing"
 
 	"k8s.io/api/core/v1"
@@ -10,7 +9,7 @@ import (
 )
 
 func TestLoadNonexistantPlugin(t *testing.T) {
-	err := GeneratePluginManifest(GenPluginConfig{
+	_, err := GeneratePluginManifest(GenPluginConfig{
 		Paths:      []string{"./plugins.d"},
 		PluginName: "non-existant-plugin",
 	})
@@ -21,12 +20,10 @@ func TestLoadNonexistantPlugin(t *testing.T) {
 }
 
 func TestLoadRealPlugin(t *testing.T) {
-	b := &bytes.Buffer{}
-	err := GeneratePluginManifest(GenPluginConfig{
+	bytes, err := GeneratePluginManifest(GenPluginConfig{
 		// Tests are executed with cwd set to their containing directory
 		Paths:      []string{"../../../../plugins.d"},
 		PluginName: "e2e",
-		outfile:    b,
 	})
 
 	if err != nil {
@@ -35,7 +32,7 @@ func TestLoadRealPlugin(t *testing.T) {
 
 	var job v1.Pod
 
-	if err = kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &job); err != nil {
+	if err = kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), bytes, &job); err != nil {
 		t.Errorf("failed to decode job: %v", err)
 	}
 }

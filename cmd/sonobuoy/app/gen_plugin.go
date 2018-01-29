@@ -17,6 +17,7 @@ limitations under the License.
 package app
 
 import (
+	"fmt"
 	"os"
 
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
@@ -46,7 +47,10 @@ func init() {
 func genPluginManifest(cmd *cobra.Command, args []string) {
 	genPluginOpts.PluginName = args[0]
 	code := 0
-	if err := ops.GeneratePluginManifest(genPluginOpts); err != nil {
+	manifest, err := ops.GeneratePluginManifest(genPluginOpts)
+	if err == nil {
+		fmt.Printf("%s\n", manifest)
+	} else {
 		errlog.LogError(errors.Wrap(err, "error attempting to generate sonobuoy manifest"))
 		code = 1
 	}

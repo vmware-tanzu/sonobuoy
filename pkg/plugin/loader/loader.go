@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -39,7 +38,7 @@ import (
 // address (host:port) and returning all of the active, configured plugins for
 // this sonobuoy run.
 func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.Selection) (ret []plugin.Interface, err error) {
-	pluginFiles := []string{}
+	pluginDefinitionFiles := []string{}
 	for _, dir := range searchPath {
 		wd, _ := os.Getwd()
 		logrus.Infof("Scanning plugins in %v (pwd: %v)", dir, wd)
@@ -55,52 +54,49 @@ func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.S
 		if err != nil {
 			return []plugin.Interface{}, errors.Wrapf(err, "couldn't scan %v for plugins", dir)
 		}
-		pluginFiles = append(pluginFiles, files...)
+		pluginDefinitionFiles = append(pluginDefinitionFiles, files...)
 	}
 
-	pluginDefs := []*pluginDefinition{}
-	for _, file := range pluginFiles {
+	pluginDefinitions := []*pluginDefinition{}
+	for _, file := range pluginDefinitionFiles {
 		pluginDef, err := loadDefinition(file)
 		if err != nil {
 			return []plugin.Interface{}, errors.Wrapf(err, "couldn't load plugin definition %v", file)
 		}
-		pluginDefs = append(pluginDefs, pluginDef)
+		pluginDefinitions = append(pluginDefinitions, pluginDef)
 	}
 
-	pluginDefs = filterPluginDef(pluginDefs, selections)
+	pluginDefinitions = filterPluginDef(pluginDefinitions, selections)
 
 	plugins := []plugin.Interface{}
-	for _, def := range pluginDefs {
-		pluginIface, err := loadPlugin(def, namespace)
+	for _, def := range pluginDefinitions {
+		loadedPlugin, err := loadPlugin(def, namespace)
 		if err != nil {
 			return nil, errors.Wrapf(err, "couldn't load plugin %v", def.SonobuoyConfig.PluginName)
 		}
-		plugins = append(plugins, pluginIface)
+		plugins = append(plugins, loadedPlugin)
 	}
 
 	return plugins, nil
 }
 
-// loadPlugin loads an individual plugin by instantiating a plugin driver with
-// the settings from the given plugin definition and selection
-// func loadPlugin(namespace string, dfn plugin.Definition, masterAddress string) (plugin.Interface, error) {
-// 	// TODO(chuckha): We don't use the cfg for anything except passing a string around. Consider removing this struct.
-// 	cfg := &plugin.WorkerConfig{}
-// 	logrus.Infof("Loading plugin driver %v", dfn.Driver)
-// 	switch dfn.Driver {
-// 	case "DaemonSet":
-// 		cfg.MasterURL = "http://" + masterAddress + "/api/v1/results/by-node"
-// 		return daemonset.NewPlugin(namespace, dfn, cfg), nil
-// 	case "Job":
-// 		cfg.MasterURL = "http://" + masterAddress + "/api/v1/results/global"
-// 		return job.NewPlugin(namespace, dfn, cfg), nil
-// 	default:
-// 		return nil, errors.Errorf("Unknown driver %v", dfn.Driver)
-// 	}
-// }
-
 func findPlugins(dir string) ([]string, error) {
-	return filepath.Glob(path.Join(dir, "*.yml"))
+	candidates, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return []string{}, errors.Wrapf(err, "couldn't search path %v", dir)
+	}
+
+	plugins := []string{}
+	for _, candidate := range candidates {
+		if candidate.IsDir() {
+			continue
+		}
+		ext := filepath.Ext(candidate.Name())
+		if ext == ".yml" || ext == ".yaml" {
+			plugins = append(plugins, filepath.Join(dir, candidate.Name()))
+		}
+	}
+	return plugins, nil
 }
 
 type sonobuoyConfig struct {

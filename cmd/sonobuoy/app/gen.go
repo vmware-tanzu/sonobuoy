@@ -27,6 +27,7 @@ import (
 
 var genopts ops.GenConfig
 
+// GenCommand is exported so it can be extended
 var GenCommand = &cobra.Command{
 	Use:   "gen",
 	Short: "Generates a sonobuoy manifest for submission via kubectl",

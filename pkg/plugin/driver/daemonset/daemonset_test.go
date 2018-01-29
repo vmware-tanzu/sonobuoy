@@ -27,9 +27,9 @@ func TestFillTemplate(t *testing.T) {
 		t.Fatalf("Failed to fill template: %v", err)
 	}
 
-	t.Logf("%s", b.Bytes())
+	t.Logf("%s", b)
 
-	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &daemonSet); err != nil {
+	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &daemonSet); err != nil {
 		t.Fatalf("Failed to decode template to daemonSet: %v", err)
 	}
 

@@ -18,8 +18,6 @@ package operations
 
 import (
 	"fmt"
-	"io"
-	"os"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/loader"
@@ -34,38 +32,28 @@ const (
 type GenPluginConfig struct {
 	Paths      []string
 	PluginName string
-	// for testing
-	outfile io.Writer
 }
 
 // GeneratePluginManifest partially initialises a plugin, then dumps out plugin's manifest
-func GeneratePluginManifest(cfg GenPluginConfig) error {
-	var outfile io.Writer
-	if cfg.outfile != nil {
-		outfile = cfg.outfile
-	} else {
-		outfile = os.Stdout
-	}
-
+func GeneratePluginManifest(cfg GenPluginConfig) ([]byte, error) {
 	plugins, err := loader.LoadAllPlugins(
 		placeholderNamespace,
 		cfg.Paths,
 		[]plugin.Selection{{Name: cfg.PluginName}},
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(plugins) != 1 {
-		return fmt.Errorf("expected 1 plugin, got %v", len(plugins))
+		return nil, fmt.Errorf("expected 1 plugin, got %v", len(plugins))
 	}
 
 	selectedPlugin := plugins[0]
 	bytes, err := selectedPlugin.FillTemplate(placeholderHostname)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	fmt.Fprintf(outfile, "%s\n", bytes.String())
-	return nil
+	return bytes, nil
 }

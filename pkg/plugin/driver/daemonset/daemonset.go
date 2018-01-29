@@ -18,6 +18,7 @@ package daemonset
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -86,12 +87,12 @@ func (p *Plugin) GetResultType() string {
 }
 
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
-func (p *Plugin) FillTemplate(hostname string) (*bytes.Buffer, error) {
+func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 	var b bytes.Buffer
 	// TODO (EKF): Should be YAML once we figure that out
-	container, err := utils.ContainerToJSON(&p.Definition.Spec)
+	container, err := json.Marshal(&p.Definition.Spec)
 	if err != nil {
-		return &bytes.Buffer{}, errors.Wrapf(err, "couldn't reserialize container for daemonset %q", p.Definition.Name)
+		return nil, errors.Wrapf(err, "couldn't reserialize container for daemonset %q", p.Definition.Name)
 	}
 
 	vars := templateData{
@@ -99,14 +100,14 @@ func (p *Plugin) FillTemplate(hostname string) (*bytes.Buffer, error) {
 		ResultType:        p.Definition.ResultType,
 		SessionID:         p.SessionID,
 		Namespace:         p.Namespace,
-		ProducerContainer: container,
-		MasterAddress:     getMasterAddress(hostname), // TODO(EKF)
+		ProducerContainer: string(container),
+		MasterAddress:     getMasterAddress(hostname),
 	}
 
 	if err := daemonSetTemplate.Execute(&b, vars); err != nil {
-		return &bytes.Buffer{}, errors.Wrapf(err, "couldn't fill template %q", p.Definition.Name)
+		return nil, errors.Wrapf(err, "couldn't fill template %q", p.Definition.Name)
 	}
-	return &b, nil
+	return b.Bytes(), nil
 }
 
 // Run dispatches worker pods according to the DaemonSet's configuration.
@@ -116,10 +117,9 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
 	)
 	b, err := p.FillTemplate(hostname)
 	if err != nil {
-		// Already wrapped sufficiently by FillTemplate
-		return err
+		return errors.Wrap(err, "couldn't fill template")
 	}
-	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &daemonSet); err != nil {
+	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &daemonSet); err != nil {
 		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
 	}
 
@@ -218,7 +218,6 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 			}
 
 			podsFound[nodeName] = true
-
 			// Check if it's failing and submit the error result
 			if isFailing, reason := utils.IsPodFailing(&pod); isFailing {
 				podsReported[nodeName] = true

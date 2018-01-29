@@ -17,7 +17,6 @@ limitations under the License.
 package plugin
 
 import (
-	"bytes"
 	"io"
 	"path"
 
@@ -42,7 +41,7 @@ type Interface interface {
 	// expect to submit.
 	ExpectedResults(nodes []v1.Node) []ExpectedResult
 	// FillTemplate fills the driver's internal template so it can be presented to the user for `sonobuoy gen`
-	FillTemplate(hostname string) (*bytes.Buffer, error)
+	FillTemplate(hostname string) ([]byte, error)
 	// GetResultType returns the type of results for this plugin, typically
 	// the same as the plugin name.
 	GetResultType() string

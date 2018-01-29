@@ -18,6 +18,7 @@ package job
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -83,12 +84,12 @@ func (p *Plugin) GetResultType() string {
 }
 
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
-func (p *Plugin) FillTemplate(hostname string) (*bytes.Buffer, error) {
+func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 	var b bytes.Buffer
 	// TODO (EKF): Should be YAML once we figure that out
-	container, err := utils.ContainerToJSON(&p.Definition.Spec)
+	container, err := json.Marshal(&p.Definition.Spec)
 	if err != nil {
-		return &bytes.Buffer{}, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
+		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
 	}
 
 	vars := templateData{
@@ -96,14 +97,14 @@ func (p *Plugin) FillTemplate(hostname string) (*bytes.Buffer, error) {
 		ResultType:        p.Definition.ResultType,
 		SessionID:         p.SessionID,
 		Namespace:         p.Namespace,
-		ProducerContainer: container,
+		ProducerContainer: string(container),
 		MasterAddress:     getMasterAddress(hostname), // TODO(EKF)
 	}
 
 	if err := jobTemplate.Execute(&b, vars); err != nil {
-		return &bytes.Buffer{}, errors.Wrapf(err, "couldn't fill template %q", p.Definition.Name)
+		return nil, errors.Wrapf(err, "couldn't fill template %q", p.Definition.Name)
 	}
-	return &b, nil
+	return b.Bytes(), nil
 }
 
 // Run dispatches worker pods according to the Job's configuration.
@@ -118,7 +119,7 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
 		return err
 	}
 
-	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b.Bytes(), &job); err != nil {
+	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &job); err != nil {
 		return errors.Wrapf(err, "could not decode executed template into a Job for plugin %v", p.GetName())
 	}
 
@@ -213,7 +214,7 @@ func (p *Plugin) findPod(kubeclient kubernetes.Interface) (*v1.Pod, error) {
 
 // GetSessionID returns the session id associated with the plugin
 func (p *Plugin) GetSessionID() string {
-	return "" //TODO(EKF) p.DfnTemplateData.SessionID
+	return p.SessionID
 }
 
 // GetName returns the name of this Job plugin
