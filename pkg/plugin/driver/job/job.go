@@ -67,7 +67,7 @@ func NewPlugin(dfn plugin.Definition, namespace string) *Plugin {
 }
 
 func getMasterAddress(hostname string) string {
-	return fmt.Sprintf("http://%s/api/v1/results/by-node", hostname)
+	return fmt.Sprintf("http://%s/api/v1/results/global", hostname)
 }
 
 // ExpectedResults returns the list of results expected for this plugin. Since

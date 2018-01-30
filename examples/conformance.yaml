@@ -54,7 +54,7 @@ data:
         "PluginNamespace": "heptio-sonobuoy",
         "Plugins": [
             {
-                "name": "systemd_logs"
+                "name": "systemd-logs"
             },
             {
                 "name": "e2e"
@@ -112,7 +112,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  e2e.tmpl: |
+  e2e.yaml: |
     sonobuoy-config:
       driver: Job
       plugin-name: e2e
@@ -120,7 +120,7 @@ data:
     spec:
       env:
       - name: E2E_FOCUS
-        value: Pods should be submitted and removed
+        value: Conformance
       image: gcr.io/heptio-images/kube-conformance:latest
       imagePullPolicy: Always
       name: e2e
@@ -128,10 +128,10 @@ data:
       - mountPath: /tmp/results
         name: results
         readOnly: false
-  systemd_logs.tmpl: |
+  systemd_logs.yaml: |
     sonobuoy-config:
       driver: DaemonSet
-      plugin-name: systemd_logs
+      plugin-name: systemd-logs
       result-type: systemd_logs
     spec:
       command:
@@ -149,7 +149,7 @@ data:
         value: /node
       image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
       imagePullPolicy: Always
-      name: sonobuoy-systemd-logs-config-{{.SessionID}}
+      name: sonobuoy-systemd-logs-config
       securityContext:
         privileged: true
       volumeMounts:

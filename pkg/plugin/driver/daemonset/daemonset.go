@@ -261,5 +261,5 @@ func (p *Plugin) GetName() string {
 }
 
 func getMasterAddress(hostname string) string {
-	return fmt.Sprintf("http://%s/api/v1/results/global", hostname)
+	return fmt.Sprintf("http://%s/api/v1/results/by-node", hostname)
 }

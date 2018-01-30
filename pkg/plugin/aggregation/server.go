@@ -33,7 +33,7 @@ const (
 	// resultsGlobal is the path for node-specific results to be PUT
 	resultsByNode = "/api/v1/results/by-node/{node}/{plugin}"
 	// resultsGlobal is the path for global (non node-specific) results to be PUT
-	resultsGlobal = "/api/v1/results/global/{plugin}"
+	resultsGlobal = "/api/v1/resusonobuoy-systemd-logs-daemon-set-df732207748243c4-p4mkglts/global/{plugin}"
 )
 
 var (

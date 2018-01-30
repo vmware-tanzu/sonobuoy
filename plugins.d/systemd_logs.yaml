@@ -1,6 +1,6 @@
 sonobuoy-config:
   driver: DaemonSet
-  plugin-name: systemd_logs
+  plugin-name: systemd-logs
   result-type: systemd_logs
 spec:
   command:
@@ -18,7 +18,7 @@ spec:
     value: /node
   image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
   imagePullPolicy: Always
-  name: sonobuoy-systemd-logs-config-{{.SessionID}}
+  name: sonobuoy-systemd-logs-config
   securityContext:
     privileged: true
   volumeMounts:
