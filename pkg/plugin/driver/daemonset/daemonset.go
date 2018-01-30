@@ -122,6 +122,7 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
 		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
 	}
 
+	// TODO(EKF): Move to v1 in 1.10
 	if _, err := kubeclient.AppsV1beta2().DaemonSets(p.Namespace).Create(&daemonSet); err != nil {
 		return errors.Wrapf(err, "could not create DaemonSet for daemonset plugin %v", p.GetName())
 	}
@@ -142,6 +143,7 @@ func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
 	}
 
 	// Delete the DaemonSet created by this plugin
+	// TODO(EKF): Move to v1 in 1.10
 	err := kubeclient.AppsV1beta2().DaemonSets(p.Namespace).DeleteCollection(
 		&deleteOptions,
 		listOptions,
@@ -159,6 +161,7 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 
 // findDaemonSet gets the daemonset that we created, using a kubernetes label search
 func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*appsv1beta2.DaemonSet, error) {
+	// TODO(EKF): Move to v1 in 1.10
 	dsets, err := kubeclient.AppsV1beta2().DaemonSets(p.Namespace).List(p.listOptions())
 	if err != nil {
 		return nil, errors.WithStack(err)
