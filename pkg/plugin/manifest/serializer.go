@@ -89,7 +89,9 @@ func (t *typer) Recognizes(kind schema.GroupVersionKind) bool {
 		return false
 	}
 	switch kind.Kind {
-	case "pod":
+	case "container":
+		return true
+	case "manifest":
 		return true
 	default:
 		return false

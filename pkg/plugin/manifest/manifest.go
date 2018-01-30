@@ -32,16 +32,16 @@ type Manifest struct {
 }
 
 // DeepCopyObject is required by runtime.Object
-func (p *Manifest) DeepCopyObject() kuberuntime.Object {
+func (m *Manifest) DeepCopyObject() kuberuntime.Object {
 	return &Manifest{
-		SonobuoyConfig: *p.SonobuoyConfig.DeepCopy(),
-		Spec:           *p.Spec.DeepCopy(),
-		objectKind:     objectKind{p.gvk},
+		SonobuoyConfig: *m.SonobuoyConfig.DeepCopy(),
+		Spec:           *m.Spec.DeepCopy(),
+		objectKind:     objectKind{m.gvk},
 	}
 }
 
 // GetObjectKind is required by runtime.Object
-func (p *Manifest) GetObjectKind() schema.ObjectKind { return p }
+func (m *Manifest) GetObjectKind() schema.ObjectKind { return m }
 
 // Container is a thin wrapper around coreV1.Container that supplies DeepCopyObject and GetObjectKind
 type Container struct {
