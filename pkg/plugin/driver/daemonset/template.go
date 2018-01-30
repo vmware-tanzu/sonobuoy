@@ -1,16 +1,21 @@
+package daemonset
+
+import "text/template"
+
+var daemonSetTemplate = template.Must(template.New("daemonSetTemplate").Parse(`
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   annotations:
     sonobuoy-driver: DaemonSet
-    sonobuoy-plugin: systemd_logs
-    sonobuoy-result-type: systemd_logs
+    sonobuoy-plugin: {{.PluginName}}
+    sonobuoy-result-type: {{.ResultType}}
   labels:
     component: sonobuoy
     sonobuoy-run: '{{.SessionID}}'
     tier: analysis
-  name: systemd-logs
+  name: sonobuoy-{{.PluginName}}-daemon-set-{{.SessionID}}
   namespace: '{{.Namespace}}'
 spec:
   selector:
@@ -24,31 +29,7 @@ spec:
         tier: analysis
     spec:
       containers:
-      - command:
-        - sh
-        - -c
-        - /get_systemd_logs.sh && sleep 3600
-        env:
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        - name: RESULTS_DIR
-          value: /tmp/results
-        - name: CHROOT_DIR
-          value: /node
-        image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
-        imagePullPolicy: Always
-        name: sonobuoy-systemd-logs-config-{{.SessionID}}
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /tmp/results
-          name: results
-          readOnly: false
-        - mountPath: /node
-          name: root
-          readOnly: false
+      - {{.ProducerContainer}}
       - command:
         - sh
         - -c
@@ -63,7 +44,7 @@ spec:
         - name: MASTER_URL
           value: '{{.MasterAddress}}'
         - name: RESULT_TYPE
-          value: systemd_logs
+          value: {{.ResultType}}
         image: gcr.io/heptio-images/sonobuoy:master
         imagePullPolicy: Always
         name: sonobuoy-worker
@@ -87,3 +68,4 @@ spec:
       - hostPath:
           path: /
         name: root
+`))

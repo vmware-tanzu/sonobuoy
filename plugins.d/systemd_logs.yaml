@@ -1,0 +1,30 @@
+sonobuoy-config:
+  driver: DaemonSet
+  plugin-name: systemd-logs
+  result-type: systemd_logs
+spec:
+  command:
+  - sh
+  - -c
+  - /get_systemd_logs.sh && sleep 3600
+  env:
+  - name: NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
+  - name: RESULTS_DIR
+    value: /tmp/results
+  - name: CHROOT_DIR
+    value: /node
+  image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
+  imagePullPolicy: Always
+  name: sonobuoy-systemd-logs-config
+  securityContext:
+    privileged: true
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
+    readOnly: false
+  - mountPath: /node
+    name: root
+    readOnly: false
