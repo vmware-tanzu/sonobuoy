@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"text/template"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	gouuid "github.com/satori/go.uuid"
@@ -99,4 +100,9 @@ var TemplateFuncs = map[string]interface{}{
 		// Don't indent the first line, it's already indented in the template
 		return strings.Join(split, ident)
 	},
+}
+
+// NewTemplate declares a new template that already has TemplateFuncs in scope
+func NewTemplate(name, tmpl string) *template.Template {
+	return template.Must(template.New(name).Funcs(TemplateFuncs).Parse(tmpl))
 }

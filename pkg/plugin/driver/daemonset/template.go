@@ -1,13 +1,10 @@
 package daemonset
 
 import (
-	"text/template"
-
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
 )
 
-var daemonSetTemplate = template.Must(
-	template.New("jobTemplate").Funcs(utils.TemplateFuncs).Parse(`
+var daemonSetTemplate = utils.NewTemplate("daemonTemplate", `
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
@@ -73,4 +70,4 @@ spec:
       - hostPath:
           path: /
         name: root
-`))
+`)
