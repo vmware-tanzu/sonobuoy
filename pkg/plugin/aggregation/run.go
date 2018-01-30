@@ -17,8 +17,8 @@ limitations under the License.
 package aggregation
 
 import (
+	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -78,18 +78,20 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 	// 2. Launch the aggregation servers
 	srv := &http.Server{
-		Addr:    cfg.BindAddress + ":" + strconv.Itoa(cfg.BindPort),
+		Addr:    fmt.Sprintf("%s:%d", cfg.BindAddress, cfg.BindPort),
 		Handler: NewHandler(aggr.HandleHTTPResult),
 	}
+
 	doneServ := make(chan error)
 	go func() {
+		logrus.Infof("starting aggregation server on %s:%d", cfg.BindAddress, cfg.BindPort)
 		doneServ <- srv.ListenAndServe()
 	}()
 
 	// 3. Launch each plugin, to dispatch workers which submit the results back
 	for _, p := range plugins {
 		logrus.Infof("Running (%v) plugin", p.GetName())
-		err := p.Run(client)
+		err := p.Run(client, cfg.AdvertiseAddress)
 		// Have the plugin monitor for errors
 		go p.Monitor(client, nodes.Items, monitorCh)
 		if err != nil {

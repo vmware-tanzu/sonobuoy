@@ -106,7 +106,7 @@ func TestLoadAllPlugins(t *testing.T) {
 	cfg := &Config{
 		PluginSearchPath: []string{"./plugins.d"},
 		PluginSelections: []plugin.Selection{
-			plugin.Selection{Name: "systemd_logs"},
+			plugin.Selection{Name: "systemd-logs"},
 			plugin.Selection{Name: "e2e"},
 			plugin.Selection{Name: "heptio-e2e"},
 		},

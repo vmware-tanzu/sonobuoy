@@ -1,0 +1,16 @@
+---
+sonobuoy-config:
+  driver: Job
+  plugin-name: e2e
+  result-type: e2e
+spec:
+  env:
+  - name: E2E_FOCUS
+    value: Pods should be submitted and removed
+  image: gcr.io/heptio-images/kube-conformance:latest
+  imagePullPolicy: Always
+  name: e2e
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
+    readOnly: false

@@ -1,26 +1,25 @@
+package job
+
+import "text/template"
+
+var jobTemplate = template.Must(template.New("jobTemplate").Parse(`
 ---
 apiVersion: v1
 kind: Pod
 metadata:
   annotations:
     sonobuoy-driver: Job
-    sonobuoy-plugin: heptio-e2e
-    sonobuoy-result-type: heptio-e2e
+    sonobuoy-plugin: {{.PluginName}}
+    sonobuoy-result-type: {{.ResultType}}
   labels:
     component: sonobuoy
     sonobuoy-run: '{{.SessionID}}'
     tier: analysis
-  name: sonobuoy-heptio-e2e-job-{{.SessionID}}
+  name: sonobuoy-{{.PluginName}}-job-{{.SessionID}}
   namespace: '{{.Namespace}}'
 spec:
   containers:
-  - image: gcr.io/heptio-images/heptio-e2e:master
-    imagePullPolicy: Always
-    name: heptio-e2e
-    volumeMounts:
-    - mountPath: /tmp/results
-      name: results
-      readOnly: false
+  - {{.ProducerContainer}}
   - command:
     - sh
     - -c
@@ -35,7 +34,7 @@ spec:
     - name: MASTER_URL
       value: '{{.MasterAddress}}'
     - name: RESULT_TYPE
-      value: heptio-e2e
+      value: {{.ResultType}}
     image: gcr.io/heptio-images/sonobuoy:master
     imagePullPolicy: Always
     name: sonobuoy-worker
@@ -54,3 +53,4 @@ spec:
   volumes:
   - emptyDir: {}
     name: results
+`))
