@@ -1,8 +1,10 @@
 package job
 
-import "text/template"
+import (
+	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+)
 
-var jobTemplate = template.Must(template.New("jobTemplate").Parse(`
+var jobTemplate = utils.NewTemplate("jobTemplate", `
 ---
 apiVersion: v1
 kind: Pod
@@ -19,7 +21,7 @@ metadata:
   namespace: '{{.Namespace}}'
 spec:
   containers:
-  - {{.ProducerContainer}}
+  - {{.ProducerContainer | indent 4}}
   - command:
     - sh
     - -c
@@ -53,4 +55,4 @@ spec:
   volumes:
   - emptyDir: {}
     name: results
-`))
+`)
