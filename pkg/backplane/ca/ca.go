@@ -9,6 +9,7 @@ import (
 	"crypto/x509/pkix"
 	"math/big"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -35,6 +36,7 @@ var (
 // certificates to be used for Client certs.
 // Sonobuoy issues every worker a client certificate
 type Authority struct {
+	sync.Mutex
 	privKey    *rsa.PrivateKey
 	cert       *x509.Certificate
 	lastSerial *big.Int
@@ -110,6 +112,8 @@ func (a *Authority) makeLeafCert(mut func(*x509.Certificate)) (*tls.Certificate,
 }
 
 func (a *Authority) nextSerial() *big.Int {
+	a.Lock()
+	defer a.Unlock()
 	if a.lastSerial == nil {
 		num := big.NewInt(1)
 		a.lastSerial = num
