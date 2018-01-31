@@ -131,7 +131,7 @@ func (a *Authority) CACertPool() *x509.CertPool {
 	return pool
 }
 
-// ServerKeyPair makes a client cert signed by out root CA. The returned certificate
+// ServerKeyPair makes a TLS server cert signed by our root CA. The returned certificate
 // has a chain including the root CA cert.
 func (a *Authority) ServerKeyPair(name string) (*tls.Certificate, error) {
 	cert, err := a.makeLeafCert(func(cert *x509.Certificate) {
@@ -165,7 +165,7 @@ func (a *Authority) MakeServerConfig(name string) (*tls.Config, error) {
 	}, nil
 }
 
-// ClientKeyPair makes a client cert signed by out root CA. The returned certificate
+// ClientKeyPair makes a client cert signed by our root CA. The returned certificate
 // has a chain including the root CA
 func (a *Authority) ClientKeyPair(name string) (*tls.Certificate, error) {
 	cert, err := a.makeLeafCert(func(cert *x509.Certificate) {
