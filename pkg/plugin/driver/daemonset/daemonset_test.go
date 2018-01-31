@@ -31,7 +31,7 @@ func TestFillTemplate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("couldn't make CA Authority %v", err)
 	}
-	clientCert, err := auth.ClientKey("test-job")
+	clientCert, err := auth.ClientKeyPair("test-job")
 	if err != nil {
 		t.Fatalf("couldn't make client certificate %v", err)
 	}

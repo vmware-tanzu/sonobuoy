@@ -18,8 +18,10 @@ package utils
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -88,4 +90,25 @@ func MakeErrorResult(resultType string, errdata map[string]interface{}, nodeName
 		NodeName:   nodeName,
 		MimeType:   "application/json",
 	}
+}
+
+// GetCertPEM extracts the CA cert and leaf cert from a tls.Certificate.
+// If the provided certificate has only one certificate in the chain, the CA and leaf
+// cert returned will be the same.
+func GetCertPEM(cert *tls.Certificate) (string, string) {
+	cacert := ""
+	clientCert := ""
+	if len(cert.Certificate) > 0 {
+		caCertDER := cert.Certificate[len(cert.Certificate)-1]
+		cacert = string(pem.EncodeToMemory(&pem.Block{
+			Type:  "Certificate",
+			Bytes: caCertDER,
+		}))
+		clientCertDER := cert.Certificate[0]
+		clientCert = string(pem.EncodeToMemory(&pem.Block{
+			Type:  "Certificate",
+			Bytes: clientCertDER,
+		}))
+	}
+	return cacert, clientCert
 }

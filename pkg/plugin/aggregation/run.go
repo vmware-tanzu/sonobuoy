@@ -42,7 +42,7 @@ import (
 // 4. Hook the shared monitoring channel up to aggr's IngestResults() function
 // 5. Block until aggr shows all results accounted for (results come in through
 //    the HTTP callback), stopping the HTTP server on completion
-func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, auth *ca.Authority, outdir string) error {
+func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, outdir string) error {
 	// Construct a list of things we'll need to dispatch
 	if len(plugins) == 0 {
 		logrus.Info("Skipping host data gathering: no plugins defined")
@@ -62,6 +62,11 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	var expectedResults []plugin.ExpectedResult
 	for _, p := range plugins {
 		expectedResults = append(expectedResults, p.ExpectedResults(nodes.Items)...)
+	}
+
+	auth, err := ca.NewAuthority()
+	if err != nil {
+		return errors.Wrap(err, "couldn't make new certificate authority for plugin aggregator")
 	}
 
 	logrus.Infof("Starting server Expected Results: %v", expectedResults)
@@ -97,7 +102,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 	// 3. Launch each plugin, to dispatch workers which submit the results back
 	for _, p := range plugins {
-		cert, err := auth.ClientKey(p.GetName())
+		cert, err := auth.ClientKeyPair(p.GetName())
 		if err != nil {
 			return errors.Wrapf(err, "couldn't make certificate for plugin %v", p.GetName())
 		}

@@ -17,7 +17,14 @@ limitations under the License.
 package operations
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"math/big"
+
+	"github.com/pkg/errors"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/loader"
@@ -49,5 +56,29 @@ func GeneratePluginManifest(cfg GenPluginConfig) ([]byte, error) {
 		return nil, fmt.Errorf("expected 1 plugin, got %v", len(plugins))
 	}
 
-	return plugins[0].FillTemplate(placeholderHostname)
+	cert, err := genCert()
+	if err != nil {
+		return nil, err
+	}
+
+	return plugins[0].FillTemplate(placeholderHostname, cert)
+}
+
+func genCert() (*tls.Certificate, error) {
+	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't generate private key")
+	}
+	tmpl := &x509.Certificate{
+		SerialNumber: big.NewInt(0),
+	}
+	certDER, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &privKey.PublicKey, privKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't create certificate")
+	}
+
+	return &tls.Certificate{
+		Certificate: [][]byte{certDER},
+		PrivateKey:  privKey,
+	}, nil
 }

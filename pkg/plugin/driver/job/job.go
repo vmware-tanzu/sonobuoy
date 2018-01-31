@@ -22,7 +22,6 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"time"
 
@@ -102,19 +101,7 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
 	}
 
-	cacert := ""
-	if len(cert.Certificate) >= 2 {
-		certDER := cert.Certificate[len(cert.Certificate)-1]
-		cacert = string(pem.EncodeToMemory(&pem.Block{
-			Type:  "Certificate",
-			Bytes: certDER,
-		}))
-	}
-
-	clientCert := string(pem.EncodeToMemory(&pem.Block{
-		Type:  "Certificate",
-		Bytes: cert.Leaf.Raw,
-	}))
+	cacert, clientCert := utils.GetCertPEM(cert)
 
 	vars := templateData{
 		PluginName:        p.Definition.Name,
