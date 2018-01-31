@@ -18,13 +18,13 @@ package daemonset
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/pkg/errors"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	v1 "k8s.io/api/core/v1"
@@ -89,8 +89,7 @@ func (p *Plugin) GetResultType() string {
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
 func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 	var b bytes.Buffer
-	// TODO (EKF): Should be YAML once we figure that out
-	container, err := json.Marshal(&p.Definition.Spec)
+	container, err := kuberuntime.Encode(manifest.Encoder, &p.Definition.Spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't reserialize container for daemonset %q", p.Definition.Name)
 	}
@@ -122,7 +121,7 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
 		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
 	}
 
-	// TODO(EKF): Move to v1 in 1.10
+	// TODO(EKF): Move to v1 in 1.11
 	if _, err := kubeclient.AppsV1beta2().DaemonSets(p.Namespace).Create(&daemonSet); err != nil {
 		return errors.Wrapf(err, "could not create DaemonSet for daemonset plugin %v", p.GetName())
 	}
@@ -143,7 +142,7 @@ func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
 	}
 
 	// Delete the DaemonSet created by this plugin
-	// TODO(EKF): Move to v1 in 1.10
+	// TODO(EKF): Move to v1 in 1.11
 	err := kubeclient.AppsV1beta2().DaemonSets(p.Namespace).DeleteCollection(
 		&deleteOptions,
 		listOptions,
@@ -161,7 +160,7 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 
 // findDaemonSet gets the daemonset that we created, using a kubernetes label search
 func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*appsv1beta2.DaemonSet, error) {
-	// TODO(EKF): Move to v1 in 1.10
+	// TODO(EKF): Move to v1 in 1.11
 	dsets, err := kubeclient.AppsV1beta2().DaemonSets(p.Namespace).List(p.listOptions())
 	if err != nil {
 		return nil, errors.WithStack(err)

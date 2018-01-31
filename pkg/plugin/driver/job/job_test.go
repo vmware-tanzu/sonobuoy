@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 
 	corev1 "k8s.io/api/core/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
@@ -15,8 +16,10 @@ func TestFillTemplate(t *testing.T) {
 	testJob := NewPlugin(plugin.Definition{
 		Name:       "test-job",
 		ResultType: "test-job-result",
-		Spec: corev1.Container{
-			Name: "producer-container",
+		Spec: manifest.Container{
+			Container: corev1.Container{
+				Name: "producer-container",
+			},
 		},
 	}, "test-namespace")
 

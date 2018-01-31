@@ -18,7 +18,6 @@ package job
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -32,6 +31,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 )
 
 // Plugin is a plugin driver that dispatches a single pod to the given
@@ -86,8 +86,8 @@ func (p *Plugin) GetResultType() string {
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
 func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 	var b bytes.Buffer
-	// TODO (EKF): Should be YAML once we figure that out
-	container, err := json.Marshal(&p.Definition.Spec)
+
+	container, err := kuberuntime.Encode(manifest.Encoder, &p.Definition.Spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
 	}
