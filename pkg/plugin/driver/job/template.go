@@ -1,10 +1,10 @@
 package job
 
 import (
-	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/heptio/sonobuoy/pkg/templates"
 )
 
-var jobTemplate = utils.NewTemplate("jobTemplate", `
+var jobTemplate = templates.NewTemplate("jobTemplate", `
 ---
 apiVersion: v1
 kind: Pod
