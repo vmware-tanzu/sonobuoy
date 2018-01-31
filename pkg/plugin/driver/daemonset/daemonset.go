@@ -18,7 +18,10 @@ package daemonset
 
 import (
 	"bytes"
+	"crypto"
+	"crypto/rsa"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"time"
@@ -36,6 +39,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 )
+
+const clientKeyName = "clientkey"
 
 // Plugin is a plugin driver that dispatches containers to each node,
 // expecting each pod to report to the master.
@@ -58,6 +63,7 @@ type templateData struct {
 	MasterAddress     string
 	CACert            string
 	ClientCert        string
+	SecretName        string
 }
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
@@ -121,6 +127,7 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 		MasterAddress:     getMasterAddress(hostname),
 		CACert:            cacert,
 		ClientCert:        clientCert,
+		SecretName:        p.getSecretName(),
 	}
 
 	if err := daemonSetTemplate.Execute(&b, vars); err != nil {
@@ -139,6 +146,10 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 	}
 	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &daemonSet); err != nil {
 		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
+	}
+
+	if err := p.createClientSecret(kubeclient, cert.PrivateKey); err != nil {
+		return errors.Wrapf(err, "couldn't create secret for Job plugin %v", p.GetName())
 	}
 
 	// TODO(EKF): Move to v1 in 1.11
@@ -176,6 +187,30 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: "sonobuoy-run=" + p.GetSessionID(),
 	}
+}
+
+func (p *Plugin) getSecretName() string {
+	return fmt.Sprintf("daemonset-%s-%s", p.GetName(), p.SessionID)
+}
+
+func (p *Plugin) createClientSecret(client kubernetes.Interface, key crypto.PrivateKey) error {
+	rsaKey, ok := key.(*rsa.PrivateKey)
+	if !ok {
+		return errors.New("private key not RSA")
+	}
+
+	bytes := x509.MarshalPKCS1PrivateKey(rsaKey)
+	secretName := p.getSecretName()
+
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: p.Namespace,
+		},
+		Data: map[string][]byte{clientKeyName: bytes},
+	}
+	_, err := client.CoreV1().Secrets(p.Namespace).Create(secret)
+	return errors.Wrap(err, "couldn't create TLS client secret")
 }
 
 // findDaemonSet gets the daemonset that we created, using a kubernetes label search

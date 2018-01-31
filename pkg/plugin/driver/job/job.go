@@ -18,7 +18,10 @@ package job
 
 import (
 	"bytes"
+	"crypto"
+	"crypto/rsa"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"time"
@@ -35,6 +38,8 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 )
+
+const clientKeyName = "clientkey"
 
 // Plugin is a plugin driver that dispatches a single pod to the given
 // kubernetes cluster
@@ -57,6 +62,7 @@ type templateData struct {
 	MasterAddress     string
 	CACert            string
 	ClientCert        string
+	SecretName        string
 }
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
@@ -119,6 +125,7 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 		MasterAddress:     getMasterAddress(hostname),
 		CACert:            cacert,
 		ClientCert:        clientCert,
+		SecretName:        p.getSecretName(),
 	}
 
 	if err := jobTemplate.Execute(&b, vars); err != nil {
@@ -141,6 +148,10 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 
 	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &job); err != nil {
 		return errors.Wrapf(err, "could not decode executed template into a Job for plugin %v", p.GetName())
+	}
+
+	if err := p.createClientSecret(kubeclient, cert.PrivateKey); err != nil {
+		return errors.Wrapf(err, "couldn't create secret for Job plugin %v", p.GetName())
 	}
 
 	if _, err := kubeclient.CoreV1().Pods(p.Namespace).Create(&job); err != nil {
@@ -214,6 +225,30 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: "sonobuoy-run=" + p.GetSessionID(),
 	}
+}
+
+func (p *Plugin) getSecretName() string {
+	return fmt.Sprintf("job-%s-%s", p.GetName(), p.SessionID)
+}
+
+func (p *Plugin) createClientSecret(client kubernetes.Interface, key crypto.PrivateKey) error {
+	rsaKey, ok := key.(*rsa.PrivateKey)
+	if !ok {
+		return errors.New("private key not RSA")
+	}
+
+	bytes := x509.MarshalPKCS1PrivateKey(rsaKey)
+	secretName := p.getSecretName()
+
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: p.Namespace,
+		},
+		Data: map[string][]byte{clientKeyName: bytes},
+	}
+	_, err := client.CoreV1().Secrets(p.Namespace).Create(secret)
+	return errors.Wrap(err, "couldn't create TLS client secret")
 }
 
 // findPod finds the pod created by this plugin, using a kubernetes label
