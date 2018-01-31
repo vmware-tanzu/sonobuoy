@@ -39,7 +39,10 @@ spec:
       value: {{.ResultType}}
     - name: CA_CERT
       value: |
-        {{.CACert}}
+        {{.CACert | indent 8}}
+    - name: CLIENT_CERT
+      value: |
+        {{.ClientCert | indent 8}}
     image: gcr.io/heptio-images/sonobuoy:master
     imagePullPolicy: Always
     name: sonobuoy-worker

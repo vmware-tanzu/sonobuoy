@@ -1,9 +1,12 @@
 package daemonset
 
 import (
+	"crypto/sha1"
+	"encoding/pem"
 	"fmt"
 	"testing"
 
+	"github.com/heptio/sonobuoy/pkg/backplane/ca"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 
@@ -24,8 +27,17 @@ func TestFillTemplate(t *testing.T) {
 		},
 	}, "test-namespace")
 
+	auth, err := ca.NewAuthority()
+	if err != nil {
+		t.Fatalf("couldn't make CA Authority %v", err)
+	}
+	clientCert, err := auth.ClientKey("test-job")
+	if err != nil {
+		t.Fatalf("couldn't make client certificate %v", err)
+	}
+
 	var daemonSet v1beta1.DaemonSet
-	b, err := testDaemonSet.FillTemplate("")
+	b, err := testDaemonSet.FillTemplate("", clientCert)
 	if err != nil {
 		t.Fatalf("Failed to fill template: %v", err)
 	}
@@ -58,4 +70,40 @@ func TestFillTemplate(t *testing.T) {
 			t.Errorf("Expected producer daemonSet to have name %v, got %v", expectedProducerName, containers[0].Name)
 		}
 	}
+
+	env := make(map[string]string)
+	for _, envVar := range daemonSet.Spec.Template.Spec.Containers[1].Env {
+		env[envVar.Name] = envVar.Value
+	}
+
+	for _, testCase := range []struct {
+		EnvVar      string
+		Fingerprint [sha1.Size]byte
+	}{
+		{
+			EnvVar:      "CA_CERT",
+			Fingerprint: sha1.Sum(auth.CACert().Raw),
+		},
+		{
+			EnvVar:      "CLIENT_CERT",
+			Fingerprint: sha1.Sum(clientCert.Leaf.Raw),
+		},
+	} {
+		caCertPEM, ok := env[testCase.EnvVar]
+		if !ok {
+			t.Fatalf("no env var %v", testCase.EnvVar)
+		}
+
+		caCertBlock, _ := pem.Decode([]byte(caCertPEM))
+		if caCertBlock == nil {
+			t.Fatal("No PEM block found.")
+		}
+
+		caCertFingerprint := sha1.Sum(caCertBlock.Bytes)
+
+		if caCertFingerprint != testCase.Fingerprint {
+			t.Errorf("%v fingerprint didn't match", testCase.EnvVar)
+		}
+	}
+
 }

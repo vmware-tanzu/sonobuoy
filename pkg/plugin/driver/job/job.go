@@ -99,8 +99,16 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 	cacert := ""
 	if len(cert.Certificate) >= 2 {
 		certDER := cert.Certificate[len(cert.Certificate)-1]
-		cacert = string(pem.EncodeToMemory(&pem.Block{Type: "Certificate", Bytes: certDER}))
+		cacert = string(pem.EncodeToMemory(&pem.Block{
+			Type:  "Certificate",
+			Bytes: certDER,
+		}))
 	}
+
+	clientCert := string(pem.EncodeToMemory(&pem.Block{
+		Type:  "Certificate",
+		Bytes: cert.Leaf.Raw,
+	}))
 
 	vars := templateData{
 		PluginName:        p.Definition.Name,
@@ -110,6 +118,7 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 		ProducerContainer: string(container),
 		MasterAddress:     getMasterAddress(hostname),
 		CACert:            cacert,
+		ClientCert:        clientCert,
 	}
 
 	if err := jobTemplate.Execute(&b, vars); err != nil {

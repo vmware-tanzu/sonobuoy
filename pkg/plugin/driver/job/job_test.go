@@ -73,22 +73,33 @@ func TestFillTemplate(t *testing.T) {
 		env[envVar.Name] = envVar.Value
 	}
 
-	caCertPEM, ok := env["CA_CERT"]
-	if !ok {
-		t.Fatalf("no env var CA_CERT")
+	for _, testCase := range []struct {
+		EnvVar      string
+		Fingerprint [sha1.Size]byte
+	}{
+		{
+			EnvVar:      "CA_CERT",
+			Fingerprint: sha1.Sum(auth.CACert().Raw),
+		},
+		{
+			EnvVar:      "CLIENT_CERT",
+			Fingerprint: sha1.Sum(clientCert.Leaf.Raw),
+		},
+	} {
+		caCertPEM, ok := env[testCase.EnvVar]
+		if !ok {
+			t.Fatalf("no env var %v", testCase.EnvVar)
+		}
+
+		caCertBlock, _ := pem.Decode([]byte(caCertPEM))
+		if caCertBlock == nil {
+			t.Fatal("No PEM block found.")
+		}
+
+		caCertFingerprint := sha1.Sum(caCertBlock.Bytes)
+
+		if caCertFingerprint != testCase.Fingerprint {
+			t.Errorf("%v fingerprint didn't match", testCase.EnvVar)
+		}
 	}
-
-	caCertBlock, _ := pem.Decode([]byte(caCertPEM))
-	if caCertBlock == nil {
-		t.Fatal("No PEM block found.")
-	}
-
-	caCertFingerprint := sha1.Sum(caCertBlock.Bytes)
-	expectedCaCertFingerprint := sha1.Sum(auth.CACert().Raw)
-
-	if caCertFingerprint != expectedCaCertFingerprint {
-		t.Errorf("CA_CERT fingerprint didn't match")
-
-	}
-
 }
