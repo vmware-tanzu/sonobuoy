@@ -50,7 +50,7 @@ func (s *Server) Client() *http.Client {
 	if s.auth == nil {
 		return s.Server.Client()
 	}
-	clientCert, err := s.auth.ClientKey("client1.local")
+	clientCert, err := s.auth.ClientKeyPair("client1.local")
 	if err != nil {
 		s.t.Fatalf("couldn't get client cert %v", err)
 	}

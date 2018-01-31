@@ -20,12 +20,16 @@ const (
 	caName   = "sonobuoy-ca"
 )
 
-var pkixName = pkix.Name{
-	Organization:       []string{"Heptio"},
-	OrganizationalUnit: []string{"sonobuoy"},
-	Country:            []string{"USA"},
-	Locality:           []string{"Seattle"},
-}
+var (
+	pkixName = pkix.Name{
+		Organization:       []string{"Heptio"},
+		OrganizationalUnit: []string{"sonobuoy"},
+		Country:            []string{"USA"},
+		Locality:           []string{"Seattle"},
+	}
+
+	randReader = rand.Reader
+)
 
 // Authority represents a root certificate authority that can issues
 // certificates to be used for Client certs.
@@ -35,8 +39,6 @@ type Authority struct {
 	cert       *x509.Certificate
 	lastSerial *big.Int
 }
-
-var randReader = rand.Reader
 
 // NewAuthority creates a new certificate authority. A new private key and root certificate will
 // be generated but not returned.
@@ -55,13 +57,15 @@ func NewAuthority() (*Authority, error) {
 		cert.Subject.CommonName = caName
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "couldn't create certificate authority root certificate")
 	}
 	auth.cert = cert
 	return auth, nil
 }
 
+// makeCert takes a public key and a function to mutate the certificate template with updated parameters
 func (a *Authority) makeCert(pub crypto.PublicKey, mut func(*x509.Certificate)) (*x509.Certificate, error) {
+
 	serialNumber := a.nextSerial()
 	validFrom := time.Now()
 	tmpl := x509.Certificate{
@@ -79,15 +83,30 @@ func (a *Authority) makeCert(pub crypto.PublicKey, mut func(*x509.Certificate)) 
 	if a.cert == nil {
 		parent = &tmpl
 	}
-	der, err := x509.CreateCertificate(randReader, &tmpl, parent, pub, a.privKey)
+
+	newDERCert, err := x509.CreateCertificate(randReader, &tmpl, parent, pub, a.privKey)
 	if err != nil {
-		return nil, errors.Wrap(err, "coouldn't make authority certificate")
+		return nil, errors.Wrap(err, "couldn't make new certificate")
 	}
-	cert, err := x509.ParseCertificate(der)
+
+	cert, err := x509.ParseCertificate(newDERCert)
+	return cert, errors.Wrap(err, "couldn't re-parse created certificate")
+}
+
+func (a *Authority) makeLeafCert(mut func(*x509.Certificate)) (*tls.Certificate, error) {
+	privKey, err := rsa.GenerateKey(randReader, rsaBits)
 	if err != nil {
-		return nil, errors.Wrap(err, "couldn't re-parse created certificate")
+		return nil, errors.Wrap(err, "couldn't generate private key")
 	}
-	return cert, nil
+
+	cert, err := a.makeCert(privKey.Public(), mut)
+
+	return &tls.Certificate{
+		Certificate: [][]byte{cert.Raw, a.cert.Raw},
+		PrivateKey:  privKey,
+		Leaf:        cert,
+	}, errors.Wrap(err, "couldn't make leaf cert")
+
 }
 
 func (a *Authority) nextSerial() *big.Int {
@@ -105,20 +124,17 @@ func (a *Authority) CACert() *x509.Certificate {
 	return a.cert
 }
 
+// CACertPool returns a CertPool prepopulated with the authority's certificate
 func (a *Authority) CACertPool() *x509.CertPool {
 	pool := x509.NewCertPool()
 	pool.AddCert(a.CACert())
 	return pool
 }
 
-// ServerKey makes a client cert signed by out root CA. The returned certificate
+// ServerKeyPair makes a client cert signed by out root CA. The returned certificate
 // has a chain including the root CA cert.
-func (a *Authority) ServerKey(name string) (*tls.Certificate, error) {
-	privKey, err := rsa.GenerateKey(randReader, rsaBits)
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't generate private key")
-	}
-	cert, err := a.makeCert(privKey.Public(), func(cert *x509.Certificate) {
+func (a *Authority) ServerKeyPair(name string) (*tls.Certificate, error) {
+	cert, err := a.makeLeafCert(func(cert *x509.Certificate) {
 		cert.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}
 		ip := net.ParseIP(name)
 		if ip != nil {
@@ -127,20 +143,13 @@ func (a *Authority) ServerKey(name string) (*tls.Certificate, error) {
 			cert.DNSNames = []string{name}
 		}
 	})
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't make server certificate")
-	}
-	return &tls.Certificate{
-		Certificate: [][]byte{cert.Raw, a.cert.Raw},
-		PrivateKey:  privKey,
-		Leaf:        cert,
-	}, nil
+	return cert, errors.Wrap(err, "couldn't make server certificate")
 }
 
 // MakeServerConfig makes a new server certificate, then returns a TLS config that uses it
 // and will verify peer certificates
 func (a *Authority) MakeServerConfig(name string) (*tls.Config, error) {
-	cert, err := a.ServerKey(name)
+	cert, err := a.ServerKeyPair(name)
 	if err != nil {
 		return nil, err
 	}
@@ -156,23 +165,12 @@ func (a *Authority) MakeServerConfig(name string) (*tls.Config, error) {
 	}, nil
 }
 
-// ClientKey makes a client cert signed by out root CA. The returned certificate
+// ClientKeyPair makes a client cert signed by out root CA. The returned certificate
 // has a chain including the root CA
-func (a *Authority) ClientKey(name string) (*tls.Certificate, error) {
-	privKey, err := rsa.GenerateKey(randReader, rsaBits)
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't generate private key")
-	}
-	cert, err := a.makeCert(privKey.Public(), func(cert *x509.Certificate) {
+func (a *Authority) ClientKeyPair(name string) (*tls.Certificate, error) {
+	cert, err := a.makeLeafCert(func(cert *x509.Certificate) {
 		cert.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}
 		cert.DNSNames = []string{name}
 	})
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't make server certificate")
-	}
-	return &tls.Certificate{
-		Certificate: [][]byte{cert.Raw, a.cert.Raw},
-		PrivateKey:  privKey,
-		Leaf:        cert,
-	}, nil
+	return cert, errors.Wrap(err, "couldn't make client certificate")
 }

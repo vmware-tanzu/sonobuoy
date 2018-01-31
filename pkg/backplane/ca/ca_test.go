@@ -36,7 +36,7 @@ func TestCA(t *testing.T) {
 	capool := auth.CACertPool()
 
 	srvName := "master.sonobuoy.local"
-	srvCert, err := auth.ServerKey(srvName)
+	srvCert, err := auth.ServerKeyPair(srvName)
 	if err != nil {
 		t.Errorf("couldn't get server cert")
 	} else {
@@ -52,7 +52,7 @@ func TestCA(t *testing.T) {
 	}
 
 	clientName := "worker1.sonobuoy.local"
-	clientCert, err := auth.ClientKey(clientName)
+	clientCert, err := auth.ClientKeyPair(clientName)
 
 	if err != nil {
 		t.Errorf("couldn't get server cert")
@@ -97,7 +97,7 @@ func TestServer(t *testing.T) {
 		t.Fatalf("made request without cert, should've gotten error")
 	}
 
-	clientCert, err := auth.ClientKey("client1.local")
+	clientCert, err := auth.ClientKeyPair("client1.local")
 	if err != nil {
 		t.Fatalf("couldn't get client cert %v", err)
 	}
