@@ -58,10 +58,15 @@ func LoadAllPlugins(namespace string, searchPath []string, selections []plugin.S
 
 	pluginDefinitions := []*manifest.Manifest{}
 	for _, file := range pluginDefinitionFiles {
-		pluginDefinition, err := loadDefinition(file)
+		definitionFile, err := loadDefinitionFromFile(file)
 		if err != nil {
-			return []plugin.Interface{}, errors.Wrapf(err, "couldn't load plugin definition %v", file)
+			return []plugin.Interface{}, errors.Wrapf(err, "couldn't load plugin definition file %v", file)
 		}
+		pluginDefinition, err := loadDefinition(definitionFile)
+		if err != nil {
+			return []plugin.Interface{}, errors.Wrapf(err, "couldn't load plugin definition for file %v", file)
+		}
+
 		pluginDefinitions = append(pluginDefinitions, pluginDefinition)
 	}
 
@@ -98,18 +103,15 @@ func findPlugins(dir string) ([]string, error) {
 	return plugins, nil
 }
 
-func loadDefinition(file string) (*manifest.Manifest, error) {
+func loadDefinitionFromFile(file string) ([]byte, error) {
 	bytes, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't open plugin definition %v", file)
-	}
+	return bytes, errors.Wrapf(err, "couldn't open plugin definition %v", file)
+}
 
+func loadDefinition(bytes []byte) (*manifest.Manifest, error) {
 	var def manifest.Manifest
-	if err = kuberuntime.DecodeInto(manifest.Decoder, bytes, &def); err != nil {
-		return nil, errors.Wrapf(err, "couldn't decode json for plugin definition %v", file)
-	}
-
-	return &def, nil
+	err := kuberuntime.DecodeInto(manifest.Decoder, bytes, &def)
+	return &def, errors.Wrap(err, "couldn't decode yaml for plugin definition")
 }
 
 func loadPlugin(def *manifest.Manifest, namespace string) (plugin.Interface, error) {

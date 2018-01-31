@@ -34,17 +34,22 @@ func TestFindPlugins(t *testing.T) {
 }
 
 func TestLoadNonexistentPlugin(t *testing.T) {
-	_, err := loadDefinition("non/existent/path")
+	_, err := loadDefinitionFromFile("non/existent/path")
 	if errors.Cause(err).Error() != "open non/existent/path: no such file or directory" {
 		t.Errorf("Expected ErrNotExist, got %v", errors.Cause(err))
 	}
 }
 
 func TestLoadValidPlugin(t *testing.T) {
-	jobDefFile := "testdata/plugin.d/job.yml"
+	jobDefFileName := "testdata/plugin.d/job.yml"
+	jobDefFile, err := loadDefinitionFromFile(jobDefFileName)
+	if err != nil {
+		t.Fatalf("Unexpected error reading job plugin: %v", err)
+	}
+
 	jobDef, err := loadDefinition(jobDefFile)
 	if err != nil {
-		t.Fatalf("Unexpected error creating job plugin: %v", err)
+		t.Fatalf("Unexpected error loading job plugin: %v", err)
 	}
 
 	if jobDef.SonobuoyConfig.Driver != "Job" {
@@ -58,10 +63,14 @@ func TestLoadValidPlugin(t *testing.T) {
 		t.Errorf("expected name gcr.io/heptio-images/heptio-e2e:master, got %q", jobDef.Spec.Image)
 	}
 
-	daemonDefFile := "testdata/plugin.d/daemonset.yaml"
+	daemonDefFileName := "testdata/plugin.d/daemonset.yaml"
+	daemonDefFile, err := loadDefinitionFromFile(daemonDefFileName)
+	if err != nil {
+		t.Fatalf("Unexpected error creating daemonset plugin: %v", err)
+	}
 	daemonDef, err := loadDefinition(daemonDefFile)
 	if err != nil {
-		t.Fatalf("Unexpected error creating job plugin: %v", err)
+		t.Fatalf("Unexpected error loading daemonset plugin: %v", err)
 	}
 
 	if daemonDef.SonobuoyConfig.Driver != "DaemonSet" {
