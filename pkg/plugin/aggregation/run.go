@@ -97,13 +97,16 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 	// 3. Launch each plugin, to dispatch workers which submit the results back
 	for _, p := range plugins {
-		logrus.Infof("Running (%v) plugin", p.GetName())
-		err := p.Run(client, cfg.AdvertiseAddress)
-		// Have the plugin monitor for errors
-		go p.Monitor(client, nodes.Items, monitorCh)
+		cert, err := auth.ClientKey(p.GetName())
 		if err != nil {
+			return errors.Wrapf(err, "couldn't make certificate for plugin %v", p.GetName())
+		}
+		logrus.Infof("Running (%v) plugin", p.GetName())
+		if err = p.Run(client, cfg.AdvertiseAddress, cert); err != nil {
 			return errors.Wrapf(err, "error running plugin %v", p.GetName())
 		}
+		// Have the plugin monitor for errors
+		go p.Monitor(client, nodes.Items, monitorCh)
 	}
 	// 4. Have the aggregator plumb results from each plugins' monitor function
 	go aggr.IngestResults(monitorCh)

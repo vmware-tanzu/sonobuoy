@@ -18,6 +18,8 @@ package job
 
 import (
 	"bytes"
+	"crypto/tls"
+	"encoding/pem"
 	"fmt"
 	"time"
 
@@ -53,6 +55,8 @@ type templateData struct {
 	Namespace         string
 	ProducerContainer string
 	MasterAddress     string
+	CACert            string
+	ClientCert        string
 }
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
@@ -84,12 +88,18 @@ func (p *Plugin) GetResultType() string {
 }
 
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
-func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
+func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error) {
 	var b bytes.Buffer
 
 	container, err := kuberuntime.Encode(manifest.Encoder, &p.Definition.Spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
+	}
+
+	cacert := ""
+	if len(cert.Certificate) >= 2 {
+		certDER := cert.Certificate[len(cert.Certificate)-1]
+		cacert = string(pem.EncodeToMemory(&pem.Block{Type: "Certificate", Bytes: certDER}))
 	}
 
 	vars := templateData{
@@ -98,7 +108,8 @@ func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 		SessionID:         p.SessionID,
 		Namespace:         p.Namespace,
 		ProducerContainer: string(container),
-		MasterAddress:     getMasterAddress(hostname), // TODO(EKF)
+		MasterAddress:     getMasterAddress(hostname),
+		CACert:            cacert,
 	}
 
 	if err := jobTemplate.Execute(&b, vars); err != nil {
@@ -108,12 +119,12 @@ func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 }
 
 // Run dispatches worker pods according to the Job's configuration.
-func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
+func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate) error {
 	var (
 		job v1.Pod
 	)
 
-	b, err := p.FillTemplate(hostname) // TODO EKF
+	b, err := p.FillTemplate(hostname, cert) // TODO EKF
 	if err != nil {
 		// Already wrapped sufficiently by FillTemplate
 		return errors.Wrapf(err, "failed to fill Job template for plugin %v", p.GetName())

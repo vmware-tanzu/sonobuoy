@@ -37,6 +37,9 @@ spec:
       value: '{{.MasterAddress}}'
     - name: RESULT_TYPE
       value: {{.ResultType}}
+    - name: CA_CERT
+      value: |
+        {{.CACert}}
     image: gcr.io/heptio-images/sonobuoy:master
     imagePullPolicy: Always
     name: sonobuoy-worker

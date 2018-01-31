@@ -1,9 +1,12 @@
 package job
 
 import (
+	"crypto/sha1"
+	"encoding/pem"
 	"fmt"
 	"testing"
 
+	"github.com/heptio/sonobuoy/pkg/backplane/ca"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 
@@ -23,8 +26,17 @@ func TestFillTemplate(t *testing.T) {
 		},
 	}, "test-namespace")
 
+	auth, err := ca.NewAuthority()
+	if err != nil {
+		t.Fatalf("couldn't make CA Authority %v", err)
+	}
+	clientCert, err := auth.ClientKey("test-job")
+	if err != nil {
+		t.Fatalf("couldn't make client certificate %v", err)
+	}
+
 	var pod corev1.Pod
-	b, err := testJob.FillTemplate("")
+	b, err := testJob.FillTemplate("", clientCert)
 	if err != nil {
 		t.Fatalf("Failed to fill template: %v", err)
 	}
@@ -55,4 +67,28 @@ func TestFillTemplate(t *testing.T) {
 			t.Errorf("Expected producer pod to have name %v, got %v", expectedProducerName, pod.Spec.Containers[0].Name)
 		}
 	}
+
+	env := make(map[string]string)
+	for _, envVar := range pod.Spec.Containers[1].Env {
+		env[envVar.Name] = envVar.Value
+	}
+
+	caCertPEM, ok := env["CA_CERT"]
+	if !ok {
+		t.Fatalf("no env var CA_CERT")
+	}
+
+	caCertBlock, _ := pem.Decode([]byte(caCertPEM))
+	if caCertBlock == nil {
+		t.Fatal("No PEM block found.")
+	}
+
+	caCertFingerprint := sha1.Sum(caCertBlock.Bytes)
+	expectedCaCertFingerprint := sha1.Sum(auth.CACert().Raw)
+
+	if caCertFingerprint != expectedCaCertFingerprint {
+		t.Errorf("CA_CERT fingerprint didn't match")
+
+	}
+
 }

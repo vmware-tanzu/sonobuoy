@@ -17,6 +17,7 @@ limitations under the License.
 package plugin
 
 import (
+	"crypto/tls"
 	"io"
 	"path"
 
@@ -30,7 +31,7 @@ import (
 type Interface interface {
 	// Run runs a plugin, declaring all resources it needs, and then
 	// returns.  It does not block and wait until the plugin has finished.
-	Run(kubeClient kubernetes.Interface, hostname string) error
+	Run(kubeClient kubernetes.Interface, hostname string, cert *tls.Certificate) error
 	// Cleanup cleans up all resources created by the plugin
 	Cleanup(kubeClient kubernetes.Interface)
 	// Monitor continually checks for problems in the resources created by a
@@ -42,7 +43,7 @@ type Interface interface {
 	// expect to submit.
 	ExpectedResults(nodes []v1.Node) []ExpectedResult
 	// FillTemplate fills the driver's internal template so it can be presented to users
-	FillTemplate(hostname string) ([]byte, error)
+	FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error)
 	// GetResultType returns the type of results for this plugin, typically
 	// the same as the plugin name.
 	GetResultType() string
