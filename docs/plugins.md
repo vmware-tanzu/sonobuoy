@@ -179,9 +179,9 @@ The current, default set of Sonobuoy plugins are available in the `plugins.d` di
 [6]: img/sonobuoy-plugins.png
 [7]: /pkg/plugin/driver
 [8]: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-[9]: /plugins.d/e2e.tmpl
+[9]: /plugins.d/e2e.yml
 [10]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#taints-and-tolerations-beta-feature
-[11]: /plugins.d/systemdlogs.yaml
+[11]: /plugins.d/systemd_logs.yaml
 [12]: /examples/quickstart.yaml
 [13]: https://github.com/heptio/sonobuoy-plugin-systemd-logs/blob/master/get_systemd_logs.sh
 [14]: /build
