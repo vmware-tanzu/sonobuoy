@@ -82,16 +82,18 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		doneAggr <- true
 	}()
 
-	tlsCfg, err := auth.MakeServerConfig(cfg.AdvertiseAddress)
+	// TODO (EKF): Do Uncomment when HTTPS is plumbed through
+	//tlsCfg, err := auth.MakeServerConfig(cfg.AdvertiseAddress)
 	if err != nil {
 		return errors.Wrap(err, "couldn't get a server certificate")
 	}
 
 	// 2. Launch the aggregation servers
 	srv := &http.Server{
-		Addr:      fmt.Sprintf("%s:%d", cfg.BindAddress, cfg.BindPort),
-		Handler:   NewHandler(aggr.HandleHTTPResult),
-		TLSConfig: tlsCfg,
+		Addr:    fmt.Sprintf("%s:%d", cfg.BindAddress, cfg.BindPort),
+		Handler: NewHandler(aggr.HandleHTTPResult),
+		// TODO (EKF): Do Uncomment when HTTPS is plumbed through
+		//TLSConfig: tlsCfg,
 	}
 
 	doneServ := make(chan error)
