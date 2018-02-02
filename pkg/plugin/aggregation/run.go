@@ -18,6 +18,7 @@ package aggregation
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -82,24 +83,28 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		doneAggr <- true
 	}()
 
-	// TODO (EKF): Do Uncomment when HTTPS is plumbed through
-	//tlsCfg, err := auth.MakeServerConfig(cfg.AdvertiseAddress)
+	// AdvertiseAddress often has a port, split this off if so
+	advertiseAddress := cfg.AdvertiseAddress
+	if host, _, err := net.SplitHostPort(cfg.AdvertiseAddress); err == nil {
+		advertiseAddress = host
+	}
+
+	tlsCfg, err := auth.MakeServerConfig(advertiseAddress)
 	if err != nil {
 		return errors.Wrap(err, "couldn't get a server certificate")
 	}
 
 	// 2. Launch the aggregation servers
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", cfg.BindAddress, cfg.BindPort),
-		Handler: NewHandler(aggr.HandleHTTPResult),
-		// TODO (EKF): Do Uncomment when HTTPS is plumbed through
-		//TLSConfig: tlsCfg,
+		Addr:      fmt.Sprintf("%s:%d", cfg.BindAddress, cfg.BindPort),
+		Handler:   NewHandler(aggr.HandleHTTPResult),
+		TLSConfig: tlsCfg,
 	}
 
 	doneServ := make(chan error)
 	go func() {
 		logrus.Infof("starting aggregation server on %s:%d", cfg.BindAddress, cfg.BindPort)
-		doneServ <- srv.ListenAndServe()
+		doneServ <- srv.ListenAndServeTLS("", "")
 	}()
 
 	// 3. Launch each plugin, to dispatch workers which submit the results back

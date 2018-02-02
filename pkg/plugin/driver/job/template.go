@@ -41,13 +41,15 @@ spec:
       value: |
         {{.CACert | indent 8}}
     - name: CLIENT_CERT
-      value: |
-        {{.ClientCert | indent 8}}
+      valueFrom:
+        secretKeyRef:
+          name: {{.SecretName}}
+          key: tls.crt
     - name: CLIENT_KEY
       valueFrom:
         secretKeyRef:
           name: {{.SecretName}}
-          key: clientkey
+          key: tls.key
     image: gcr.io/heptio-images/sonobuoy:master
     imagePullPolicy: Always
     name: sonobuoy-worker

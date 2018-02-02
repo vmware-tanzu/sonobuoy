@@ -120,6 +120,7 @@ type WorkerConfig struct {
 	ResultType string `json:"resulttype,omitempty" mapstructure:"resulttype"`
 	CACert     string `json:"cacert,omitempty" mapstructure:"cacert"`
 	ClientCert string `json:"clientcert,omitempty" mapstructure:"clientcert"`
+	ClientKey  string `json:"clientkey,omitempty" mapstructure:"clientkey"`
 }
 
 // ID returns a unique identifier for this expected result to distinguish it

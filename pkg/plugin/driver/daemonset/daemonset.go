@@ -18,11 +18,7 @@ package daemonset
 
 import (
 	"bytes"
-	"crypto"
-	"crypto/rsa"
 	"crypto/tls"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"time"
 
@@ -62,7 +58,6 @@ type templateData struct {
 	ProducerContainer string
 	MasterAddress     string
 	CACert            string
-	ClientCert        string
 	SecretName        string
 }
 
@@ -104,19 +99,7 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 		return nil, errors.Wrapf(err, "couldn't reserialize container for daemonset %q", p.Definition.Name)
 	}
 
-	cacert := ""
-	if len(cert.Certificate) >= 2 {
-		certDER := cert.Certificate[len(cert.Certificate)-1]
-		cacert = string(pem.EncodeToMemory(&pem.Block{
-			Type:  "Certificate",
-			Bytes: certDER,
-		}))
-	}
-
-	clientCert := string(pem.EncodeToMemory(&pem.Block{
-		Type:  "Certificate",
-		Bytes: cert.Leaf.Raw,
-	}))
+	cacert := utils.GetCACertPEM(cert)
 
 	vars := templateData{
 		PluginName:        p.Definition.Name,
@@ -126,7 +109,6 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 		ProducerContainer: string(container),
 		MasterAddress:     getMasterAddress(hostname),
 		CACert:            cacert,
-		ClientCert:        clientCert,
 		SecretName:        p.getSecretName(),
 	}
 
@@ -148,8 +130,13 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
 	}
 
-	if err := p.createClientSecret(kubeclient, cert.PrivateKey); err != nil {
-		return errors.Wrapf(err, "couldn't create secret for Job plugin %v", p.GetName())
+	secret, err := utils.MakeTLSSecret(cert, p.Namespace, p.getSecretName())
+	if err != nil {
+		return errors.Wrapf(err, "couldn't make secret for daemonset plugin %v", p.GetName())
+	}
+
+	if _, err := kubeclient.CoreV1().Secrets(p.Namespace).Create(secret); err != nil {
+		return errors.Wrapf(err, "couldn't create TLS secret for daemonset plugin %v", p.GetName())
 	}
 
 	// TODO(EKF): Move to v1 in 1.11
@@ -191,26 +178,6 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 
 func (p *Plugin) getSecretName() string {
 	return fmt.Sprintf("daemonset-%s-%s", p.GetName(), p.SessionID)
-}
-
-func (p *Plugin) createClientSecret(client kubernetes.Interface, key crypto.PrivateKey) error {
-	rsaKey, ok := key.(*rsa.PrivateKey)
-	if !ok {
-		return errors.New("private key not RSA")
-	}
-
-	bytes := x509.MarshalPKCS1PrivateKey(rsaKey)
-	secretName := p.getSecretName()
-
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: p.Namespace,
-		},
-		Data: map[string][]byte{clientKeyName: bytes},
-	}
-	_, err := client.CoreV1().Secrets(p.Namespace).Create(secret)
-	return errors.Wrap(err, "couldn't create TLS client secret")
 }
 
 // findDaemonSet gets the daemonset that we created, using a kubernetes label search
@@ -315,5 +282,5 @@ func (p *Plugin) GetName() string {
 }
 
 func getMasterAddress(hostname string) string {
-	return fmt.Sprintf("http://%s/api/v1/results/by-node", hostname)
+	return fmt.Sprintf("https://%s/api/v1/results/by-node", hostname)
 }

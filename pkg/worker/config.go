@@ -49,6 +49,10 @@ func LoadConfig() (*plugin.WorkerConfig, error) {
 	viper.BindEnv("resultsdir", "RESULTS_DIR")
 	viper.BindEnv("resulttype", "RESULT_TYPE")
 
+	viper.BindEnv("caCert", "CA_CERT")
+	viper.BindEnv("clientCert", "CLIENT_CERT")
+	viper.BindEnv("clientKey", "CLIENT_KEY")
+
 	setConfigDefaults(config)
 
 	if err = viper.Unmarshal(config); err != nil {

@@ -18,10 +18,7 @@ package job
 
 import (
 	"bytes"
-	"crypto"
-	"crypto/rsa"
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"time"
 
@@ -60,7 +57,6 @@ type templateData struct {
 	ProducerContainer string
 	MasterAddress     string
 	CACert            string
-	ClientCert        string
 	SecretName        string
 }
 
@@ -76,7 +72,7 @@ func NewPlugin(dfn plugin.Definition, namespace string) *Plugin {
 }
 
 func getMasterAddress(hostname string) string {
-	return fmt.Sprintf("http://%s/api/v1/results/global", hostname)
+	return fmt.Sprintf("https://%s/api/v1/results/global", hostname)
 }
 
 // ExpectedResults returns the list of results expected for this plugin. Since
@@ -101,7 +97,7 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
 	}
 
-	cacert, clientCert := utils.GetCertPEM(cert)
+	cacert := utils.GetCACertPEM(cert)
 
 	vars := templateData{
 		PluginName:        p.Definition.Name,
@@ -111,7 +107,6 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 		ProducerContainer: string(container),
 		MasterAddress:     getMasterAddress(hostname),
 		CACert:            cacert,
-		ClientCert:        clientCert,
 		SecretName:        p.getSecretName(),
 	}
 
@@ -137,8 +132,13 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 		return errors.Wrapf(err, "could not decode executed template into a Job for plugin %v", p.GetName())
 	}
 
-	if err := p.createClientSecret(kubeclient, cert.PrivateKey); err != nil {
-		return errors.Wrapf(err, "couldn't create secret for Job plugin %v", p.GetName())
+	secret, err := utils.MakeTLSSecret(cert, p.Namespace, p.getSecretName())
+	if err != nil {
+		return errors.Wrapf(err, "couldn't make secret for Job plugin %v", p.GetName())
+	}
+
+	if _, err := kubeclient.CoreV1().Secrets(p.Namespace).Create(secret); err != nil {
+		return errors.Wrapf(err, "couldn't create TLS secret for job plugin %v", p.GetName())
 	}
 
 	if _, err := kubeclient.CoreV1().Pods(p.Namespace).Create(&job); err != nil {
@@ -216,26 +216,6 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 
 func (p *Plugin) getSecretName() string {
 	return fmt.Sprintf("job-%s-%s", p.GetName(), p.SessionID)
-}
-
-func (p *Plugin) createClientSecret(client kubernetes.Interface, key crypto.PrivateKey) error {
-	rsaKey, ok := key.(*rsa.PrivateKey)
-	if !ok {
-		return errors.New("private key not RSA")
-	}
-
-	bytes := x509.MarshalPKCS1PrivateKey(rsaKey)
-	secretName := p.getSecretName()
-
-	secret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: p.Namespace,
-		},
-		Data: map[string][]byte{clientKeyName: bytes},
-	}
-	_, err := client.CoreV1().Secrets(p.Namespace).Create(secret)
-	return errors.Wrap(err, "couldn't create TLS client secret")
 }
 
 // findPod finds the pod created by this plugin, using a kubernetes label

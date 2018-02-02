@@ -123,5 +123,4 @@ func TestServer(t *testing.T) {
 	if string(respBody) != testString {
 		t.Errorf("expected %s, got %s", testString, respBody)
 	}
-
 }
