@@ -158,7 +158,7 @@ func getHTTPClient(cfg *plugin.WorkerConfig) (*http.Client, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't parse ClientCert")
 	}
-	clientKey, err := x509.ParsePKCS1PrivateKey(clientKeyDER.Bytes)
+	clientKey, err := x509.ParseECPrivateKey(clientKeyDER.Bytes)
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't parse ClientKey")
 	}
