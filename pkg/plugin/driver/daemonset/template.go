@@ -61,7 +61,7 @@ spec:
             secretKeyRef:
               name: {{.SecretName}}
               key: tls.key
-        image: gcr.io/heptio-images/sonobuoy:master
+        image: {{.SonobuoyImage}}
         imagePullPolicy: Always
         name: sonobuoy-worker
         volumeMounts:

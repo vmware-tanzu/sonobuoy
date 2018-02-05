@@ -31,8 +31,9 @@ import (
 )
 
 const (
-	placeholderHostname  = "<hostname>"
-	placeholderNamespace = "sonobuoy"
+	placeholderHostname      = "<hostname>"
+	placeholderNamespace     = "sonobuoy"
+	placeholderSonobuoyImage = "gcr.io/heptio-images/sonobuoy:master"
 )
 
 // GenPluginConfig are the input options for running
@@ -45,6 +46,7 @@ type GenPluginConfig struct {
 func GeneratePluginManifest(cfg GenPluginConfig) ([]byte, error) {
 	plugins, err := loader.LoadAllPlugins(
 		placeholderNamespace,
+		placeholderSonobuoyImage,
 		cfg.Paths,
 		[]plugin.Selection{{Name: cfg.PluginName}},
 	)

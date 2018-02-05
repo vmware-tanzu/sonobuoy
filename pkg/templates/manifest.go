@@ -98,7 +98,8 @@ data:
             "bindport": 8080,
             "timeoutseconds": 5400
         },
-        "Version": "v0.11.0"
+        "Version": "v0.11.0",
+        "WorkerImage": "{{.SonobuoyImage}}"
     }
 kind: ConfigMap
 metadata:

@@ -40,10 +40,11 @@ const clientKeyName = "clientkey"
 // Plugin is a plugin driver that dispatches a single pod to the given
 // kubernetes cluster
 type Plugin struct {
-	Definition plugin.Definition
-	SessionID  string
-	Namespace  string
-	cleanedUp  bool
+	Definition    plugin.Definition
+	SessionID     string
+	Namespace     string
+	SonobuoyImage string
+	cleanedUp     bool
 }
 
 // Ensure Plugin implements plugin.Interface
@@ -54,6 +55,7 @@ type templateData struct {
 	ResultType        string
 	SessionID         string
 	Namespace         string
+	SonobuoyImage     string
 	ProducerContainer string
 	MasterAddress     string
 	CACert            string
@@ -62,12 +64,13 @@ type templateData struct {
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address
-func NewPlugin(dfn plugin.Definition, namespace string) *Plugin {
+func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
 	return &Plugin{
-		Definition: dfn,
-		SessionID:  utils.GetSessionID(),
-		Namespace:  namespace,
-		cleanedUp:  false, // be explicit
+		Definition:    dfn,
+		SessionID:     utils.GetSessionID(),
+		Namespace:     namespace,
+		SonobuoyImage: sonobuoyImage,
+		cleanedUp:     false, // be explicit
 	}
 }
 
@@ -104,6 +107,7 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 		ResultType:        p.Definition.ResultType,
 		SessionID:         p.SessionID,
 		Namespace:         p.Namespace,
+		SonobuoyImage:     p.SonobuoyImage,
 		ProducerContainer: string(container),
 		MasterAddress:     getMasterAddress(hostname),
 		CACert:            cacert,

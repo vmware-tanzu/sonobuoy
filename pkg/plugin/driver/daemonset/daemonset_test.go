@@ -16,6 +16,11 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
+const (
+	expectedImageName = "gcr.io/heptio-image/sonobuoy:master"
+	expectedNamespace = "test-namespace"
+)
+
 func TestFillTemplate(t *testing.T) {
 	testDaemonSet := NewPlugin(plugin.Definition{
 		Name:       "test-plugin",
@@ -25,7 +30,7 @@ func TestFillTemplate(t *testing.T) {
 				Name: "producer-container",
 			},
 		},
-	}, "test-namespace")
+	}, expectedNamespace, expectedImageName)
 
 	auth, err := ca.NewAuthority()
 	if err != nil {
@@ -53,7 +58,6 @@ func TestFillTemplate(t *testing.T) {
 		t.Errorf("Expected daemonSet name %v, got %v", expectedName, daemonSet.Name)
 	}
 
-	expectedNamespace := "test-namespace"
 	if daemonSet.Namespace != expectedNamespace {
 		t.Errorf("Expected daemonSet namespace %v, got %v", expectedNamespace, daemonSet.Namespace)
 	}
@@ -67,7 +71,18 @@ func TestFillTemplate(t *testing.T) {
 		// Don't segfault if the count is incorrect
 		expectedProducerName := "producer-container"
 		if containers[0].Name != expectedProducerName {
-			t.Errorf("Expected producer daemonSet to have name %v, got %v", expectedProducerName, containers[0].Name)
+			t.Errorf(
+				"Expected producer pod to have name %v, got %v",
+				expectedProducerName,
+				containers[0].Name,
+			)
+		}
+		if containers[1].Image != expectedImageName {
+			t.Errorf(
+				"Expected consumer pod to have image %v, got %v",
+				expectedImageName,
+				containers[1].Image,
+			)
 		}
 	}
 
