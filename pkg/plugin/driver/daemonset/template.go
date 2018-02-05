@@ -1,10 +1,10 @@
 package daemonset
 
 import (
-	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/heptio/sonobuoy/pkg/templates"
 )
 
-var daemonSetTemplate = utils.NewTemplate("daemonTemplate", `
+var daemonSetTemplate = templates.NewTemplate("daemonTemplate", `
 ---
 apiVersion: extensions/v1beta1
 kind: DaemonSet

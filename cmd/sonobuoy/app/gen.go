@@ -17,9 +17,11 @@ limitations under the License.
 package app
 
 import (
+	"fmt"
 	"os"
 
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -35,18 +37,28 @@ var GenCommand = &cobra.Command{
 }
 
 func init() {
-
 	GenCommand.PersistentFlags().StringVar(
 		&genopts.Path, "path", "./",
 		"TBD: location to output",
 	)
-	// TODO: Other options?
+
+	GenCommand.PersistentFlags().StringVar(
+		&genopts.Image, "sonobuoy-image",
+		"gcr.io/heptio-images/sonobuoy:latest",
+		"The Docker image (as a registry URL) to use for the Sonobuoy controller",
+	)
+
+	mode.AddFlag(&genopts.ModeName, GenCommand)
+
 	RootCmd.AddCommand(GenCommand)
 }
 
 func genManifest(cmd *cobra.Command, args []string) {
 	code := 0
-	if err := ops.GenerateManifest(genopts); err != nil {
+	bytes, err := ops.GenerateManifest(genopts)
+	if err == nil {
+		fmt.Printf("%s\n", bytes)
+	} else {
 		errlog.LogError(errors.Wrap(err, "error attempting to generate sonobuoy manifest"))
 		code = 1
 	}
