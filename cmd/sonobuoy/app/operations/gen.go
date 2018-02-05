@@ -17,20 +17,52 @@ limitations under the License.
 package operations
 
 import (
-	"errors"
+	"bytes"
+	"encoding/json"
+	"fmt"
+
+	"github.com/pkg/errors"
+
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
+	"github.com/heptio/sonobuoy/pkg/templates"
 )
 
 // GenConfig are the input options for running
 // TODO: Figure out chained subcommands or how to share input options from RunConfig
 type GenConfig struct {
-	Path string
-	opts RunConfig
+	Path     string
+	ModeName mode.Name
+	Image    string
 }
 
-func GenerateManifest(cfg GenConfig) error {
-	// Do the following:
-	// 1. Walk through the run options and create utility functions that generate objects based on input option
-	// 2. append objects to an array
-	// 3. Serialize the array to the path provided
-	return errors.New("not implemented")
+type templateValues struct {
+	E2EFocus       string
+	PluginSelector string
+	SonobuoyImage  string
+}
+
+// GenerateManifest fills in a template with a Sonobuoy config
+func GenerateManifest(cfg GenConfig) ([]byte, error) {
+	mode := cfg.ModeName.Get()
+	if mode == nil {
+		return nil, fmt.Errorf("unknown mode: %q", cfg.ModeName.String())
+	}
+	marshalledSelector, err := json.Marshal(mode.Selectors)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't marshall selector")
+	}
+
+	tmplVals := &templateValues{
+		E2EFocus:       mode.E2EFocus,
+		PluginSelector: string(marshalledSelector),
+		SonobuoyImage:  cfg.Image,
+	}
+
+	var buf bytes.Buffer
+
+	if err := templates.Manifest.Execute(&buf, tmplVals); err != nil {
+		return nil, errors.Wrap(err, "couldn't execute manifest template")
+	}
+
+	return buf.Bytes(), nil
 }
