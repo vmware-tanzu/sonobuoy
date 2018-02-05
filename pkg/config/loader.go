@@ -121,19 +121,23 @@ func (cfg *Config) Validate() (errors []error) {
 	return errors
 }
 
-// LoadClient creates a kube-clientset, using given sonobuoy configuration
-func LoadClient(cfg *Config) (kubernetes.Interface, error) {
-	var config *rest.Config
-	var err error
-
+func LoadClientConfig(cfg *Config) (*rest.Config, error) {
 	// 1 - gather config information used to initialize
 	kubeconfig := viper.GetString("kubeconfig")
 	if len(kubeconfig) > 0 {
 		cfg.Kubeconfig = kubeconfig
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-	} else {
-		config, err = rest.InClusterConfig()
+		// TODO EKF Wrap
+		return clientcmd.BuildConfigFromFlags("", kubeconfig)
 	}
+	// TODO EKF Wrap
+	return rest.InClusterConfig()
+
+}
+
+// LoadClient creates a kube-clientset, using given sonobuoy configuration
+func LoadClient(cfg *Config) (kubernetes.Interface, error) {
+
+	config, err := LoadClientConfig(cfg)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
