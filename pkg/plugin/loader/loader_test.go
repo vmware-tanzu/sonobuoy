@@ -86,6 +86,7 @@ func TestLoadValidPlugin(t *testing.T) {
 
 func TestLoadJobPlugin(t *testing.T) {
 	namespace := "loader_test"
+	image := "gcr.io/heptio-images/sonobuoy:latest"
 	jobDef := &manifest.Manifest{
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			Driver:     "Job",
@@ -98,7 +99,7 @@ func TestLoadJobPlugin(t *testing.T) {
 		},
 	}
 
-	pluginIface, err := loadPlugin(jobDef, namespace)
+	pluginIface, err := loadPlugin(jobDef, namespace, image)
 	if err != nil {
 		t.Fatalf("unexpected error loading plugin: %v", err)
 	}
@@ -123,6 +124,7 @@ func TestLoadJobPlugin(t *testing.T) {
 
 func TestLoadDaemonSet(t *testing.T) {
 	namespace := "loader_test"
+	image := "gcr.io/heptio-images/sonobuoy:latest"
 	daemonDef := &manifest.Manifest{
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			Driver:     "DaemonSet",
@@ -135,7 +137,7 @@ func TestLoadDaemonSet(t *testing.T) {
 		},
 	}
 
-	pluginIface, err := loadPlugin(daemonDef, namespace)
+	pluginIface, err := loadPlugin(daemonDef, namespace, image)
 	if err != nil {
 		t.Fatalf("unexpected error loading plugin: %v", err)
 	}

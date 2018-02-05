@@ -23,6 +23,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -67,6 +68,7 @@ func NewHandler(resultsCallback func(*plugin.Result, http.ResponseWriter)) http.
 }
 
 func (h *Handler) resultsHandler(w http.ResponseWriter, r *http.Request) {
+	logRequest(r)
 	vars := mux.Vars(r)
 
 	result := &plugin.Result{
@@ -118,4 +120,16 @@ func GlobalResultURL(baseURL, pluginName string) (string, error) {
 	path.Host = base.Host
 	return path.String(), nil
 
+}
+
+func logRequest(req *http.Request) {
+	vars := mux.Vars(req)
+	log := logrus.WithField("plugin_name", vars["plugin"])
+	if node := vars["node"]; node != "" {
+		log = log.WithField("node", node)
+	}
+	if req.TLS != nil && len(req.TLS.PeerCertificates) > 0 {
+		log = log.WithField("client_cert", req.TLS.PeerCertificates[0].Subject.CommonName)
+	}
+	log.Info("received aggregator request")
 }

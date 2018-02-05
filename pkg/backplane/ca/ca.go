@@ -174,7 +174,7 @@ func (a *Authority) MakeServerConfig(name string) (*tls.Config, error) {
 func (a *Authority) ClientKeyPair(name string) (*tls.Certificate, error) {
 	cert, err := a.makeLeafCert(func(cert *x509.Certificate) {
 		cert.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}
-		cert.DNSNames = []string{name}
+		cert.Subject.CommonName = name
 	})
 	return cert, errors.Wrap(err, "couldn't make client certificate")
 }

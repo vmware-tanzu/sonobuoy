@@ -56,7 +56,7 @@ data:
             "Namespaces": ".*"
         },
         "PluginNamespace": "heptio-sonobuoy",
-        "Plugins": [{{.PluginSelector}}],
+        "Plugins": {{.PluginSelector}},
         "Resources": [
             "CertificateSigningRequests",
             "ClusterRoleBindings",
