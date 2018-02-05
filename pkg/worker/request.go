@@ -24,6 +24,7 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
+	"github.com/sethgrid/pester"
 )
 
 // DoRequest calls the given callback which returns an io.Reader, and submits
@@ -33,7 +34,7 @@ import (
 // come.)
 func DoRequest(url string, client *http.Client, callback func() (io.Reader, string, error)) error {
 	input, mimeType, err := callback()
-	//pesterClient := pester.NewExtendedClient(client)
+	pesterClient := pester.NewExtendedClient(client)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "error gathering host data"))
 
@@ -53,7 +54,7 @@ func DoRequest(url string, client *http.Client, callback func() (io.Reader, stri
 		}
 
 		// And if we can't even do that, log it.
-		resp, err := client.Do(req) //pesterClient.Do(req)
+		resp, err := pesterClient.Do(req)
 		if err != nil || resp.StatusCode != http.StatusOK {
 			errlog.LogError(errors.Wrapf(err, "could not send error message to master URL (%v)", url))
 		}
