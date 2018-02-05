@@ -18,12 +18,14 @@ package operations
 
 import (
 	"errors"
+
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
 )
 
 // RunConfig are the input options for running
 // TODO: We should expose FOCUS and other options with sane defaults
 type RunConfig struct {
-	Mode string
+	Mode mode.Name
 }
 
 func Run(cfg RunConfig) error {

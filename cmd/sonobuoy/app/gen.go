@@ -20,11 +20,13 @@ import (
 	"fmt"
 	"os"
 
-	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
-	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
-	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
+	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/image"
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
+	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
 var genopts ops.GenConfig
@@ -37,17 +39,7 @@ var GenCommand = &cobra.Command{
 }
 
 func init() {
-	GenCommand.PersistentFlags().StringVar(
-		&genopts.Path, "path", "./",
-		"TBD: location to output",
-	)
-
-	GenCommand.PersistentFlags().StringVar(
-		&genopts.Image, "sonobuoy-image",
-		"gcr.io/heptio-images/sonobuoy:latest",
-		"The Docker image (as a registry URL) to use for the Sonobuoy controller",
-	)
-
+	image.AddFlag(&genopts.Image, GenCommand)
 	mode.AddFlag(&genopts.ModeName, GenCommand)
 
 	RootCmd.AddCommand(GenCommand)

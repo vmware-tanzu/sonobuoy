@@ -23,6 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/image"
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/templates"
@@ -31,9 +32,8 @@ import (
 // GenConfig are the input options for running
 // TODO: Figure out chained subcommands or how to share input options from RunConfig
 type GenConfig struct {
-	Path     string
 	ModeName mode.Name
-	Image    string
+	Image    image.ID
 }
 
 type templateValues struct {
@@ -57,7 +57,7 @@ func GenerateManifest(cfg GenConfig) ([]byte, error) {
 	tmplVals := &templateValues{
 		E2EFocus:       mode.E2EFocus,
 		PluginSelector: string(marshalledSelector),
-		SonobuoyImage:  cfg.Image,
+		SonobuoyImage:  cfg.Image.String(),
 		Version:        buildinfo.Version,
 	}
 

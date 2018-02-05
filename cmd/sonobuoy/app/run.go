@@ -20,6 +20,7 @@ import (
 	"os"
 
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -33,10 +34,8 @@ func init() {
 		Short: "Submits a sonobuoy run",
 		Run:   submitSonobuoyRun,
 	}
-	cmd.PersistentFlags().StringVar(
-		&runopts.Mode, "mode", "Conformance",
-		"TBD: Update description on different run modes (quick|conformance|extended)",
-	)
+	mode.AddFlag(&runopts.Mode, cmd)
+
 	// TODO: We should expose FOCUS and other options with sane defaults
 	RootCmd.AddCommand(cmd)
 }
