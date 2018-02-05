@@ -17,8 +17,9 @@ limitations under the License.
 package operations
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -67,7 +68,7 @@ func GeneratePluginManifest(cfg GenPluginConfig) ([]byte, error) {
 }
 
 func genCert() (*tls.Certificate, error) {
-	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't generate private key")
 	}
