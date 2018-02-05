@@ -17,23 +17,19 @@ limitations under the License.
 package operations
 
 import (
-	"errors"
-
-	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
+	"github.com/pkg/errors"
 )
 
 // RunConfig are the input options for running
 // TODO: We should expose FOCUS and other options with sane defaults
 type RunConfig struct {
-	Mode mode.Name
+	GenConfig
 }
 
 func Run(cfg RunConfig) error {
-	// Do the following:
-	// 1. Validate mode of input
-	// 2. Pull the api-settings in order to generate the correct .yaml
-	// 3. Generate the yaml, follow kubeadm as a pattern here, and we may want to
-	//    subst the params that plumb all the way through.
-	// 4. Submit the .yaml - Here is where it will get weird b/c you you may need to submit the resources separately b
-	return errors.New("not implemented")
+	yaml, err := GenerateManifest(cfg.GenConfig)
+	if err != nil {
+		return errors.Wrap(err, "couldn't run invalid manifest")
+	}
+	return nil
 }
