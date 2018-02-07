@@ -33,6 +33,9 @@ BUILD_IMAGE ?= gcr.io/heptio-images/golang:1.9-alpine3.6
 BUILDCMD = go build -o $(TARGET) $(VERBOSE_FLAG) -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION) -X github.com/heptio/sonobuoy/pkg/buildinfo.DockerImage=$(REGISTRY)/$(TARGET):$(GIT_REF)"
 BUILD = $(BUILDCMD) $(GOTARGET)
 
+GOINSTALL = go install $(GOTARGET)
+GENERATE_CMD=sonobuoy gen --sonobuoy-image $(IMAGE):master
+
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
 TEST_CMD = go test $(TESTARGS)
@@ -95,3 +98,6 @@ clean:
 	rm -f $(TARGET)
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET) || true
 
+generate:
+	$(DOCKER_BUILD) '$(GOINSTALL) && $(GENERATE_CMD) --mode quick' > examples/quickstart.yaml
+	$(DOCKER_BUILD) '$(GOINSTALL) && $(GENERATE_CMD) --mode conformance' > examples/conformance.yaml

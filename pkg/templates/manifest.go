@@ -98,7 +98,7 @@ data:
             "bindport": 8080,
             "timeoutseconds": 5400
         },
-        "Version": "{{.Version}}",
+        "Version": "0.11.0",{{/* TODO(EKF): Should be buildinfo.Version, when that's set*/}}
         "WorkerImage": "{{.SonobuoyImage}}"
     }
 kind: ConfigMap
