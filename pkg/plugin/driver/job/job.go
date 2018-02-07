@@ -126,7 +126,7 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 		job v1.Pod
 	)
 
-	b, err := p.FillTemplate(hostname, cert) // TODO EKF
+	b, err := p.FillTemplate(hostname, cert)
 	if err != nil {
 		// Already wrapped sufficiently by FillTemplate
 		return errors.Wrapf(err, "failed to fill Job template for plugin %v", p.GetName())
@@ -219,7 +219,7 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 }
 
 func (p *Plugin) getSecretName() string {
-	return fmt.Sprintf("job-%s-%s", p.GetName(), p.SessionID)
+	return fmt.Sprintf("job-%s-%s", p.GetName(), p.GetSessionID())
 }
 
 // findPod finds the pod created by this plugin, using a kubernetes label

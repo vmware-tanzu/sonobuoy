@@ -168,7 +168,7 @@ func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
 		listOptions,
 	)
 	if err != nil {
-		errlog.LogError(errors.Wrapf(err, "could not delete DaemonSet-%v for daemonset plugin %v", p.SessionID, p.GetName()))
+		errlog.LogError(errors.Wrapf(err, "could not delete DaemonSet-%v for daemonset plugin %v", p.GetSessionID(), p.GetName()))
 	}
 }
 

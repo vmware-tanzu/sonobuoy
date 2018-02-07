@@ -103,7 +103,10 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 	doneServ := make(chan error)
 	go func() {
-		logrus.Infof("starting aggregation server on %s:%d", cfg.BindAddress, cfg.BindPort)
+		logrus.WithFields(logrus.Fields{
+			"address": cfg.BindAddress,
+			"port":    cfg.BindPort,
+		}).Info("starting aggregation server")
 		doneServ <- srv.ListenAndServeTLS("", "")
 	}()
 
@@ -113,7 +116,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		if err != nil {
 			return errors.Wrapf(err, "couldn't make certificate for plugin %v", p.GetName())
 		}
-		logrus.Infof("Running (%v) plugin", p.GetName())
+		logrus.WithField("plugin", p.GetName()).Info("Running plugin")
 		if err = p.Run(client, cfg.AdvertiseAddress, cert); err != nil {
 			return errors.Wrapf(err, "error running plugin %v", p.GetName())
 		}
