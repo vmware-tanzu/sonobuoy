@@ -95,7 +95,7 @@ data:
             "bindport": 8080,
             "timeoutseconds": 5400
         },
-        "Version": "",
+        "Version": "0.11.0",
         "WorkerImage": "gcr.io/heptio-images/sonobuoy:master"
     }
 kind: ConfigMap
