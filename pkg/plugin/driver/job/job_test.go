@@ -1,15 +1,23 @@
 package job
 
 import (
+	"crypto/sha1"
+	"encoding/pem"
 	"fmt"
 	"testing"
 
+	"github.com/heptio/sonobuoy/pkg/backplane/ca"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 
 	corev1 "k8s.io/api/core/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+)
+
+const (
+	expectedImageName = "gcr.io/heptio-image/sonobuoy:master"
+	expectedNamespace = "test-namespace"
 )
 
 func TestFillTemplate(t *testing.T) {
@@ -21,10 +29,19 @@ func TestFillTemplate(t *testing.T) {
 				Name: "producer-container",
 			},
 		},
-	}, "test-namespace")
+	}, expectedNamespace, expectedImageName)
+
+	auth, err := ca.NewAuthority()
+	if err != nil {
+		t.Fatalf("couldn't make CA Authority %v", err)
+	}
+	clientCert, err := auth.ClientKeyPair("test-job")
+	if err != nil {
+		t.Fatalf("couldn't make client certificate %v", err)
+	}
 
 	var pod corev1.Pod
-	b, err := testJob.FillTemplate("")
+	b, err := testJob.FillTemplate("", clientCert)
 	if err != nil {
 		t.Fatalf("Failed to fill template: %v", err)
 	}
@@ -40,7 +57,6 @@ func TestFillTemplate(t *testing.T) {
 		t.Errorf("Expected pod name %v, got %v", expectedName, pod.Name)
 	}
 
-	expectedNamespace := "test-namespace"
 	if pod.Namespace != expectedNamespace {
 		t.Errorf("Expected pod namespace %v, got %v", expectedNamespace, pod.Namespace)
 	}
@@ -52,7 +68,39 @@ func TestFillTemplate(t *testing.T) {
 		// Don't segfault if the count is incorrect
 		expectedProducerName := "producer-container"
 		if pod.Spec.Containers[0].Name != expectedProducerName {
-			t.Errorf("Expected producer pod to have name %v, got %v", expectedProducerName, pod.Spec.Containers[0].Name)
+			t.Errorf(
+				"Expected producer pod to have name %v, got %v",
+				expectedProducerName,
+				pod.Spec.Containers[0].Name,
+			)
 		}
+
+		if pod.Spec.Containers[1].Image != expectedImageName {
+			t.Errorf(
+				"Expected consumer pod to have image %v, got %v",
+				expectedImageName,
+				pod.Spec.Containers[1].Image,
+			)
+		}
+	}
+
+	env := make(map[string]string)
+	for _, envVar := range pod.Spec.Containers[1].Env {
+		env[envVar.Name] = envVar.Value
+	}
+
+	caCertPEM, ok := env["CA_CERT"]
+	if !ok {
+		t.Fatal("no env var CA_CERT")
+	}
+	caCertBlock, _ := pem.Decode([]byte(caCertPEM))
+	if caCertBlock == nil {
+		t.Fatal("No PEM block found.")
+	}
+
+	caCertFingerprint := sha1.Sum(caCertBlock.Bytes)
+
+	if caCertFingerprint != sha1.Sum(auth.CACert().Raw) {
+		t.Errorf("CA_CERT fingerprint didn't match")
 	}
 }

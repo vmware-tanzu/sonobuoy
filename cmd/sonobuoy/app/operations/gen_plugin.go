@@ -17,15 +17,24 @@ limitations under the License.
 package operations
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"math/big"
+
+	"github.com/pkg/errors"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/loader"
 )
 
 const (
-	placeholderHostname  = "<hostname>"
-	placeholderNamespace = "sonobuoy"
+	placeholderHostname      = "<hostname>"
+	placeholderNamespace     = "sonobuoy"
+	placeholderSonobuoyImage = "gcr.io/heptio-images/sonobuoy:master"
 )
 
 // GenPluginConfig are the input options for running
@@ -38,6 +47,7 @@ type GenPluginConfig struct {
 func GeneratePluginManifest(cfg GenPluginConfig) ([]byte, error) {
 	plugins, err := loader.LoadAllPlugins(
 		placeholderNamespace,
+		placeholderSonobuoyImage,
 		cfg.Paths,
 		[]plugin.Selection{{Name: cfg.PluginName}},
 	)
@@ -49,5 +59,29 @@ func GeneratePluginManifest(cfg GenPluginConfig) ([]byte, error) {
 		return nil, fmt.Errorf("expected 1 plugin, got %v", len(plugins))
 	}
 
-	return plugins[0].FillTemplate(placeholderHostname)
+	cert, err := genCert()
+	if err != nil {
+		return nil, err
+	}
+
+	return plugins[0].FillTemplate(placeholderHostname, cert)
+}
+
+func genCert() (*tls.Certificate, error) {
+	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't generate private key")
+	}
+	tmpl := &x509.Certificate{
+		SerialNumber: big.NewInt(0),
+	}
+	certDER, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &privKey.PublicKey, privKey)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't create certificate")
+	}
+
+	return &tls.Certificate{
+		Certificate: [][]byte{certDER},
+		PrivateKey:  privKey,
+	}, nil
 }

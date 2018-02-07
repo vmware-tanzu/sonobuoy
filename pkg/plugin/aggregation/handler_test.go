@@ -20,10 +20,10 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 
+	"github.com/heptio/sonobuoy/pkg/backplane/ca/authtest"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 )
 
@@ -46,7 +46,7 @@ func TestStart(t *testing.T) {
 		checkins[checkin.Path()] = checkin
 	})
 
-	srv := httptest.NewServer(h)
+	srv := authtest.NewTLSServer(h, t)
 	defer srv.Close()
 
 	// Expect a 404 and no results

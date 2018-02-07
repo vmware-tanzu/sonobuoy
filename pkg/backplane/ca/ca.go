@@ -2,8 +2,9 @@ package ca
 
 import (
 	"crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -37,7 +38,7 @@ var (
 // Sonobuoy issues every worker a client certificate
 type Authority struct {
 	sync.Mutex
-	privKey    *rsa.PrivateKey
+	privKey    *ecdsa.PrivateKey
 	cert       *x509.Certificate
 	lastSerial *big.Int
 }
@@ -45,8 +46,7 @@ type Authority struct {
 // NewAuthority creates a new certificate authority. A new private key and root certificate will
 // be generated but not returned.
 func NewAuthority() (*Authority, error) {
-
-	privKey, err := rsa.GenerateKey(randReader, rsaBits)
+	privKey, err := ecdsa.GenerateKey(elliptic.P256(), randReader)
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't generate private key")
 	}
@@ -96,7 +96,7 @@ func (a *Authority) makeCert(pub crypto.PublicKey, mut func(*x509.Certificate)) 
 }
 
 func (a *Authority) makeLeafCert(mut func(*x509.Certificate)) (*tls.Certificate, error) {
-	privKey, err := rsa.GenerateKey(randReader, rsaBits)
+	privKey, err := ecdsa.GenerateKey(elliptic.P256(), randReader)
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't generate private key")
 	}
@@ -174,7 +174,7 @@ func (a *Authority) MakeServerConfig(name string) (*tls.Config, error) {
 func (a *Authority) ClientKeyPair(name string) (*tls.Certificate, error) {
 	cert, err := a.makeLeafCert(func(cert *x509.Certificate) {
 		cert.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}
-		cert.DNSNames = []string{name}
+		cert.Subject.CommonName = name
 	})
 	return cert, errors.Wrap(err, "couldn't make client certificate")
 }

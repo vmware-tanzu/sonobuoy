@@ -24,12 +24,12 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/heptio/sonobuoy/pkg/backplane/ca/authtest"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 	"github.com/heptio/sonobuoy/pkg/worker"
@@ -59,7 +59,7 @@ func TestStress(t *testing.T) {
 	// Launch the aggregator and server
 	aggr := aggregation.NewAggregator(dir+"/results", expected)
 	handler := aggregation.NewHandler(aggr.HandleHTTPResult)
-	srv := httptest.NewServer(handler)
+	srv := authtest.NewTLSServer(handler, t)
 
 	stopCh := make(chan bool)
 	timeoutCh := make(chan bool, 1)

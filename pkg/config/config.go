@@ -129,6 +129,11 @@ type Config struct {
 	PluginSearchPath []string                 `json:"PluginSearchPath" mapstructure:"PluginSearchPath"`
 	PluginNamespace  string                   `json:"PluginNamespace" mapstructure:"PluginNamespace"`
 	LoadedPlugins    []plugin.Interface       // this is assigned when plugins are loaded.
+
+	///////////////////////////////////////////////
+	// sonobuoy configuration
+	///////////////////////////////////////////////
+	WorkerImage string `json:"WorkerImage" mapstructure:"workerImage"`
 }
 
 // LimitConfig is a configuration on the limits of sizes of various responses.
@@ -232,6 +237,8 @@ func NewWithDefaults() *Config {
 		"/etc/sonobuoy/plugins.d",
 		"~/sonobuoy/plugins.d",
 	}
+
+	cfg.WorkerImage = "gcr.io/heptio-images/sonobuoy:latest"
 
 	return &cfg
 }

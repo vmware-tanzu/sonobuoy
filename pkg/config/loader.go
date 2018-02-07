@@ -153,7 +153,12 @@ func loadAllPlugins(cfg *Config) error {
 	var plugins []plugin.Interface
 
 	// Load all Plugins
-	plugins, err := pluginloader.LoadAllPlugins(cfg.PluginNamespace, cfg.PluginSearchPath, cfg.PluginSelections)
+	plugins, err := pluginloader.LoadAllPlugins(
+		cfg.PluginNamespace,
+		cfg.WorkerImage,
+		cfg.PluginSearchPath,
+		cfg.PluginSelections,
+	)
 	if err != nil {
 		return err
 	}

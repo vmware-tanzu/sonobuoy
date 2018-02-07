@@ -56,7 +56,7 @@ data:
             "Namespaces": ".*"
         },
         "PluginNamespace": "heptio-sonobuoy",
-        "Plugins": [{{.PluginSelector}}],
+        "Plugins": {{.PluginSelector}},
         "Resources": [
             "CertificateSigningRequests",
             "ClusterRoleBindings",
@@ -98,7 +98,8 @@ data:
             "bindport": 8080,
             "timeoutseconds": 5400
         },
-        "Version": "v0.11.0"
+        "Version": "{{.Version}}",
+        "WorkerImage": "{{.SonobuoyImage}}"
     }
 kind: ConfigMap
 metadata:

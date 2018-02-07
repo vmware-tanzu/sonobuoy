@@ -20,12 +20,12 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path"
 	"testing"
 
+	"github.com/heptio/sonobuoy/pkg/backplane/ca/authtest"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	pluginutils "github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
 	"github.com/viniciuschiele/tarx"
@@ -36,7 +36,7 @@ func TestAggregation(t *testing.T) {
 		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
 	}
 
-	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
 		URL, err := NodeResultURL(srv.URL, "node1", "systemd_logs")
 		if err != nil {
 			t.Fatalf("couldn't get test server URL: %v", err)
@@ -64,7 +64,7 @@ func TestAggregation_noExtension(t *testing.T) {
 		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
 	}
 
-	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
 		URL, err := NodeResultURL(srv.URL, "node1", "systemd_logs")
 		if err != nil {
 			t.Fatalf("couldn't get test server URL: %v", err)
@@ -94,7 +94,7 @@ func TestAggregation_tarfile(t *testing.T) {
 	fileBytes := []byte("foo")
 	tarBytes := makeTarWithContents(t, "inside_tar.txt", fileBytes)
 
-	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
 		URL, err := GlobalResultURL(srv.URL, "e2e")
 		if err != nil {
 			t.Fatalf("couldn't get test server URL: %v", err)
@@ -128,7 +128,7 @@ func TestAggregation_wrongnodes(t *testing.T) {
 		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
 	}
 
-	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
 		URL, err := NodeResultURL(srv.URL, "randomnodename", "systemd_logs")
 		if err != nil {
 			t.Fatalf("couldn't get test server URL: %v", err)
@@ -150,7 +150,7 @@ func TestAggregation_duplicates(t *testing.T) {
 		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
 		plugin.ExpectedResult{NodeName: "node12", ResultType: "systemd_logs"},
 	}
-	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
 		URL, err := NodeResultURL(srv.URL, "node1", "systemd_logs")
 		if err != nil {
 			t.Fatalf("couldn't get test server URL: %v", err)
@@ -179,7 +179,7 @@ func TestAggregation_errors(t *testing.T) {
 		plugin.ExpectedResult{ResultType: "e2e"},
 	}
 
-	withAggregator(t, expected, func(agg *Aggregator, srv *httptest.Server) {
+	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
 		resultsCh := make(chan *plugin.Result)
 		go agg.IngestResults(resultsCh)
 
@@ -198,7 +198,7 @@ func TestAggregation_errors(t *testing.T) {
 	})
 }
 
-func withAggregator(t *testing.T, expected []plugin.ExpectedResult, callback func(*Aggregator, *httptest.Server)) {
+func withAggregator(t *testing.T, expected []plugin.ExpectedResult, callback func(*Aggregator, *authtest.Server)) {
 	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
 	if err != nil {
 		t.Fatal("Could not create temp directory")
@@ -209,7 +209,7 @@ func withAggregator(t *testing.T, expected []plugin.ExpectedResult, callback fun
 
 	agg := NewAggregator(dir, expected)
 	handler := NewHandler(agg.HandleHTTPResult)
-	srv := httptest.NewServer(handler)
+	srv := authtest.NewTLSServer(handler, t)
 	defer srv.Close()
 
 	// Run the server, ensuring it's fully stopped before returning

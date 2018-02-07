@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
+	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/templates"
 )
 
@@ -39,6 +40,7 @@ type templateValues struct {
 	E2EFocus       string
 	PluginSelector string
 	SonobuoyImage  string
+	Version        string
 }
 
 // GenerateManifest fills in a template with a Sonobuoy config
@@ -56,6 +58,7 @@ func GenerateManifest(cfg GenConfig) ([]byte, error) {
 		E2EFocus:       mode.E2EFocus,
 		PluginSelector: string(marshalledSelector),
 		SonobuoyImage:  cfg.Image,
+		Version:        buildinfo.Version,
 	}
 
 	var buf bytes.Buffer
