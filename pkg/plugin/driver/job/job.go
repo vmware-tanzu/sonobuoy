@@ -18,6 +18,7 @@ package job
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"time"
 
@@ -34,13 +35,16 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 )
 
+const clientKeyName = "clientkey"
+
 // Plugin is a plugin driver that dispatches a single pod to the given
 // kubernetes cluster
 type Plugin struct {
-	Definition plugin.Definition
-	SessionID  string
-	Namespace  string
-	cleanedUp  bool
+	Definition    plugin.Definition
+	SessionID     string
+	Namespace     string
+	SonobuoyImage string
+	cleanedUp     bool
 }
 
 // Ensure Plugin implements plugin.Interface
@@ -51,23 +55,27 @@ type templateData struct {
 	ResultType        string
 	SessionID         string
 	Namespace         string
+	SonobuoyImage     string
 	ProducerContainer string
 	MasterAddress     string
+	CACert            string
+	SecretName        string
 }
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address
-func NewPlugin(dfn plugin.Definition, namespace string) *Plugin {
+func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
 	return &Plugin{
-		Definition: dfn,
-		SessionID:  utils.GetSessionID(),
-		Namespace:  namespace,
-		cleanedUp:  false, // be explicit
+		Definition:    dfn,
+		SessionID:     utils.GetSessionID(),
+		Namespace:     namespace,
+		SonobuoyImage: sonobuoyImage,
+		cleanedUp:     false, // be explicit
 	}
 }
 
 func getMasterAddress(hostname string) string {
-	return fmt.Sprintf("http://%s/api/v1/results/global", hostname)
+	return fmt.Sprintf("https://%s/api/v1/results/global", hostname)
 }
 
 // ExpectedResults returns the list of results expected for this plugin. Since
@@ -84,7 +92,7 @@ func (p *Plugin) GetResultType() string {
 }
 
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
-func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
+func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error) {
 	var b bytes.Buffer
 
 	container, err := kuberuntime.Encode(manifest.Encoder, &p.Definition.Spec)
@@ -92,13 +100,18 @@ func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
 	}
 
+	cacert := utils.GetCACertPEM(cert)
+
 	vars := templateData{
 		PluginName:        p.Definition.Name,
 		ResultType:        p.Definition.ResultType,
 		SessionID:         p.SessionID,
 		Namespace:         p.Namespace,
+		SonobuoyImage:     p.SonobuoyImage,
 		ProducerContainer: string(container),
-		MasterAddress:     getMasterAddress(hostname), // TODO(EKF)
+		MasterAddress:     getMasterAddress(hostname),
+		CACert:            cacert,
+		SecretName:        p.getSecretName(),
 	}
 
 	if err := jobTemplate.Execute(&b, vars); err != nil {
@@ -108,12 +121,12 @@ func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 }
 
 // Run dispatches worker pods according to the Job's configuration.
-func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
+func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate) error {
 	var (
 		job v1.Pod
 	)
 
-	b, err := p.FillTemplate(hostname) // TODO EKF
+	b, err := p.FillTemplate(hostname, cert)
 	if err != nil {
 		// Already wrapped sufficiently by FillTemplate
 		return errors.Wrapf(err, "failed to fill Job template for plugin %v", p.GetName())
@@ -121,6 +134,15 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
 
 	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &job); err != nil {
 		return errors.Wrapf(err, "could not decode executed template into a Job for plugin %v", p.GetName())
+	}
+
+	secret, err := utils.MakeTLSSecret(cert, p.Namespace, p.getSecretName())
+	if err != nil {
+		return errors.Wrapf(err, "couldn't make secret for Job plugin %v", p.GetName())
+	}
+
+	if _, err := kubeclient.CoreV1().Secrets(p.Namespace).Create(secret); err != nil {
+		return errors.Wrapf(err, "couldn't create TLS secret for job plugin %v", p.GetName())
 	}
 
 	if _, err := kubeclient.CoreV1().Pods(p.Namespace).Create(&job); err != nil {
@@ -194,6 +216,10 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: "sonobuoy-run=" + p.GetSessionID(),
 	}
+}
+
+func (p *Plugin) getSecretName() string {
+	return fmt.Sprintf("job-%s-%s", p.GetName(), p.GetSessionID())
 }
 
 // findPod finds the pod created by this plugin, using a kubernetes label

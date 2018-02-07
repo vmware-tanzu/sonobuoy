@@ -18,6 +18,7 @@ package daemonset
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"time"
 
@@ -38,10 +39,11 @@ import (
 // Plugin is a plugin driver that dispatches containers to each node,
 // expecting each pod to report to the master.
 type Plugin struct {
-	Definition plugin.Definition
-	SessionID  string
-	Namespace  string
-	cleanedUp  bool
+	Definition    plugin.Definition
+	SessionID     string
+	Namespace     string
+	SonobuoyImage string
+	cleanedUp     bool
 }
 
 // Ensure DaemonSetPlugin implements plugin.Interface
@@ -52,18 +54,22 @@ type templateData struct {
 	ResultType        string
 	SessionID         string
 	Namespace         string
+	SonobuoyImage     string
 	ProducerContainer string
 	MasterAddress     string
+	CACert            string
+	SecretName        string
 }
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address
-func NewPlugin(dfn plugin.Definition, namespace string) *Plugin {
+func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
 	return &Plugin{
-		Definition: dfn,
-		SessionID:  utils.GetSessionID(),
-		Namespace:  namespace,
-		cleanedUp:  false,
+		Definition:    dfn,
+		SessionID:     utils.GetSessionID(),
+		Namespace:     namespace,
+		SonobuoyImage: sonobuoyImage,
+		cleanedUp:     false,
 	}
 }
 
@@ -87,20 +93,25 @@ func (p *Plugin) GetResultType() string {
 }
 
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
-func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
+func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error) {
 	var b bytes.Buffer
 	container, err := kuberuntime.Encode(manifest.Encoder, &p.Definition.Spec)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't reserialize container for daemonset %q", p.Definition.Name)
 	}
 
+	cacert := utils.GetCACertPEM(cert)
+
 	vars := templateData{
 		PluginName:        p.Definition.Name,
 		ResultType:        p.Definition.ResultType,
 		SessionID:         p.SessionID,
 		Namespace:         p.Namespace,
+		SonobuoyImage:     p.SonobuoyImage,
 		ProducerContainer: string(container),
 		MasterAddress:     getMasterAddress(hostname),
+		CACert:            cacert,
+		SecretName:        p.getSecretName(),
 	}
 
 	if err := daemonSetTemplate.Execute(&b, vars); err != nil {
@@ -110,15 +121,24 @@ func (p *Plugin) FillTemplate(hostname string) ([]byte, error) {
 }
 
 // Run dispatches worker pods according to the DaemonSet's configuration.
-func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string) error {
+func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate) error {
 	var daemonSet appsv1beta2.DaemonSet
 
-	b, err := p.FillTemplate(hostname)
+	b, err := p.FillTemplate(hostname, cert)
 	if err != nil {
 		return errors.Wrap(err, "couldn't fill template")
 	}
 	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &daemonSet); err != nil {
 		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
+	}
+
+	secret, err := utils.MakeTLSSecret(cert, p.Namespace, p.getSecretName())
+	if err != nil {
+		return errors.Wrapf(err, "couldn't make secret for daemonset plugin %v", p.GetName())
+	}
+
+	if _, err := kubeclient.CoreV1().Secrets(p.Namespace).Create(secret); err != nil {
+		return errors.Wrapf(err, "couldn't create TLS secret for daemonset plugin %v", p.GetName())
 	}
 
 	// TODO(EKF): Move to v1 in 1.11
@@ -148,7 +168,7 @@ func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
 		listOptions,
 	)
 	if err != nil {
-		errlog.LogError(errors.Wrapf(err, "could not delete DaemonSet-%v for daemonset plugin %v", p.SessionID, p.GetName()))
+		errlog.LogError(errors.Wrapf(err, "could not delete DaemonSet-%v for daemonset plugin %v", p.GetSessionID(), p.GetName()))
 	}
 }
 
@@ -156,6 +176,10 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 	return metav1.ListOptions{
 		LabelSelector: "sonobuoy-run=" + p.GetSessionID(),
 	}
+}
+
+func (p *Plugin) getSecretName() string {
+	return fmt.Sprintf("daemonset-%s-%s", p.GetName(), p.SessionID)
 }
 
 // findDaemonSet gets the daemonset that we created, using a kubernetes label search
@@ -260,5 +284,5 @@ func (p *Plugin) GetName() string {
 }
 
 func getMasterAddress(hostname string) string {
-	return fmt.Sprintf("http://%s/api/v1/results/by-node", hostname)
+	return fmt.Sprintf("https://%s/api/v1/results/by-node", hostname)
 }

@@ -18,9 +18,11 @@ package aggregation
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
+	"github.com/heptio/sonobuoy/pkg/backplane/ca"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -63,6 +65,11 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		expectedResults = append(expectedResults, p.ExpectedResults(nodes.Items)...)
 	}
 
+	auth, err := ca.NewAuthority()
+	if err != nil {
+		return errors.Wrap(err, "couldn't make new certificate authority for plugin aggregator")
+	}
+
 	logrus.Infof("Starting server Expected Results: %v", expectedResults)
 
 	// 1. Await results from each plugin
@@ -76,27 +83,45 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		doneAggr <- true
 	}()
 
+	// AdvertiseAddress often has a port, split this off if so
+	advertiseAddress := cfg.AdvertiseAddress
+	if host, _, err := net.SplitHostPort(cfg.AdvertiseAddress); err == nil {
+		advertiseAddress = host
+	}
+
+	tlsCfg, err := auth.MakeServerConfig(advertiseAddress)
+	if err != nil {
+		return errors.Wrap(err, "couldn't get a server certificate")
+	}
+
 	// 2. Launch the aggregation servers
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", cfg.BindAddress, cfg.BindPort),
-		Handler: NewHandler(aggr.HandleHTTPResult),
+		Addr:      fmt.Sprintf("%s:%d", cfg.BindAddress, cfg.BindPort),
+		Handler:   NewHandler(aggr.HandleHTTPResult),
+		TLSConfig: tlsCfg,
 	}
 
 	doneServ := make(chan error)
 	go func() {
-		logrus.Infof("starting aggregation server on %s:%d", cfg.BindAddress, cfg.BindPort)
-		doneServ <- srv.ListenAndServe()
+		logrus.WithFields(logrus.Fields{
+			"address": cfg.BindAddress,
+			"port":    cfg.BindPort,
+		}).Info("starting aggregation server")
+		doneServ <- srv.ListenAndServeTLS("", "")
 	}()
 
 	// 3. Launch each plugin, to dispatch workers which submit the results back
 	for _, p := range plugins {
-		logrus.Infof("Running (%v) plugin", p.GetName())
-		err := p.Run(client, cfg.AdvertiseAddress)
-		// Have the plugin monitor for errors
-		go p.Monitor(client, nodes.Items, monitorCh)
+		cert, err := auth.ClientKeyPair(p.GetName())
 		if err != nil {
+			return errors.Wrapf(err, "couldn't make certificate for plugin %v", p.GetName())
+		}
+		logrus.WithField("plugin", p.GetName()).Info("Running plugin")
+		if err = p.Run(client, cfg.AdvertiseAddress, cert); err != nil {
 			return errors.Wrapf(err, "error running plugin %v", p.GetName())
 		}
+		// Have the plugin monitor for errors
+		go p.Monitor(client, nodes.Items, monitorCh)
 	}
 	// 4. Have the aggregator plumb results from each plugins' monitor function
 	go aggr.IngestResults(monitorCh)

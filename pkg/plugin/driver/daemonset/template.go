@@ -47,7 +47,21 @@ spec:
           value: '{{.MasterAddress}}'
         - name: RESULT_TYPE
           value: {{.ResultType}}
-        image: gcr.io/heptio-images/sonobuoy:master
+        - name: CA_CERT
+          value: |
+            {{.CACert | indent 12}}
+        - name: CLIENT_CERT
+          valueFrom:
+            secretKeyRef:
+              name: {{.SecretName}}
+              key: tls.crt
+
+        - name: CLIENT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{.SecretName}}
+              key: tls.key
+        image: {{.SonobuoyImage}}
         imagePullPolicy: Always
         name: sonobuoy-worker
         volumeMounts:

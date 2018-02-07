@@ -17,6 +17,9 @@ limitations under the License.
 package app
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"net/http"
 	"os"
 	"strings"
@@ -91,11 +94,17 @@ func runGatherSingleNode(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	client, err := getHTTPClient(cfg)
+	if err != nil {
+		errlog.LogError(err)
+		os.Exit(1)
+	}
+
 	// A single-node results URL looks like:
 	// http://sonobuoy-master:8080/api/v1/results/by-node/node1/systemd_logs
 	url := cfg.MasterURL + "/" + cfg.NodeName + "/" + cfg.ResultType
 
-	err = worker.GatherResults(cfg.ResultsDir+"/done", url, http.DefaultClient)
+	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client)
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
@@ -110,13 +119,65 @@ func runGatherGlobal(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	// A global results URL looks like:
-	// http://sonobuoy-master:8080/api/v1/results/global/systemd_logs
-	url := cfg.MasterURL + "/" + cfg.ResultType
-
-	err = worker.GatherResults(cfg.ResultsDir+"/done", url, http.DefaultClient)
+	client, err := getHTTPClient(cfg)
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
+
+	// A global results URL looks like:
+	// http://sonobuoy-master:8080/api/v1/results/global/systemd_logs
+	url := cfg.MasterURL + "/" + cfg.ResultType
+
+	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client)
+	if err != nil {
+		errlog.LogError(err)
+		os.Exit(1)
+	}
+}
+
+func getHTTPClient(cfg *plugin.WorkerConfig) (*http.Client, error) {
+	caCertDER, _ := pem.Decode([]byte(cfg.CACert))
+	if caCertDER == nil {
+		return nil, errors.New("Couldn't parse CaCert PEM")
+	}
+	clientCertDER, _ := pem.Decode([]byte(cfg.ClientCert))
+	if clientCertDER == nil {
+		return nil, errors.New("Couldn't parse ClientCert PEM")
+	}
+	clientKeyDER, _ := pem.Decode([]byte(cfg.ClientKey))
+	if clientKeyDER == nil {
+		return nil, errors.New("Couldn't parse ClientKey PEM")
+	}
+
+	caCert, err := x509.ParseCertificate(caCertDER.Bytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't parse CaCert")
+	}
+	clientCert, err := x509.ParseCertificate(clientCertDER.Bytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't parse ClientCert")
+	}
+	clientKey, err := x509.ParseECPrivateKey(clientKeyDER.Bytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't parse ClientKey")
+	}
+
+	certPool := x509.NewCertPool()
+	certPool.AddCert(caCert)
+
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				Certificates: []tls.Certificate{
+					{
+						Certificate: [][]byte{clientCertDER.Bytes},
+						PrivateKey:  clientKey,
+						Leaf:        clientCert,
+					},
+				},
+				RootCAs: certPool,
+			},
+		},
+	}, nil
 }
