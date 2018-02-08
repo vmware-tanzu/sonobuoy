@@ -16,9 +16,7 @@ package spec
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -379,29 +377,26 @@ func (r *schemaLoader) resolveRef(ref *Ref, target interface{}, basePath string)
 		return nil
 	}
 
-	// if no basePath is provided, we attempt to resolve the reference against root
-	if basePath == "" {
-		var b []byte
-		switch rr := r.root.(type) {
-		case *Schema:
-			b, _ = rr.MarshalJSON()
-		case *Swagger:
-			b, _ = rr.MarshalJSON()
+	var data interface{}
+	var err error
+	// Resolve against the root if it isn't nil, and if ref is pointing at the root, or has a fragment only which means
+	// it is pointing somewhere in the root.
+	root := r.root
+	if (ref.IsRoot() || ref.HasFragmentOnly) && root == nil && basePath != "" {
+		if baseRef, err := NewRef(basePath); err == nil {
+			root, _, _, _ = r.load(baseRef.GetURL())
 		}
-		f, err := ioutil.TempFile(os.TempDir(), "tmproot")
+	}
+	if (ref.IsRoot() || ref.HasFragmentOnly) && root != nil {
+		data = root
+	} else {
+		baseRef := normalizeFileRef(ref, basePath)
+		debugLog("current ref is: %s", ref.String())
+		debugLog("current ref normalized file: %s", baseRef.String())
+		data, _, _, err = r.load(baseRef.GetURL())
 		if err != nil {
 			return err
 		}
-		f.Write(b)
-		f.Close()
-		basePath = f.Name()
-	}
-
-	baseRef := normalizeFileRef(ref, basePath)
-	debugLog("current ref normalized file: %s", baseRef.String())
-	data, _, _, err := r.load(baseRef.GetURL())
-	if err != nil {
-		return err
 	}
 
 	var res interface{}
@@ -449,6 +444,9 @@ func (r *schemaLoader) Resolve(ref *Ref, target interface{}, basePath string) er
 
 // absPath returns the absolute path of a file
 func absPath(fname string) (string, error) {
+	if strings.HasPrefix(fname, "http") {
+		return fname, nil
+	}
 	if filepath.IsAbs(fname) {
 		return fname, nil
 	}
@@ -471,11 +469,10 @@ func ExpandSpec(spec *Swagger, options *ExpandOptions) error {
 	}
 
 	if options == nil || !options.SkipSchemas {
-		rt := fmt.Sprintf("%s#/definitions/", specBasePath)
 		for key, definition := range spec.Definitions {
 			var def *Schema
 			var err error
-			if def, err = expandSchema(definition, []string{rt + key}, resolver, specBasePath); shouldStopOnError(err, resolver.options) {
+			if def, err = expandSchema(definition, []string{fmt.Sprintf("#/defintions/%s", key)}, resolver, specBasePath); shouldStopOnError(err, resolver.options) {
 				return err
 			}
 			if def != nil {
@@ -526,29 +523,19 @@ func shouldStopOnError(err error, opts *ExpandOptions) bool {
 // go-openapi/validate uses this function
 // notice that it is impossible to reference a json scema in a different file other than root
 func ExpandSchema(schema *Schema, root interface{}, cache ResolutionCache) error {
-	// if root is passed as nil, assume root is the same as schema
-	if root == nil {
-		root = schema
+	// Only save the root to a tmp file if it isn't nil.
+	var base string
+	if root != nil {
+		base, _ = absPath("root")
+		if cache == nil {
+			cache = resCache
+		}
+		cache.Set(base, root)
+		base = "root"
 	}
-
-	file, err := ioutil.TempFile(os.TempDir(), "root")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(file.Name())
-
-	switch r := root.(type) {
-	case *Schema:
-		b, _ := r.MarshalJSON()
-		file.Write(b)
-	case *Swagger:
-		b, _ := r.MarshalJSON()
-		file.Write(b)
-	}
-	file.Close()
 
 	opts := &ExpandOptions{
-		RelativeBase:    file.Name(),
+		RelativeBase:    base,
 		SkipSchemas:     false,
 		ContinueOnError: false,
 	}
@@ -561,14 +548,10 @@ func ExpandSchemaWithBasePath(schema *Schema, cache ResolutionCache, opts *Expan
 		return nil
 	}
 
-	if opts == nil {
-		return errors.New("cannot expand schema without a base path")
+	var basePath string
+	if opts.RelativeBase != "" {
+		basePath, _ = absPath(opts.RelativeBase)
 	}
-	if opts.RelativeBase == "" {
-		return errors.New("cannot expand schema with empty base path")
-	}
-
-	basePath, _ := absPath(opts.RelativeBase)
 
 	resolver, err := defaultSchemaLoader(nil, opts, cache)
 	if err != nil {
@@ -842,6 +825,21 @@ func expandOperation(op *Operation, resolver *schemaLoader, basePath string) err
 	return nil
 }
 
+// ExpandResponse expands a response based on a basepath
+// This is the exported version of expandResponse
+// all refs inside response will be resolved relative to basePath
+func ExpandResponse(response *Response, basePath string) error {
+	opts := &ExpandOptions{
+		RelativeBase: basePath,
+	}
+	resolver, err := defaultSchemaLoader(nil, opts, nil)
+	if err != nil {
+		return err
+	}
+
+	return expandResponse(response, resolver, basePath)
+}
+
 func expandResponse(response *Response, resolver *schemaLoader, basePath string) error {
 	if response == nil {
 		return nil
@@ -873,6 +871,21 @@ func expandResponse(response *Response, resolver *schemaLoader, basePath string)
 		*response.Schema = *s
 	}
 	return nil
+}
+
+// ExpandParameter expands a parameter based on a basepath
+// This is the exported version of expandParameter
+// all refs inside parameter will be resolved relative to basePath
+func ExpandParameter(parameter *Parameter, basePath string) error {
+	opts := &ExpandOptions{
+		RelativeBase: basePath,
+	}
+	resolver, err := defaultSchemaLoader(nil, opts, nil)
+	if err != nil {
+		return err
+	}
+
+	return expandParameter(parameter, resolver, basePath)
 }
 
 func expandParameter(parameter *Parameter, resolver *schemaLoader, basePath string) error {

@@ -128,6 +128,7 @@ func LoadClient(cfg *Config) (kubernetes.Interface, error) {
 
 	// 1 - gather config information used to initialize
 	kubeconfig := viper.GetString("kubeconfig")
+	// TODO(chuckha) BuildConfigFromFlags will fallback to InClusterConfig so we do not need this else block
 	if len(kubeconfig) > 0 {
 		cfg.Kubeconfig = kubeconfig
 		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)

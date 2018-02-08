@@ -1,6 +1,7 @@
 package pester
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -394,6 +395,48 @@ func TestConcurrentRequestsNotRacyAndDontLeak_SuccessfulRequest(t *testing.T) {
 	goroEnd := runtime.NumGoroutine()
 	if goroStart < goroEnd {
 		t.Errorf("got %d running goroutines, want %d", goroEnd, goroStart)
+	}
+}
+
+func TestRetriesNotAttemptedIfContextIsCancelled(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	port, err := timeoutServer(1 * time.Second)
+	if err != nil {
+		t.Fatal("unable to start timeout server", err)
+	}
+
+	timeoutURL := fmt.Sprintf("http://localhost:%d", port)
+	req, err := http.NewRequest("GET", timeoutURL, nil)
+	if err != nil {
+		t.Fatalf("unable to create request %v", err)
+	}
+	req = req.WithContext(ctx)
+
+	c := New()
+	c.MaxRetries = 10
+	c.KeepLog = true
+	c.Backoff = ExponentialBackoff
+
+	//Cancel the context in another routine (eg: user interrupt)
+	go func() {
+		cancel()
+		t.Logf("\n%d - cancelled", time.Now().Unix())
+	}()
+
+	_, err = c.Do(req)
+	if err == nil {
+		t.Fatal("expected to get an error")
+	}
+	c.Wait()
+
+	// in the event of an error, let's see what the logs were
+	t.Log("\n", c.LogString())
+
+	if got, want := c.LogErrCount(), 1; got != want {
+		t.Fatalf("got %d errors, want %d", got, want)
 	}
 }
 

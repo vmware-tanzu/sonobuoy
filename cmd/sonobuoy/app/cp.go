@@ -17,12 +17,13 @@ limitations under the License.
 package app
 
 import (
+	"fmt"
 	"os"
 
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
 	"github.com/heptio/sonobuoy/pkg/errlog"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"k8s.io/kubernetes/pkg/kubectl/cmd/util"
 )
 
 var path string
@@ -37,15 +38,38 @@ func init() {
 		&path, "path", "./",
 		"TBD: location to output",
 	)
-	// TODO: Other Options.?.?
 	RootCmd.AddCommand(cmd)
 }
 
 func copyResults(cmd *cobra.Command, args []string) {
-	code := 0
-	if err := ops.CopyResults(path); err != nil {
-		errlog.LogError(errors.Wrap(err, "error attempting to copy sonobuoy results"))
-		code = 1
+	f := util.NewClientAccessFactory(nil)
+	cfg, err := f.ClientConfig()
+	if err != nil {
+		errlog.LogError(fmt.Errorf("could not get cfg: %v", err))
+		os.Exit(1)
 	}
-	os.Exit(code)
+	clientset, err := f.ClientSet()
+	if err != nil {
+		errlog.LogError(fmt.Errorf("could not get clientset: %v", err))
+		os.Exit(1)
+	}
+	src := ops.FileSpec{
+		PodNamespace: "heptio-sonobuoy",
+		PodName:      "sonobuoy",
+		File:         "/tmp/sonobuoy",
+	}
+	dst := ops.FileSpec{
+		File: "./archive",
+	}
+	errc := make(chan error)
+	go ops.CopyResults(cfg, clientset, os.Stderr, src, dst, errc)
+	errorCount := 0
+	for err := range errc {
+		errorCount++
+		errlog.LogError(fmt.Errorf("error during coyping: %v", err))
+	}
+	if errorCount > 0 {
+		os.Exit(1)
+	}
+	os.Exit(0)
 }
