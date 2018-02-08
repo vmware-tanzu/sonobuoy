@@ -84,24 +84,15 @@
   branch = "release-1.9"
   name = "k8s.io/kubernetes"
 
-# To use reference package:
-#   vendor/k8s.io/kubernetes/pkg/util/parsers/parsers.go:36:16: undefined: reference.ParseNormalizedNamed
+# Use all the right deps from kubernetes/kubernetes that cause problems
 [[override]]
   name = "github.com/docker/distribution"
-  branch = "master"
+  revision = "edc3ab29cdff8694dd6feb85cfeb4b5f1b38ed9c"
 
-# github.com/heptio/sonobuoy/vendor/k8s.io/kubernetes/pkg/credentialprovider
-# vendor/k8s.io/kubernetes/pkg/credentialprovider/keyring.go:61:2: undefined: "github.com/heptio/sonobuoy/vendor/github.com/docker/docker/api/types".AuthConfig
 [[override]]
   name = "github.com/docker/docker"
-  branch = "master"
+  revision = "4f3616fb1c112e206b88cb7a9922bf49067a7756"
 
-# github.com/heptio/sonobuoy/vendor/k8s.io/kubernetes/pkg/kubectl/cmd/templates
-# vendor/k8s.io/kubernetes/pkg/kubectl/cmd/templates/markdown.go:30:5: cannot use ASCIIRenderer literal (type *ASCIIRenderer) as type blackfriday.Renderer in assignment:
-# 	*ASCIIRenderer does not implement blackfriday.Renderer (missing RenderFooter method)
-# vendor/k8s.io/kubernetes/pkg/kubectl/cmd/templates/markdown.go:64:11: undefined: blackfriday.LIST_ITEM_BEGINNING_OF_LIST
-# vendor/k8s.io/kubernetes/pkg/kubectl/cmd/templates/markdown.go:71:11: undefined: blackfriday.LIST_TYPE_ORDERED
-# vendor/k8s.io/kubernetes/pkg/kubectl/cmd/templates/normalizers.go:73:35: too many arguments to conversion to blackfriday.Markdown: blackfriday.Markdown(bytes, composite literal, 0)
 [[override]]
   name = "github.com/russross/blackfriday"
   revision = "300106c228d52c8941d4b3de6054a6062a86dda3"
