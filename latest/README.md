@@ -1,4 +1,4 @@
-# Sonobuoy
+# Heptio Sonobuoy
 
 **Maintainers:** [Heptio][0]
 
