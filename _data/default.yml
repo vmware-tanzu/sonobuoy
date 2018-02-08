@@ -1,0 +1,22 @@
+toc:
+  - title: Setting up
+    subfolderitems:
+      - page: Configuration
+        url: /configuration
+      - page: Generated YAML
+        url: /examples/quickstart.yaml
+        github: true
+      - page: Snapshot layout
+        url: /snapshot
+  - title: Use cases
+    subfolderitems:
+      - page: Conformance testing
+        url: conformance-testing
+      - page: Plugins
+        url: /plugins
+  - title: Next steps
+    subfolderitems:
+      - page: Make your own manifests
+        url: /examples
+        github: true
+
