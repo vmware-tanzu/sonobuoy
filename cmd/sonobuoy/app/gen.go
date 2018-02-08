@@ -26,6 +26,7 @@ import (
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/image"
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/namespace"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
@@ -41,6 +42,7 @@ var GenCommand = &cobra.Command{
 func init() {
 	image.AddFlag(&genopts.Image, GenCommand)
 	mode.AddFlag(&genopts.ModeName, GenCommand)
+	namespace.AddFlag(&genopts.Namespace, GenCommand)
 
 	RootCmd.AddCommand(GenCommand)
 }

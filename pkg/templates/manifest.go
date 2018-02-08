@@ -6,7 +6,7 @@ var Manifest = NewTemplate("manifest", `
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: heptio-sonobuoy
+  name: {{.Namespace}}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -14,7 +14,7 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-serviceaccount
-  namespace: heptio-sonobuoy
+  namespace: {{.Namespace}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -29,7 +29,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: sonobuoy-serviceaccount
-  namespace: heptio-sonobuoy
+  namespace: {{.Namespace}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -37,7 +37,7 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-serviceaccount
-  namespace: heptio-sonobuoy
+  namespace: {{.Namespace}}
 rules:
 - apiGroups:
   - '*'
@@ -55,7 +55,7 @@ data:
             "LabelSelector": "",
             "Namespaces": ".*"
         },
-        "PluginNamespace": "heptio-sonobuoy",
+        "PluginNamespace": "{{.Namespace}}",
         "Plugins": {{.PluginSelector}},
         "Resources": [
             "CertificateSigningRequests",
@@ -106,7 +106,7 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-config-cm
-  namespace: heptio-sonobuoy
+  namespace: {{.Namespace}}
 ---
 apiVersion: v1
 data:
@@ -162,7 +162,7 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-plugins-cm
-  namespace: heptio-sonobuoy
+  namespace: {{.Namespace}}
 ---
 apiVersion: v1
 kind: Pod
@@ -172,7 +172,7 @@ metadata:
     run: sonobuoy-master
     tier: analysis
   name: sonobuoy
-  namespace: heptio-sonobuoy
+  namespace: {{.Namespace}}
 spec:
   containers:
   - command:
@@ -213,7 +213,7 @@ metadata:
     component: sonobuoy
     run: sonobuoy-master
   name: sonobuoy-master
-  namespace: heptio-sonobuoy
+  namespace: {{.Namespace}}
 spec:
   ports:
   - port: 8080
