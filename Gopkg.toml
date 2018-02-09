@@ -80,24 +80,3 @@
 [[constraint]]
   branch = "release-6.0"
   name = "k8s.io/client-go"
-
-[[constraint]]
-  branch = "release-1.9"
-  name = "k8s.io/kubernetes"
-
-# Use all the right deps from kubernetes/kubernetes that cause problems
-[[override]]
-  name = "github.com/docker/distribution"
-  revision = "edc3ab29cdff8694dd6feb85cfeb4b5f1b38ed9c"
-
-[[override]]
-  name = "github.com/docker/docker"
-  revision = "4f3616fb1c112e206b88cb7a9922bf49067a7756"
-
-[[override]]
-  name = "github.com/russross/blackfriday"
-  revision = "300106c228d52c8941d4b3de6054a6062a86dda3"
-
-[[override]]
-  name = "github.com/imdario/mergo"
-  revision = "6633656539c1639d9d78127b7d47c622b5d7b6dc"
