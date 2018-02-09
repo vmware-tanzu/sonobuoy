@@ -1,7 +1,6 @@
 package image
 
 import (
-	"github.com/docker/distribution/reference"
 	"github.com/spf13/cobra"
 )
 
@@ -23,10 +22,6 @@ func (i *ID) Type() string { return "Sonobuoy Container Image ID" }
 
 //Set the image ID. Returns an error when not a valid image ID.
 func (i *ID) Set(id string) error {
-	if _, err := reference.Parse(id); err != nil {
-		return err
-	}
-
 	*i = ID(id)
 	return nil
 }
