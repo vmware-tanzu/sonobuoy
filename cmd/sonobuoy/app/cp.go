@@ -17,15 +17,22 @@ limitations under the License.
 package app
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
+	"sync"
 
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/errlog"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
-var path string
+var (
+	prefix        = filepath.Join("tmp", "sonobuoy")
+	defaultOutDir = "."
+)
 
 func init() {
 	cmd := &cobra.Command{
@@ -33,19 +40,69 @@ func init() {
 		Short: "Copies the results to a specified path",
 		Run:   copyResults,
 	}
-	cmd.PersistentFlags().StringVar(
-		&path, "path", "./",
-		"TBD: location to output",
-	)
-	// TODO: Other Options.?.?
+	cmd.Flags().String("namespace", config.DefaultPluginNamespace, "The namespace where the Sonobuoy control plane is running.")
 	RootCmd.AddCommand(cmd)
 }
 
 func copyResults(cmd *cobra.Command, args []string) {
-	code := 0
-	if err := ops.CopyResults(path); err != nil {
-		errlog.LogError(errors.Wrap(err, "error attempting to copy sonobuoy results"))
-		code = 1
+	namespace, err := cmd.Flags().GetString("namespace")
+	if err != nil {
+		errlog.LogError(fmt.Errorf("failed to get namespace flag: %v", err))
+		os.Exit(1)
 	}
-	os.Exit(code)
+
+	outDir := defaultOutDir
+	if len(args) > 0 {
+		outDir = args[0]
+	}
+
+	// TODO(chuckha) this should be the same across all sonobuoy commands.
+	// Find and load the kubeconfig using the same loading rules that kubectl uses.
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{})
+	config, err := kubeConfig.ClientConfig()
+	if err != nil {
+		errlog.LogError(fmt.Errorf("failed to get kubernetes client: %v", err))
+		os.Exit(1)
+	}
+
+	// TODO(chuckha) try to catch some errors and present user friendly messages.
+	// Setup error channel and synchronization so that all errors get reported before exiting.
+	errc := make(chan error)
+	errcount := 0
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for err := range errc {
+			errcount++
+			errlog.LogError(err)
+		}
+	}()
+
+	// Get a reader that contains the tar output of the results directory.
+	reader := ops.CopyResults(namespace, config, os.Stderr, errc)
+
+	// CopyResults bailed early and will report an error.
+	if reader == nil {
+		close(errc)
+		wg.Wait()
+		os.Exit(1)
+	}
+
+	// Extract the tar output into a local directory under the prefix.
+	err = ops.UntarAll(reader, outDir, prefix)
+	if err != nil {
+		close(errc)
+		wg.Wait()
+		errlog.LogError(fmt.Errorf("error untarring output: %v", err))
+		os.Exit(1)
+	}
+
+	// Everything has been written from the reader which means we're done.
+	close(errc)
+	wg.Wait()
+
+	if errcount != 0 {
+		os.Exit(1)
+	}
 }
