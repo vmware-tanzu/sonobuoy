@@ -4,27 +4,20 @@
 
 [![Build Status][1]][2]
 
+**NOTE:**
+Sonobuoys master branch is in high flux atm, and if you are looking for a more stable version please checkout the v0.10.0 tag. 
 
 ## Overview
 
-Heptio Sonobuoy is a diagnostic tool that makes it easier to understand the state of a Kubernetes cluster by running a set of [Kubernetes][3] conformance tests in an accessible and non-destructive manner. It is a customizable, extendable, and cluster-agnostic way to generate clear, informative reports about your cluster--regardless of your deployment details.
+Heptio Sonobuoy is a diagnostic tool that makes it easier to understand the state of a Kubernetes cluster by running a set of [Kubernetes][3] conformance tests in an accessible and non-destructive manner.  It is a customizable, extendable, and cluster-agnostic way to generate clear, informative reports about your cluster.
 
 Its selective data dumps of Kubernetes resource objects and cluster nodes allow for the following use cases:
 
-* Integrated end-to-end (e2e) [conformance-testing 1.7+][13]
+* Integrated end-to-end (e2e) [conformance-testing][4]
 * Workload debugging
 * Custom data collection via extensible plugins
 
-## Supported Versions
-
-*NOTE: The table below only applies to the e2e conformance tests.*
-
-To ensure that your cluster is running the appropriate Kubernetes version for your Sonobuoy release, see the second column of the table below. Otherwise you may encounter the documented issues.
-
-| Sonobuoy Version | Supported K8s Cluster Versions | Note(s) |
-|---|---|---|
-| master | 1.9 <= X <= TBD | Under development |
-| v0.10.x | 1.7 <= X <= 1.9 | Verify your kube-conformance container version matches cluster version |
+Sonobuoy supports all upstream supported versions of Kubernetes. v1.7.x-v1.9.y
 
 ## Prerequisites
 
@@ -32,90 +25,64 @@ To ensure that your cluster is running the appropriate Kubernetes version for yo
 
 * **You should have `kubectl` installed.** If not, follow the instructions for [installing via Homebrew (MacOS)][6] or [building the binary (Linux)][7].
 
-* **You must run the `kubectl apply` commands for Sonobuoy as an admin user.**
+* **You should have an admin `kubeconfig file` installed, and KUBECONFIG environment variable set.**
 
-* **Your firewall settings must allow Sonobuoy to communicate with your cluster.**
-
-* **Your cluster must have the appropriate RBAC ClusterRole and ClusterRoleBinding configured.** By default, the Sonobuoy YAML assumes that your cluster is running with `--authorization-mode=RBAC`, and includes the required RBAC configurations.
-
-  (If you don't have RBAC enabled, subsequent documentation addresses how to handle this.)
-
-## Up and running
+## Getting Started
 
 To easily get a Sonobuoy scan started on your cluster, use the browser-based [Sonobuoy Scanner tool][18]. Sonobuoy Scanner also provides a more user-friendly way of viewing your scan results.
 
-*Note that Sonobuoy Scanner runs conformance tests only. To learn how to run Sonobuoy with your own YAML files, which allows for further configuration and customization, see the [Quickstart][19] section below.*
+*Note that Sonobuoy Scanner runs conformance tests only.*
 
 ![tarball overview screenshot][20]
 
-
-## Quickstart
-
-> Heptio provides prebuilt Sonobuoy container images in its Google Container Registry (*gcr.io/heptio-images*). For the sake of faster setup on your cluster, **this quickstart pulls from this registry to skip the container build process**. You can use this same process to deploy Sonobuoy to production.
-
+## Using the CLI
 
 This guide executes a Sonobuoy run on your cluster, and records the following results:
 * Basic info about your cluster's hosts, Kubernetes resources, and versions.
 * *(Via plugin)* [`systemd`][14] logs from each host
-* *(Via plugin)* The results of a single e2e conformance test ("Pods should be submitted and removed"). See the [conformance guide][13] for configuration details.
+* *(Via plugin)* The results of a single e2e conformance test ("Pods should be submitted and removed"). See the [conformance guide][4] for configuration details.
 
 ### 1. Download
-Clone or fork the Sonobuoy repo:
+
+Sonobuoy is written in golang and can easily be obtained by running:
 ```
-git clone https://github.com/heptio/sonobuoy.git
+$ go get github.com/heptio/sonobuoy
 ```
 
 ### 2. Run
 
-First, make sure that you're in your Sonobuoy root directory.
-
 Now you're ready to deploy a Sonobuoy pod to your cluster! Run the following command:
 ```
-kubectl apply -f examples/quickstart.yaml
+$ sonobuoy run
 ```
 
 You can view actively running pods with the following command:
 ```
-kubectl get pods -l component=sonobuoy --namespace=heptio-sonobuoy
+$ sonobuoy status 
 ```
 
-To verify that Sonobuoy has completed successfully, check the logs:
+To inspect the logs:
 ```
-kubectl logs -f sonobuoy --namespace=heptio-sonobuoy
+$ sonobuoy logs
 ```
-If you see the log line `no-exit was specified, sonobuoy is now blocking`, the Sonobuoy pod has completed its data collection.
-
-> *Notes*:
->
-> * **The Sonobuoy pod in this example continues to run after it finishes data collection**, due to the `--no-exit` flag in its YAML manifest. This allows you to easily grab the results tarball.
->
-> * **Sonobuoy collects one data report per run**---each time you want a new report you need to delete the existing Sonobuoy YAML files and reapply them (see the [tear down step][15]).
->
-> * **In practice, you should make sure that the Sonobuoy pod writes its results to a Persistent Volume.** The quickstart example writes its output to an `emptyDir` volume for simplicity.
->
-> *Troubleshooting errors from `kubectl logs`*:
->  * If you are able to debug and resolve the issue on your own, *make sure to delete and reapply Sonobuoy's YAML manifests*. Otherwise, [file an issue][10].
->
 
 To view the output, copy the output directory from the main Sonobuoy pod to somewhere local:
 ```
-kubectl cp heptio-sonobuoy/sonobuoy:/tmp/sonobuoy ./archive --namespace=heptio-sonobuoy
+$ sonobuoy cp .
 ```
 
-This should copy a single `.tar.gz` snapshot from the Sonobuoy pod into your local `./archive` directory. You can extract its contents into `./results` with:
+This should copy a single `.tar.gz` snapshot from the Sonobuoy pod into your local `.` directory. You can extract its contents into `./results` with:
 ```
-mkdir ./results; tar xzf ./archive/*.tar.gz -C ./results
+mkdir ./results; tar xzf *.tar.gz -C ./results
 ```
 
-For information on the contents of the snapshot, see the [snapshot documentation](docs/snapshot.md).
+For information on the contents of the snapshot, see the [documentation](docs/snapshot.md).
 
-*NOTE: At this time, the layout of the contents of the tarball is subject to change.*
-
-### 3. Tear down
+### 3. Cleanup
 
 To clean up Kubernetes objects created by Sonobuoy, run the following command:
 ```
-kubectl delete -f examples/quickstart.yaml
+sonobuoy delete
 ```
 
 ## Further documentation
@@ -128,7 +95,7 @@ If you encounter any problems that the documentation does not address, [file an 
 
 ## Contributing
 
-Thanks for taking the time to join our community and start contributing!
+Thanks for taking the time to join our community and start contributing!  We welcome pull requests. Feel free to dig through the [issues][10] and jump in.
 
 #### Before you start
 
@@ -139,17 +106,6 @@ developer certificate of origin that we require.
 * There is a [mailing list][16] and [Slack channel][17] if you want to interact with
 other members of the community
 
-#### Testing
-
-You can run sonobuoy's tests with `make test`. This will spin up local docker
-containers to run the test suite.
-
-For noisier tests, use `VERBOSE=true make test`
-
-#### Pull requests
-
-* We welcome pull requests. Feel free to dig through the [issues][10] and jump in.
-
 ## Changelog
 
 See [the list of releases](https://github.com/heptio/sonobuoy/releases) to find out about feature changes.
@@ -158,6 +114,7 @@ See [the list of releases](https://github.com/heptio/sonobuoy/releases) to find 
 [1]: https://jenkins.i.heptio.com/buildStatus/icon?job=sonobuoy-deployer
 [2]: https://jenkins.i.heptio.com/job/sonobuoy-deployer/
 [3]: https://github.com/kubernetes/kubernetes
+[4]: /docs/conformance-testing.md
 [5]: http://docs.heptio.com/content/tutorials/aws-cloudformation-k8s.html
 [6]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [7]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
@@ -166,7 +123,6 @@ See [the list of releases](https://github.com/heptio/sonobuoy/releases) to find 
 [10]: https://github.com/heptio/sonobuoy/issues
 [11]: /CONTRIBUTING.md
 [12]: /CODE_OF_CONDUCT.md
-[13]: /docs/conformance-testing.md
 [14]: https://github.com/systemd/systemd
 [15]: #3-tear-down
 [16]: https://groups.google.com/forum/#!forum/heptio-sonobuoy
