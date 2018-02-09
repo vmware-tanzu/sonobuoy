@@ -30,3 +30,12 @@ func (i *ID) Set(id string) error {
 	*i = ID(id)
 	return nil
 }
+
+// Get returns the provided ID, or a default if none has been provided
+func (i *ID) Get() string {
+	if i == nil || *i == "" {
+		return "gcr.io/heptio-images/sonobuoy:master"
+	}
+
+	return i.String()
+}

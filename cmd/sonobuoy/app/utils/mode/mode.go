@@ -18,7 +18,7 @@ const (
 	// Heptio's E2E Tests
 	Extended Name = "extended"
 )
-fun
+
 // Name identifies a specific mode
 type Name string
 

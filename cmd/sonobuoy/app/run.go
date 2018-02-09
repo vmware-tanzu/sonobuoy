@@ -22,6 +22,7 @@ import (
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/image"
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/namespace"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -37,16 +38,15 @@ func init() {
 	}
 	mode.AddFlag(&runopts.GenConfig.ModeName, cmd)
 	image.AddFlag(&runopts.GenConfig.Image, cmd)
+	namespace.AddFlag(&runopts.GenConfig.Namespace, cmd)
 
-	// TODO: We should expose FOCUS and other options with sane defaults
 	RootCmd.AddCommand(cmd)
 }
 
 func submitSonobuoyRun(cmd *cobra.Command, args []string) {
-	code := 0
 	if err := ops.Run(runopts); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
-		code = 1
+		os.Exit(1)
 	}
-	os.Exit(code)
+	os.Exit(0)
 }

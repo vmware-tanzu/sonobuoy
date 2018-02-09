@@ -60,7 +60,7 @@ func GenerateManifest(cfg GenConfig) ([]byte, error) {
 	tmplVals := &templateValues{
 		E2EFocus:       mode.E2EFocus,
 		PluginSelector: string(marshalledSelector),
-		SonobuoyImage:  cfg.Image.String(),
+		SonobuoyImage:  cfg.Image.Get(),
 		Version:        buildinfo.Version,
 		Namespace:      cfg.Namespace.Get(),
 	}
