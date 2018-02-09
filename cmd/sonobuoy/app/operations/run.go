@@ -19,12 +19,18 @@ package operations
 import (
 	"bytes"
 	"fmt"
+	"io"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"k8s.io/client-go/rest"
-	cmdutil "k8s.io/kubernetes/pkg/kubectl/cmd/util"
-	"k8s.io/kubernetes/pkg/kubectl/resource"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/kubernetes/pkg/api/legacyscheme"
 )
 
 // RunConfig are the input options for running
@@ -36,59 +42,91 @@ type RunConfig struct {
 // Run generates the manifest, then tries to apply it to the cluster.
 // returns created resources or an error
 func Run(cfg RunConfig) error {
-	yaml, err := GenerateManifest(cfg.GenConfig)
+	manifest, err := GenerateManifest(cfg.GenConfig)
 	if err != nil {
 		return errors.Wrap(err, "couldn't run invalid manifest")
 	}
-	buf := bytes.NewBuffer(yaml)
+	buf := bytes.NewBuffer(manifest)
 
-	restConfig, err := cmdutil.NewClientAccessFactory(nil).ClientConfig()
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	configOverrides := &clientcmd.ConfigOverrides{}
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
+	config, err := kubeConfig.ClientConfig()
+
 	if err != nil {
 		return errors.Wrap(err, "couldn't get REST client")
 	}
 
-	err = cmdutil.NewFactory(nil).
-		NewBuilder().
-		Unstructured().
-		NamespaceParam(cfg.Namespace.Get()).
-		RequireNamespace().
-		Stream(buf, fmt.Sprintf("%s.yaml", cfg.ModeName.String())).
-		Flatten().
-		Do().
-		Visit(func(info *resource.Info, err error) error {
-			if err != nil {
-				return err
+	d := yaml.NewYAMLOrJSONDecoder(buf, 4096)
+
+	mapper := legacyscheme.Registry
+	for {
+		ext := runtime.RawExtension{}
+		obj := unstructured.Unstructured{}
+		if err := d.Decode(&ext); err != nil {
+			if err == io.EOF {
+				break
 			}
+			return errors.Wrap(err, "couldn't decode template")
+		}
 
-			*restConfig.GroupVersion = info.ResourceMapping().GroupVersionKind.GroupVersion()
-			if info.ResourceMapping().GroupVersionKind.Group == "" {
-				restConfig.APIPath = "/api"
-			} else {
-				restConfig.APIPath = "/apis"
-			}
+		// Skip over empty or partial objects
+		ext.Raw = bytes.TrimSpace(ext.Raw)
+		if len(ext.Raw) == 0 || bytes.Equal(ext.Raw, []byte("null")) {
+			continue
+		}
 
-			client, err := rest.RESTClientFor(restConfig)
-			if err != nil {
-				return errors.Wrapf(err, "couldn't make rest client for %s", info.Name)
-			}
+		if err := runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), ext.Raw, &obj); err != nil {
+			return errors.Wrap(err, "couldn't decode template")
+		}
 
-			helper := resource.NewHelper(client, info.ResourceMapping())
+		fmt.Printf("%+v\n", obj)
 
-			_, err = helper.Create(
-				cfg.Namespace.Get(),
-				false, // don't overwrite existing resources
-				info.AsUnstructured(),
-			)
-			if err != nil {
-				return errors.Wrapf(err, "couldn't create resource %v (%v)", info.Name, info.ResourceMapping().Resource)
-			}
-			logrus.WithFields(logrus.Fields{
-				"name":      info.Name,
-				"namespace": info.Namespace,
-				"resource":  info.ResourceMapping().Resource,
-			}).Info("created object")
-			return nil
-		})
+		gvk := obj.GroupVersionKind()
 
-	return errors.Wrap(err, "failed to apply resource")
+		*restConfig.GroupVersion = gvk.GroupVersion()
+		if gvk.Group == "" {
+			restConfig.APIPath = "/api"
+		} else {
+			restConfig.APIPath = "/apis"
+		}
+
+		client, err := dynamic.NewClient(restConfig)
+		if err != nil {
+			return errors.Wrapf(err, "couldn't make rest client")
+		}
+
+		mapping, err := mapper.RESTMapper(gvk.GroupVersion()).RESTMapping(gvk.GroupKind(), gvk.Version)
+		if err != nil {
+			return errors.Wrapf(err, "couldn't get resource")
+		}
+
+		resource := mapping.Resource
+		name, err := mapping.MetadataAccessor.Name(&obj)
+		if err != nil {
+			return errors.Wrapf(err, "couldn't get name for resource %s", resource)
+		}
+
+		namespace, err := mapping.MetadataAccessor.Namespace(&obj)
+		if err != nil {
+			return errors.Wrapf(err, "couldn't get namespace for object %s", name)
+		}
+
+		_, err = client.Resource(&v1.APIResource{
+			Name:       resource,
+			Namespaced: namespace != "",
+		}, namespace).Create(&obj)
+
+		if err != nil {
+			return errors.Wrapf(err, "couldn't create resource %s", name)
+		}
+
+		logrus.WithFields(logrus.Fields{
+			"name":      name,
+			"namespace": namespace,
+			"resource":  resource,
+		}).Info("created object")
+
+	}
+	return nil
 }

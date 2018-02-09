@@ -37,7 +37,6 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-serviceaccount
-  namespace: {{.Namespace}}
 rules:
 - apiGroups:
   - '*'
