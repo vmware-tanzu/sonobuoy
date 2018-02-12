@@ -22,8 +22,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils"
-	"github.com/pkg/errors"
+	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,21 +36,14 @@ var (
 // Logs gathers the logs for the containers in the sonobuoy namespace and prints them
 
 // GetLogs streams logs from the sonobuoy pod by default to stdout.
-func GetLogs(namespace string, follow bool) error {
-	client, err := utils.OutOfClusterClient()
-	if err != nil {
-		return errors.Wrap(err, "could not load kubernetes client")
-	}
-
-	// Follow the main logs if -f is provided
+func GetLogs(client kubernetes.Interface, namespace string, follow bool) error {
 	if follow {
-		return streamLogs(client, namespace, utils.SonobuoyPod, &v1.PodLogOptions{Follow: true})
+		return streamLogs(client, namespace, config.MasterPodName, &v1.PodLogOptions{Follow: true})
 	}
 
-	// Otherwise print every log we can
 	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{})
 	if err != nil {
-		return errors.Wrap(err, "could not list pods")
+		return fmt.Errorf("could not list pods: %v", err)
 	}
 	for _, pod := range pods.Items {
 		for _, container := range pod.Spec.Containers {
@@ -60,7 +52,7 @@ func GetLogs(namespace string, follow bool) error {
 				Container: container.Name,
 			})
 			if err != nil {
-				return errors.Wrap(err, "failed to stream logs")
+				return fmt.Errorf("failed to stream logs: %v", err)
 			}
 			fmt.Println(podLogSeparator)
 		}
@@ -74,9 +66,9 @@ func streamLogs(client kubernetes.Interface, namespace, podName string, logOptio
 	req := client.CoreV1().Pods(namespace).GetLogs(podName, logOptions)
 	readCloser, err := req.Stream()
 	if err != nil {
-		return errors.Wrap(err, "could not stream the request")
+		return fmt.Errorf("could not stream the request: %v", err)
 	}
 	defer readCloser.Close()
 	_, err = io.Copy(os.Stdout, readCloser)
-	return errors.Wrap(err, "could not copy request body")
+	return fmt.Errorf("could not copy request body: %v", err)
 }
