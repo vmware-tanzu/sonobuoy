@@ -20,15 +20,6 @@
   revision = "4eba002a5eaea69cf8d235a388fc6b65ae68d2dd"
 
 [[projects]]
-  name = "github.com/docker/distribution"
-  packages = [
-    "digest",
-    "reference"
-  ]
-  revision = "48294d928ced5dd9b378f7fd7c6f5da3ff3f2c89"
-  version = "v2.6.2"
-
-[[projects]]
   branch = "master"
   name = "github.com/docker/spdystream"
   packages = [
@@ -427,9 +418,6 @@
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
-    "pkg/apimachinery",
-    "pkg/apimachinery/announced",
-    "pkg/apimachinery/registered",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
     "pkg/apis/meta/v1alpha1",
@@ -532,15 +520,9 @@
   packages = ["pkg/common"]
   revision = "a07b7bbb58e7fdc5144f8d7046331d29fc9ad3b3"
 
-[[projects]]
-  name = "k8s.io/kubernetes"
-  packages = ["pkg/api/legacyscheme"]
-  revision = "d2835416544f298c919e2ead3be3d0864b52323b"
-  version = "v1.9.3"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1f64c504842633f39999948c3a3f8607d6470aed77bc12c65c9c9ec524c9da20"
+  inputs-digest = "3846259892091a4ae0eb02e48ee5629fe416bddbbf38523aec3a10ae302b98f8"
   solver-name = "gps-cdcl"
   solver-version = 1
