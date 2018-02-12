@@ -6,13 +6,13 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -28,8 +28,6 @@ const (
 	defaultServerVersionFile = "serverversion.json"
 	defaultServerGroupsFile  = "servergroups.json"
 )
-
-// TODO(chuckha) Wrap errors.
 
 const (
 	// UnknownVersion lets the consumer know if this client can detect the archive version or not.
@@ -59,19 +57,17 @@ func NewReaderFromBytes(data []byte) (*Reader, error) {
 	r := bytes.NewReader(data)
 	gzipReader, err := gzip.NewReader(r)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error creating new gzip reader")
 	}
 	version, err := DiscoverVersion(gzipReader)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error discovering version")
 	}
-	_, err = r.Seek(0, io.SeekStart)
-	if err != nil {
-		return nil, err
+	if _, err = r.Seek(0, io.SeekStart); err != nil {
+		return nil, errors.Wrap(err, "error seeking to start")
 	}
-	err = gzipReader.Reset(r)
-	if err != nil {
-		return nil, err
+	if err = gzipReader.Reset(r); err != nil {
+		return nil, errors.Wrap(err, "error reseting gzip reader")
 	}
 	return &Reader{
 		Reader:  gzipReader,
@@ -92,7 +88,7 @@ func DiscoverVersion(reader io.Reader) (string, error) {
 		return ExtractConfig(path, info, conf)
 	})
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "error extracting config")
 	}
 	var version string
 	// Get rid of any of the extra version information that doesn't affect archive layout.
@@ -133,7 +129,7 @@ func (r *Reader) WalkFiles(walkfn filepath.WalkFunc) error {
 			break
 		}
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error getting next file in archive")
 		}
 		info := &tarFileInfo{
 			header.FileInfo(),
@@ -142,10 +138,9 @@ func (r *Reader) WalkFiles(walkfn filepath.WalkFunc) error {
 		err = walkfn(filepath.Clean(header.Name), info, err)
 	}
 	return nil
-
 }
 
-// Functions to be used within a walkfn
+// Functions to be used within a walkfn.
 
 // ExtractBytes pulls out bytes into a buffer for any path matching file.
 func ExtractBytes(file string, path string, info os.FileInfo, buf *bytes.Buffer) error {
@@ -156,7 +151,7 @@ func ExtractBytes(file string, path string, info os.FileInfo, buf *bytes.Buffer)
 		}
 		_, err := buf.ReadFrom(reader)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "could not read from buffer")
 		}
 	}
 	return nil
@@ -171,22 +166,19 @@ func ExtractIntoStruct(predicate func(string) bool, path string, info os.FileInf
 		if !ok {
 			return errors.New("info.Sys() is not a reader")
 		}
-		// TODO(chuckha) there must be a better way
+		// TODO(chuckha) Perhaps find a more robust way to handle different data formats.
 		if strings.HasSuffix(path, "xml") {
 			decoder := xml.NewDecoder(reader)
-			err := decoder.Decode(object)
-			if err != nil {
-				return err
+			if err := decoder.Decode(object); err != nil {
+				return errors.Wrap(err, "error decoding xml into object")
 			}
 			return nil
 		}
 
 		// If it's not xml it's probably json
 		decoder := json.NewDecoder(reader)
-		err := decoder.Decode(object)
-
-		if err != nil {
-			return err
+		if err := decoder.Decode(object); err != nil {
+			return errors.Wrap(err, "error decoding json into object")
 		}
 	}
 	return nil
