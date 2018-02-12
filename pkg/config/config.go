@@ -26,6 +26,17 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+const (
+	// DefaultPluginNamespace is the namespace where the master and plugin workers will run (but not necessarily the pods created by the plugin workers).
+	DefaultPluginNamespace = "heptio-sonobuoy"
+	// MasterPodName is the name of the main pod that runs plugins and collects results.
+	MasterPodName = "sonobuoy"
+	// MasterContainerName is the name of the main container in the master pod.
+	MasterContainerName = "kube-sonobuoy"
+	// MasterResultsPath is the location in the main container of the master pod where results will be archived.
+	MasterResultsPath = "/tmp/sonobuoy"
+)
+
 ///////////////////////////////////////////////////////
 // Note: The described resources are a 1:1 match
 // with kubectl UX for consistent user experience.
@@ -226,7 +237,7 @@ func NewWithDefaults() *Config {
 	cfg.Resources = ClusterResources
 	cfg.Resources = append(cfg.Resources, NamespacedResources...)
 
-	cfg.PluginNamespace = "heptio-sonobuoy"
+	cfg.PluginNamespace = DefaultPluginNamespace
 
 	cfg.Aggregation.BindAddress = "0.0.0.0"
 	cfg.Aggregation.BindPort = 8080
