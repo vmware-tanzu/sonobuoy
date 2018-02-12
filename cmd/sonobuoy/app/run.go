@@ -19,13 +19,15 @@ package app
 import (
 	"os"
 
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/image"
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/mode"
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/namespace"
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/utils/kubeconfig"
 	"github.com/heptio/sonobuoy/pkg/errlog"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 var runopts ops.RunConfig
@@ -39,6 +41,7 @@ func init() {
 	mode.AddFlag(&runopts.GenConfig.ModeName, cmd)
 	image.AddFlag(&runopts.GenConfig.Image, cmd)
 	namespace.AddFlag(&runopts.GenConfig.Namespace, cmd)
+	kubeconfig.AddFlag(&runopts.Kubecfg, cmd)
 
 	RootCmd.AddCommand(cmd)
 }
