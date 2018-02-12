@@ -45,17 +45,14 @@ func GatherResults(waitfile string, url string, client *http.Client) error {
 	var outfile *os.File
 
 	// just loop looking for a file.
-	done := false
 	logrus.Infof("Waiting on: (%v)", waitfile)
-	for !done {
-		inputFileName, err = ioutil.ReadFile(waitfile) // For read access.
-		if err != nil {
-			// There is no need to log here, just wait for the results.
-			logrus.Infof("Sleeping")
-			time.Sleep(1 * time.Second)
-		} else {
-			done = true
+	for {
+		if inputFileName, err = ioutil.ReadFile(waitfile); err == nil {
+			break
 		}
+		// There is no need to log here, just wait for the results.
+		logrus.Infof("Sleeping")
+		time.Sleep(1 * time.Second)
 	}
 
 	s := string(inputFileName)
