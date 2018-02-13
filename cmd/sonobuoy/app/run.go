@@ -47,7 +47,13 @@ func init() {
 }
 
 func submitSonobuoyRun(cmd *cobra.Command, args []string) {
-	if err := ops.Run(runopts); err != nil {
+	restConfig, err := runopts.Kubecfg.Get()
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
+		os.Exit(1)
+	}
+
+	if err := ops.Run(runopts, restConfig); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
 	}

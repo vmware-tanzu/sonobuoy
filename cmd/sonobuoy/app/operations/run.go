@@ -47,18 +47,13 @@ type RunConfig struct {
 
 // Run generates the manifest, then tries to apply it to the cluster.
 // returns created resources or an error
-func Run(cfg RunConfig) error {
+func Run(cfg RunConfig, restConfig *rest.Config) error {
 	manifest, err := GenerateManifest(cfg.GenConfig)
 	if err != nil {
 		return errors.Wrap(err, "couldn't run invalid manifest")
 	}
 
 	buf := bytes.NewBuffer(manifest)
-
-	restConfig, err := cfg.Kubecfg.Get()
-	if err != nil {
-		return errors.Wrap(err, "couldn't get REST client")
-	}
 
 	mapper, err := newMapper(restConfig)
 	if err != nil {
