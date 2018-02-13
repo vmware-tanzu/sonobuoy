@@ -164,7 +164,7 @@ func getNames(obj runtime.Object) (string, string, error) {
 
 	namespace, err := accessor.Namespace(obj)
 	if err != nil {
-		return "", "", errors.Wrapf(err, "couldn't get namespac e for object %s", name)
+		return "", "", errors.Wrapf(err, "couldn't get namespace for object %s", name)
 	}
 
 	return name, namespace, nil

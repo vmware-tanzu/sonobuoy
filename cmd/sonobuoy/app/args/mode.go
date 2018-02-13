@@ -7,8 +7,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Mode is the name of the mode
-
 const (
 	// Quick runs a single E2E test and the systemd log tests
 	Quick Mode = "quick"
@@ -22,7 +20,7 @@ const (
 // Mode identifies a specific mode
 type Mode string
 
-// ModeConfig is the
+// ModeConfig represents the sonobuoy configuration for a given mode
 type ModeConfig struct {
 	// E2EFocus is the string to be passed to the E2EFOCUS env var
 	E2EFocus string

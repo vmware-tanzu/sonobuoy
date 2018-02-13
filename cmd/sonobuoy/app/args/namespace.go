@@ -5,7 +5,7 @@ import "github.com/spf13/cobra"
 // Namespace represents a Kubernetes namespace
 type Namespace string
 
-const usage = "the namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously."
+const usage = "The namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously."
 
 //AddNamespaceFlag adds a Namespace flag to the given command
 func AddNamespaceFlag(namespace *Namespace, cmd *cobra.Command) {
