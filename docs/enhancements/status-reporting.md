@@ -11,7 +11,6 @@
     - [Proposal](#proposal)
         - [For Sonobuoy Aggregator](#for-sonobuoy-aggregator)
         - [For `sonobuoy status`](#for-sonobuoy-status)
-        - [For Scanner](#for-scanner)
         - [Heartbeats (optional/future)](#heartbeats-optionalfuture)
         - [User Stories](#user-stories)
     - [Unresolved Questions](#unresolved-questions)
@@ -35,8 +34,6 @@ This status should be secure so only the intended audience can see it.
 ### Goals
 
 * Create a command `sonobuoy status` that shows the results of an ongoing run.
-* Create an API on Aggregator so Scanner can report status instead of the
-  existing spinner
 * (optional) Workers can report their status to the aggregator
 
 ### Non-goals
@@ -44,26 +41,16 @@ This status should be secure so only the intended audience can see it.
 * Actually updating Scanner is outside of our scope, though we should make sure
   the API is useful to that team
 * Complex metrics and monitoring. The first pass should be simple.
+* Scanner support
 
 ## Proposal
 
 ### For Sonobuoy Aggregator
 
-In addition to the HTTPS server running for the plugin workers, a second HTTPS
-server and accompanying k8s `service` will be run for the purpose of
-communicating status back to the client. This service will be `NodePort` or
-`LoadBalanacer` rather than the `ClusterIP` of the aggregation service.
+An annotation will be attached to the sonobuoy pod, constantly updated by the
+aggregation server.
 
-To secure this, the client will provide a server TLS cert/key to serve HTTPS
-with, and a CACertificate to validate the client's peer certificates with.
-
-This secondary HTTPS server will report status initially based on the percentage
-of plugins that have reported results. Later, the workers will be able to report
-heartbeats or more granular status.
-
-The API for this status will look like:
-
-`GET /status`
+The annotation will be `sonobuoy.heptio.com/status`.
 
 ```json
 {
@@ -87,43 +74,17 @@ The API for this status will look like:
 
 ### For `sonobuoy status`
 
-`sonobuoy run` is responsible for creating the certs for the aggregator. The CA
-certificate, along with a client cert and key, will need to be stored so they
-can be used later by `sonobuoy status`. To this end, they will be PEM-encoded
-and stored in a JSON file along with the source address of the cluster
-
-`cat /tmp/sonobuoy.json`
-
-```json
-{
-  "host_address": "https://172.217.6.206:8002/",
-  "created_at": "2008-09-15T15:53:00+05:00",
-  "ca_cert": "-----BEGIN CERTIFICATE-----\nMIIDADCC<snip>rdPiFCXw==\n-----END CERTIFICATE-----",
-  "client_cert": "-----BEGIN CERTIFICATE-----\nAz4cADRC<snip>qu32zv00==\n-----END CERTIFICATE-----",
-  "client_key": "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIE<snip>h5bg==\n-----END EC PRIVATE KEY-----"
-}
-```
-
-`sonobuoy status` will look for `/tmp/sonobuoy.json`, and verify that the
-`created_at` was within some reasonable duration. If so, the PEMs are loaded,
-and an HTTPS request is made to `<host_address>/status`.
-
-### For Scanner
-
-The certificate is created as for `sonobuoy status`, but instead of being
-written out to a file it's stored in an ephemeral session tied to the session
-ID. The URL can be queried periodically and the UI updated with the status.
+`sonobuoy status` will use the kubeconfig acquisition logic from `sonobuoy run`,
+then lookup the `sonobuoy` pod in the provided namespace. The status annotation can
+then be decoded and displayed to the user.
 
 ### Heartbeats (optional/future)
 
-Having workers report heartbeats helps detect common issues like DNS and
-networking failures.
+The workers will set their own status annotations similar to the aggregators.
+They will use the key `sonobuoy.heptio.com/status/worker`
 
-On a set interval, workers will GET a URL like
-`/api/v1/health/by-node/node1/systemd-logs` or `/api/v1/health/global/e2e`.
-
-The aggregator will keep track of this information and use it when reporting
-status to clients.
+The aggregator will keep regularly collect and collate this information and use
+it when reporting status to clients.
 
 
 ```json
@@ -135,13 +96,13 @@ status to clients.
       "name":"systemd",
       "node": "node1",
       "status": "running",
-      "last-heartbeat" 17,
+      "last-heartbeat" "2008-09-15T15:53:00+05:00",
     },
     {
       "name":"e2e",
       "node": "",
       "status": "timed_out",
-      "last-heartbeat" 200,
+      "last-heartbeat" "2008-09-15T15:53:00+05:00",
     }
   ]
 }
