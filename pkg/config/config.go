@@ -29,6 +29,8 @@ import (
 const (
 	// DefaultPluginNamespace is the namespace where the master and plugin workers will run (but not necessarily the pods created by the plugin workers).
 	DefaultPluginNamespace = "heptio-sonobuoy"
+	// DefaultImage is the URL of the docker image to run for the aggregator and workers
+	DefaultImage = "gcr.io/heptio-images/sonobuoy:master"
 	// MasterPodName is the name of the main pod that runs plugins and collects results.
 	MasterPodName = "sonobuoy"
 	// MasterContainerName is the name of the main container in the master pod.

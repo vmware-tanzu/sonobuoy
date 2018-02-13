@@ -19,10 +19,12 @@ package app
 import (
 	"os"
 
-	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
-	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/args"
+	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
 var runopts ops.RunConfig
@@ -33,19 +35,24 @@ func init() {
 		Short: "Submits a sonobuoy run",
 		Run:   submitSonobuoyRun,
 	}
-	cmd.PersistentFlags().StringVar(
-		&runopts.Mode, "mode", "Conformance",
-		"TBD: Update description on different run modes (quick|conformance|extended)",
-	)
-	// TODO: We should expose FOCUS and other options with sane defaults
+	args.AddModeFlag(&runopts.GenConfig.ModeName, cmd)
+	args.AddSonobuoyImageFlag(&runopts.GenConfig.Image, cmd)
+	args.AddNamespaceFlag(&runopts.GenConfig.Namespace, cmd)
+	args.AddKubeconfigFlag(&runopts.Kubecfg, cmd)
+
 	RootCmd.AddCommand(cmd)
 }
 
 func submitSonobuoyRun(cmd *cobra.Command, args []string) {
-	code := 0
-	if err := ops.Run(runopts); err != nil {
-		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
-		code = 1
+	restConfig, err := runopts.Kubecfg.Get()
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
+		os.Exit(1)
 	}
-	os.Exit(code)
+
+	if err := ops.Run(runopts, restConfig); err != nil {
+		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
+		os.Exit(1)
+	}
+	os.Exit(0)
 }
