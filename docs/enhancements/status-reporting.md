@@ -55,7 +55,6 @@ The annotation will be `sonobuoy.heptio.com/status`.
 ```json
 {
   "status": "running",
-  "percent_complete": 0.5
   "plugins": [
     {
       "name":"systemd",
@@ -90,7 +89,6 @@ it when reporting status to clients.
 ```json
 {
   "status": "failed",
-  "percent_complete": 0.5
   "plugins": [
     {
       "name":"systemd",
