@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"io"
 
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/args"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -32,8 +33,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-
-	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/utils/kubeconfig"
 )
 
 const bufferSize = 4096
@@ -42,7 +41,7 @@ const bufferSize = 4096
 // TODO: We should expose FOCUS and other options with sane defaults
 type RunConfig struct {
 	GenConfig
-	Kubecfg kubeconfig.Config
+	Kubecfg args.Kubeconfig
 }
 
 // Run generates the manifest, then tries to apply it to the cluster.

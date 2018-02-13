@@ -1,4 +1,4 @@
-package kubeconfig
+package args
 
 import (
 	"github.com/spf13/cobra"
@@ -6,13 +6,18 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// Config represents an explict or implict kubeconfig
-type Config struct {
+// Kubeconfig represents an explict or implict kubeconfig
+type Kubeconfig struct {
 	*clientcmd.ClientConfigLoadingRules
 }
 
+// AddKubeconfigFlag adds a kubeconfig flag to the provided command
+func AddKubeconfigFlag(cfg *Kubeconfig, cmd *cobra.Command) {
+	cmd.PersistentFlags().Var(cfg, "kubeconfig", "Explict kubeconfig file")
+}
+
 // String needed for pflag.Value
-func (c *Config) String() string {
+func (c *Kubeconfig) String() string {
 	if c.ClientConfigLoadingRules != nil {
 		return c.ExplicitPath
 	}
@@ -20,10 +25,10 @@ func (c *Config) String() string {
 }
 
 // Type needed for pflag.Value
-func (c *Config) Type() string { return "Kubeconfig" }
+func (c *Kubeconfig) Type() string { return "Kubeconfig" }
 
 // Set sets the explicit path of the loader to the provided config file
-func (c *Config) Set(str string) error {
+func (c *Kubeconfig) Set(str string) error {
 	if c.ClientConfigLoadingRules == nil {
 		c.ClientConfigLoadingRules = clientcmd.NewDefaultClientConfigLoadingRules()
 	}
@@ -32,13 +37,8 @@ func (c *Config) Set(str string) error {
 	return nil
 }
 
-// AddFlag adds a kubeconfig flag to the provided command
-func AddFlag(cfg *Config, cmd *cobra.Command) {
-	cmd.PersistentFlags().Var(cfg, "kubeconfig", "Explict kubeconfig file")
-}
-
 // Get returns a rest Config, possibly based on a provided config
-func (c *Config) Get() (*rest.Config, error) {
+func (c *Kubeconfig) Get() (*rest.Config, error) {
 	if c.ClientConfigLoadingRules == nil {
 		c.ClientConfigLoadingRules = clientcmd.NewDefaultClientConfigLoadingRules()
 	}
