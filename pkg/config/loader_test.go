@@ -104,7 +104,7 @@ func TestDefaultResources(t *testing.T) {
 
 func TestLoadAllPlugins(t *testing.T) {
 	cfg := &Config{
-		PluginSearchPath: []string{"./plugins.d"},
+		PluginSearchPath: []string{"./examples/plugins.d"},
 		PluginSelections: []plugin.Selection{
 			plugin.Selection{Name: "systemd-logs"},
 			plugin.Selection{Name: "e2e"},

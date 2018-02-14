@@ -10,7 +10,7 @@ import (
 
 func TestLoadNonexistantPlugin(t *testing.T) {
 	_, err := GeneratePluginManifest(GenPluginConfig{
-		Paths:      []string{"./plugins.d"},
+		Paths:      []string{"./examples/plugins.d"},
 		PluginName: "non-existant-plugin",
 	})
 
@@ -22,7 +22,7 @@ func TestLoadNonexistantPlugin(t *testing.T) {
 func TestLoadRealPlugin(t *testing.T) {
 	bytes, err := GeneratePluginManifest(GenPluginConfig{
 		// Tests are executed with cwd set to their containing directory
-		Paths:      []string{"../../../../plugins.d"},
+		Paths:      []string{"../../../../examples/plugins.d"},
 		PluginName: "e2e",
 	})
 
