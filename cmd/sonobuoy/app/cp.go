@@ -39,6 +39,7 @@ func init() {
 		Use:   "cp",
 		Short: "Copies the results to a specified path",
 		Run:   copyResults,
+		Args:  cobra.MaximumNArgs(1),
 	}
 	cmd.Flags().String("namespace", config.DefaultPluginNamespace, "The namespace where the Sonobuoy control plane is running.")
 	RootCmd.AddCommand(cmd)

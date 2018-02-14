@@ -31,6 +31,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print sonobuoy version",
 	Run:   runVersion,
+	Args:  cobra.ExactArgs(0),
 }
 
 func runVersion(cmd *cobra.Command, args []string) {
