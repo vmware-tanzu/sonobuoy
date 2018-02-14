@@ -39,27 +39,30 @@ func init() {
 // 1. Output data will be placed into an agreed upon results directory.
 // 2. The Job will wait for a done file
 // 3. The done file contains a single string of the results to be sent to the master
-func GatherResults(waitfile string, url string, client *http.Client) error {
-	var inputFileName []byte
-	var err error
-	var outfile *os.File
-
-	// just loop looking for a file.
-	logrus.Infof("Waiting on: (%v)", waitfile)
+func GatherResults(waitfile string, url string, client *http.Client, stop <-chan struct{}) error {
+	logrus.WithField("waitfile", waitfile).Info("Waiting for waitfile")
+	ticker := time.Tick(1 * time.Second)
 	for {
-		if inputFileName, err = ioutil.ReadFile(waitfile); err == nil {
-			break
+		select {
+		case <-ticker:
+			if inputFileName, err := ioutil.ReadFile(waitfile); err == nil {
+				return handleWaitFile(string(inputFileName), url, client)
+			}
+		case <-stop:
+			logrus.Info("Forced shutdown. Stopping.")
+			return nil
 		}
-		// There is no need to log here, just wait for the results.
-		logrus.Infof("Sleeping")
-		time.Sleep(1 * time.Second)
 	}
+}
 
-	s := string(inputFileName)
-	logrus.Infof("Detected done file, transmitting: (%v)", s)
+func handleWaitFile(resultFile, url string, client *http.Client) error {
+	var outfile *os.File
+	var err error
+
+	logrus.WithField("resultFile", resultFile).Info("Detected done file, transmitting result file")
 
 	// Set content type
-	extension := filepath.Ext(s)
+	extension := filepath.Ext(resultFile)
 	mimeType := mime.TypeByExtension(extension)
 
 	defer func() {
@@ -70,8 +73,7 @@ func GatherResults(waitfile string, url string, client *http.Client) error {
 
 	// transmit back the results file.
 	return DoRequest(url, client, func() (io.Reader, string, error) {
-		outfile, err = os.Open(s)
+		outfile, err = os.Open(resultFile)
 		return outfile, mimeType, errors.WithStack(err)
 	})
-
 }

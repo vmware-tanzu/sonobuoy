@@ -30,6 +30,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+const (
+	gracefulShutdownPeriod = 45
+)
+
 // Run runs an aggregation server and gathers results, in accordance with the
 // given sonobuoy configuration.
 //
@@ -127,24 +131,29 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	go aggr.IngestResults(monitorCh)
 
 	// Ensure we only wait for results for a certain time
-	timeout := time.After(time.Duration(cfg.TimeoutSeconds) * time.Second)
+
+	// softTimeout will start by cleaning up all plugins, but we aren't in an error state yet.
+	softTimeout := time.After(time.Duration(cfg.TimeoutSeconds-gracefulShutdownPeriod) * time.Second)
+	// hardTimeout means no more waiting and we're in an error state now. Worst case scenario.
+	hardTimeout := time.After(time.Duration(cfg.TimeoutSeconds) * time.Second)
 
 	// 5. Wait for aggr to show that all results are accounted for
-	select {
-	case <-timeout:
-		srv.Close()
-		stopWaitCh <- true
-		return errors.Errorf("timed out waiting for plugins, shutting down HTTP server")
-	case err := <-doneServ:
-		stopWaitCh <- true
-		if err != nil {
+	for {
+		select {
+		case <-softTimeout:
+			Cleanup(client, plugins)
+			logrus.Info("Gracefully timing out plugins.")
+		case <-hardTimeout:
+			srv.Close()
+			stopWaitCh <- true
+			return errors.New("timed out waiting for plugins, shutting down HTTP server")
+		case err := <-doneServ:
+			stopWaitCh <- true
 			return err
+		case <-doneAggr:
+			return nil
 		}
-	case <-doneAggr:
-		break
 	}
-
-	return nil
 }
 
 // Cleanup calls cleanup on all plugins

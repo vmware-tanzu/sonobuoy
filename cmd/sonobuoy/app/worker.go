@@ -22,13 +22,20 @@ import (
 	"encoding/pem"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/worker"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+)
+
+const (
+	pauseSecondsBeforeShutdown = 20
 )
 
 func init() {
@@ -90,7 +97,22 @@ func loadAndValidateConfig() (*plugin.WorkerConfig, error) {
 	return cfg, nil
 }
 
+// sigHandler is used to manage graceful cleanups when a TERM signal is received.
+func sigHandler() <-chan struct{} {
+	stop := make(chan struct{})
+	go func() {
+		sigc := make(chan os.Signal, 1)
+		signal.Notify(sigc, syscall.SIGTERM)
+		<-sigc
+		// The worker needs to not shutdown immediately upon receiving SIGTERM.
+		time.Sleep(pauseSecondsBeforeShutdown)
+		close(stop)
+	}()
+	return stop
+}
+
 func runGatherSingleNode(cmd *cobra.Command, args []string) {
+	stop := sigHandler()
 	cfg, err := loadAndValidateConfig()
 	if err != nil {
 		errlog.LogError(err)
@@ -107,7 +129,7 @@ func runGatherSingleNode(cmd *cobra.Command, args []string) {
 	// http://sonobuoy-master:8080/api/v1/results/by-node/node1/systemd_logs
 	url := cfg.MasterURL + "/" + cfg.NodeName + "/" + cfg.ResultType
 
-	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client)
+	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client, stop)
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
@@ -116,6 +138,7 @@ func runGatherSingleNode(cmd *cobra.Command, args []string) {
 }
 
 func runGatherGlobal(cmd *cobra.Command, args []string) {
+	stop := sigHandler()
 	cfg, err := loadAndValidateConfig()
 	if err != nil {
 		errlog.LogError(err)
@@ -132,7 +155,7 @@ func runGatherGlobal(cmd *cobra.Command, args []string) {
 	// http://sonobuoy-master:8080/api/v1/results/global/systemd_logs
 	url := cfg.MasterURL + "/" + cfg.ResultType
 
-	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client)
+	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client, stop)
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
