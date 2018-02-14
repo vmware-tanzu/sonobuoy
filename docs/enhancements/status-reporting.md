@@ -47,7 +47,7 @@ This status should be secure so only the intended audience can see it.
 
 ### For Sonobuoy Aggregator
 
-An annotation will be attached to the sonobuoy pod, constantly updated by the
+An annotation will be attached to the sonobuoy pod, periodically updated by the
 aggregation server.
 
 The annotation will be `sonobuoy.heptio.com/status`.
