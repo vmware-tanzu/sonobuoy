@@ -22,10 +22,8 @@ metadata:
 spec:
   containers:
   - {{.ProducerContainer | indent 4}}
-  - command:
-    - sh
-    - -c
-    - /sonobuoy worker global -v 5 --logtostderr
+  - command: ["/sonobuoy"]
+    args: ["worker", "global", "-v", "5", "--logtostderr"]
     env:
     - name: NODE_NAME
       valueFrom:
