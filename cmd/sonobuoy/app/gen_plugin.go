@@ -36,7 +36,7 @@ func init() {
 		Args:  cobra.ExactArgs(1),
 	}
 
-	GenCommand.PersistentFlags().StringArrayVarP(
+	cmd.PersistentFlags().StringArrayVarP(
 		&genPluginOpts.Paths, "paths", "p", []string{".", "./plugins.d/"},
 		"the paths to search for the plugins in. Defaults to . and ./plugins.d/",
 	)

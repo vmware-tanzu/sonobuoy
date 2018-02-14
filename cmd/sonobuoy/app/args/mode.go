@@ -2,6 +2,7 @@ package args
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/spf13/cobra"
@@ -20,6 +21,12 @@ const (
 // Mode identifies a specific mode
 type Mode string
 
+var modeMap = map[string]Mode{
+	"conformance": Conformance,
+	"quick":       Quick,
+	"extended":    Extended,
+}
+
 // ModeConfig represents the sonobuoy configuration for a given mode
 type ModeConfig struct {
 	// E2EFocus is the string to be passed to the E2EFOCUS env var
@@ -32,7 +39,10 @@ type ModeConfig struct {
 func AddModeFlag(modeMode *Mode, cmd *cobra.Command) {
 	cmd.PersistentFlags().VarP(
 		modeMode, "mode", "m",
-		"What mode to run sonobuoy in",
+		fmt.Sprintf(
+			"What mode to run sonobuoy in. One of %s (default Conformance).",
+			strings.Join(getModes(), ", "),
+		),
 	)
 }
 
@@ -44,16 +54,11 @@ func (n *Mode) Type() string { return "Mode" }
 
 // Set the name with a given string. Returns error on unknown mode
 func (n *Mode) Set(str string) error {
-	switch str {
-	case "conformance":
-		*n = Conformance
-	case "quick":
-		*n = Quick
-	case "extended":
-		*n = Extended
-	default:
+	mode, ok := modeMap[str]
+	if !ok {
 		return fmt.Errorf("unknown mode %s", str)
 	}
+	*n = mode
 	return nil
 }
 
@@ -94,4 +99,14 @@ func (n *Mode) Get() *ModeConfig {
 	default:
 		return nil
 	}
+}
+
+func getModes() []string {
+	keys := make([]string, len(modeMap))
+	i := 0
+	for k := range modeMap {
+		keys[i] = k
+		i++
+	}
+	return keys
 }
