@@ -35,6 +35,7 @@ var GenCommand = &cobra.Command{
 	Use:   "gen",
 	Short: "Generates a sonobuoy manifest for submission via kubectl",
 	Run:   genManifest,
+	Args:  cobra.ExactArgs(0),
 }
 
 func init() {

@@ -35,6 +35,7 @@ func init() {
 		Use:   "logs",
 		Short: "Dumps the logs of the currently running sonobuoy containers for diagnostics",
 		Run:   getLogs,
+		Args:  cobra.ExactArgs(0),
 	}
 	cmd.Flags().BoolP("follow", "f", false, "Specify if the logs should be streamed.")
 	RootCmd.AddCommand(cmd)

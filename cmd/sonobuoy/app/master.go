@@ -35,6 +35,7 @@ func init() {
 		Short: "Generate reports on your kubernetes cluster",
 		Long:  "Sonobuoy is an introspective kubernetes component that generates reports on cluster conformance, configuration, and more",
 		Run:   runMaster,
+		Args:  cobra.ExactArgs(0),
 	}
 	cmd.PersistentFlags().BoolVar(
 		&noExit, "no-exit", false,
