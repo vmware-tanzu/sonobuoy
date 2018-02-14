@@ -34,6 +34,7 @@ func init() {
 		Use:   "run",
 		Short: "Submits a sonobuoy run",
 		Run:   submitSonobuoyRun,
+		Args:  cobra.ExactArgs(0),
 	}
 	args.AddModeFlag(&runopts.GenConfig.ModeName, cmd)
 	args.AddSonobuoyImageFlag(&runopts.GenConfig.Image, cmd)

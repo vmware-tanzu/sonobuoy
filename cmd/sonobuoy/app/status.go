@@ -30,6 +30,7 @@ func init() {
 		Use:   "status",
 		Short: "Gets a summarizes status of a sonobuoy run",
 		Run:   getStatus,
+		Args:  cobra.ExactArgs(0),
 	}
 	// TODO: Determine options
 	RootCmd.AddCommand(cmd)

@@ -42,18 +42,21 @@ var workerCmd = &cobra.Command{
 	Use:   "worker",
 	Short: "Gather and send data to the sonobuoy master instance",
 	Run:   runGather,
+	Args:  cobra.ExactArgs(0),
 }
 
 var globalCmd = &cobra.Command{
 	Use:   "global",
 	Short: "Submit results scoped to the whole cluster",
 	Run:   runGatherGlobal,
+	Args:  cobra.ExactArgs(0),
 }
 
 var singleNodeCmd = &cobra.Command{
 	Use:   "single-node",
 	Short: "Submit results scoped to a single node",
 	Run:   runGatherSingleNode,
+	Args:  cobra.ExactArgs(0),
 }
 
 func runGather(cmd *cobra.Command, args []string) {
