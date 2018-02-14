@@ -51,7 +51,7 @@ func TestRun(t *testing.T) {
 			withTempDir(t, func(tmpdir string) {
 				ioutil.WriteFile(tmpdir+"/systemd_logs", []byte("{}"), 0755)
 				ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs"), 0755)
-				err := GatherResults(tmpdir+"/done", URL, srv.Client())
+				err := GatherResults(tmpdir+"/done", URL, srv.Client(), nil)
 				if err != nil {
 					t.Fatalf("Got error running agent: %v", err)
 				}
@@ -78,7 +78,7 @@ func TestRunGlobal(t *testing.T) {
 		withTempDir(t, func(tmpdir string) {
 			ioutil.WriteFile(tmpdir+"/systemd_logs.json", []byte("{}"), 0755)
 			ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs.json"), 0755)
-			err := GatherResults(tmpdir+"/done", url, srv.Client())
+			err := GatherResults(tmpdir+"/done", url, srv.Client(), nil)
 			if err != nil {
 				t.Fatalf("Got error running agent: %v", err)
 			}
@@ -103,7 +103,7 @@ func TestRunGlobal_noExtension(t *testing.T) {
 		withTempDir(t, func(tmpdir string) {
 			ioutil.WriteFile(tmpdir+"/systemd_logs", []byte("{}"), 0755)
 			ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs"), 0755)
-			err := GatherResults(tmpdir+"/done", url, srv.Client())
+			err := GatherResults(tmpdir+"/done", url, srv.Client(), nil)
 			if err != nil {
 				t.Fatalf("Got error running agent: %v", err)
 			}
