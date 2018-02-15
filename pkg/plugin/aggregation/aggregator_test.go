@@ -185,7 +185,8 @@ func TestAggregation_errors(t *testing.T) {
 
 		// Send an error
 		resultsCh <- pluginutils.MakeErrorResult("e2e", map[string]interface{}{"error": "foo"}, "")
-		agg.Wait(make(chan bool))
+		// make channel of size 10 so we don't block / need to set up a consumer
+		agg.Wait(make(chan bool), make(chan *plugin.Result, 10))
 
 		if result, ok := agg.Results["e2e"]; ok {
 			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path()))

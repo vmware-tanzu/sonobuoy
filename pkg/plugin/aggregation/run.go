@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca"
+	"github.com/heptio/sonobuoy/pkg/backplane/status"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -43,7 +44,7 @@ import (
 // 4. Hook the shared monitoring channel up to aggr's IngestResults() function
 // 5. Block until aggr shows all results accounted for (results come in through
 //    the HTTP callback), stopping the HTTP server on completion
-func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, outdir string) error {
+func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, namespace, outdir string) error {
 	// Construct a list of things we'll need to dispatch
 	if len(plugins) == 0 {
 		logrus.Info("Skipping host data gathering: no plugins defined")
@@ -78,8 +79,10 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	monitorCh := make(chan *plugin.Result, len(expectedResults))
 	stopWaitCh := make(chan bool, 1)
 
+	updateCh := make(chan *plugin.Result)
+	defer close(updateCh)
 	go func() {
-		aggr.Wait(stopWaitCh)
+		aggr.Wait(stopWaitCh, updateCh)
 		doneAggr <- true
 	}()
 
@@ -110,7 +113,13 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		doneServ <- srv.ListenAndServeTLS("", "")
 	}()
 
-	// 3. Launch each plugin, to dispatch workers which submit the results back
+	updater := status.NewUpdater(expectedResults, "sonobuoy", namespace, client)
+	if err := updater.Annotate(); err != nil {
+		logrus.WithField("err", err).Info("couldn't annotate initial status")
+	}
+	go sendUpdates(updater, updateCh)
+
+	// 4. Launch each plugin, to dispatch workers which submit the results back
 	for _, p := range plugins {
 		cert, err := auth.ClientKeyPair(p.GetName())
 		if err != nil {
@@ -123,7 +132,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		// Have the plugin monitor for errors
 		go p.Monitor(client, nodes.Items, monitorCh)
 	}
-	// 4. Have the aggregator plumb results from each plugins' monitor function
+	// 5. Have the aggregator plumb results from each plugins' monitor function
 	go aggr.IngestResults(monitorCh)
 
 	// Give the plugins a chance to cleanup before a hard timeout occurs
@@ -155,5 +164,36 @@ func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
 	// Cleanup after each plugin
 	for _, p := range plugins {
 		p.Cleanup(client)
+	}
+}
+
+func sendUpdates(updater *status.Updater, updateCh <-chan *plugin.Result) {
+	for result := range updateCh {
+		state := "complete"
+		if result.Error != "" {
+			state = "failed"
+		}
+		update := status.Plugin{
+			Node:   result.NodeName,
+			Plugin: result.ResultType,
+			Status: state,
+		}
+
+		log := logrus.WithFields(
+			logrus.Fields{
+				"node":   update.Node,
+				"plugin": update.Plugin,
+				"status": state,
+			},
+		)
+		if err := updater.Receive(&update); err != nil {
+			log.Error(err)
+			continue
+		}
+		if err := updater.Annotate(); err != nil {
+			log.Error(err)
+			continue
+		}
+		log.Info("status updated")
 	}
 }

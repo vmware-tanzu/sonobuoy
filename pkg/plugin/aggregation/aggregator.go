@@ -76,11 +76,11 @@ func NewAggregator(outputDir string, expected []plugin.ExpectedResult) *Aggregat
 }
 
 // Wait blocks until all expected results have come in.
-func (a *Aggregator) Wait(stop chan bool) {
+func (a *Aggregator) Wait(stop chan bool, results chan<- *plugin.Result) {
 	for !a.isComplete() {
 		select {
-		case <-a.resultEvents:
-			break
+		case res := <-a.resultEvents:
+			results <- res
 		case <-stop:
 			return
 		}

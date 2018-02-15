@@ -13,7 +13,12 @@ func TestCreateUpdater(t *testing.T) {
 		{NodeName: "", ResultType: "e2e"},
 	}
 
-	updater := NewUpdater(expected)
+	updater := NewUpdater(
+		expected,
+		"sonobuoy",
+		"heptio-sonobuoy-test",
+		nil,
+	)
 
 	if err := updater.Receive(&Plugin{
 		Status: Failed,
