@@ -118,6 +118,7 @@ data:
       env:
       - name: E2E_FOCUS
         value: {{.E2EFocus}}
+      command: ["/run_e2e.sh"]
       image: gcr.io/heptio-images/kube-conformance:latest
       imagePullPolicy: Always
       name: e2e
@@ -131,10 +132,7 @@ data:
       plugin-name: systemd-logs
       result-type: systemd_logs
     spec:
-      command:
-      - sh
-      - -c
-      - /get_systemd_logs.sh && sleep 3600
+      command: ["/bin/sh", "-c", "/get_systemd_logs.sh && sleep 3600"]
       env:
       - name: NODE_NAME
         valueFrom:

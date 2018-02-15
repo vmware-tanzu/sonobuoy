@@ -32,10 +32,7 @@ spec:
     spec:
       containers:
       - {{.ProducerContainer | indent 8}}
-      - command:
-        - sh
-        - -c
-        - /sonobuoy worker single-node -v 5 --logtostderr && sleep 3600
+      - command: ["/run_single_node_worker.sh"]
         env:
         - name: NODE_NAME
           valueFrom:
