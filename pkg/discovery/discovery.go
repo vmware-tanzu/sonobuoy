@@ -35,7 +35,7 @@ import (
 )
 
 // Run is the main entrypoint for discovery
-func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint, err error) {
+func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
 	t := time.Now()
 
 	// 1. Create the directory which will store the results, including the
@@ -43,9 +43,10 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint, er
 	// config)
 	outpath := path.Join(cfg.ResultsDir, cfg.UUID)
 	metapath := path.Join(outpath, MetaLocation)
-	err = os.MkdirAll(metapath, 0755)
+	err := os.MkdirAll(metapath, 0755)
 	if err != nil {
-		return errCount, errors.Wrap(err, "could not create directory to store results")
+		errlog.LogError(errors.Wrap(err, "could not create directory to store results"))
+		return errCount + 1
 	}
 
 	// Write logs to the configured results location. All log levels
@@ -75,13 +76,15 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint, er
 	logrus.Infof("Filtering namespaces based on the following regex:%s", nsfilter)
 	nslist, err := FilterNamespaces(kubeClient, nsfilter)
 	if err != nil {
-		return errCount, errors.Wrap(err, "could not filter namespaces")
+		errlog.LogError(errors.Wrap(err, "could not filter namespaces"))
+		return errCount + 1
 	}
 
 	// 3. Dump the config.json we used to run our test
 	if blob, err := json.Marshal(cfg); err == nil {
 		if err = ioutil.WriteFile(path.Join(metapath, "config.json"), blob, 0644); err != nil {
-			return errCount, errors.Wrap(err, "could not write config.json file")
+			errlog.LogError(errors.Wrap(err, "could not write config.json file"))
+			return errCount + 1
 		}
 	}
 
@@ -119,5 +122,5 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint, er
 	trackErrorsFor("assembling results tarball")(err)
 	logrus.Infof("Results available at %v", tb)
 
-	return errCount, nil
+	return errCount
 }
