@@ -167,7 +167,7 @@ spec:
    name: results
 ```
 
-#### Advantages: 
+#### Advantages:
 * Simple substitution
 * Can add additional fields later
 
@@ -187,9 +187,9 @@ metadata:
     sonobuoy-driver: Job
     sonobuoy-plugin: heptio-e2e
     sonobuoy-result-type: heptio-e2e
-  labels: {{.SonobuoyLabels}
+  labels: {{.SonobuoyLabels}}
   name: sonobuoy-heptio-e2e-job-{{.SessionID}}
-  namespace: '{{. Namespace}}'
+  namespace: '{{.Namespace}}'
 spec:
   containers:
   - image: gcr.io/heptio-images/heptio-e2e:master
@@ -197,7 +197,7 @@ spec:
     name: heptio-e2e
     {{.SonobuoyMount}}
   - {{.SonobuoyConsumer}}
-  {{.SonobuySpecExtras}} 
+  {{.SonobuySpecExtras}}
 ```
 
 Then, at runtime, the template would be filled with values by the plugin driver.
@@ -216,7 +216,7 @@ of Go structs.
 
 # Results
 
-Proposal 1 accepted. 
+Proposal 1 accepted.
 
 ## User stories:
 
