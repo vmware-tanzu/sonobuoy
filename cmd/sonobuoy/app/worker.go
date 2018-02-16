@@ -112,7 +112,6 @@ func runGatherSingleNode(cmd *cobra.Command, args []string) {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
-
 }
 
 func runGatherGlobal(cmd *cobra.Command, args []string) {
