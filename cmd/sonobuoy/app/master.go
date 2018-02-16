@@ -61,7 +61,12 @@ func runMaster(cmd *cobra.Command, args []string) {
 	}
 
 	// Run Discovery (gather API data, run plugins)
-	if errcount := discovery.Run(kubeClient, cfg); errcount > 0 {
+	errcount, err := discovery.Run(kubeClient, cfg)
+	if err != nil {
+		errlog.LogError(err)
+		os.Exit(1)
+	}
+	if errcount > 0 {
 		exit = 1
 	}
 
