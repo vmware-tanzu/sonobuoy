@@ -65,20 +65,13 @@ func TestStress(t *testing.T) {
 	timeoutCh := make(chan bool, 1)
 	doneCh := make(chan bool, 1)
 	srvDoneCh := make(chan error, 1)
-	resultCh := make(chan *plugin.Result)
 	go func() {
 		time.Sleep(time.Duration(timeoutSeconds) * time.Second)
 		timeoutCh <- true
 	}()
 	go func() {
-		aggr.Wait(stopCh, resultCh)
+		aggr.Wait(stopCh)
 		doneCh <- true
-	}()
-
-	go func() {
-		// Discard all results as fast as possible
-		for range resultCh {
-		}
 	}()
 
 	sendResults(t, srv.URL, srv.Client(), numResults)

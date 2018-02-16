@@ -31,6 +31,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+var annotationUpdateFreq = 5 * time.Second
+
 // Run runs an aggregation server and gathers results, in accordance with the
 // given sonobuoy configuration.
 //
@@ -79,10 +81,8 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	monitorCh := make(chan *plugin.Result, len(expectedResults))
 	stopWaitCh := make(chan bool, 1)
 
-	updateCh := make(chan *plugin.Result)
-	defer close(updateCh)
 	go func() {
-		aggr.Wait(stopWaitCh, updateCh)
+		aggr.Wait(stopWaitCh)
 		doneAggr <- true
 	}()
 
@@ -114,10 +114,14 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	}()
 
 	updater := status.NewUpdater(expectedResults, "sonobuoy", namespace, client)
-	if err := updater.Annotate(); err != nil {
-		logrus.WithField("err", err).Info("couldn't annotate initial status")
-	}
-	go sendUpdates(updater, updateCh)
+	ticker := time.NewTicker(annotationUpdateFreq)
+	defer ticker.Stop()
+
+	go func() {
+		for range ticker.C {
+			sendUpdates(updater, aggr)
+		}
+	}()
 
 	// 4. Launch each plugin, to dispatch workers which submit the results back
 	for _, p := range plugins {
@@ -167,8 +171,9 @@ func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
 	}
 }
 
-func sendUpdates(updater *status.Updater, updateCh <-chan *plugin.Result) {
-	for result := range updateCh {
+func sendUpdates(updater *status.Updater, ag *Aggregator) {
+	// Could have race conditions, but will be eventually consistent
+	for _, result := range ag.Results {
 		state := "complete"
 		if result.Error != "" {
 			state = "failed"
@@ -179,21 +184,18 @@ func sendUpdates(updater *status.Updater, updateCh <-chan *plugin.Result) {
 			Status: state,
 		}
 
-		log := logrus.WithFields(
-			logrus.Fields{
-				"node":   update.Node,
-				"plugin": update.Plugin,
-				"status": state,
-			},
-		)
 		if err := updater.Receive(&update); err != nil {
-			log.Error(err)
-			continue
+			logrus.WithFields(
+				logrus.Fields{
+					"node":   update.Node,
+					"plugin": update.Plugin,
+					"status": state,
+					"at":     "sendUpdates",
+				},
+			).Error(err)
 		}
-		if err := updater.Annotate(); err != nil {
-			log.Error(err)
-			continue
-		}
-		log.Info("status updated")
+	}
+	if err := updater.Annotate(); err != nil {
+		logrus.WithField("at", "sendUpdates").Error(err)
 	}
 }
