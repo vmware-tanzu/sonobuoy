@@ -19,6 +19,7 @@ type Plugin struct {
 }
 
 // Status represents the current status of a Sonobuoy run
+// TODO(EKF): Find a better name for this struct/package
 type Status struct {
 	Plugins []Plugin `json:"plugins"`
 	Status  string   `json:"status"`
