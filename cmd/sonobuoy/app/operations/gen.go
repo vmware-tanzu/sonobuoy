@@ -23,19 +23,18 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/args"
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/templates"
 )
 
 // GenConfig are the input options for running
-// TODO: Figure out chained subcommands or how to share input options from RunConfig
 type GenConfig struct {
-	ModeName  args.Mode
-	Image     args.SonobuoyImage
-	Namespace args.Namespace
+	ModeName  Mode
+	Image     string
+	Namespace string
 }
 
+// templateValues are used for direct template substitution for manifest generation.
 type templateValues struct {
 	E2EFocus       string
 	PluginSelector string
@@ -45,10 +44,10 @@ type templateValues struct {
 }
 
 // GenerateManifest fills in a template with a Sonobuoy config
-func GenerateManifest(cfg GenConfig) ([]byte, error) {
-	mode := cfg.ModeName.Get()
+func (g *GenConfig) GenerateManifest() ([]byte, error) {
+	mode := g.ModeName.Get()
 	if mode == nil {
-		return nil, fmt.Errorf("unknown mode: %q", cfg.ModeName.String())
+		return nil, fmt.Errorf("unknown mode: %q", g.ModeName.String())
 	}
 	marshalledSelector, err := json.Marshal(mode.Selectors)
 	if err != nil {
@@ -58,9 +57,9 @@ func GenerateManifest(cfg GenConfig) ([]byte, error) {
 	tmplVals := &templateValues{
 		E2EFocus:       mode.E2EFocus,
 		PluginSelector: string(marshalledSelector),
-		SonobuoyImage:  cfg.Image.Get(),
+		SonobuoyImage:  g.Image,
 		Version:        buildinfo.Version,
-		Namespace:      cfg.Namespace.Get(),
+		Namespace:      g.Namespace,
 	}
 
 	var buf bytes.Buffer

@@ -20,7 +20,9 @@ import (
 	"bytes"
 	"io"
 
+	// TODO(timothysc) remove kubeconfig too.
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/args"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -38,16 +40,17 @@ import (
 const bufferSize = 4096
 
 // RunConfig are the input options for running
-// TODO: We should expose FOCUS and other options with sane defaults
 type RunConfig struct {
 	GenConfig
+
+	// Only pass in the rest client from the arg-parsing.
 	Kubecfg args.Kubeconfig
 }
 
 // Run generates the manifest, then tries to apply it to the cluster.
 // returns created resources or an error
 func Run(cfg RunConfig, restConfig *rest.Config) error {
-	manifest, err := GenerateManifest(cfg.GenConfig)
+	manifest, err := cfg.GenerateManifest()
 	if err != nil {
 		return errors.Wrap(err, "couldn't run invalid manifest")
 	}
