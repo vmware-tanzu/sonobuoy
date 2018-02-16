@@ -35,7 +35,7 @@ import (
 )
 
 // Run is the main entrypoint for discovery
-func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
+func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint, err error) {
 	t := time.Now()
 
 	// 1. Create the directory which will store the results, including the
@@ -43,9 +43,9 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
 	// config)
 	outpath := path.Join(cfg.ResultsDir, cfg.UUID)
 	metapath := path.Join(outpath, MetaLocation)
-	err := os.MkdirAll(metapath, 0755)
+	err = os.MkdirAll(metapath, 0755)
 	if err != nil {
-		panic(err.Error())
+		return errCount, errors.Wrap(err, "could not create directory to store results")
 	}
 
 	// Write logs to the configured results location. All log levels
@@ -73,11 +73,15 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
 	// 2. Get the list of namespaces and apply the regex filter on the namespace
 	nsfilter := fmt.Sprintf("%s|%s", cfg.Filters.Namespaces, cfg.PluginNamespace)
 	logrus.Infof("Filtering namespaces based on the following regex:%s", nsfilter)
-	nslist := FilterNamespaces(kubeClient, nsfilter)
+	nslist, err := FilterNamespaces(kubeClient, nsfilter)
+	if err != nil {
+		return errCount, errors.Wrap(err, "could not filter namespaces")
+	}
+
 	// 3. Dump the config.json we used to run our test
 	if blob, err := json.Marshal(cfg); err == nil {
 		if err = ioutil.WriteFile(path.Join(metapath, "config.json"), blob, 0644); err != nil {
-			panic(err.Error())
+			return errCount, errors.Wrap(err, "could not write config.json file")
 		}
 	}
 
@@ -115,5 +119,5 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
 	trackErrorsFor("assembling results tarball")(err)
 	logrus.Infof("Results available at %v", tb)
 
-	return errCount
+	return errCount, nil
 }
