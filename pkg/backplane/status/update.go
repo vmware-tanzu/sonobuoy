@@ -26,7 +26,7 @@ type Updater struct {
 	client          kubernetes.Interface
 }
 
-// NewUpdater creates an an updater that expects ExpectedResult
+// NewUpdater creates an an updater that expects ExpectedResult.
 func NewUpdater(expected []plugin.ExpectedResult, name, namespace string, client kubernetes.Interface) *Updater {
 	updater := &Updater{
 		positionLookup: make(map[key]*Plugin),
@@ -56,7 +56,7 @@ func expectedToKey(result plugin.ExpectedResult) key {
 	return key{node: result.NodeName, name: result.ResultType}
 }
 
-// Receive recieves an update to an individual plugin
+// Receive recieves an update to an individual plugin.
 func (u *Updater) Receive(update *Plugin) error {
 	u.Lock()
 	defer u.Unlock()
@@ -70,7 +70,7 @@ func (u *Updater) Receive(update *Plugin) error {
 	return u.status.updateStatus()
 }
 
-// Serialize json-encodes the status object
+// Serialize json-encodes the status object.
 func (u *Updater) Serialize() (string, error) {
 	u.RLock()
 	defer u.RUnlock()
@@ -78,7 +78,7 @@ func (u *Updater) Serialize() (string, error) {
 	return string(bytes), errors.Wrap(err, "couldn't marshall status")
 }
 
-// Annotate serialises the status json, then updates the Sonobuoy pod with the annotation
+// Annotate serialises the status json, then updates the Sonobuoy pod with the annotation.
 func (u *Updater) Annotate() error {
 	u.RLock()
 	defer u.RUnlock()
