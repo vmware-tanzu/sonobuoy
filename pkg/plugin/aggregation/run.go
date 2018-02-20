@@ -126,25 +126,28 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// 4. Have the aggregator plumb results from each plugins' monitor function
 	go aggr.IngestResults(monitorCh)
 
+	// Give the plugins a chance to cleanup before a hard timeout occurs
+	shutdownPlugins := time.After(time.Duration(cfg.TimeoutSeconds-plugin.GracefulShutdownPeriod) * time.Second)
 	// Ensure we only wait for results for a certain time
 	timeout := time.After(time.Duration(cfg.TimeoutSeconds) * time.Second)
 
 	// 5. Wait for aggr to show that all results are accounted for
-	select {
-	case <-timeout:
-		srv.Close()
-		stopWaitCh <- true
-		return errors.Errorf("timed out waiting for plugins, shutting down HTTP server")
-	case err := <-doneServ:
-		stopWaitCh <- true
-		if err != nil {
+	for {
+		select {
+		case <-shutdownPlugins:
+			Cleanup(client, plugins)
+			logrus.Info("Gracefully shutting down plugins due to timeout.")
+		case <-timeout:
+			srv.Close()
+			stopWaitCh <- true
+			return errors.Errorf("timed out waiting for plugins, shutting down HTTP server")
+		case err := <-doneServ:
+			stopWaitCh <- true
 			return err
+		case <-doneAggr:
+			return nil
 		}
-	case <-doneAggr:
-		break
 	}
-
-	return nil
 }
 
 // Cleanup calls cleanup on all plugins
