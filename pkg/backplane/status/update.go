@@ -56,7 +56,7 @@ func expectedToKey(result plugin.ExpectedResult) key {
 	return key{node: result.NodeName, name: result.ResultType}
 }
 
-// Receive recieves an update to an individual plugin.
+// Receive updates an individual plugin's status.
 func (u *Updater) Receive(update *Plugin) error {
 	u.Lock()
 	defer u.Unlock()
@@ -78,7 +78,7 @@ func (u *Updater) Serialize() (string, error) {
 	return string(bytes), errors.Wrap(err, "couldn't marshall status")
 }
 
-// Annotate serialises the status json, then updates the Sonobuoy pod with the annotation.
+// Annotate serialises the status json, then annotates the aggregator pod with the status.
 func (u *Updater) Annotate() error {
 	u.RLock()
 	defer u.RUnlock()

@@ -190,12 +190,11 @@ func sendUpdates(updater *status.Updater, ag *Aggregator) {
 					"node":   update.Node,
 					"plugin": update.Plugin,
 					"status": state,
-					"at":     "sendUpdates",
 				},
-			).Error(err)
+			).WithError(err).Info("couldn't update plugin")
 		}
 	}
 	if err := updater.Annotate(); err != nil {
-		logrus.WithField("at", "sendUpdates").Error(err)
+		logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
 	}
 }
