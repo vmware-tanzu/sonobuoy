@@ -22,9 +22,12 @@ import (
 	"mime"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
+	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -40,26 +43,31 @@ func init() {
 // 2. The Job will wait for a done file
 // 3. The done file contains a single string of the results to be sent to the master
 func GatherResults(waitfile string, url string, client *http.Client) error {
-	var inputFileName []byte
-	var err error
-	var outfile *os.File
-
-	// just loop looking for a file.
-	logrus.Infof("Waiting on: (%v)", waitfile)
+	logrus.WithField("waitfile", waitfile).Info("Waiting for waitfile")
+	stop := sigHandler()
+	ticker := time.Tick(1 * time.Second)
 	for {
-		if inputFileName, err = ioutil.ReadFile(waitfile); err == nil {
-			break
+		select {
+		case <-ticker:
+			if resultFile, err := ioutil.ReadFile(waitfile); err == nil {
+				logrus.WithField("resultFile", string(resultFile)).Info("Detected done file, transmitting result file")
+				return handleWaitFile(string(resultFile), url, client)
+			}
+		case <-stop:
+			// Sleep to give plugins time to finish up
+			time.Sleep(plugin.GracefulShutdownPeriod)
+			logrus.Info("Forced shutdown. Stopping.")
+			return nil
 		}
-		// There is no need to log here, just wait for the results.
-		logrus.Infof("Sleeping")
-		time.Sleep(1 * time.Second)
 	}
+}
 
-	s := string(inputFileName)
-	logrus.Infof("Detected done file, transmitting: (%v)", s)
+func handleWaitFile(resultFile, url string, client *http.Client) error {
+	var outfile *os.File
+	var err error
 
 	// Set content type
-	extension := filepath.Ext(s)
+	extension := filepath.Ext(resultFile)
 	mimeType := mime.TypeByExtension(extension)
 
 	defer func() {
@@ -70,8 +78,20 @@ func GatherResults(waitfile string, url string, client *http.Client) error {
 
 	// transmit back the results file.
 	return DoRequest(url, client, func() (io.Reader, string, error) {
-		outfile, err = os.Open(s)
+		outfile, err = os.Open(resultFile)
 		return outfile, mimeType, errors.WithStack(err)
 	})
+}
 
+// sigHandler is used to manage graceful cleanups when a TERM signal is received.
+func sigHandler() <-chan struct{} {
+	stop := make(chan struct{})
+	go func() {
+		sigc := make(chan os.Signal, 1)
+		signal.Notify(sigc, syscall.SIGTERM)
+		sig := <-sigc
+		logrus.WithField("signal", sig).Info("got a signal, waiting then sending the real shutdown signal")
+		close(stop)
+	}()
+	return stop
 }

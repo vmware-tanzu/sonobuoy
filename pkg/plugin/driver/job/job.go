@@ -186,7 +186,7 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, _ []v1.Node, resultsCh
 // Cleanup cleans up the k8s Job and ConfigMap created by this plugin instance
 func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
 	p.cleanedUp = true
-	gracePeriod := int64(1)
+	gracePeriod := int64(plugin.GracefulShutdownPeriod)
 	deletionPolicy := metav1.DeletePropagationBackground
 
 	listOptions := metav1.ListOptions{
