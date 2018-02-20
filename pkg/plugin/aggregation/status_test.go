@@ -1,4 +1,4 @@
-package status
+package aggregation
 
 import "testing"
 
@@ -32,9 +32,9 @@ func TestUpdateStatus(t *testing.T) {
 
 	for _, test := range statusTests {
 		t.Run(test.name, func(t *testing.T) {
-			plugins := make([]Plugin, len(test.pluginStatuses))
+			plugins := make([]PluginStatus, len(test.pluginStatuses))
 			for i, pluginStatus := range test.pluginStatuses {
-				plugins[i] = Plugin{Status: pluginStatus}
+				plugins[i] = PluginStatus{Status: pluginStatus}
 			}
 
 			status := &Status{Plugins: plugins}
@@ -51,7 +51,7 @@ func TestUpdateStatus(t *testing.T) {
 
 func TestUpdateInvalidStatus(t *testing.T) {
 	status := &Status{
-		Plugins: []Plugin{
+		Plugins: []PluginStatus{
 			{Status: "unknown"},
 		},
 		Status: "",

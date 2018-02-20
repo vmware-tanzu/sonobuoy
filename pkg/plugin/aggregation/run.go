@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca"
-	"github.com/heptio/sonobuoy/pkg/backplane/status"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -113,13 +112,16 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		doneServ <- srv.ListenAndServeTLS("", "")
 	}()
 
-	updater := status.NewUpdater(expectedResults, "sonobuoy", namespace, client)
+	updater := NewUpdater(expectedResults, "sonobuoy", namespace, client)
 	ticker := time.NewTicker(annotationUpdateFreq)
 	defer ticker.Stop()
 
 	go func() {
 		for range ticker.C {
-			sendUpdates(updater, aggr)
+			updater.ReceiveAll(aggr.Results)
+			if err := updater.Annotate(); err != nil {
+				logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
+			}
 		}
 	}()
 
@@ -168,33 +170,5 @@ func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
 	// Cleanup after each plugin
 	for _, p := range plugins {
 		p.Cleanup(client)
-	}
-}
-
-func sendUpdates(updater *status.Updater, ag *Aggregator) {
-	// Could have race conditions, but will be eventually consistent
-	for _, result := range ag.Results {
-		state := "complete"
-		if result.Error != "" {
-			state = "failed"
-		}
-		update := status.Plugin{
-			Node:   result.NodeName,
-			Plugin: result.ResultType,
-			Status: state,
-		}
-
-		if err := updater.Receive(&update); err != nil {
-			logrus.WithFields(
-				logrus.Fields{
-					"node":   update.Node,
-					"plugin": update.Plugin,
-					"status": state,
-				},
-			).WithError(err).Info("couldn't update plugin")
-		}
-	}
-	if err := updater.Annotate(); err != nil {
-		logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
 	}
 }

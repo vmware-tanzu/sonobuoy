@@ -1,4 +1,4 @@
-package status
+package aggregation
 
 import (
 	"encoding/json"
@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 
@@ -18,9 +19,10 @@ type key struct {
 	node, name string
 }
 
+// Updater manages setting the Aggregator annotation with the current status
 type Updater struct {
 	sync.RWMutex
-	positionLookup  map[key]*Plugin
+	positionLookup  map[key]*PluginStatus
 	status          Status
 	name, namespace string
 	client          kubernetes.Interface
@@ -29,10 +31,10 @@ type Updater struct {
 // NewUpdater creates an an updater that expects ExpectedResult.
 func NewUpdater(expected []plugin.ExpectedResult, name, namespace string, client kubernetes.Interface) *Updater {
 	updater := &Updater{
-		positionLookup: make(map[key]*Plugin),
+		positionLookup: make(map[key]*PluginStatus),
 		status: Status{
-			Plugins: make([]Plugin, len(expected)),
-			Status:  Running,
+			Plugins: make([]PluginStatus, len(expected)),
+			Status:  RunningStatus,
 		},
 		name:      name,
 		namespace: namespace,
@@ -40,10 +42,10 @@ func NewUpdater(expected []plugin.ExpectedResult, name, namespace string, client
 	}
 
 	for i, result := range expected {
-		updater.status.Plugins[i] = Plugin{
+		updater.status.Plugins[i] = PluginStatus{
 			Node:   result.NodeName,
 			Plugin: result.ResultType,
-			Status: Running,
+			Status: RunningStatus,
 		}
 
 		updater.positionLookup[expectedToKey(result)] = &updater.status.Plugins[i]
@@ -57,7 +59,7 @@ func expectedToKey(result plugin.ExpectedResult) key {
 }
 
 // Receive updates an individual plugin's status.
-func (u *Updater) Receive(update *Plugin) error {
+func (u *Updater) Receive(update *PluginStatus) error {
 	u.Lock()
 	defer u.Unlock()
 	k := key{node: update.Node, name: update.Plugin}
@@ -95,6 +97,32 @@ func (u *Updater) Annotate() error {
 
 	_, err = u.client.CoreV1().Pods(u.namespace).Patch(u.name, types.MergePatchType, bytes)
 	return errors.Wrap(err, "couldn't patch pod annotation")
+}
+
+// ReceiveAll takes a map of plugin.Result and calls Receive on all of them.
+func (u *Updater) ReceiveAll(results map[string]*plugin.Result) {
+	// Could have race conditions, but will be eventually consistent
+	for _, result := range results {
+		state := "complete"
+		if result.Error != "" {
+			state = "failed"
+		}
+		update := PluginStatus{
+			Node:   result.NodeName,
+			Plugin: result.ResultType,
+			Status: state,
+		}
+
+		if err := u.Receive(&update); err != nil {
+			logrus.WithFields(
+				logrus.Fields{
+					"node":   update.Node,
+					"plugin": update.Plugin,
+					"status": state,
+				},
+			).WithError(err).Info("couldn't update plugin")
+		}
+	}
 }
 
 func getPatch(annotation string) map[string]interface{} {

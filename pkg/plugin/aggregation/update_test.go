@@ -1,4 +1,4 @@
-package status
+package aggregation
 
 import (
 	"testing"
@@ -20,15 +20,15 @@ func TestCreateUpdater(t *testing.T) {
 		nil,
 	)
 
-	if err := updater.Receive(&Plugin{
-		Status: Failed,
+	if err := updater.Receive(&PluginStatus{
+		Status: FailedStatus,
 		Node:   "node1",
 		Plugin: "systemd",
 	}); err != nil {
 		t.Errorf("unexpected error receiving update %v", err)
 	}
 
-	if updater.status.Status != Failed {
+	if updater.status.Status != FailedStatus {
 		t.Errorf("expected status to be failed, got %v", updater.status.Status)
 	}
 }
