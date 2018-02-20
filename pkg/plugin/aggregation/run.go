@@ -30,6 +30,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+var annotationUpdateFreq = 5 * time.Second
+
 // Run runs an aggregation server and gathers results, in accordance with the
 // given sonobuoy configuration.
 //
@@ -43,7 +45,7 @@ import (
 // 4. Hook the shared monitoring channel up to aggr's IngestResults() function
 // 5. Block until aggr shows all results accounted for (results come in through
 //    the HTTP callback), stopping the HTTP server on completion
-func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, outdir string) error {
+func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, namespace, outdir string) error {
 	// Construct a list of things we'll need to dispatch
 	if len(plugins) == 0 {
 		logrus.Info("Skipping host data gathering: no plugins defined")
@@ -110,7 +112,21 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		doneServ <- srv.ListenAndServeTLS("", "")
 	}()
 
-	// 3. Launch each plugin, to dispatch workers which submit the results back
+	updater := NewUpdater(expectedResults, "sonobuoy", namespace, client)
+	ticker := time.NewTicker(annotationUpdateFreq)
+	defer ticker.Stop()
+
+	// 3. Regularly annotate the Aggregator pod with the current run status
+	go func() {
+		for range ticker.C {
+			updater.ReceiveAll(aggr.Results)
+			if err := updater.Annotate(); err != nil {
+				logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
+			}
+		}
+	}()
+
+	// 4. Launch each plugin, to dispatch workers which submit the results back
 	for _, p := range plugins {
 		cert, err := auth.ClientKeyPair(p.GetName())
 		if err != nil {
@@ -123,7 +139,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		// Have the plugin monitor for errors
 		go p.Monitor(client, nodes.Items, monitorCh)
 	}
-	// 4. Have the aggregator plumb results from each plugins' monitor function
+	// 5. Have the aggregator plumb results from each plugins' monitor function
 	go aggr.IngestResults(monitorCh)
 
 	// Give the plugins a chance to cleanup before a hard timeout occurs
@@ -131,7 +147,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// Ensure we only wait for results for a certain time
 	timeout := time.After(time.Duration(cfg.TimeoutSeconds) * time.Second)
 
-	// 5. Wait for aggr to show that all results are accounted for
+	// 6. Wait for aggr to show that all results are accounted for
 	for {
 		select {
 		case <-shutdownPlugins:

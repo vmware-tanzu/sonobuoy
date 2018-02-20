@@ -90,7 +90,7 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
 
 	// 4. Run the plugin aggregator
 	trackErrorsFor("running plugins")(
-		pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, outpath),
+		pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.PluginNamespace, outpath),
 	)
 
 	// 5. Run the queries
