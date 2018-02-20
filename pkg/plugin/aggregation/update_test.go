@@ -13,9 +13,8 @@ func TestCreateUpdater(t *testing.T) {
 		{NodeName: "", ResultType: "e2e"},
 	}
 
-	updater := NewUpdater(
+	updater := newUpdater(
 		expected,
-		"sonobuoy",
 		"heptio-sonobuoy-test",
 		nil,
 	)

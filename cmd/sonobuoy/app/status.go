@@ -19,11 +19,20 @@ package app
 import (
 	"os"
 
-	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
-	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/kubernetes"
+
+	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/args"
+	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	"github.com/heptio/sonobuoy/pkg/errlog"
 )
+
+var statusOpts struct {
+	namespace args.Namespace
+	config    args.Kubeconfig
+}
 
 func init() {
 	cmd := &cobra.Command{
@@ -32,15 +41,39 @@ func init() {
 		Run:   getStatus,
 		Args:  cobra.ExactArgs(0),
 	}
-	// TODO: Determine options
+
+	args.AddNamespaceFlag(&statusOpts.namespace, cmd)
+	args.AddKubeconfigFlag(&statusOpts.config, cmd)
+
 	RootCmd.AddCommand(cmd)
 }
 
 func getStatus(cmd *cobra.Command, args []string) {
-	code := 0
-	if err := ops.GetStatus( /*opts*/ ); err != nil {
-		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
-		code = 1
+	config, err := statusOpts.config.Get()
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't get kubernetes config"))
+		os.Exit(1)
 	}
-	os.Exit(code)
+	namespace := statusOpts.namespace.Get()
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't initialise kubernete client"))
+		os.Exit(1)
+	}
+
+	status, err := ops.GetStatus(namespace, client)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
+		os.Exit(1)
+	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"plugin", "node", "status"})
+	for _, pluginStatus := range status.Plugins {
+		table.Append([]string{pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status})
+	}
+	table.SetFooter([]string{"", "", status.Status})
+	table.Render()
+
+	os.Exit(0)
 }
