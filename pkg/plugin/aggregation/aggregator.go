@@ -80,7 +80,6 @@ func (a *Aggregator) Wait(stop chan bool) {
 	for !a.isComplete() {
 		select {
 		case <-a.resultEvents:
-			break
 		case <-stop:
 			return
 		}
