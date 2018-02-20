@@ -116,6 +116,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	ticker := time.NewTicker(annotationUpdateFreq)
 	defer ticker.Stop()
 
+	// 3. Regularly annotate the Aggregator pod with the current run status
 	go func() {
 		for range ticker.C {
 			updater.ReceiveAll(aggr.Results)
@@ -146,7 +147,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// Ensure we only wait for results for a certain time
 	timeout := time.After(time.Duration(cfg.TimeoutSeconds) * time.Second)
 
-	// 5. Wait for aggr to show that all results are accounted for
+	// 6. Wait for aggr to show that all results are accounted for
 	for {
 		select {
 		case <-shutdownPlugins:
