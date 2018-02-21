@@ -17,9 +17,11 @@ limitations under the License.
 package app
 
 import (
+	"fmt"
 	"os"
+	"strings"
+	"text/tabwriter"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -67,13 +69,17 @@ func getStatus(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"plugin", "node", "status"})
+	tw := tabwriter.NewWriter(os.Stdout, 1, 8, 1, '\t', tabwriter.AlignRight)
+
+	fmt.Fprintf(tw, "PLUGIN\tNODE\tSTATUS\n")
 	for _, pluginStatus := range status.Plugins {
-		table.Append([]string{pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status})
+		fmt.Fprintf(tw, "%s\t%s\t%s\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status)
 	}
-	table.SetFooter([]string{"", "", status.Status})
-	table.Render()
+	fmt.Fprintf(tw, "\t\t%s\n", strings.ToUpper(status.Status))
+	if err := tw.Flush(); err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't write status out"))
+		os.Exit(1)
+	}
 
 	os.Exit(0)
 }
