@@ -33,22 +33,28 @@ var (
 	podLogSeparator = strings.Repeat("-", 79)
 )
 
+// LogConfig is the options passed to GetLogs
+type LogConfig struct {
+	Follow    *bool
+	Namespace string
+}
+
 // Logs gathers the logs for the containers in the sonobuoy namespace and prints them
 
 // GetLogs streams logs from the sonobuoy pod by default to stdout.
-func GetLogs(client kubernetes.Interface, namespace string, follow bool) error {
-	if follow {
-		return streamLogs(client, namespace, config.MasterPodName, &v1.PodLogOptions{Follow: true})
+func GetLogs(client kubernetes.Interface, cfg *LogConfig) error {
+	if *cfg.Follow {
+		return streamLogs(client, cfg.Namespace, config.MasterPodName, &v1.PodLogOptions{Follow: true})
 	}
 
-	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{})
+	pods, err := client.CoreV1().Pods(cfg.Namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("could not list pods: %v", err)
 	}
 	for _, pod := range pods.Items {
 		for _, container := range pod.Spec.Containers {
 			logrus.WithFields(logrus.Fields{"pod": pod.Name, "container": container.Name}).Info("Printing container logs")
-			err := streamLogs(client, namespace, pod.Name, &v1.PodLogOptions{
+			err := streamLogs(client, cfg.Namespace, pod.Name, &v1.PodLogOptions{
 				Container: container.Name,
 			})
 			if err != nil {

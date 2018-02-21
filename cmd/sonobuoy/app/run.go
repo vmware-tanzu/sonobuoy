@@ -22,12 +22,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/args"
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
 var runopts ops.RunConfig
+var runKubecfg Kubeconfig
 
 func init() {
 	cmd := &cobra.Command{
@@ -37,15 +37,13 @@ func init() {
 		Args:  cobra.ExactArgs(0),
 	}
 	AddGenFlags(&runopts.GenConfig, cmd)
-
-	// TODO (timothysc) move kubeconfig args here or into config.
-	args.AddKubeconfigFlag(&runopts.Kubecfg, cmd)
+	AddKubeconfigFlag(&runKubecfg, cmd)
 
 	RootCmd.AddCommand(cmd)
 }
 
 func submitSonobuoyRun(cmd *cobra.Command, args []string) {
-	restConfig, err := runopts.Kubecfg.Get()
+	restConfig, err := runKubecfg.Get()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
 		os.Exit(1)

@@ -23,15 +23,18 @@ import (
 	"sync"
 
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
-	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
 	prefix        = filepath.Join("tmp", "sonobuoy")
 	defaultOutDir = "."
+)
+
+var (
+	cpKubecfg   Kubeconfig
+	cpNamespace string
 )
 
 func init() {
@@ -41,7 +44,10 @@ func init() {
 		Run:   copyResults,
 		Args:  cobra.MaximumNArgs(1),
 	}
-	cmd.Flags().String("namespace", config.DefaultPluginNamespace, "The namespace where the Sonobuoy control plane is running.")
+
+	AddKubeconfigFlag(&cpKubecfg, cmd)
+	AddNamespaceFlag(&cpNamespace, cmd)
+
 	RootCmd.AddCommand(cmd)
 }
 
@@ -59,8 +65,7 @@ func copyResults(cmd *cobra.Command, args []string) {
 
 	// TODO(chuckha) this should be the same across all sonobuoy commands.
 	// Find and load the kubeconfig using the same loading rules that kubectl uses.
-	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{})
-	config, err := kubeConfig.ClientConfig()
+	config, err := cpKubecfg.Get()
 	if err != nil {
 		errlog.LogError(fmt.Errorf("failed to get kubernetes client: %v", err))
 		os.Exit(1)

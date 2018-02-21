@@ -1,7 +1,6 @@
-package args
+package app
 
 import (
-	"github.com/spf13/cobra"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -9,11 +8,6 @@ import (
 // Kubeconfig represents an explict or implict kubeconfig
 type Kubeconfig struct {
 	*clientcmd.ClientConfigLoadingRules
-}
-
-// AddKubeconfigFlag adds a kubeconfig flag to the provided command
-func AddKubeconfigFlag(cfg *Kubeconfig, cmd *cobra.Command) {
-	cmd.PersistentFlags().Var(cfg, "kubeconfig", "Explict kubeconfig file")
 }
 
 // String needed for pflag.Value
