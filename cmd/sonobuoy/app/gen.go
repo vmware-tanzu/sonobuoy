@@ -50,16 +50,15 @@ func AddGenFlags(gen *ops.GenConfig, cmd *cobra.Command) {
 		&mode, "e2e-mode", "", string(ops.Conformance),
 		fmt.Sprintf("What mode to run sonobuoy in. [%s]", strings.Join(ops.GetModes(), ", ")),
 	)
+
+	AddNamespaceFlag(&gen.Namespace, cmd)
+
 	// TODO(timothysc) This variable default needs saner image defaults from ops.f(n) or config
 	cmd.PersistentFlags().StringVarP(
 		&gen.Image, "sonobuoy-image", "", "gcr.io/heptio-images/sonobuoy:master",
 		"Container image override for the sonobuoy worker and container",
 	)
-	// TODO(timothysc) This variable default needs saner image defaults from ops.f(n) or config
-	cmd.PersistentFlags().StringVarP(
-		&gen.Namespace, "namespace", "n", "heptio-sonobuoy",
-		"The namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously.",
-	)
+
 	// TODO(timothysc) Need to provide ability to override config structure and allow for sane defaults
 	// TODO(timothysc) Need to provide ability to override e2e-focus
 	// TODO(timothysc) Need to provide ability to override e2e-skip

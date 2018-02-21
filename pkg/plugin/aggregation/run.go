@@ -112,7 +112,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		doneServ <- srv.ListenAndServeTLS("", "")
 	}()
 
-	updater := NewUpdater(expectedResults, "sonobuoy", namespace, client)
+	updater := newUpdater(expectedResults, namespace, client)
 	ticker := time.NewTicker(annotationUpdateFreq)
 	defer ticker.Stop()
 
