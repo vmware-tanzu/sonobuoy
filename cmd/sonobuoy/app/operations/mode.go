@@ -1,12 +1,13 @@
-package args
+package operations
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/spf13/cobra"
 )
+
+// Mode identifies a specific mode
+type Mode string
 
 const (
 	// Quick runs a single E2E test and the systemd log tests
@@ -17,9 +18,6 @@ const (
 	// Heptio's E2E Tests
 	Extended Mode = "extended"
 )
-
-// Mode identifies a specific mode
-type Mode string
 
 var modeMap = map[string]Mode{
 	"conformance": Conformance,
@@ -33,17 +31,6 @@ type ModeConfig struct {
 	E2EFocus string
 	// Selectors are the plugins selected by thi mode
 	Selectors []plugin.Selection
-}
-
-// AddModeFlag adds a mode flag to existing command
-func AddModeFlag(modeMode *Mode, cmd *cobra.Command) {
-	cmd.PersistentFlags().VarP(
-		modeMode, "mode", "m",
-		fmt.Sprintf(
-			"What mode to run sonobuoy in. One of %s (default Conformance).",
-			strings.Join(getModes(), ", "),
-		),
-	)
 }
 
 // String needed for pflag.Value
@@ -84,7 +71,6 @@ func (n *Mode) Get() *ModeConfig {
 			E2EFocus: "Pods should be submitted and removed",
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
-				{Name: "systemd-logs"},
 			},
 		}
 	case Extended:
@@ -101,7 +87,7 @@ func (n *Mode) Get() *ModeConfig {
 	}
 }
 
-func getModes() []string {
+func GetModes() []string {
 	keys := make([]string, len(modeMap))
 	i := 0
 	for k := range modeMap {
