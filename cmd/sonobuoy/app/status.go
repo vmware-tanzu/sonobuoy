@@ -32,7 +32,7 @@ import (
 )
 
 var statusOpts struct {
-	namespace args.Namespace
+	namespace string
 	config    args.Kubeconfig
 }
 
@@ -44,7 +44,7 @@ func init() {
 		Args:  cobra.ExactArgs(0),
 	}
 
-	args.AddNamespaceFlag(&statusOpts.namespace, cmd)
+	AddNamespaceFlag(&statusOpts.namespace, cmd)
 	args.AddKubeconfigFlag(&statusOpts.config, cmd)
 
 	RootCmd.AddCommand(cmd)
@@ -56,7 +56,7 @@ func getStatus(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "couldn't get kubernetes config"))
 		os.Exit(1)
 	}
-	namespace := statusOpts.namespace.Get()
+	namespace := statusOpts.namespace
 	client, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't initialise kubernete client"))
