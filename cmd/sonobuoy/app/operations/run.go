@@ -20,9 +20,6 @@ import (
 	"bytes"
 	"io"
 
-	// TODO(timothysc) remove kubeconfig too.
-	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/args"
-
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -42,9 +39,6 @@ const bufferSize = 4096
 // RunConfig are the input options for running
 type RunConfig struct {
 	GenConfig
-
-	// Only pass in the rest client from the arg-parsing.
-	Kubecfg args.Kubeconfig
 }
 
 // Run generates the manifest, then tries to apply it to the cluster.

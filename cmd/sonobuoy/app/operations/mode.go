@@ -52,12 +52,7 @@ func (n *Mode) Set(str string) error {
 // Get returns the ModeConfig associated with a mode name, or nil
 // if there's no associated mode
 func (n *Mode) Get() *ModeConfig {
-	// Default value
-	name := Conformance
-	if n != nil && *n != "" {
-		name = *n
-	}
-	switch name {
+	switch *n {
 	case Conformance:
 		return &ModeConfig{
 			E2EFocus: "Conformance",

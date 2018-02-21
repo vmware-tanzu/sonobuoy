@@ -67,7 +67,7 @@ spec:
           readOnly: false
       dnsPolicy: ClusterFirstWithHostNet
       hostIPC: true
-      hostNetwork: true
+      hos-tNetwork: true
       hostPID: true
       tolerations:
       - effect: NoSchedule

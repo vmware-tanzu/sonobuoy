@@ -19,7 +19,6 @@ package app
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -46,32 +45,19 @@ func init() {
 
 // AddGenFlags adds generation flags to a command
 func AddGenFlags(gen *ops.GenConfig, cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVarP(
-		&mode, "e2e-mode", "", string(ops.Conformance),
-		fmt.Sprintf("What mode to run sonobuoy in. [%s]", strings.Join(ops.GetModes(), ", ")),
-	)
-
-	AddNamespaceFlag(&gen.Namespace, cmd)
-
-	// TODO(timothysc) This variable default needs saner image defaults from ops.f(n) or config
-	cmd.PersistentFlags().StringVarP(
-		&gen.Image, "sonobuoy-image", "", "gcr.io/heptio-images/sonobuoy:master",
-		"Container image override for the sonobuoy worker and container",
-	)
-
-	// TODO(timothysc) Need to provide ability to override config structure and allow for sane defaults
+	AddNamespaceFlag(&genopts.Namespace, cmd)
+	AddSonobuoyImage(&genopts.Image, cmd)
+	// TODO(timothysc) Need to provide ability to override config structure and allow for better defaults
 	// TODO(timothysc) Need to provide ability to override e2e-focus
 	// TODO(timothysc) Need to provide ability to override e2e-skip
+	AddE2EModeFlag(&genopts.ModeName, cmd)
 }
 
 func genManifest(cmd *cobra.Command, args []string) {
-	err := genopts.ModeName.Set(mode)
+	bytes, err := genopts.GenerateManifest()
 	if err == nil {
-		bytes, err := genopts.GenerateManifest()
-		if err == nil {
-			fmt.Printf("%s\n", bytes)
-			os.Exit(0)
-		}
+		fmt.Printf("%s\n", bytes)
+		os.Exit(0)
 	}
 	errlog.LogError(errors.Wrap(err, "error attempting to generate sonobuoy manifest"))
 	os.Exit(1)
