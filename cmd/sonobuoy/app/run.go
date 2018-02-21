@@ -36,9 +36,9 @@ func init() {
 		Run:   submitSonobuoyRun,
 		Args:  cobra.ExactArgs(0),
 	}
-	args.AddModeFlag(&runopts.GenConfig.ModeName, cmd)
-	args.AddSonobuoyImageFlag(&runopts.GenConfig.Image, cmd)
-	args.AddNamespaceFlag(&runopts.GenConfig.Namespace, cmd)
+	AddGenFlags(&runopts.GenConfig, cmd)
+
+	// TODO (timothysc) move kubeconfig args here or into config.
 	args.AddKubeconfigFlag(&runopts.Kubecfg, cmd)
 
 	RootCmd.AddCommand(cmd)

@@ -19,16 +19,17 @@ package app
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/heptio/sonobuoy/cmd/sonobuoy/app/args"
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
 var genopts ops.GenConfig
+var mode string
 
 // GenCommand is exported so it can be extended
 var GenCommand = &cobra.Command{
@@ -39,21 +40,40 @@ var GenCommand = &cobra.Command{
 }
 
 func init() {
-	args.AddSonobuoyImageFlag(&genopts.Image, GenCommand)
-	args.AddModeFlag(&genopts.ModeName, GenCommand)
-	args.AddNamespaceFlag(&genopts.Namespace, GenCommand)
-
+	AddGenFlags(&genopts, GenCommand)
 	RootCmd.AddCommand(GenCommand)
 }
 
+// AddGenFlags adds generation flags to a command
+func AddGenFlags(gen *ops.GenConfig, cmd *cobra.Command) {
+	cmd.PersistentFlags().StringVarP(
+		&mode, "e2e-mode", "", string(ops.Conformance),
+		fmt.Sprintf("What mode to run sonobuoy in. [%s]", strings.Join(ops.GetModes(), ", ")),
+	)
+	// TODO(timothysc) This variable default needs saner image defaults from ops.f(n) or config
+	cmd.PersistentFlags().StringVarP(
+		&gen.Image, "sonobuoy-image", "", "gcr.io/heptio-images/sonobuoy:master",
+		"Container image override for the sonobuoy worker and container",
+	)
+	// TODO(timothysc) This variable default needs saner image defaults from ops.f(n) or config
+	cmd.PersistentFlags().StringVarP(
+		&gen.Namespace, "namespace", "n", "heptio-sonobuoy",
+		"The namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously.",
+	)
+	// TODO(timothysc) Need to provide ability to override config structure and allow for sane defaults
+	// TODO(timothysc) Need to provide ability to override e2e-focus
+	// TODO(timothysc) Need to provide ability to override e2e-skip
+}
+
 func genManifest(cmd *cobra.Command, args []string) {
-	code := 0
-	bytes, err := ops.GenerateManifest(genopts)
+	err := genopts.ModeName.Set(mode)
 	if err == nil {
-		fmt.Printf("%s\n", bytes)
-	} else {
-		errlog.LogError(errors.Wrap(err, "error attempting to generate sonobuoy manifest"))
-		code = 1
+		bytes, err := genopts.GenerateManifest()
+		if err == nil {
+			fmt.Printf("%s\n", bytes)
+			os.Exit(0)
+		}
 	}
-	os.Exit(code)
+	errlog.LogError(errors.Wrap(err, "error attempting to generate sonobuoy manifest"))
+	os.Exit(1)
 }
