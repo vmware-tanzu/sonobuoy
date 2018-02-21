@@ -13,45 +13,48 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 )
 
-const annotationName = "sonobuoy.hept.io/status"
+const (
+	StatusAnnotationName = "sonobuoy.hept.io/status"
+	StatusPodName        = "sonobuoy"
+)
 
+// node and name uniquely identify a single plugin result
 type key struct {
 	node, name string
 }
 
-// Updater manages setting the Aggregator annotation with the current status
-type Updater struct {
+// updater manages setting the Aggregator annotation with the current status
+type updater struct {
 	sync.RWMutex
-	positionLookup  map[key]*PluginStatus
-	status          Status
-	name, namespace string
-	client          kubernetes.Interface
+	positionLookup map[key]*PluginStatus
+	status         Status
+	namespace      string
+	client         kubernetes.Interface
 }
 
-// NewUpdater creates an an updater that expects ExpectedResult.
-func NewUpdater(expected []plugin.ExpectedResult, name, namespace string, client kubernetes.Interface) *Updater {
-	updater := &Updater{
+// newUpdater creates an an updater that expects ExpectedResult.
+func newUpdater(expected []plugin.ExpectedResult, namespace string, client kubernetes.Interface) *updater {
+	u := &updater{
 		positionLookup: make(map[key]*PluginStatus),
 		status: Status{
 			Plugins: make([]PluginStatus, len(expected)),
 			Status:  RunningStatus,
 		},
-		name:      name,
 		namespace: namespace,
 		client:    client,
 	}
 
 	for i, result := range expected {
-		updater.status.Plugins[i] = PluginStatus{
+		u.status.Plugins[i] = PluginStatus{
 			Node:   result.NodeName,
 			Plugin: result.ResultType,
 			Status: RunningStatus,
 		}
 
-		updater.positionLookup[expectedToKey(result)] = &updater.status.Plugins[i]
+		u.positionLookup[expectedToKey(result)] = &u.status.Plugins[i]
 	}
 
-	return updater
+	return u
 }
 
 func expectedToKey(result plugin.ExpectedResult) key {
@@ -59,7 +62,7 @@ func expectedToKey(result plugin.ExpectedResult) key {
 }
 
 // Receive updates an individual plugin's status.
-func (u *Updater) Receive(update *PluginStatus) error {
+func (u *updater) Receive(update *PluginStatus) error {
 	u.Lock()
 	defer u.Unlock()
 	k := key{node: update.Node, name: update.Plugin}
@@ -73,7 +76,7 @@ func (u *Updater) Receive(update *PluginStatus) error {
 }
 
 // Serialize json-encodes the status object.
-func (u *Updater) Serialize() (string, error) {
+func (u *updater) Serialize() (string, error) {
 	u.RLock()
 	defer u.RUnlock()
 	bytes, err := json.Marshal(u.status)
@@ -81,7 +84,7 @@ func (u *Updater) Serialize() (string, error) {
 }
 
 // Annotate serialises the status json, then annotates the aggregator pod with the status.
-func (u *Updater) Annotate() error {
+func (u *updater) Annotate() error {
 	u.RLock()
 	defer u.RUnlock()
 	str, err := u.Serialize()
@@ -95,12 +98,12 @@ func (u *Updater) Annotate() error {
 		return errors.Wrap(err, "couldn't encode patch")
 	}
 
-	_, err = u.client.CoreV1().Pods(u.namespace).Patch(u.name, types.MergePatchType, bytes)
+	_, err = u.client.CoreV1().Pods(u.namespace).Patch(StatusPodName, types.MergePatchType, bytes)
 	return errors.Wrap(err, "couldn't patch pod annotation")
 }
 
 // ReceiveAll takes a map of plugin.Result and calls Receive on all of them.
-func (u *Updater) ReceiveAll(results map[string]*plugin.Result) {
+func (u *updater) ReceiveAll(results map[string]*plugin.Result) {
 	// Could have race conditions, but will be eventually consistent
 	for _, result := range results {
 		state := "complete"
@@ -129,7 +132,7 @@ func getPatch(annotation string) map[string]interface{} {
 	return map[string]interface{}{
 		"metadata": map[string]interface{}{
 			"annotations": map[string]string{
-				annotationName: annotation,
+				StatusAnnotationName: annotation,
 			},
 		},
 	}

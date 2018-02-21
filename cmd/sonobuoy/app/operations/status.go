@@ -17,15 +17,41 @@ limitations under the License.
 package operations
 
 import (
-	"errors"
+	"encoding/json"
+	"fmt"
+
+	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+
+	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 )
 
-// Status determines the status of the sonobuoy run in order to assist the user.
-func GetStatus( /*opts?*/ ) error {
-	// Do the following:
-	// 1. Check to see if the heptio namespace exists
-	// 2. If it exists check to see if it's blocking(finished) or not
-	// 3. If it's still running, post state as running w/breadcrumb to call logs to inspect the details.
-	// 4. TODO: Wedge detection w/timeouts () tests can wedge in places, and sometimes the forwarder can also wedge.
-	return errors.New("not implemented")
+// GetStatus determines the status of the sonobuoy run in order to assist the user.
+func GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error) {
+	if _, err := client.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{}); err != nil {
+		return nil, errors.Wrap(err, "sonobuoy namespace does not exist")
+	}
+
+	pod, err := client.CoreV1().Pods(namespace).Get(aggregation.StatusPodName, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not retrieve sonobuoy pod")
+	}
+
+	if pod.Status.Phase != corev1.PodRunning {
+		return nil, fmt.Errorf("pod has status %q", pod.Status.Phase)
+	}
+
+	statusJSON, ok := pod.Annotations[aggregation.StatusAnnotationName]
+	if !ok {
+		return nil, fmt.Errorf("missing status annotation %q", aggregation.StatusAnnotationName)
+	}
+
+	var status aggregation.Status
+	if err := json.Unmarshal([]byte(statusJSON), &status); err != nil {
+		return nil, errors.Wrap(err, "couldn't unmarshal the JSON status annotation")
+	}
+
+	return &status, nil
 }
