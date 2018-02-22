@@ -20,10 +20,12 @@ import (
 	"fmt"
 	"strings"
 
-	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/spf13/cobra"
 )
+
+// TODO (timothysc) - add a general override for --config for all commands which is the sonobuoy config
 
 // AddNamespaceFlag initialises a namespace flag
 func AddNamespaceFlag(str *string, cmd *cobra.Command) {

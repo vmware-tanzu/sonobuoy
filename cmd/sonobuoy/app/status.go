@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
 
-	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
@@ -49,6 +49,8 @@ func init() {
 	RootCmd.AddCommand(cmd)
 }
 
+// TODO (timothysc) summarize and aggregate daemonset-plugins by status done (24) running (24)
+// also --show-all
 func getStatus(cmd *cobra.Command, args []string) {
 	config, err := statusKubeconfig.Get()
 	if err != nil {

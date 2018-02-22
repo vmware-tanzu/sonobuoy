@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/spf13/cobra"
 )
@@ -38,6 +38,7 @@ var (
 )
 
 func init() {
+	// TODO (timothysc) change the name to retrieve
 	cmd := &cobra.Command{
 		Use:   "cp",
 		Short: "Copies the results to a specified path",
@@ -51,6 +52,7 @@ func init() {
 	RootCmd.AddCommand(cmd)
 }
 
+// TODO (timothysc) abstract copy details into a lower level function.
 func copyResults(cmd *cobra.Command, args []string) {
 	namespace, err := cmd.Flags().GetString("namespace")
 	if err != nil {

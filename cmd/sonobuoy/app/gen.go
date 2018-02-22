@@ -23,7 +23,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
@@ -47,9 +47,12 @@ func init() {
 func AddGenFlags(gen *ops.GenConfig, cmd *cobra.Command) {
 	AddNamespaceFlag(&gen.Namespace, cmd)
 	AddSonobuoyImage(&gen.Image, cmd)
+
 	// TODO(timothysc) Need to provide ability to override config structure and allow for better defaults
 	// TODO(timothysc) Need to provide ability to override e2e-focus
 	// TODO(timothysc) Need to provide ability to override e2e-skip
+	// config->focus/skip->mode
+
 	AddE2EModeFlag(&gen.ModeName, cmd)
 }
 
