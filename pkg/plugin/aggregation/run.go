@@ -114,14 +114,17 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 	updater := newUpdater(expectedResults, namespace, client)
 	ticker := time.NewTicker(annotationUpdateFreq)
-	defer ticker.Stop()
 
 	// 3. Regularly annotate the Aggregator pod with the current run status
 	go func() {
+		defer ticker.Stop()
 		for range ticker.C {
 			updater.ReceiveAll(aggr.Results)
 			if err := updater.Annotate(); err != nil {
 				logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
+			}
+			if aggr.isComplete() {
+				return
 			}
 		}
 	}()
