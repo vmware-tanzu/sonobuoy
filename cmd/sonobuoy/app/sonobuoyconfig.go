@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/heptio/sonobuoy/pkg/client"
+	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
-	"k8s.io/test-infra/prow/config"
 )
 
 // SonobuoyConfig is a config.Config that implements pflag.Value from a file path
@@ -48,4 +49,21 @@ func (c *SonobuoyConfig) Get() *config.Config {
 	}
 
 	return &c.Config
+}
+
+// GetConfigWithMode creates a config with the following algorithim:
+// If the SonobuoyConfig isn't nil, use that
+// If not, use the supplied Mode to modify a default config
+func GetConfigWithMode(sonobuoyCfg *SonobuoyConfig, mode client.Mode) *config.Config {
+	suppliedConfig := sonobuoyCfg.Get()
+	if suppliedConfig != nil {
+		return suppliedConfig
+	}
+
+	defaultConfig := config.NewWithDefaults()
+	modeConfig := mode.Get()
+	if modeConfig != nil {
+		defaultConfig.PluginSelections = modeConfig.Selectors
+	}
+	return defaultConfig
 }

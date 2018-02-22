@@ -28,7 +28,8 @@ import (
 )
 
 var genopts ops.GenConfig
-var mode string
+
+var genSonobuoyConfig SonobuoyConfig
 
 // GenCommand is exported so it can be extended
 var GenCommand = &cobra.Command{
@@ -48,15 +49,16 @@ func AddGenFlags(gen *ops.GenConfig, cmd *cobra.Command) {
 	AddNamespaceFlag(&gen.Namespace, cmd)
 	AddSonobuoyImage(&gen.Image, cmd)
 
-	// TODO(timothysc) Need to provide ability to override config structure and allow for better defaults
 	// TODO(timothysc) Need to provide ability to override e2e-focus
 	// TODO(timothysc) Need to provide ability to override e2e-skip
 	// config->focus/skip->mode
 
 	AddE2EModeFlag(&gen.ModeName, cmd)
+	AddSonobuoyConfigFlag(&genSonobuoyConfig, cmd)
 }
 
 func genManifest(cmd *cobra.Command, args []string) {
+	genopts.Config = GetConfigWithMode(&genSonobuoyConfig, genopts.ModeName)
 	bytes, err := ops.NewSonobuoyClient().GenerateManifest(&genopts)
 	if err == nil {
 		fmt.Printf("%s\n", bytes)

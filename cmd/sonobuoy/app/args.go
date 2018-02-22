@@ -25,8 +25,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO (timothysc) - add a general override for --config for all commands which is the sonobuoy config
-
 // AddNamespaceFlag initialises a namespace flag
 func AddNamespaceFlag(str *string, cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(
@@ -56,4 +54,14 @@ func AddSonobuoyImage(image *string, cmd *cobra.Command) {
 func AddKubeconfigFlag(cfg *Kubeconfig, cmd *cobra.Command) {
 	// The default is the empty string (look in the environment)
 	cmd.PersistentFlags().Var(cfg, "kubeconfig", "Explict kubeconfig file")
+	cmd.MarkFlagFilename("kubeconfig")
+}
+
+// AddSonobuoyConfigFlag adds a SonobuoyConfig flag to the provided command
+func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, cmd *cobra.Command) {
+	cmd.PersistentFlags().Var(
+		cfg, "config",
+		"path to a sonobuoy configuration JSON file. Overrides --e2e-mode",
+	)
+	cmd.MarkFlagFilename("config", "json")
 }

@@ -48,58 +48,7 @@ rules:
 apiVersion: v1
 data:
   config.json: |
-    {
-        "Description": "EXAMPLE",
-        "Filters": {
-            "LabelSelector": "",
-            "Namespaces": ".*"
-        },
-        "PluginNamespace": "{{.Namespace}}",
-        "Plugins": {{.PluginSelector}},
-        "Resources": [
-            "CertificateSigningRequests",
-            "ClusterRoleBindings",
-            "ClusterRoles",
-            "ComponentStatuses",
-            "CustomResourceDefinitions",
-            "Nodes",
-            "PersistentVolumes",
-            "PodSecurityPolicies",
-            "ServerVersion",
-            "StorageClasses",
-            "ConfigMaps",
-            "DaemonSets",
-            "Deployments",
-            "Endpoints",
-            "Events",
-            "HorizontalPodAutoscalers",
-            "Ingresses",
-            "Jobs",
-            "LimitRanges",
-            "PersistentVolumeClaims",
-            "Pods",
-            "PodDisruptionBudgets",
-            "PodTemplates",
-            "ReplicaSets",
-            "ReplicationControllers",
-            "ResourceQuotas",
-            "RoleBindings",
-            "Roles",
-            "ServerGroups",
-            "ServiceAccounts",
-            "Services",
-            "StatefulSets"
-        ],
-        "ResultsDir": "/tmp/sonobuoy",
-        "Server": {
-            "advertiseaddress": "sonobuoy-master:8080",
-            "bindaddress": "0.0.0.0",
-            "bindport": 8080,
-            "timeoutseconds": 5400
-        },
-        "Version": "0.11.0",{{/* TODO(EKF): Should be buildinfo.Version, when that's set*/}}
-        "WorkerImage": "{{.SonobuoyImage}}"
-    }
+    {{.SonobuoyConfig}}
 kind: ConfigMap
 metadata:
   labels:

@@ -30,7 +30,7 @@ import (
 // templateValues are used for direct template substitution for manifest generation.
 type templateValues struct {
 	E2EFocus       string
-	PluginSelector string
+	SonobuoyConfig string
 	SonobuoyImage  string
 	Version        string
 	Namespace      string
@@ -41,14 +41,17 @@ func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	if mode == nil {
 		return nil, fmt.Errorf("unknown mode: %q", cfg.ModeName.String())
 	}
-	marshalledSelector, err := json.Marshal(mode.Selectors)
+
+	cfg.Config.WorkerImage = cfg.Image
+
+	marshalledConfig, err := json.Marshal(cfg.Config)
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't marshall selector")
 	}
 
 	tmplVals := &templateValues{
 		E2EFocus:       mode.E2EFocus,
-		PluginSelector: string(marshalledSelector),
+		SonobuoyConfig: string(marshalledConfig),
 		SonobuoyImage:  cfg.Image,
 		Version:        buildinfo.Version,
 		Namespace:      cfg.Namespace,

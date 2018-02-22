@@ -19,6 +19,7 @@ package client
 import (
 	"io"
 
+	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -32,6 +33,7 @@ type LogConfig struct {
 
 // GenConfig is the input options for generating a Sonobuoy manifest
 type GenConfig struct {
+	Config    *config.Config
 	ModeName  Mode
 	Image     string
 	Namespace string

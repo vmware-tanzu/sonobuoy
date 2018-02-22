@@ -48,9 +48,9 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
 		os.Exit(1)
 	}
+	runopts.Config = GetConfigWithMode(&genSonobuoyConfig, runopts.ModeName)
 
 	// TODO(timothysc) Need to add checks which include (detection-rbac, preflight-DNS, ...)
-
 	if err := ops.NewSonobuoyClient().Run(&runopts, restConfig); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
