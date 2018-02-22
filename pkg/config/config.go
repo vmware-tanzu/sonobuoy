@@ -251,6 +251,7 @@ func NewWithDefaults() *Config {
 		"~/sonobuoy/plugins.d",
 	}
 
+	// TODO (timothysc) reference the other consts
 	cfg.WorkerImage = "gcr.io/heptio-images/sonobuoy:latest"
 
 	return &cfg
