@@ -35,7 +35,7 @@ func AddNamespaceFlag(str *string, cmd *cobra.Command) {
 
 // AddE2EModeFlag initialises a mode flag
 func AddE2EModeFlag(mode *ops.Mode, cmd *cobra.Command) {
-	mode.Set(string(ops.Conformance)) // default
+	*mode = ops.Conformance // default
 	cmd.PersistentFlags().Var(
 		mode, "e2e-mode",
 		fmt.Sprintf("What mode to run sonobuoy in. [%s]", strings.Join(ops.GetModes(), ", ")),

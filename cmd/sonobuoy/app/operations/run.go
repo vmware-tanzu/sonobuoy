@@ -44,7 +44,7 @@ type RunConfig struct {
 // Run generates the manifest, then tries to apply it to the cluster.
 // returns created resources or an error
 func Run(cfg RunConfig, restConfig *rest.Config) error {
-	manifest, err := cfg.GenerateManifest()
+	manifest, err := cfg.GenConfig.GenerateManifest()
 	if err != nil {
 		return errors.Wrap(err, "couldn't run invalid manifest")
 	}
