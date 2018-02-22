@@ -22,13 +22,14 @@ import (
 
 	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
+
+var logConfig ops.LogConfig
+var logsKubecfg Kubeconfig
 
 func init() {
 	cmd := &cobra.Command{
@@ -37,18 +38,19 @@ func init() {
 		Run:   getLogs,
 		Args:  cobra.ExactArgs(0),
 	}
-	cmd.Flags().BoolP("follow", "f", false, "Specify if the logs should be streamed.")
+
+	logConfig.Follow = cmd.Flags().BoolP(
+		"follow", "f", false,
+		"Specify if the logs should be streamed.",
+	)
+
+	AddKubeconfigFlag(&logsKubecfg, cmd)
+	AddNamespaceFlag(&logConfig.Namespace, cmd)
 	RootCmd.AddCommand(cmd)
 }
 
 func getLogs(cmd *cobra.Command, args []string) {
-	follow, err := cmd.Flags().GetBool("follow")
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "error getting follow flag"))
-		os.Exit(1)
-	}
-	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientcmd.NewDefaultClientConfigLoadingRules(), &clientcmd.ConfigOverrides{})
-	restConfig, err := clientConfig.ClientConfig()
+	restConfig, err := logsKubecfg.Get()
 	if err != nil {
 		errlog.LogError(fmt.Errorf("failed to get rest config: %v", err))
 		os.Exit(1)
@@ -58,7 +60,7 @@ func getLogs(cmd *cobra.Command, args []string) {
 		errlog.LogError(fmt.Errorf("failed to get kubernetes client: %v", err))
 		os.Exit(1)
 	}
-	if err := ops.GetLogs(kubeClient, config.DefaultPluginNamespace, follow); err != nil {
+	if err := ops.GetLogs(kubeClient, &logConfig); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to get sonobuoy logs"))
 		os.Exit(1)
 	}

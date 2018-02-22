@@ -16,13 +16,42 @@ limitations under the License.
 
 package app
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+	"strings"
+
+	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/spf13/cobra"
+)
 
 // AddNamespaceFlag initialises a namespace flag
 func AddNamespaceFlag(str *string, cmd *cobra.Command) {
-	// TODO(timothysc) This variable default needs saner image defaults from ops.f(n) or config
 	cmd.PersistentFlags().StringVarP(
-		str, "namespace", "n", "heptio-sonobuoy",
+		str, "namespace", "n", config.DefaultPluginNamespace,
 		"The namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously.",
 	)
+}
+
+// AddE2EModeFlag initialises a mode flag
+func AddE2EModeFlag(mode *ops.Mode, cmd *cobra.Command) {
+	*mode = ops.Conformance // default
+	cmd.PersistentFlags().Var(
+		mode, "e2e-mode",
+		fmt.Sprintf("What mode to run sonobuoy in. [%s]", strings.Join(ops.GetModes(), ", ")),
+	)
+}
+
+// AddSonobuoyImage initialises an image url flag
+func AddSonobuoyImage(image *string, cmd *cobra.Command) {
+	cmd.PersistentFlags().StringVar(
+		image, "sonobuoy-image", config.DefaultImage,
+		"Container image override for the sonobuoy worker and container",
+	)
+}
+
+// AddKubeconfigFlag adds a kubeconfig flag to the provided command
+func AddKubeconfigFlag(cfg *Kubeconfig, cmd *cobra.Command) {
+	// The default is the empty string (look in the environment)
+	cmd.PersistentFlags().Var(cfg, "kubeconfig", "Explict kubeconfig file")
 }
