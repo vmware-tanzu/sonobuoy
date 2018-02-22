@@ -45,12 +45,12 @@ func init() {
 
 // AddGenFlags adds generation flags to a command
 func AddGenFlags(gen *ops.GenConfig, cmd *cobra.Command) {
-	AddNamespaceFlag(&genopts.Namespace, cmd)
-	AddSonobuoyImage(&genopts.Image, cmd)
+	AddNamespaceFlag(&gen.Namespace, cmd)
+	AddSonobuoyImage(&gen.Image, cmd)
 	// TODO(timothysc) Need to provide ability to override config structure and allow for better defaults
 	// TODO(timothysc) Need to provide ability to override e2e-focus
 	// TODO(timothysc) Need to provide ability to override e2e-skip
-	AddE2EModeFlag(&genopts.ModeName, cmd)
+	AddE2EModeFlag(&gen.ModeName, cmd)
 }
 
 func genManifest(cmd *cobra.Command, args []string) {
