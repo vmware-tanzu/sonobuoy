@@ -22,7 +22,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
@@ -48,6 +48,8 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
 		os.Exit(1)
 	}
+
+	// TODO(timothysc) Need to add checks which include (detection-rbac, preflight-DNS, ...)
 
 	if err := ops.Run(runopts, restConfig); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))

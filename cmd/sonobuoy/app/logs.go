@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"os"
 
-	ops "github.com/heptio/sonobuoy/cmd/sonobuoy/app/operations"
+	ops "github.com/heptio/sonobuoy/pkg/client"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
