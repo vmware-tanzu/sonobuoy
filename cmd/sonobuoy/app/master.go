@@ -45,7 +45,6 @@ func init() {
 }
 
 func runMaster(cmd *cobra.Command, args []string) {
-	exit := 0
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
@@ -61,14 +60,12 @@ func runMaster(cmd *cobra.Command, args []string) {
 	}
 
 	// Run Discovery (gather API data, run plugins)
-	if errcount := discovery.Run(kubeClient, cfg); errcount > 0 {
-		exit = 1
-	}
+	errcount := discovery.Run(kubeClient, cfg)
 
 	if noExit {
 		logrus.Info("no-exit was specified, sonobuoy is now blocking")
 		select {}
 	}
 
-	os.Exit(exit)
+	os.Exit(errcount)
 }

@@ -80,6 +80,4 @@ func getStatus(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "couldn't write status out"))
 		os.Exit(1)
 	}
-
-	os.Exit(0)
 }
