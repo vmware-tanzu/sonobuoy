@@ -35,7 +35,7 @@ import (
 )
 
 // Run is the main entrypoint for discovery
-func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount uint) {
+func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount int) {
 	t := time.Now()
 
 	// 1. Create the directory which will store the results, including the

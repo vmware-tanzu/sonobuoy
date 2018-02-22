@@ -18,7 +18,6 @@ package app
 
 import (
 	"flag"
-	"os"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/spf13/cobra"
@@ -42,5 +41,4 @@ var RootCmd = &cobra.Command{
 func rootCmd(cmd *cobra.Command, args []string) {
 	// Sonobuoy does nothing when not given a subcommand
 	cmd.Help()
-	os.Exit(0)
 }
