@@ -19,7 +19,6 @@ package client
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -30,25 +29,24 @@ import (
 // templateValues are used for direct template substitution for manifest generation.
 type templateValues struct {
 	E2EFocus       string
-	PluginSelector string
+	E2ESkip        string
+	SonobuoyConfig string
 	SonobuoyImage  string
 	Version        string
 	Namespace      string
 }
 
+// GenerateManifest fills in a template with a Sonobuoy config
 func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
-	mode := cfg.ModeName.Get()
-	if mode == nil {
-		return nil, fmt.Errorf("unknown mode: %q", cfg.ModeName.String())
-	}
-	marshalledSelector, err := json.Marshal(mode.Selectors)
+	marshalledConfig, err := json.Marshal(cfg.Config)
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't marshall selector")
 	}
 
 	tmplVals := &templateValues{
-		E2EFocus:       mode.E2EFocus,
-		PluginSelector: string(marshalledSelector),
+		E2EFocus:       cfg.E2EConfig.Focus,
+		E2ESkip:        cfg.E2EConfig.Skip,
+		SonobuoyConfig: string(marshalledConfig),
 		SonobuoyImage:  cfg.Image,
 		Version:        buildinfo.Version,
 		Namespace:      cfg.Namespace,

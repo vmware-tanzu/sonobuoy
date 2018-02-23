@@ -6,18 +6,23 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 )
 
-// Mode identifies a specific mode
+// Mode identifies a specific mode of running Sonobuoy.
+// A mode is a defined configuration of plugins and E2E Focus and Config.
+// Modes form the base level defaults, which can then be overriden by the e2e flags
+// and the config flag.
 type Mode string
 
 const (
-	// Quick runs a single E2E test and the systemd log tests
+	// Quick runs a single E2E test and the systemd log tests.
 	Quick Mode = "quick"
-	// Conformance runs all of the E2E tests and the systemd log tests
+	// Conformance runs all of the E2E tests and the systemd log tests.
 	Conformance Mode = "conformance"
 	// Extended run all of the E2E tests, the systemd log tests, and
-	// Heptio's E2E Tests
+	// Heptio's E2E Tests.
 	Extended Mode = "extended"
 )
+
+const defaultSkipList = "Alpha|Disruptive|Feature|Flaky|Kubectl"
 
 var modeMap = map[string]Mode{
 	"conformance": Conformance,
@@ -25,11 +30,11 @@ var modeMap = map[string]Mode{
 	"extended":    Extended,
 }
 
-// ModeConfig represents the sonobuoy configuration for a given mode
+// ModeConfig represents the sonobuoy configuration for a given mode.
 type ModeConfig struct {
-	// E2EFocus is the string to be passed to the E2EFOCUS env var
-	E2EFocus string
-	// Selectors are the plugins selected by thi mode
+	// E2EConfig is the focus and skip vars for the conformance tests
+	E2EConfig E2EConfig
+	// Selectors are the plugins selected by this mode.
 	Selectors []plugin.Selection
 }
 
@@ -55,7 +60,10 @@ func (n *Mode) Get() *ModeConfig {
 	switch *n {
 	case Conformance:
 		return &ModeConfig{
-			E2EFocus: "Conformance",
+			E2EConfig: E2EConfig{
+				Focus: "Conformance",
+				Skip:  defaultSkipList,
+			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
 				{Name: "systemd-logs"},
@@ -63,14 +71,20 @@ func (n *Mode) Get() *ModeConfig {
 		}
 	case Quick:
 		return &ModeConfig{
-			E2EFocus: "Pods should be submitted and removed",
+			E2EConfig: E2EConfig{
+				Focus: "Pods should be submitted and removed",
+				Skip:  defaultSkipList,
+			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
 			},
 		}
 	case Extended:
 		return &ModeConfig{
-			E2EFocus: "Conformance",
+			E2EConfig: E2EConfig{
+				Focus: "Conformance",
+				Skip:  defaultSkipList,
+			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
 				{Name: "systemd-logs"},
@@ -82,6 +96,7 @@ func (n *Mode) Get() *ModeConfig {
 	}
 }
 
+// GetModes gets a list of all available modes.
 func GetModes() []string {
 	keys := make([]string, len(modeMap))
 	i := 0
