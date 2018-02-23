@@ -60,7 +60,7 @@ func genManifest(cmd *cobra.Command, args []string) {
 	bytes, err := genopts.GenerateManifest()
 	if err == nil {
 		fmt.Printf("%s\n", bytes)
-		os.Exit(0)
+		return
 	}
 	errlog.LogError(errors.Wrap(err, "error attempting to generate sonobuoy manifest"))
 	os.Exit(1)
