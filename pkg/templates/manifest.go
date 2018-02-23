@@ -65,10 +65,14 @@ data:
       result-type: e2e
     spec:
       env:
+      {{- if .E2EFocus }}
       - name: E2E_FOCUS
         value: "{{.E2EFocus}}"
+      {{- end }}
+      {{- if .E2ESkip }}
       - name: E2E_SKIP
         value: "{{.E2ESkip}}"
+      {{- end }}
       command: ["/run_e2e.sh"]
       image: gcr.io/heptio-images/kube-conformance:latest
       imagePullPolicy: Always

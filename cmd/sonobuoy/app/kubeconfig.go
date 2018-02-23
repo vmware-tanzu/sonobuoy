@@ -11,6 +11,7 @@ type Kubeconfig struct {
 	*clientcmd.ClientConfigLoadingRules
 }
 
+// Make sure Kubeconfig implements Value properly
 var _ pflag.Value = &Kubeconfig{}
 
 // String needed for pflag.Value

@@ -74,15 +74,16 @@ func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, cmd *cobra.Command) {
 
 // AddE2EConfig adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig.
 func AddE2EConfig(cmd *cobra.Command) {
+	modeName := ops.Conformance
+	defaultMode := modeName.Get()
 	cmd.PersistentFlags().String(
-		e2eFocusFlag, "",
+		e2eFocusFlag, defaultMode.E2EConfig.Focus,
 		"Specify the E2E_FOCUS flag to the conformance tests. Overrides --mode.",
 	)
 	cmd.PersistentFlags().String(
-		e2eSkipFlag, "",
+		e2eSkipFlag, defaultMode.E2EConfig.Skip,
 		"Specify the E2E_SKIP flag to the conformance tests. Overrides --mode.",
 	)
-
 }
 
 // GetE2EConfig gets the E2EConfig from the mode, then overrides them with e2e-focus and e2e-skip if they are provided.
