@@ -64,10 +64,15 @@ var _ Interface = &SonobuoyClient{}
 // This will provide a consistent look/feel to upstream and allow us to expose sonobuoy behavior
 // to other automation systems.
 type Interface interface {
-	// functions that are exposed for consumption
+	// Run generates the manifest, then tries to apply it to the cluster.
+	// returns created resources or an error
 	Run(cfg *RunConfig, restConfig *rest.Config) error
+	// GenerateManifest fills in a template with a Sonobuoy config
 	GenerateManifest(cfg *GenConfig) ([]byte, error)
+	// CopyResults copies results from a sonobuoy run into a Reader in tar format.
 	CopyResults(cfg *CopyConfig, restConfig *rest.Config) io.Reader
+	// GetStatus determines the status of the sonobuoy run in order to assist the user.
 	GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error)
+	// GetLogs streams logs from the sonobuoy pod by default to stdout.
 	GetLogs(cfg *LogConfig, client kubernetes.Interface) error
 }

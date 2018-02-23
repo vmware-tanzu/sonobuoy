@@ -36,8 +36,6 @@ import (
 
 const bufferSize = 4096
 
-// Run generates the manifest, then tries to apply it to the cluster.
-// returns created resources or an error
 func (c *SonobuoyClient) Run(cfg *RunConfig, restConfig *rest.Config) error {
 	manifest, err := c.GenerateManifest(&cfg.GenConfig)
 	if err != nil {
