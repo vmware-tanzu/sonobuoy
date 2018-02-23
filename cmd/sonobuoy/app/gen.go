@@ -57,7 +57,7 @@ func AddGenFlags(gen *ops.GenConfig, cmd *cobra.Command) {
 }
 
 func genManifest(cmd *cobra.Command, args []string) {
-	bytes, err := genopts.GenerateManifest()
+	bytes, err := ops.NewSonobuoyClient().GenerateManifest(&genopts)
 	if err == nil {
 		fmt.Printf("%s\n", bytes)
 		return
