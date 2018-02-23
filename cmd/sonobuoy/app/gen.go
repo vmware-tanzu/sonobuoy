@@ -34,7 +34,7 @@ var genFlags struct {
 	mode           ops.Mode
 }
 
-// GenCommand is exported so it can be extended
+// GenCommand is exported so it can be extended.
 var GenCommand = &cobra.Command{
 	Use:   "gen",
 	Short: "Generates a sonobuoy manifest for submission via kubectl",
@@ -52,7 +52,7 @@ func init() {
 	RootCmd.AddCommand(GenCommand)
 }
 
-// AddGenFlags adds generation flags to a command
+// AddGenFlags adds generation flags to a command.
 func AddGenFlags(gen *ops.GenConfig, cmd *cobra.Command) {
 	AddNamespaceFlag(&gen.Namespace, cmd)
 	AddSonobuoyImage(&gen.Image, cmd)
