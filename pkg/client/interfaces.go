@@ -33,10 +33,16 @@ type LogConfig struct {
 
 // GenConfig is the input options for generating a Sonobuoy manifest
 type GenConfig struct {
+	E2EConfig *E2EConfig
 	Config    *config.Config
-	ModeName  Mode
 	Image     string
 	Namespace string
+}
+
+// E2EConfig is the configuration of the E2E test
+type E2EConfig struct {
+	Focus string
+	Skip  string
 }
 
 // RunConfig is the input options for running Sonobuoy

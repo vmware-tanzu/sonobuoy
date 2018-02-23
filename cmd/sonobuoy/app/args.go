@@ -22,7 +22,13 @@ import (
 
 	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+)
+
+const (
+	e2eFocusFlag = "e2e-focus"
+	e2eSkipFlag  = "e2e-skip"
 )
 
 // AddNamespaceFlag initialises a namespace flag
@@ -33,11 +39,11 @@ func AddNamespaceFlag(str *string, cmd *cobra.Command) {
 	)
 }
 
-// AddE2EModeFlag initialises a mode flag
-func AddE2EModeFlag(mode *ops.Mode, cmd *cobra.Command) {
+// AddModeFlag initialises a mode flag
+func AddModeFlag(mode *ops.Mode, cmd *cobra.Command) {
 	*mode = ops.Conformance // default
 	cmd.PersistentFlags().Var(
-		mode, "e2e-mode",
+		mode, "mode",
 		fmt.Sprintf("What mode to run sonobuoy in. [%s]", strings.Join(ops.GetModes(), ", ")),
 	)
 }
@@ -61,7 +67,42 @@ func AddKubeconfigFlag(cfg *Kubeconfig, cmd *cobra.Command) {
 func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, cmd *cobra.Command) {
 	cmd.PersistentFlags().Var(
 		cfg, "config",
-		"path to a sonobuoy configuration JSON file. Overrides --e2e-mode",
+		"path to a sonobuoy configuration JSON file. Overrides --mode",
 	)
 	cmd.MarkFlagFilename("config", "json")
+}
+
+// AddE2EConfig adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig.
+func AddE2EConfig(cmd *cobra.Command) {
+	cmd.PersistentFlags().String(
+		e2eFocusFlag, "",
+		"Specify the E2E_FOCUS flag to the conformance tests. Overrides --mode.",
+	)
+	cmd.PersistentFlags().String(
+		e2eSkipFlag, "",
+		"Specify the E2E_SKIP flag to the conformance tests. Overrides --mode.",
+	)
+
+}
+
+// GetE2EConfig gets the E2EConfig from the mode, then overrides them with e2e-focus and e2e-skip if they are provided.
+func GetE2EConfig(mode ops.Mode, cmd *cobra.Command) (*ops.E2EConfig, error) {
+	flags := cmd.PersistentFlags()
+	cfg := mode.Get().E2EConfig
+	if flags.Changed(e2eFocusFlag) {
+		focus, err := flags.GetString(e2eFocusFlag)
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't retrieve focus flag")
+		}
+		cfg.Focus = focus
+	}
+
+	if flags.Changed(e2eSkipFlag) {
+		skip, err := flags.GetString(e2eSkipFlag)
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't retrieve skip flag")
+		}
+		cfg.Skip = skip
+	}
+	return &cfg, nil
 }

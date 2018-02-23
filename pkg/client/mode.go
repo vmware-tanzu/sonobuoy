@@ -28,7 +28,7 @@ var modeMap = map[string]Mode{
 // ModeConfig represents the sonobuoy configuration for a given mode
 type ModeConfig struct {
 	// E2EFocus is the string to be passed to the E2EFOCUS env var
-	E2EFocus string
+	E2EConfig E2EConfig
 	// Selectors are the plugins selected by thi mode
 	Selectors []plugin.Selection
 }
@@ -55,7 +55,10 @@ func (n *Mode) Get() *ModeConfig {
 	switch *n {
 	case Conformance:
 		return &ModeConfig{
-			E2EFocus: "Conformance",
+			E2EConfig: E2EConfig{
+				Focus: "Conformance",
+				Skip:  "",
+			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
 				{Name: "systemd-logs"},
@@ -63,14 +66,20 @@ func (n *Mode) Get() *ModeConfig {
 		}
 	case Quick:
 		return &ModeConfig{
-			E2EFocus: "Pods should be submitted and removed",
+			E2EConfig: E2EConfig{
+				Focus: "Pods should be submitted and removed",
+				Skip:  "",
+			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
 			},
 		}
 	case Extended:
 		return &ModeConfig{
-			E2EFocus: "Conformance",
+			E2EConfig: E2EConfig{
+				Focus: "Conformance",
+				Skip:  "",
+			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
 				{Name: "systemd-logs"},
