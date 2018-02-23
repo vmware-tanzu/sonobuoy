@@ -31,7 +31,7 @@ const (
 	e2eSkipFlag  = "e2e-skip"
 )
 
-// AddNamespaceFlag initialises a namespace flag
+// AddNamespaceFlag initialises a namespace flag.
 func AddNamespaceFlag(str *string, cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(
 		str, "namespace", "n", config.DefaultPluginNamespace,
@@ -39,7 +39,7 @@ func AddNamespaceFlag(str *string, cmd *cobra.Command) {
 	)
 }
 
-// AddModeFlag initialises a mode flag
+// AddModeFlag initialises a mode flag.
 func AddModeFlag(mode *ops.Mode, cmd *cobra.Command) {
 	*mode = ops.Conformance // default
 	cmd.PersistentFlags().Var(
@@ -48,7 +48,7 @@ func AddModeFlag(mode *ops.Mode, cmd *cobra.Command) {
 	)
 }
 
-// AddSonobuoyImage initialises an image url flag
+// AddSonobuoyImage initialises an image url flag.
 func AddSonobuoyImage(image *string, cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVar(
 		image, "sonobuoy-image", config.DefaultImage,
@@ -56,14 +56,14 @@ func AddSonobuoyImage(image *string, cmd *cobra.Command) {
 	)
 }
 
-// AddKubeconfigFlag adds a kubeconfig flag to the provided command
+// AddKubeconfigFlag adds a kubeconfig flag to the provided command.
 func AddKubeconfigFlag(cfg *Kubeconfig, cmd *cobra.Command) {
 	// The default is the empty string (look in the environment)
 	cmd.PersistentFlags().Var(cfg, "kubeconfig", "Explict kubeconfig file")
 	cmd.MarkFlagFilename("kubeconfig")
 }
 
-// AddSonobuoyConfigFlag adds a SonobuoyConfig flag to the provided command
+// AddSonobuoyConfigFlag adds a SonobuoyConfig flag to the provided command.
 func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, cmd *cobra.Command) {
 	cmd.PersistentFlags().Var(
 		cfg, "config",
@@ -86,6 +86,7 @@ func AddE2EConfig(cmd *cobra.Command) {
 }
 
 // GetE2EConfig gets the E2EConfig from the mode, then overrides them with e2e-focus and e2e-skip if they are provided.
+// We can't rely on the zero value of the flags, as "" is a valid  focus or skip value.
 func GetE2EConfig(mode ops.Mode, cmd *cobra.Command) (*ops.E2EConfig, error) {
 	flags := cmd.PersistentFlags()
 	cfg := mode.Get().E2EConfig
