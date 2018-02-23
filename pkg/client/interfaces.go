@@ -17,16 +17,62 @@ limitations under the License.
 package client
 
 import (
-// TODO
+	"io"
+
+	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
-// TODO (timothysc) move structs used by functions here.
+// LogConfig is the options passed to GetLogs
+type LogConfig struct {
+	Follow    *bool
+	Namespace string
+}
 
-// NewSonobuoyClient (could be empty struct that implements the interface)
+// GenConfig is the input options for generating a Sonobuoy manifest
+type GenConfig struct {
+	ModeName  Mode
+	Image     string
+	Namespace string
+}
 
-// client.Interface is the main contract that we will give to external consumers of this library
+// RunConfig is the input options for running Sonobuoy
+type RunConfig struct {
+	GenConfig
+}
+
+// CopyConfig is the options passed to CopyConfig.
+type CopyConfig struct {
+	Namespace string
+	CmdErr    io.Writer
+	Errc      chan error
+}
+
+// SonobuoyClient is a high-level interface to Sonobuoy operations.
+type SonobuoyClient struct{}
+
+// NewSonobuoyClient creates a new SonobuoyClient
+func NewSonobuoyClient() *SonobuoyClient {
+	return &SonobuoyClient{}
+}
+
+// Make sure SonobuoyClient implements the interface
+var _ Interface = &SonobuoyClient{}
+
+// Interface is the main contract that we will give to external consumers of this library
 // This will provide a consistent look/feel to upstream and allow us to expose sonobuoy behavior
 // to other automation systems.
 type Interface interface {
-	// functions that are exposed for consumption
+	// Run generates the manifest, then tries to apply it to the cluster.
+	// returns created resources or an error
+	Run(cfg *RunConfig, restConfig *rest.Config) error
+	// GenerateManifest fills in a template with a Sonobuoy config
+	GenerateManifest(cfg *GenConfig) ([]byte, error)
+	// CopyResults copies results from a sonobuoy run into a Reader in tar format.
+	CopyResults(cfg *CopyConfig, restConfig *rest.Config) io.Reader
+	// GetStatus determines the status of the sonobuoy run in order to assist the user.
+	GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error)
+	// GetLogs streams logs from the sonobuoy pod by default to stdout.
+	GetLogs(cfg *LogConfig, client kubernetes.Interface) error
 }
