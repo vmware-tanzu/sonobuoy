@@ -65,9 +65,7 @@ func copyResults(cmd *cobra.Command, args []string) {
 		outDir = args[0]
 	}
 
-	// TODO(chuckha) this should be the same across all sonobuoy commands.
-	// Find and load the kubeconfig using the same loading rules that kubectl uses.
-	config, err := cpKubecfg.Get()
+	restConfig, err := cpKubecfg.Get()
 	if err != nil {
 		errlog.LogError(fmt.Errorf("failed to get kubernetes client: %v", err))
 		os.Exit(1)
@@ -87,8 +85,14 @@ func copyResults(cmd *cobra.Command, args []string) {
 		}
 	}()
 
+	cfg := &ops.CopyConfig{
+		Namespace: namespace,
+		CmdErr:    os.Stderr,
+		Errc:      errc,
+	}
+
 	// Get a reader that contains the tar output of the results directory.
-	reader := ops.CopyResults(namespace, config, os.Stderr, errc)
+	reader := ops.NewSonobuoyClient().CopyResults(cfg, restConfig)
 
 	// CopyResults bailed early and will report an error.
 	if reader == nil {

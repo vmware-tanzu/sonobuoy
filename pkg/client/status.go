@@ -29,7 +29,7 @@ import (
 )
 
 // GetStatus determines the status of the sonobuoy run in order to assist the user.
-func GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error) {
+func (c *SonobuoyClient) GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error) {
 	if _, err := client.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{}); err != nil {
 		return nil, errors.Wrap(err, "sonobuoy namespace does not exist")
 	}

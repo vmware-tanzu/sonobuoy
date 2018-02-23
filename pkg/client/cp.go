@@ -35,17 +35,17 @@ import (
 )
 
 // CopyResults copies results from a sonobuoy run into a Reader in tar format.
-func CopyResults(namespace string, restConfig *rest.Config, cmderr io.Writer, errc chan error) io.Reader {
+func (c *SonobuoyClient) CopyResults(cfg *CopyConfig, restConfig *rest.Config) io.Reader {
 	clientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		errc <- fmt.Errorf("unable to create clientset: %v", err)
+		cfg.Errc <- fmt.Errorf("unable to create clientset: %v", err)
 		return nil
 	}
 	client := clientset.CoreV1().RESTClient()
 	req := client.Post().
 		Resource("pods").
 		Name(config.MasterPodName).
-		Namespace(namespace).
+		Namespace(cfg.Namespace).
 		SubResource("exec").
 		Param("container", config.MasterContainerName)
 	req.VersionedParams(&corev1.PodExecOptions{
@@ -57,7 +57,7 @@ func CopyResults(namespace string, restConfig *rest.Config, cmderr io.Writer, er
 	}, scheme.ParameterCodec)
 	executor, err := remotecommand.NewSPDYExecutor(restConfig, "POST", req.URL())
 	if err != nil {
-		errc <- fmt.Errorf("unable to get remote executor: %v", err)
+		cfg.Errc <- fmt.Errorf("unable to get remote executor: %v", err)
 		return nil
 	}
 	reader, writer := io.Pipe()
@@ -66,11 +66,11 @@ func CopyResults(namespace string, restConfig *rest.Config, cmderr io.Writer, er
 
 		err = executor.Stream(remotecommand.StreamOptions{
 			Stdout: writer,
-			Stderr: cmderr,
+			Stderr: cfg.CmdErr,
 			Tty:    false,
 		})
 		if err != nil {
-			errc <- fmt.Errorf("error streaming: %v", err)
+			cfg.Errc <- fmt.Errorf("error streaming: %v", err)
 		}
 	}()
 	return reader

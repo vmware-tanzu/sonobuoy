@@ -19,6 +19,8 @@ package client
 import (
 	"io"
 
+	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
@@ -42,10 +44,9 @@ type RunConfig struct {
 
 // CopyConfig is the options passed to CopyConfig.
 type CopyConfig struct {
-	Namespace  string
-	RestConfig *rest.Config
-	CmdErr     io.Writer
-	Errc       chan error
+	Namespace string
+	CmdErr    io.Writer
+	Errc      chan error
 }
 
 // SonobuoyClient is a high-level interface to Sonobuoy operations.
@@ -59,8 +60,6 @@ func NewSonobuoyClient() *SonobuoyClient {
 // Make sure SonobuoyClient implements the interface
 var _ Interface = &SonobuoyClient{}
 
-// NewClient creates a new sonobuoy client.
-
 // Interface is the main contract that we will give to external consumers of this library
 // This will provide a consistent look/feel to upstream and allow us to expose sonobuoy behavior
 // to other automation systems.
@@ -68,7 +67,7 @@ type Interface interface {
 	// functions that are exposed for consumption
 	Run(cfg *RunConfig, restConfig *rest.Config) error
 	GenerateManifest(cfg *GenConfig) ([]byte, error)
-	// CopyResults(cfg *CopyConfig) io.Reader
-	// GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error)
-	// GetLogs(cfg *LogConfig, client kubernetes.Interface) error
+	CopyResults(cfg *CopyConfig, restConfig *rest.Config) io.Reader
+	GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error)
+	GetLogs(cfg *LogConfig, client kubernetes.Interface) error
 }
