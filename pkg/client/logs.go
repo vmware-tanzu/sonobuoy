@@ -33,16 +33,10 @@ var (
 	podLogSeparator = strings.Repeat("-", 79)
 )
 
-// LogConfig is the options passed to GetLogs
-type LogConfig struct {
-	Follow    *bool
-	Namespace string
-}
-
 // Logs gathers the logs for the containers in the sonobuoy namespace and prints them
 
-// GetLogs streams logs from the sonobuoy pod by default to stdout.
-func GetLogs(client kubernetes.Interface, cfg *LogConfig) error {
+func (c *SonobuoyClient) GetLogs(cfg *LogConfig, client kubernetes.Interface) error {
+	// TODO(EKF): Stream to a writer instead of just stdout
 	if *cfg.Follow {
 		return streamLogs(client, cfg.Namespace, config.MasterPodName, &v1.PodLogOptions{Follow: true})
 	}

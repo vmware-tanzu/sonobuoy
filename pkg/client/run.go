@@ -36,15 +36,8 @@ import (
 
 const bufferSize = 4096
 
-// RunConfig are the input options for running
-type RunConfig struct {
-	GenConfig
-}
-
-// Run generates the manifest, then tries to apply it to the cluster.
-// returns created resources or an error
-func Run(cfg RunConfig, restConfig *rest.Config) error {
-	manifest, err := cfg.GenConfig.GenerateManifest()
+func (c *SonobuoyClient) Run(cfg *RunConfig, restConfig *rest.Config) error {
+	manifest, err := c.GenerateManifest(&cfg.GenConfig)
 	if err != nil {
 		return errors.Wrap(err, "couldn't run invalid manifest")
 	}

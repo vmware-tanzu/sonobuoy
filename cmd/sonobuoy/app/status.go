@@ -63,7 +63,7 @@ func getStatus(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	status, err := ops.GetStatus(statusNamespace, client)
+	status, err := ops.NewSonobuoyClient().GetStatus(statusNamespace, client)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
