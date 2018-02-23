@@ -6,7 +6,10 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 )
 
-// Mode identifies a specific mode
+// Mode identifies a specific mode of running Sonobuoy.
+// A mode is a defined configuration of plugins and E2E Focus and Config.
+// Modes form the base level defaults, which can then be overriden by the e2e flags
+// and the config flag.
 type Mode string
 
 const (
@@ -57,7 +60,7 @@ func (n *Mode) Get() *ModeConfig {
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
 				Focus: "Conformance",
-				Skip:  "",
+				Skip:  "Alpha|Disruptive|Feature|Flaky|Kubectl",
 			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
@@ -68,7 +71,7 @@ func (n *Mode) Get() *ModeConfig {
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
 				Focus: "Pods should be submitted and removed",
-				Skip:  "",
+				Skip:  "Alpha|Disruptive|Feature|Flaky|Kubectl",
 			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
@@ -78,7 +81,7 @@ func (n *Mode) Get() *ModeConfig {
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
 				Focus: "Conformance",
-				Skip:  "",
+				Skip:  "Alpha|Disruptive|Feature|Flaky|Kubectl",
 			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},

@@ -26,11 +26,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	e2eFocusFlag = "e2e-focus"
-	e2eSkipFlag  = "e2e-skip"
-)
-
 // AddNamespaceFlag initialises a namespace flag.
 func AddNamespaceFlag(str *string, cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(
@@ -40,6 +35,9 @@ func AddNamespaceFlag(str *string, cmd *cobra.Command) {
 }
 
 // AddModeFlag initialises a mode flag.
+// The mode is a preset configuration of sonobuoy configuration and e2e configuration variables.
+// Mode can be partially or fully overridden by specifying config, e2e-focus, and e2e-skip.
+// The variables specified by those flags will overlay the defaults provided by the given mode.
 func AddModeFlag(mode *ops.Mode, cmd *cobra.Command) {
 	*mode = ops.Conformance // default
 	cmd.PersistentFlags().Var(
@@ -71,6 +69,11 @@ func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, cmd *cobra.Command) {
 	)
 	cmd.MarkFlagFilename("config", "json")
 }
+
+const (
+	e2eFocusFlag = "e2e-focus"
+	e2eSkipFlag  = "e2e-skip"
+)
 
 // AddE2EConfig adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig.
 func AddE2EConfig(cmd *cobra.Command) {
