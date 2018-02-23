@@ -33,12 +33,6 @@ var (
 	podLogSeparator = strings.Repeat("-", 79)
 )
 
-// LogConfig is the options passed to GetLogs
-type LogConfig struct {
-	Follow    *bool
-	Namespace string
-}
-
 // Logs gathers the logs for the containers in the sonobuoy namespace and prints them
 
 // GetLogs streams logs from the sonobuoy pod by default to stdout.
