@@ -34,7 +34,6 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
-// CopyResults copies results from a sonobuoy run into a Reader in tar format.
 func (c *SonobuoyClient) CopyResults(cfg *CopyConfig, restConfig *rest.Config) io.Reader {
 	clientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {

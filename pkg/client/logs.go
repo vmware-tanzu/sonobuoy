@@ -35,9 +35,8 @@ var (
 
 // Logs gathers the logs for the containers in the sonobuoy namespace and prints them
 
-// GetLogs streams logs from the sonobuoy pod by default to stdout.
-// TODO(EKF): Stream to a writer instead of just stdout
 func (c *SonobuoyClient) GetLogs(cfg *LogConfig, client kubernetes.Interface) error {
+	// TODO(EKF): Stream to a writer instead of just stdout
 	if *cfg.Follow {
 		return streamLogs(client, cfg.Namespace, config.MasterPodName, &v1.PodLogOptions{Follow: true})
 	}

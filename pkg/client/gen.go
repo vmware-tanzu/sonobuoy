@@ -36,7 +36,6 @@ type templateValues struct {
 	Namespace      string
 }
 
-// GenerateManifest fills in a template with a Sonobuoy config
 func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	mode := cfg.ModeName.Get()
 	if mode == nil {
