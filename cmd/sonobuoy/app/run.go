@@ -27,7 +27,12 @@ import (
 )
 
 var runopts ops.RunConfig
-var runKubecfg Kubeconfig
+
+var runFlags struct {
+	sonobuoyConfig SonobuoyConfig
+	mode           ops.Mode
+	kubecfg        Kubeconfig
+}
 
 func init() {
 	cmd := &cobra.Command{
@@ -37,20 +42,30 @@ func init() {
 		Args:  cobra.ExactArgs(0),
 	}
 	AddGenFlags(&runopts.GenConfig, cmd)
-	AddKubeconfigFlag(&runKubecfg, cmd)
+
+	AddModeFlag(&runFlags.mode, cmd)
+	AddSonobuoyConfigFlag(&runFlags.sonobuoyConfig, cmd)
+	AddE2EConfig(cmd)
+	AddKubeconfigFlag(&runFlags.kubecfg, cmd)
 
 	RootCmd.AddCommand(cmd)
 }
 
 func submitSonobuoyRun(cmd *cobra.Command, args []string) {
-	restConfig, err := runKubecfg.Get()
+	restConfig, err := runFlags.kubecfg.Get()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
 		os.Exit(1)
 	}
+	runopts.Config = GetConfigWithMode(&runFlags.sonobuoyConfig, runFlags.mode)
+	e2ecfg, err := GetE2EConfig(runFlags.mode, cmd)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "could not retrieve E2E config"))
+		os.Exit(1)
+	}
+	genopts.E2EConfig = e2ecfg
 
 	// TODO(timothysc) Need to add checks which include (detection-rbac, preflight-DNS, ...)
-
 	if err := ops.NewSonobuoyClient().Run(&runopts, restConfig); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
