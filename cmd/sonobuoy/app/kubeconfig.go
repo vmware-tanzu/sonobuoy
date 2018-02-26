@@ -37,6 +37,7 @@ func (c *Kubeconfig) Set(str string) error {
 
 // Get returns a rest Config, possibly based on a provided config
 func (c *Kubeconfig) Get() (*rest.Config, error) {
+
 	if c.ClientConfigLoadingRules == nil {
 		c.ClientConfigLoadingRules = clientcmd.NewDefaultClientConfigLoadingRules()
 	}
