@@ -111,3 +111,12 @@ func GetE2EConfig(mode ops.Mode, cmd *cobra.Command) (*ops.E2EConfig, error) {
 	}
 	return &cfg, nil
 }
+
+// AddRBACMode adds an E2E Argument with the provided default.
+func AddRBACMode(mode *RBACMode, cmd *cobra.Command, defaultMode RBACMode) {
+	*mode = defaultMode // default
+	cmd.PersistentFlags().Var(
+		mode, "rbac",
+		"Whether to enable rbac on Sonobuoy. Options are \"enable\", \"disable\", and \"detect\" (query the server to see whether to enable Sonobuoy)",
+	)
+}
