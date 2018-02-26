@@ -9,6 +9,8 @@
 
 ## Overview
 
+TODO: This requires a update links to the latest examples.   
+
 In addition to querying API objects, Sonobuoy also supports a *Plugin model*. In this model, "worker" pods are dispatched into the cluster to collect data from each node, and use an aggregation URL to submit their results back to a waiting "master" pod. See the diagram below:
 
 ![sonobuoy plugins diagram][6]
