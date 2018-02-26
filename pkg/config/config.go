@@ -117,7 +117,6 @@ type Config struct {
 	UUID        string `json:"UUID" mapstructure:"UUID"`
 	Version     string `json:"Version" mapstructure:"Version"`
 	ResultsDir  string `json:"ResultsDir" mapstructure:"ResultsDir"`
-	Kubeconfig  string `json:"Kubeconfig" mapstructure:"Kubeconfig"`
 
 	///////////////////////////////////////////////
 	// Data collection options

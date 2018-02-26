@@ -45,8 +45,6 @@ func TestSaveAndLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Tests shouldn't fail just because KUBECONFIG is customized
-	cfg2.Kubeconfig = cfg.Kubeconfig
 	// And we can't predict what advertise address we'll detect
 	cfg2.Aggregation.AdvertiseAddress = cfg.Aggregation.AdvertiseAddress
 	// And UUID's won't match either
