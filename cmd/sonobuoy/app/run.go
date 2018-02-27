@@ -44,7 +44,6 @@ func init() {
 		Args:  cobra.ExactArgs(0),
 	}
 	AddGenFlags(&runopts.GenConfig, cmd)
-
 	AddModeFlag(&runFlags.mode, cmd)
 	AddSonobuoyConfigFlag(&runFlags.sonobuoyConfig, cmd)
 	AddE2EConfigFlags(cmd)
@@ -82,7 +81,7 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "could not retrieve E2E config"))
 		os.Exit(1)
 	}
-	genopts.E2EConfig = e2ecfg
+	runopts.E2EConfig = e2ecfg
 
 	// TODO(timothysc) Need to add checks which include (detection-rbac, preflight-DNS, ...)
 	if err := ops.NewSonobuoyClient().Run(&runopts, restConfig); err != nil {
