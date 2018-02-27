@@ -70,9 +70,9 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig, client kubernetes.Interface) 
 	}
 
 	for _, namespace := range namespaces.Items {
-		if strings.HasPrefix(e2eNamespacePrefix, namespace.Name) {
+		if strings.HasPrefix(namespace.Name, e2eNamespacePrefix) {
 			if err := client.CoreV1().Namespaces().Delete(namespace.Name, &metav1.DeleteOptions{}); err != nil {
-				return errors.Wrap(err, "failed to delete 2e2 namespace")
+				return errors.Wrap(err, "failed to delete e2e namespace")
 			}
 			logrus.WithField("namespace", namespace.Name).Info("deleted E2E namespace")
 		}
