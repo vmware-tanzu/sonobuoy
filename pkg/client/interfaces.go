@@ -91,4 +91,6 @@ type Interface interface {
 	GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error)
 	// GetLogs streams logs from the sonobuoy pod by default to stdout.
 	GetLogs(cfg *LogConfig, client kubernetes.Interface) error
+	// Delete removes a sonobuoy run, namespace, and all associated tests.
+	Delete(namespace string, client kubernetes.Interface) error
 }
