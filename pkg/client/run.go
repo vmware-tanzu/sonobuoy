@@ -141,7 +141,7 @@ func newMapper(cfg *rest.Config) (meta.RESTMapper, error) {
 
 	return discovery.NewRESTMapper(
 		resources,
-		unstruturedVersionInterface,
+		unstructuredVersionInterface,
 	), nil
 }
 
@@ -161,7 +161,7 @@ func getNames(obj runtime.Object) (string, string, error) {
 }
 
 // implements meta.VersionInterfacesFunc
-func unstruturedVersionInterface(version schema.GroupVersion) (*meta.VersionInterfaces, error) {
+func unstructuredVersionInterface(version schema.GroupVersion) (*meta.VersionInterfaces, error) {
 	return &meta.VersionInterfaces{
 		ObjectConvertor:  &unstructured.UnstructuredObjectConverter{},
 		MetadataAccessor: meta.NewAccessor(),
