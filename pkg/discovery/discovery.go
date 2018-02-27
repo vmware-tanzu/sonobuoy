@@ -61,6 +61,10 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount int) {
 
 	logrus.AddHook(hook)
 
+	// Unset all hooks as we exit the Run function
+	defer func() {
+		logrus.StandardLogger().Hooks = make(logrus.LevelHooks)
+	}()
 	// closure used to collect and report errors.
 	trackErrorsFor := func(action string) func(error) {
 		return func(err error) {
