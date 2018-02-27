@@ -47,10 +47,10 @@ func init() {
 
 	AddModeFlag(&runFlags.mode, cmd)
 	AddSonobuoyConfigFlag(&runFlags.sonobuoyConfig, cmd)
-	AddE2EConfig(cmd)
+	AddE2EConfigFlags(cmd)
 	AddKubeconfigFlag(&runFlags.kubecfg, cmd)
 	// Default to detect since we need a kubeconfig regardless
-	AddRBACMode(&runFlags.rbacMode, cmd, DetectRBACMode)
+	AddRBACModeFlags(&runFlags.rbacMode, cmd, DetectRBACMode)
 
 	RootCmd.AddCommand(cmd)
 }

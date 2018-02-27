@@ -14,7 +14,8 @@ import (
 type RBACMode string
 
 var (
-	RBACErrorNoClient = errors.New("can't use nil client with \"detect\" RBAC mode")
+	//ErrRBACNoClient is the error returned when we need a client but didn't get on
+	ErrRBACNoClient = errors.New(`can't use nil client with "detect" RBAC mode`)
 )
 
 const (
@@ -66,7 +67,7 @@ func (r *RBACMode) Get(client *kubernetes.Clientset) (bool, error) {
 		return true, nil
 	case DetectRBACMode:
 		if client == nil {
-			return false, RBACErrorNoClient
+			return false, ErrRBACNoClient
 		}
 		return checkRBACEnabled(client.Discovery().RESTClient())
 	default:

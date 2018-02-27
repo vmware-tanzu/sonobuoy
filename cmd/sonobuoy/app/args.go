@@ -75,8 +75,8 @@ const (
 	e2eSkipFlag  = "e2e-skip"
 )
 
-// AddE2EConfig adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig.
-func AddE2EConfig(cmd *cobra.Command) {
+// AddE2EConfigFlags adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig.
+func AddE2EConfigFlags(cmd *cobra.Command) {
 	modeName := ops.Conformance
 	defaultMode := modeName.Get()
 	cmd.PersistentFlags().String(
@@ -112,11 +112,11 @@ func GetE2EConfig(mode ops.Mode, cmd *cobra.Command) (*ops.E2EConfig, error) {
 	return &cfg, nil
 }
 
-// AddRBACMode adds an E2E Argument with the provided default.
-func AddRBACMode(mode *RBACMode, cmd *cobra.Command, defaultMode RBACMode) {
+// AddRBACModeFlags adds an E2E Argument with the provided default.
+func AddRBACModeFlags(mode *RBACMode, cmd *cobra.Command, defaultMode RBACMode) {
 	*mode = defaultMode // default
 	cmd.PersistentFlags().Var(
 		mode, "rbac",
-		"Whether to enable rbac on Sonobuoy. Options are \"enable\", \"disable\", and \"detect\" (query the server to see whether to enable Sonobuoy)",
+		`Whether to enable rbac on Sonobuoy. Options are "enable", "disable", and "detect" (query the server to see whether to enable Sonobuoy)`,
 	)
 }

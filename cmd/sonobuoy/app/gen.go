@@ -51,9 +51,9 @@ func init() {
 	AddModeFlag(&genFlags.mode, GenCommand)
 	AddSonobuoyConfigFlag(&genFlags.sonobuoyConfig, GenCommand)
 	AddKubeconfigFlag(&genFlags.kubecfg, GenCommand)
-	AddE2EConfig(GenCommand)
+	AddE2EConfigFlags(GenCommand)
 	// Default to enabled here so we don't need a kubeconfig by default
-	AddRBACMode(&genFlags.rbacMode, GenCommand, EnabledRBACMode)
+	AddRBACModeFlags(&genFlags.rbacMode, GenCommand, EnabledRBACMode)
 
 	RootCmd.AddCommand(GenCommand)
 }
@@ -110,7 +110,7 @@ func getRBACOrExit(mode *RBACMode, kubeconfig *Kubeconfig) bool {
 	rbacEnabled, err := genFlags.rbacMode.Get(client)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC mode."))
-		if errors.Cause(err) == RBACErrorNoClient {
+		if errors.Cause(err) == ErrRBACNoClient {
 			errlog.LogError(kubeError)
 		}
 		os.Exit(1)
