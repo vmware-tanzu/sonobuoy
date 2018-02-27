@@ -34,6 +34,7 @@ type templateValues struct {
 	SonobuoyImage  string
 	Version        string
 	Namespace      string
+	EnableRBAC     bool
 }
 
 // GenerateManifest fills in a template with a Sonobuoy config
@@ -54,6 +55,7 @@ func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		SonobuoyImage:  cfg.Image,
 		Version:        buildinfo.Version,
 		Namespace:      cfg.Namespace,
+		EnableRBAC:     cfg.EnableRBAC,
 	}
 
 	var buf bytes.Buffer
