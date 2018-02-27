@@ -25,9 +25,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
+	"k8s.io/client-go/kubernetes"
 )
 
 var noExit bool
+var kubecfg Kubeconfig
 
 func init() {
 	cmd := &cobra.Command{
@@ -41,6 +44,7 @@ func init() {
 		&noExit, "no-exit", false,
 		"Use this if you want sonobuoy to block and not exit. Useful when you want to explicitly grab results.tar.gz",
 	)
+	AddKubeconfigFlag(&kubecfg, cmd)
 	RootCmd.AddCommand(cmd)
 }
 
@@ -52,15 +56,20 @@ func runMaster(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	// Load a kubernetes client
-	kubeClient, err := config.LoadClient(cfg)
+	kcfg, err := kubecfg.Get()
+	if err != nil {
+		errlog.LogError(err)
+		os.Exit(1)
+	}
+
+	clientset, err := kubernetes.NewForConfig(kcfg)
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
 
 	// Run Discovery (gather API data, run plugins)
-	errcount := discovery.Run(kubeClient, cfg)
+	errcount := discovery.Run(clientset, cfg)
 
 	if noExit {
 		logrus.Info("no-exit was specified, sonobuoy is now blocking")
