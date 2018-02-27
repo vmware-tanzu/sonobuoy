@@ -51,7 +51,7 @@ func (c *SonobuoyConfig) Get() *config.Config {
 	return &c.Config
 }
 
-// GetConfigWithMode creates a config with the following algorithim:
+// GetConfigWithMode creates a config with the following algorithm:
 // If the SonobuoyConfig isn't nil, use that
 // If not, use the supplied Mode to modify a default config
 func GetConfigWithMode(sonobuoyCfg *SonobuoyConfig, mode client.Mode) *config.Config {
