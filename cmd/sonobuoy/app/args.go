@@ -120,3 +120,11 @@ func AddRBACModeFlags(mode *RBACMode, cmd *cobra.Command, defaultMode RBACMode) 
 		`Whether to enable rbac on Sonobuoy. Options are "enable", "disable", and "detect" (query the server to see whether to enable Sonobuoy)`,
 	)
 }
+
+// AddSkipPreflightFlag adds a boolean flag to skip preflight checks.
+func AddSkipPreflightFlag(flag *bool, cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVar(
+		flag, "preflight", false,
+		"If true, skip all checks before kicking off the sonobuoy run.",
+	)
+}
