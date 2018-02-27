@@ -69,6 +69,9 @@ func streamLogs(client kubernetes.Interface, namespace, podName string, logOptio
 		return fmt.Errorf("could not stream the request: %v", err)
 	}
 	defer readCloser.Close()
-	_, err = io.Copy(os.Stdout, readCloser)
-	return fmt.Errorf("could not copy request body: %v", err)
+	// In the case of -f this will never return unless there is an error.
+	if _, err = io.Copy(os.Stdout, readCloser); err != nil {
+		return fmt.Errorf("could not copy request body: %v", err)
+	}
+	return nil
 }
