@@ -21,6 +21,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func (c *SonobuoyClient) Delete(namespace string, client kubernetes.Interface) error {
+func (c *SonobuoyClient) Delete(cfg *DeleteConfig, client kubernetes.Interface) error {
 	return errors.New("not yet implemented")
 }

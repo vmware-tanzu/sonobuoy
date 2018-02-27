@@ -26,9 +26,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+var deleteopts client.DeleteConfig
+
 var deleteFlags struct {
 	kubeconfig Kubeconfig
-	namespace  string
+	rbacMode   RBACMode
 }
 
 func init() {
@@ -40,7 +42,8 @@ func init() {
 	}
 
 	AddKubeconfigFlag(&deleteFlags.kubeconfig, cmd)
-	AddNamespaceFlag(&deleteFlags.namespace, cmd)
+	AddNamespaceFlag(&deleteopts.Namespace, cmd)
+	AddRBACModeFlags(&deleteFlags.rbacMode, cmd, DetectRBACMode)
 
 	RootCmd.AddCommand(cmd)
 }
@@ -58,7 +61,14 @@ func deleteSonobuoyRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	if err := client.NewSonobuoyClient().Delete(deleteFlags.namespace, kubeclient); err != nil {
+	rbacEnabled, err := deleteFlags.rbacMode.Enabled(kubeclient)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC status"))
+		os.Exit(1)
+	}
+	deleteopts.EnableRBAC = rbacEnabled
+
+	if err := client.NewSonobuoyClient().Delete(&deleteopts, kubeclient); err != nil {
 		errlog.LogError(errors.Wrap(err, "failed to delete sonobuoy resources"))
 		os.Exit(1)
 	}
