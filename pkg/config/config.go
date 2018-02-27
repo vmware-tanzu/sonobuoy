@@ -230,7 +230,7 @@ func NewWithDefaults() *Config {
 	var cfg Config
 	cfg.UUID = uuid.NewV4().String()
 	cfg.Description = "DEFAULT"
-	cfg.ResultsDir = "./results"
+	cfg.ResultsDir = "/tmp/sonobuoy"
 	cfg.Version = buildinfo.Version
 
 	cfg.Filters.Namespaces = ".*"
