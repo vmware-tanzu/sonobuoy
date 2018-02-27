@@ -189,7 +189,7 @@ func preflightCheck(client kubernetes.Interface) error {
 	selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, kubeDNSLabelKey, kubeDNSLabelValue)
 
 	obj, err := client.CoreV1().Pods(kubeSystemNamespace).List(
-		metav1.ListOptions{LabelSelector: selector.String()},
+		metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)},
 	)
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve list of pods")
