@@ -21,6 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	kubeerror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -34,10 +35,15 @@ const (
 
 func (c *SonobuoyClient) Delete(cfg *DeleteConfig, client kubernetes.Interface) error {
 	// Delete the namespace
-	if err := client.CoreV1().Namespaces().Delete(cfg.Namespace, &metav1.DeleteOptions{}); err != nil {
-		return errors.Wrap(err, "failed to delete namespace")
+	log := logrus.WithFields(logrus.Fields{
+		"kind":      "namespace",
+		"namespace": cfg.Namespace,
+	})
+
+	err := client.CoreV1().Namespaces().Delete(cfg.Namespace, &metav1.DeleteOptions{})
+	if err := logDelete(log, err); err != nil {
+		return errors.Wrap(err, "couldn't delete namespace")
 	}
-	logrus.WithField("namespace", cfg.Namespace).Info("deleted namespace")
 
 	if cfg.EnableRBAC {
 		// ClusterRole and ClusterRoleBindings aren't namespaced, so delete them seperately
@@ -52,15 +58,16 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig, client kubernetes.Interface) 
 			LabelSelector: metav1.FormatLabelSelector(selector),
 		}
 
-		if err := client.RbacV1().ClusterRoleBindings().DeleteCollection(deleteOpts, listOpts); err != nil {
+		err := client.RbacV1().ClusterRoleBindings().DeleteCollection(deleteOpts, listOpts)
+		if err := logDelete(logrus.WithField("kind", "clusterrolebindings"), err); err != nil {
 			return errors.Wrap(err, "failed to delete cluster role binding")
 		}
 
 		// ClusterRole and ClusterRole bindings aren't namespaced, so delete them manually
-		if err := client.RbacV1().ClusterRoles().DeleteCollection(deleteOpts, listOpts); err != nil {
+		err = client.RbacV1().ClusterRoles().DeleteCollection(deleteOpts, listOpts)
+		if err := logDelete(logrus.WithField("kind", "clusterroles"), err); err != nil {
 			return errors.Wrap(err, "failed to delete cluster role")
 		}
-		logrus.Info("deleted clusterrolebindings and clusterroles")
 	}
 
 	// Delete any dangling E2E namespaces
@@ -71,11 +78,30 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig, client kubernetes.Interface) 
 
 	for _, namespace := range namespaces.Items {
 		if strings.HasPrefix(namespace.Name, e2eNamespacePrefix) {
-			if err := client.CoreV1().Namespaces().Delete(namespace.Name, &metav1.DeleteOptions{}); err != nil {
-				return errors.Wrap(err, "failed to delete e2e namespace")
+
+			log := logrus.WithFields(logrus.Fields{
+				"kind":      "namespace",
+				"namespace": namespace.Name,
+			})
+			err := client.CoreV1().Namespaces().Delete(namespace.Name, &metav1.DeleteOptions{})
+			if err := logDelete(log, err); err != nil {
+				return errors.Wrap(err, "couldn't delete namespace")
 			}
-			logrus.WithField("namespace", namespace.Name).Info("deleted E2E namespace")
 		}
+	}
+	return nil
+}
+
+func logDelete(log logrus.FieldLogger, err error) error {
+	switch {
+	case err == nil:
+		log.Info("deleted")
+	case kubeerror.IsNotFound(err):
+		log.Info("already deleted")
+	case kubeerror.IsConflict(err):
+		log.WithError(err).Info("delete in progress")
+	case err != nil:
+		return err
 	}
 	return nil
 }
