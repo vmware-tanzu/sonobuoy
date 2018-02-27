@@ -75,6 +75,9 @@ func (r *RBACMode) Get(client *kubernetes.Clientset) (bool, error) {
 }
 
 func checkRBACEnabled(client rest.Interface) (bool, error) {
+	// This checks that the rbac API group is enabled. Note that this does NOT
+	// mean that RBAC is enabled. It simply means the API is present, and
+	// therefore will not error if we send RBAC objects.
 	result, err := client.Get().AbsPath(apiRootPath).Do().Get()
 	if err != nil {
 		return false, errors.Wrap(err, "couldn't retrieve API groups")
