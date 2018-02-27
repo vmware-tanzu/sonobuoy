@@ -25,13 +25,15 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// LogConfig is the options passed to GetLogs
+// LogConfig are the options passed to GetLogs.
 type LogConfig struct {
-	Follow    *bool
+	// Follow determines if the logs should be followed or not (tail -f).
+	Follow *bool
+	// Namespace is the namespace the sonobuoy aggregator is running in.
 	Namespace string
 }
 
-// GenConfig is the input options for generating a Sonobuoy manifest
+// GenConfig are the input options for generating a Sonobuoy manifest.
 type GenConfig struct {
 	E2EConfig *E2EConfig
 	Config    *config.Config
@@ -39,22 +41,25 @@ type GenConfig struct {
 	Namespace string
 }
 
-// E2EConfig is the configuration of the E2E test
+// E2EConfig is the configuration of the E2E test.
 type E2EConfig struct {
 	Focus string
 	Skip  string
 }
 
-// RunConfig is the input options for running Sonobuoy
+// RunConfig are the input options for running Sonobuoy.
 type RunConfig struct {
 	GenConfig
 }
 
-// CopyConfig is the options passed to CopyConfig.
-type CopyConfig struct {
+// RetrieveConfig are the options passed to RetrieveResults.
+type RetrieveConfig struct {
+	// CmdErr is the place to write errors to.
+	CmdErr io.Writer
+	// Errc reports errors from go routines that retrieve may spawn.
+	Errc chan error
+	// Namespace is the namespace the sonobuoy aggregator is running in.
 	Namespace string
-	CmdErr    io.Writer
-	Errc      chan error
 }
 
 // SonobuoyClient is a high-level interface to Sonobuoy operations.
@@ -77,8 +82,8 @@ type Interface interface {
 	Run(cfg *RunConfig, restConfig *rest.Config) error
 	// GenerateManifest fills in a template with a Sonobuoy config
 	GenerateManifest(cfg *GenConfig) ([]byte, error)
-	// CopyResults copies results from a sonobuoy run into a Reader in tar format.
-	CopyResults(cfg *CopyConfig, restConfig *rest.Config) io.Reader
+	// RetrieveResults copies results from a sonobuoy run into a Reader in tar format.
+	RetrieveResults(cfg *RetrieveConfig, restConfig *rest.Config) io.Reader
 	// GetStatus determines the status of the sonobuoy run in order to assist the user.
 	GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error)
 	// GetLogs streams logs from the sonobuoy pod by default to stdout.

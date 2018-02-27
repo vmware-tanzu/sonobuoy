@@ -34,7 +34,7 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
-func (c *SonobuoyClient) CopyResults(cfg *CopyConfig, restConfig *rest.Config) io.Reader {
+func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig, restConfig *rest.Config) io.Reader {
 	clientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		cfg.Errc <- fmt.Errorf("unable to create clientset: %v", err)
@@ -60,6 +60,8 @@ func (c *SonobuoyClient) CopyResults(cfg *CopyConfig, restConfig *rest.Config) i
 		return nil
 	}
 	reader, writer := io.Pipe()
+	// We use a goroutine here to allow this function to return a reader that lets the caller
+	// deal with what to do with this stream of data and keep that detail out of this function.
 	go func() {
 		defer writer.Close()
 

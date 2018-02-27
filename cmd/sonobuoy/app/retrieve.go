@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	ops "github.com/heptio/sonobuoy/pkg/client"
+	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/spf13/cobra"
 )
@@ -38,11 +38,10 @@ var (
 )
 
 func init() {
-	// TODO (timothysc) change the name to retrieve
 	cmd := &cobra.Command{
-		Use:   "cp",
-		Short: "Copies the results to a specified path",
-		Run:   copyResults,
+		Use:   "retrieve",
+		Short: "Retrieves the results of a sonobuoy run to a specified path",
+		Run:   retrieveResults,
 		Args:  cobra.MaximumNArgs(1),
 	}
 
@@ -52,8 +51,8 @@ func init() {
 	RootCmd.AddCommand(cmd)
 }
 
-// TODO (timothysc) abstract copy details into a lower level function.
-func copyResults(cmd *cobra.Command, args []string) {
+// TODO (timothysc) abstract retrieve details into a lower level function.
+func retrieveResults(cmd *cobra.Command, args []string) {
 	namespace, err := cmd.Flags().GetString("namespace")
 	if err != nil {
 		errlog.LogError(fmt.Errorf("failed to get namespace flag: %v", err))
@@ -85,16 +84,16 @@ func copyResults(cmd *cobra.Command, args []string) {
 		}
 	}()
 
-	cfg := &ops.CopyConfig{
+	cfg := &client.RetrieveConfig{
 		Namespace: namespace,
 		CmdErr:    os.Stderr,
 		Errc:      errc,
 	}
 
 	// Get a reader that contains the tar output of the results directory.
-	reader := ops.NewSonobuoyClient().CopyResults(cfg, restConfig)
+	reader := client.NewSonobuoyClient().RetrieveResults(cfg, restConfig)
 
-	// CopyResults bailed early and will report an error.
+	// RetrieveResults bailed early and will report an error.
 	if reader == nil {
 		close(errc)
 		wg.Wait()
@@ -102,7 +101,7 @@ func copyResults(cmd *cobra.Command, args []string) {
 	}
 
 	// Extract the tar output into a local directory under the prefix.
-	err = ops.UntarAll(reader, outDir, prefix)
+	err = client.UntarAll(reader, outDir, prefix)
 	if err != nil {
 		close(errc)
 		wg.Wait()
