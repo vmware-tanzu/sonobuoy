@@ -51,6 +51,8 @@ type E2EConfig struct {
 // RunConfig are the input options for running Sonobuoy.
 type RunConfig struct {
 	GenConfig
+	// SkipPreflight means don't run any checks before kicking off the Sonobuoy run.
+	SkipPreflight bool
 }
 
 // RetrieveConfig are the options passed to RetrieveResults.

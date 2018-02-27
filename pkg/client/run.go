@@ -23,13 +23,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 )
@@ -37,6 +38,16 @@ import (
 const bufferSize = 4096
 
 func (c *SonobuoyClient) Run(cfg *RunConfig, restConfig *rest.Config) error {
+	if !cfg.SkipPreflight {
+		client, err := kubernetes.NewForConfig(restConfig)
+		if err != nil {
+			return errors.Wrap(err, "couln't create Kubernetes client")
+		}
+		if err := preflightCheck(client); err != nil {
+			return errors.Wrap(err, "preflight check failed")
+		}
+	}
+
 	manifest, err := c.GenerateManifest(&cfg.GenConfig)
 	if err != nil {
 		return errors.Wrap(err, "couldn't run invalid manifest")
@@ -99,7 +110,7 @@ func createObject(cfg *rest.Config, obj *unstructured.Unstructured, mapper meta.
 		return errors.Wrap(err, "couldn't retrive object metadata")
 	}
 
-	_, err = client.Resource(&v1.APIResource{
+	_, err = client.Resource(&metav1.APIResource{
 		Name:       resource,
 		Namespaced: namespace != "",
 	}, namespace).Create(obj)
@@ -166,4 +177,27 @@ func unstructuredVersionInterface(version schema.GroupVersion) (*meta.VersionInt
 		ObjectConvertor:  &unstructured.UnstructuredObjectConverter{},
 		MetadataAccessor: meta.NewAccessor(),
 	}, nil
+}
+
+const (
+	kubeSystemNamespace = "kube-system"
+	kubeDNSLabelKey     = "k8s-app"
+	kubeDNSLabelValue   = "kube-dns"
+)
+
+func preflightCheck(client kubernetes.Interface) error {
+	selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, kubeDNSLabelKey, kubeDNSLabelValue)
+
+	obj, err := client.CoreV1().Pods(kubeSystemNamespace).List(
+		metav1.ListOptions{LabelSelector: selector.String()},
+	)
+	if err != nil {
+		return errors.Wrap(err, "could not retrieve list of pods")
+	}
+
+	if len(obj.Items) == 0 {
+		return errors.New("no kube-dns tests found")
+	}
+
+	return nil
 }

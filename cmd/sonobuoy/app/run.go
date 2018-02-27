@@ -51,6 +51,7 @@ func init() {
 	AddKubeconfigFlag(&runFlags.kubecfg, cmd)
 	// Default to detect since we need a kubeconfig regardless
 	AddRBACModeFlags(&runFlags.rbacMode, cmd, DetectRBACMode)
+	AddSkipPreflightFlag(&runopts.SkipPreflight, cmd)
 
 	RootCmd.AddCommand(cmd)
 }
