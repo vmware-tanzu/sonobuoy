@@ -22,6 +22,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/kubernetes"
 
 	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
@@ -32,6 +33,8 @@ var genopts ops.GenConfig
 var genFlags struct {
 	sonobuoyConfig SonobuoyConfig
 	mode           ops.Mode
+	rbacMode       RBACMode
+	kubecfg        Kubeconfig
 }
 
 // GenCommand is exported so it can be extended.
@@ -47,7 +50,10 @@ func init() {
 
 	AddModeFlag(&genFlags.mode, GenCommand)
 	AddSonobuoyConfigFlag(&genFlags.sonobuoyConfig, GenCommand)
-	AddE2EConfig(GenCommand)
+	AddKubeconfigFlag(&genFlags.kubecfg, GenCommand)
+	AddE2EConfigFlags(GenCommand)
+	// Default to enabled here so we don't need a kubeconfig by default
+	AddRBACModeFlags(&genFlags.rbacMode, GenCommand, EnabledRBACMode)
 
 	RootCmd.AddCommand(GenCommand)
 }
@@ -68,6 +74,8 @@ func genManifest(cmd *cobra.Command, args []string) {
 	}
 	genopts.E2EConfig = e2ecfg
 
+	genopts.EnableRBAC = getRBACOrExit(&genFlags.rbacMode, &genFlags.kubecfg)
+
 	bytes, err := ops.NewSonobuoyClient().GenerateManifest(&genopts)
 
 	if err == nil {
@@ -76,4 +84,36 @@ func genManifest(cmd *cobra.Command, args []string) {
 	}
 	errlog.LogError(errors.Wrap(err, "error attempting to generate sonobuoy manifest"))
 	os.Exit(1)
+}
+
+// getRBACOrExit is a helper function for working with RBACMode. RBACMode is a bit of a special case
+// because it only needs a kubeconfig for detect, otherwise errors from kubeconfig can be ignored.
+// This function returns a bool because it os.Exit()s in error cases.
+func getRBACOrExit(mode *RBACMode, kubeconfig *Kubeconfig) bool {
+
+	// Usually we don't need a client. But in this case, we _might_ if we're using detect.
+	// So pass in nil if we get an error, then display the errors from trying to get a client
+	// if it turns out we needed it.
+	cfg, err := kubeconfig.Get()
+	var client *kubernetes.Clientset
+
+	var kubeError error
+	if err == nil {
+		client, err = kubernetes.NewForConfig(cfg)
+		if err != nil {
+			kubeError = err
+		}
+	} else {
+		kubeError = err
+	}
+
+	rbacEnabled, err := genFlags.rbacMode.Enabled(client)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC mode."))
+		if errors.Cause(err) == ErrRBACNoClient {
+			errlog.LogError(kubeError)
+		}
+		os.Exit(1)
+	}
+	return rbacEnabled
 }

@@ -15,8 +15,9 @@ metadata:
     component: sonobuoy
   name: sonobuoy-serviceaccount
   namespace: {{.Namespace}}
+{{- if .EnableRBAC }}
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
@@ -31,7 +32,7 @@ subjects:
   name: sonobuoy-serviceaccount
   namespace: {{.Namespace}}
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
@@ -45,6 +46,7 @@ rules:
   verbs:
   - '*'
 ---
+{{- end }}
 apiVersion: v1
 data:
   config.json: |

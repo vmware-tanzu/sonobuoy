@@ -21,6 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/kubernetes"
 
 	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
@@ -32,6 +33,7 @@ var runFlags struct {
 	sonobuoyConfig SonobuoyConfig
 	mode           ops.Mode
 	kubecfg        Kubeconfig
+	rbacMode       RBACMode
 }
 
 func init() {
@@ -45,8 +47,10 @@ func init() {
 
 	AddModeFlag(&runFlags.mode, cmd)
 	AddSonobuoyConfigFlag(&runFlags.sonobuoyConfig, cmd)
-	AddE2EConfig(cmd)
+	AddE2EConfigFlags(cmd)
 	AddKubeconfigFlag(&runFlags.kubecfg, cmd)
+	// Default to detect since we need a kubeconfig regardless
+	AddRBACModeFlags(&runFlags.rbacMode, cmd, DetectRBACMode)
 
 	RootCmd.AddCommand(cmd)
 }
@@ -57,6 +61,20 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
 		os.Exit(1)
 	}
+
+	client, err := kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't create Kubernetes client"))
+		os.Exit(1)
+	}
+
+	rbacEnabled, err := runFlags.rbacMode.Enabled(client)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC mode"))
+		os.Exit(1)
+	}
+	runopts.GenConfig.EnableRBAC = rbacEnabled
+
 	runopts.Config = GetConfigWithMode(&runFlags.sonobuoyConfig, runFlags.mode)
 	e2ecfg, err := GetE2EConfig(runFlags.mode, cmd)
 	if err != nil {
