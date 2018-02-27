@@ -107,7 +107,7 @@ func getRBACOrExit(mode *RBACMode, kubeconfig *Kubeconfig) bool {
 		kubeError = err
 	}
 
-	rbacEnabled, err := genFlags.rbacMode.Get(client)
+	rbacEnabled, err := genFlags.rbacMode.Enabled(client)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC mode."))
 		if errors.Cause(err) == ErrRBACNoClient {

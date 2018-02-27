@@ -53,10 +53,10 @@ const apiRootPath = "/apis"
 
 var supportedRBACGroupVersion = rbacv1.SchemeGroupVersion.String()
 
-// Get retrieves whether to enable or disable rbac. If the mode is disable or
+// Enabled retrieves whether to enable or disable rbac. If the mode is disable or
 // enabled, the client is unused. If the mode is "detect", the client will be
 // used to query the server's API groups and detect whether an RBAC api group exists.
-func (r *RBACMode) Get(client *kubernetes.Clientset) (bool, error) {
+func (r *RBACMode) Enabled(client *kubernetes.Clientset) (bool, error) {
 	if r == nil {
 		return false, fmt.Errorf("RBACMode is nil")
 	}

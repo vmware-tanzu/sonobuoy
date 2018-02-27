@@ -68,7 +68,7 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	rbacEnabled, err := runFlags.rbacMode.Get(client)
+	rbacEnabled, err := runFlags.rbacMode.Enabled(client)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC mode"))
 		os.Exit(1)
