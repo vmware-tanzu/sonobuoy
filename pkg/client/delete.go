@@ -17,10 +17,65 @@ limitations under the License.
 package client
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
+const (
+	clusterRoleFieldName  = "component"
+	clusterRoleFieldValue = "sonobuoy"
+
+	e2eNamespacePrefix = "e2e-"
+)
+
 func (c *SonobuoyClient) Delete(cfg *DeleteConfig, client kubernetes.Interface) error {
-	return errors.New("not yet implemented")
+	// Delete the namespace
+	if err := client.CoreV1().Namespaces().Delete(cfg.Namespace, &metav1.DeleteOptions{}); err != nil {
+		return errors.Wrap(err, "failed to delete namespace")
+	}
+	logrus.WithField("namespace", cfg.Namespace).Info("deleted namespace")
+
+	if cfg.EnableRBAC {
+		// ClusterRole and ClusterRoleBindings aren't namespaced, so delete them seperately
+		selector := metav1.AddLabelToSelector(
+			&metav1.LabelSelector{},
+			clusterRoleFieldName,
+			clusterRoleFieldValue,
+		)
+
+		deleteOpts := &metav1.DeleteOptions{}
+		listOpts := metav1.ListOptions{
+			LabelSelector: metav1.FormatLabelSelector(selector),
+		}
+
+		if err := client.RbacV1().ClusterRoleBindings().DeleteCollection(deleteOpts, listOpts); err != nil {
+			return errors.Wrap(err, "failed to delete cluster role binding")
+		}
+
+		// ClusterRole and ClusterRole bindings aren't namespaced, so delete them manually
+		if err := client.RbacV1().ClusterRoles().DeleteCollection(deleteOpts, listOpts); err != nil {
+			return errors.Wrap(err, "failed to delete cluster role")
+		}
+		logrus.Info("deleted clusterrolebindings and clusterroles")
+	}
+
+	// Delete any dangling E2E namespaces
+	namespaces, err := client.CoreV1().Namespaces().List(metav1.ListOptions{})
+	if err != nil {
+		return errors.Wrap(err, "failed to list namespaces")
+	}
+
+	for _, namespace := range namespaces.Items {
+		if strings.HasPrefix(e2eNamespacePrefix, namespace.Name) {
+			if err := client.CoreV1().Namespaces().Delete(namespace.Name, &metav1.DeleteOptions{}); err != nil {
+				return errors.Wrap(err, "failed to delete 2e2 namespace")
+			}
+			logrus.WithField("namespace", namespace.Name).Info("deleted E2E namespace")
+		}
+	}
+	return nil
 }
