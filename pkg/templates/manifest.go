@@ -45,8 +45,8 @@ rules:
   - '*'
   verbs:
   - '*'
----
 {{- end }}
+---
 apiVersion: v1
 data:
   config.json: |
