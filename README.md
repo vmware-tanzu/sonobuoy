@@ -4,9 +4,6 @@
 
 [![Build Status][1]][2]
 
-**NOTE:**
-Sonobuoys master branch is in high flux atm, and if you are looking for a more stable version please checkout the v0.10.0 tag. 
-
 ## Overview
 
 Heptio Sonobuoy is a diagnostic tool that makes it easier to understand the state of a Kubernetes cluster by running a set of [Kubernetes][3] conformance tests in an accessible and non-destructive manner.  It is a customizable, extendable, and cluster-agnostic way to generate clear, informative reports about your cluster.
@@ -68,7 +65,7 @@ $ sonobuoy logs
 
 To view the output, copy the output directory from the main Sonobuoy pod to somewhere local:
 ```
-$ sonobuoy cp .
+$ sonobuoy retrieve .
 ```
 
 This should copy a single `.tar.gz` snapshot from the Sonobuoy pod into your local `.` directory. You can extract its contents into `./results` with:

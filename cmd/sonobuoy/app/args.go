@@ -124,7 +124,7 @@ func AddRBACModeFlags(mode *RBACMode, cmd *cobra.Command, defaultMode RBACMode) 
 // AddSkipPreflightFlag adds a boolean flag to skip preflight checks.
 func AddSkipPreflightFlag(flag *bool, cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVar(
-		flag, "preflight", false,
+		flag, "skip-preflight", false,
 		"If true, skip all checks before kicking off the sonobuoy run.",
 	)
 }
