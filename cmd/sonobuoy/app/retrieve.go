@@ -39,7 +39,7 @@ var (
 
 func init() {
 	cmd := &cobra.Command{
-		Use:   "retrieve",
+		Use:   "retrieve [path]",
 		Short: "Retrieves the results of a sonobuoy run to a specified path",
 		Run:   retrieveResults,
 		Args:  cobra.MaximumNArgs(1),
