@@ -22,7 +22,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	kubeerror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -116,24 +115,15 @@ func createObject(cfg *rest.Config, obj *unstructured.Unstructured, mapper meta.
 		Namespaced: namespace != "",
 	}, namespace).Create(obj)
 
-	log := logrus.WithFields(logrus.Fields{
-		"name":      name,
-		"namespace": namespace,
-		"resource":  resource,
-	})
-
-	switch {
-	case err == nil:
-		log.Info("created object")
-	// Some resources (like ClusterRoleBinding and ClusterBinding) aren't
-	// namespaced and may overlap between runs. So don't abort on duplicate errors
-	// in this case.
-	case namespace == "" && kubeerror.IsAlreadyExists(err):
-		log.Info("object already exists")
-	case err != nil:
+	if err != nil {
 		return errors.Wrapf(err, "failed to create API resource %s", name)
 	}
 
+	logrus.WithFields(logrus.Fields{
+		"name":      name,
+		"namespace": namespace,
+		"resource":  resource,
+	}).Info("created object")
 	return nil
 }
 
