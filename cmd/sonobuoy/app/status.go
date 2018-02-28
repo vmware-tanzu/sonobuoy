@@ -79,10 +79,10 @@ func getStatus(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "couldn't write status out"))
 		os.Exit(1)
 	}
-	fmt.Printf("\n%s\n", statusAsString(status.Status))
+	fmt.Printf("\n%s\n", humanReadableStatus(status.Status))
 }
 
-func statusAsString(str string) string {
+func humanReadableStatus(str string) string {
 	switch str {
 	case "running":
 		return "Sonobuoy is still running. Runs can take up to 60 minutes."
