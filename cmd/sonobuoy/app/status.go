@@ -19,7 +19,6 @@ package app
 import (
 	"fmt"
 	"os"
-	"strings"
 	"text/tabwriter"
 
 	"github.com/pkg/errors"
@@ -75,9 +74,23 @@ func getStatus(cmd *cobra.Command, args []string) {
 	for _, pluginStatus := range status.Plugins {
 		fmt.Fprintf(tw, "%s\t%s\t%s\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status)
 	}
-	fmt.Fprintf(tw, "\t\t%s\n", strings.ToUpper(status.Status))
+
 	if err := tw.Flush(); err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't write status out"))
 		os.Exit(1)
+	}
+	fmt.Printf("\n%s\n", humanReadableStatus(status.Status))
+}
+
+func humanReadableStatus(str string) string {
+	switch str {
+	case "running":
+		return "Sonobuoy is still running. Runs can take up to 60 minutes."
+	case "failed":
+		return "Sonobuoy has failed. You can see what happened with `sonobuoy logs`."
+	case "completed":
+		return "Sonobuoy has completed. Use `sonobuoy retrieve` to get results."
+	default:
+		return fmt.Sprintf("Sonobuoy is in unknown state %q. Please report a bug at github.com/heptio/sonobuoy", str)
 	}
 }
