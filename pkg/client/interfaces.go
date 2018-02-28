@@ -55,6 +55,13 @@ type RunConfig struct {
 	SkipPreflight bool
 }
 
+// DeleteConfig are the input options for cleaning up a Sonobuoy run.
+type DeleteConfig struct {
+	Namespace  string
+	EnableRBAC bool
+	DeleteAll  bool
+}
+
 // RetrieveConfig are the options passed to RetrieveResults.
 type RetrieveConfig struct {
 	// CmdErr is the place to write errors to.
@@ -91,4 +98,6 @@ type Interface interface {
 	GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error)
 	// GetLogs streams logs from the sonobuoy pod by default to stdout.
 	GetLogs(cfg *LogConfig, client kubernetes.Interface) error
+	// Delete removes a sonobuoy run, namespace, and all associated resources.
+	Delete(cfg *DeleteConfig, client kubernetes.Interface) error
 }
