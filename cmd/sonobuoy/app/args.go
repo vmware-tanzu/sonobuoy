@@ -128,3 +128,11 @@ func AddSkipPreflightFlag(flag *bool, cmd *cobra.Command) {
 		"If true, skip all checks before kicking off the sonobuoy run.",
 	)
 }
+
+// AddDeleteAllFlag adds a boolean flag for deleting everything (including E2E tests).
+func AddDeleteAllFlag(flag *bool, cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVar(
+		flag, "all", false,
+		"In addition to deleting Sonobuoy namespaces, also clean up dangling e2e- namespaces.",
+	)
+}
