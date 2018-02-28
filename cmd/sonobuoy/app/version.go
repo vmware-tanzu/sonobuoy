@@ -36,5 +36,4 @@ var versionCmd = &cobra.Command{
 
 func runVersion(cmd *cobra.Command, args []string) {
 	fmt.Println(buildinfo.Version)
-	fmt.Println("Configured docker image:", buildinfo.DockerImage)
 }
