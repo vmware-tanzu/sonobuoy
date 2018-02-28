@@ -39,10 +39,11 @@ func init() {
 }
 
 var workerCmd = &cobra.Command{
-	Use:   "worker",
-	Short: "Gather and send data to the sonobuoy master instance",
-	Run:   runGather,
-	Args:  cobra.ExactArgs(0),
+	Use:    "worker",
+	Short:  "Gather and send data to the sonobuoy master instance (for internal use)",
+	Run:    runGather,
+	Hidden: true,
+	Args:   cobra.ExactArgs(0),
 }
 
 var globalCmd = &cobra.Command{
