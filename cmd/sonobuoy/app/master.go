@@ -34,11 +34,12 @@ var kubecfg Kubeconfig
 
 func init() {
 	cmd := &cobra.Command{
-		Use:   "master",
-		Short: "Generate reports on your kubernetes cluster",
-		Long:  "Sonobuoy is an introspective kubernetes component that generates reports on cluster conformance, configuration, and more",
-		Run:   runMaster,
-		Args:  cobra.ExactArgs(0),
+		Use:    "master",
+		Short:  "Runs the master/aggregator component (for internal use)",
+		Long:   "Sonobuoy is an introspective kubernetes component that generates reports on cluster conformance, configuration, and more",
+		Run:    runMaster,
+		Hidden: true,
+		Args:   cobra.ExactArgs(0),
 	}
 	cmd.PersistentFlags().BoolVar(
 		&noExit, "no-exit", false,
