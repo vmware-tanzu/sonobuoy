@@ -34,42 +34,67 @@ const (
 )
 
 func (c *SonobuoyClient) Delete(cfg *DeleteConfig, client kubernetes.Interface) error {
+	if err := cleanupNamespace(cfg.Namespace, client); err != nil {
+		return err
+	}
+
+	if cfg.EnableRBAC {
+		if err := deleteRBAC(client); err != nil {
+			return err
+		}
+	}
+
+	if cfg.DeleteAll {
+		if err := cleanupE2E(client); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func cleanupNamespace(namespace string, client kubernetes.Interface) error {
 	// Delete the namespace
 	log := logrus.WithFields(logrus.Fields{
 		"kind":      "namespace",
-		"namespace": cfg.Namespace,
+		"namespace": namespace,
 	})
 
-	err := client.CoreV1().Namespaces().Delete(cfg.Namespace, &metav1.DeleteOptions{})
+	err := client.CoreV1().Namespaces().Delete(namespace, &metav1.DeleteOptions{})
 	if err := logDelete(log, err); err != nil {
 		return errors.Wrap(err, "couldn't delete namespace")
 	}
 
-	if cfg.EnableRBAC {
-		// ClusterRole and ClusterRoleBindings aren't namespaced, so delete them seperately
-		selector := metav1.AddLabelToSelector(
-			&metav1.LabelSelector{},
-			clusterRoleFieldName,
-			clusterRoleFieldValue,
-		)
+	return nil
+}
 
-		deleteOpts := &metav1.DeleteOptions{}
-		listOpts := metav1.ListOptions{
-			LabelSelector: metav1.FormatLabelSelector(selector),
-		}
+func deleteRBAC(client kubernetes.Interface) error {
+	// ClusterRole and ClusterRoleBindings aren't namespaced, so delete them seperately
+	selector := metav1.AddLabelToSelector(
+		&metav1.LabelSelector{},
+		clusterRoleFieldName,
+		clusterRoleFieldValue,
+	)
 
-		err := client.RbacV1().ClusterRoleBindings().DeleteCollection(deleteOpts, listOpts)
-		if err := logDelete(logrus.WithField("kind", "clusterrolebindings"), err); err != nil {
-			return errors.Wrap(err, "failed to delete cluster role binding")
-		}
-
-		// ClusterRole and ClusterRole bindings aren't namespaced, so delete them manually
-		err = client.RbacV1().ClusterRoles().DeleteCollection(deleteOpts, listOpts)
-		if err := logDelete(logrus.WithField("kind", "clusterroles"), err); err != nil {
-			return errors.Wrap(err, "failed to delete cluster role")
-		}
+	deleteOpts := &metav1.DeleteOptions{}
+	listOpts := metav1.ListOptions{
+		LabelSelector: metav1.FormatLabelSelector(selector),
 	}
 
+	err := client.RbacV1().ClusterRoleBindings().DeleteCollection(deleteOpts, listOpts)
+	if err := logDelete(logrus.WithField("kind", "clusterrolebindings"), err); err != nil {
+		return errors.Wrap(err, "failed to delete cluster role binding")
+	}
+
+	// ClusterRole and ClusterRole bindings aren't namespaced, so delete them manually
+	err = client.RbacV1().ClusterRoles().DeleteCollection(deleteOpts, listOpts)
+	if err := logDelete(logrus.WithField("kind", "clusterroles"), err); err != nil {
+		return errors.Wrap(err, "failed to delete cluster role")
+	}
+
+	return nil
+}
+
+func cleanupE2E(client kubernetes.Interface) error {
 	// Delete any dangling E2E namespaces
 	namespaces, err := client.CoreV1().Namespaces().List(metav1.ListOptions{})
 	if err != nil {

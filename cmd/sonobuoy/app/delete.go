@@ -44,6 +44,7 @@ func init() {
 	AddKubeconfigFlag(&deleteFlags.kubeconfig, cmd)
 	AddNamespaceFlag(&deleteopts.Namespace, cmd)
 	AddRBACModeFlags(&deleteFlags.rbacMode, cmd, DetectRBACMode)
+	AddDeleteAllFlag(&deleteopts.DeleteAll, cmd)
 
 	RootCmd.AddCommand(cmd)
 }
