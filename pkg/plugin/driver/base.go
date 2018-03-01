@@ -1,4 +1,4 @@
-package plugin
+package driver
 
 import (
 	"crypto/ecdsa"
@@ -7,6 +7,7 @@ import (
 	"encoding/pem"
 	"fmt"
 
+	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -15,7 +16,7 @@ import (
 )
 
 type Base struct {
-	Definition    Definition
+	Definition    plugin.Definition
 	SessionID     string
 	Namespace     string
 	SonobuoyImage string
@@ -54,7 +55,7 @@ func (b *Base) GetResultType() string {
 }
 
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
-func (b *Base) GetTemplateData(hostname string, cert *tls.Certificate) (*TemplateData, error) {
+func (b *Base) GetTemplateData(masterAddress string, cert *tls.Certificate) (*TemplateData, error) {
 
 	container, err := kuberuntime.Encode(manifest.Encoder, &b.Definition.Spec)
 	if err != nil {
@@ -70,14 +71,10 @@ func (b *Base) GetTemplateData(hostname string, cert *tls.Certificate) (*Templat
 		Namespace:         b.Namespace,
 		SonobuoyImage:     b.SonobuoyImage,
 		ProducerContainer: string(container),
-		MasterAddress:     b.GetMasterAddress(hostname),
+		MasterAddress:     masterAddress,
 		CACert:            cacert,
 		SecretName:        b.GetSecretName(),
 	}, nil
-}
-
-func (b *Base) GetMasterAddress(hostname string) string {
-	panic("base GetMasterAddress called")
 }
 
 // MakeTLSSecret makes a Kubernetes secret object for the given TLS certificate.

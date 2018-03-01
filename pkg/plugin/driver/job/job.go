@@ -31,13 +31,14 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
 )
 
 // Plugin is a plugin driver that dispatches a single pod to the given
 // kubernetes cluster
 type Plugin struct {
-	plugin.Base
+	driver.Base
 }
 
 // Ensure Plugin implements plugin.Interface
@@ -47,7 +48,7 @@ var _ plugin.Interface = &Plugin{}
 // and sonobuoy master address
 func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
 	return &Plugin{
-		plugin.Base{
+		driver.Base{
 			Definition:    dfn,
 			SessionID:     utils.GetSessionID(),
 			Namespace:     namespace,
@@ -55,10 +56,6 @@ func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
 			CleanedUp:     false, // be explicit
 		},
 	}
-}
-
-func (p *Plugin) GetMasterAddress(hostname string) string {
-	return fmt.Sprintf("https://%s/api/v1/results/global", hostname)
 }
 
 // ExpectedResults returns the list of results expected for this plugin. Since
@@ -69,10 +66,14 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	}
 }
 
+func getMasterAddress(hostname string) string {
+	return fmt.Sprintf("https://%s/api/v1/results/global", hostname)
+}
+
 func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error) {
 	var b bytes.Buffer
 
-	tmplData, err := p.GetTemplateData(hostname, cert)
+	tmplData, err := p.GetTemplateData(getMasterAddress(hostname), cert)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't get template data for %q", p.Definition.Name)
 	}

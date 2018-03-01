@@ -22,23 +22,24 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/errlog"
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
-	"github.com/pkg/errors"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
-
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
+
+	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/driver"
+	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/pkg/errors"
 )
 
 // Plugin is a plugin driver that dispatches containers to each node,
 // expecting each pod to report to the master.
 type Plugin struct {
-	plugin.Base
+	driver.Base
 }
 
 // Ensure DaemonSetPlugin implements plugin.Interface
@@ -48,7 +49,7 @@ var _ plugin.Interface = &Plugin{}
 // and sonobuoy master address
 func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
 	return &Plugin{
-		plugin.Base{
+		driver.Base{
 			Definition:    dfn,
 			SessionID:     utils.GetSessionID(),
 			Namespace:     namespace,
@@ -72,11 +73,15 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	return ret
 }
 
+func getMasterAddress(hostname string) string {
+	return fmt.Sprintf("https://%s/api/v1/results/by-node", hostname)
+}
+
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
 func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error) {
 	var b bytes.Buffer
 
-	tmplData, err := p.GetTemplateData(hostname, cert)
+	tmplData, err := p.GetTemplateData(getMasterAddress(hostname), cert)
 	if err != nil {
 		return nil, errors.Wrapf(err, "couldn't get template data for %q", p.Definition.Name)
 	}
@@ -239,8 +244,4 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 			}
 		}
 	}
-}
-
-func (p *Plugin) GetMasterAddress(hostname string) string {
-	return fmt.Sprintf("https://%s/api/v1/results/by-node", hostname)
 }
