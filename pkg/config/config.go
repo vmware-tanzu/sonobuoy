@@ -145,7 +145,8 @@ type Config struct {
 	///////////////////////////////////////////////
 	// sonobuoy configuration
 	///////////////////////////////////////////////
-	WorkerImage string `json:"WorkerImage" mapstructure:"workerImage"`
+	WorkerImage     string `json:"WorkerImage" mapstructure:"WorkerImage"`
+	ImagePullPolicy string `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
 }
 
 // LimitConfig is a configuration on the limits of sizes of various responses.
@@ -252,6 +253,7 @@ func NewWithDefaults() *Config {
 
 	// TODO (timothysc) reference the other consts
 	cfg.WorkerImage = "gcr.io/heptio-images/sonobuoy:latest"
+	cfg.ImagePullPolicy = "Always"
 
 	return &cfg
 }

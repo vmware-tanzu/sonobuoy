@@ -1,4 +1,4 @@
-package utils
+package driver
 
 import (
 	"crypto/ecdsa"
@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca"
+	"github.com/heptio/sonobuoy/pkg/plugin"
 )
 
 func TestMakeTLSSecret(t *testing.T) {
@@ -17,18 +18,27 @@ func TestMakeTLSSecret(t *testing.T) {
 	}
 	expectedNamespace := "test-namespace"
 	expectedName := "test-name"
+	sessionID := "aaaaaa11111"
 
 	cert, err := auth.ClientKeyPair("")
 	if err != nil {
 		t.Fatalf("unexpected error %v making client pair", err)
 	}
 
-	secret, err := MakeTLSSecret(cert, expectedNamespace, expectedName)
+	driver := &Base{
+		Namespace: expectedNamespace,
+		Definition: plugin.Definition{
+			Name: expectedName,
+		},
+		SessionID: sessionID,
+	}
+
+	secret, err := driver.MakeTLSSecret(cert)
 	if err != nil {
 		t.Fatalf("unexpected error %v making TLS Secret", err)
 	}
 
-	if secret.ObjectMeta.Name != expectedName {
+	if secret.ObjectMeta.Name != driver.GetSecretName() {
 		t.Errorf("expected name %v, got %v", expectedName, secret.ObjectMeta.Name)
 	}
 	if secret.ObjectMeta.Namespace != expectedNamespace {
