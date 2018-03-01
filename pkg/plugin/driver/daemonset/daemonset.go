@@ -22,58 +22,44 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/errlog"
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
-	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
-	"github.com/pkg/errors"
 	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
-
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
+
+	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/driver"
+	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/pkg/errors"
 )
 
 // Plugin is a plugin driver that dispatches containers to each node,
 // expecting each pod to report to the master.
 type Plugin struct {
-	Definition    plugin.Definition
-	SessionID     string
-	Namespace     string
-	SonobuoyImage string
-	cleanedUp     bool
+	driver.Base
 }
 
 // Ensure DaemonSetPlugin implements plugin.Interface
 var _ plugin.Interface = &Plugin{}
 
-type templateData struct {
-	PluginName        string
-	ResultType        string
-	SessionID         string
-	Namespace         string
-	SonobuoyImage     string
-	ProducerContainer string
-	MasterAddress     string
-	CACert            string
-	SecretName        string
-}
-
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
-// and sonobuoy master address
+// and sonobuoy master address.
 func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
 	return &Plugin{
-		Definition:    dfn,
-		SessionID:     utils.GetSessionID(),
-		Namespace:     namespace,
-		SonobuoyImage: sonobuoyImage,
-		cleanedUp:     false,
+		driver.Base{
+			Definition:    dfn,
+			SessionID:     utils.GetSessionID(),
+			Namespace:     namespace,
+			SonobuoyImage: sonobuoyImage,
+			CleanedUp:     false,
+		},
 	}
 }
 
-// ExpectedResults returns the list of results expected for this daemonset
+// ExpectedResults returns the list of results expected for this daemonset.
 func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	ret := make([]plugin.ExpectedResult, 0, len(nodes))
 
@@ -87,34 +73,20 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	return ret
 }
 
-// GetResultType returns the ResultType for this plugin (to adhere to plugin.Interface)
-func (p *Plugin) GetResultType() string {
-	return p.Definition.ResultType
+func getMasterAddress(hostname string) string {
+	return fmt.Sprintf("https://%s/api/v1/results/by-node", hostname)
 }
 
-//FillTemplate populates the internal Job YAML template with the values for this particular job.
+//FillTemplate populates the internal Job YAML template with the values for this particular daemonset.
 func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error) {
 	var b bytes.Buffer
-	container, err := kuberuntime.Encode(manifest.Encoder, &p.Definition.Spec)
+
+	tmplData, err := p.GetTemplateData(getMasterAddress(hostname), cert)
 	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't reserialize container for daemonset %q", p.Definition.Name)
+		return nil, errors.Wrapf(err, "couldn't get template data for %q", p.Definition.Name)
 	}
 
-	cacert := utils.GetCACertPEM(cert)
-
-	vars := templateData{
-		PluginName:        p.Definition.Name,
-		ResultType:        p.Definition.ResultType,
-		SessionID:         p.SessionID,
-		Namespace:         p.Namespace,
-		SonobuoyImage:     p.SonobuoyImage,
-		ProducerContainer: string(container),
-		MasterAddress:     getMasterAddress(hostname),
-		CACert:            cacert,
-		SecretName:        p.getSecretName(),
-	}
-
-	if err := daemonSetTemplate.Execute(&b, vars); err != nil {
+	if err := daemonSetTemplate.Execute(&b, tmplData); err != nil {
 		return nil, errors.Wrapf(err, "couldn't fill template %q", p.Definition.Name)
 	}
 	return b.Bytes(), nil
@@ -132,7 +104,7 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
 	}
 
-	secret, err := utils.MakeTLSSecret(cert, p.Namespace, p.getSecretName())
+	secret, err := p.MakeTLSSecret(cert)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't make secret for daemonset plugin %v", p.GetName())
 	}
@@ -149,9 +121,9 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 	return nil
 }
 
-// Cleanup cleans up the k8s DaemonSet and ConfigMap created by this plugin instance
+// Cleanup cleans up the k8s DaemonSet and ConfigMap created by this plugin instance.
 func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
-	p.cleanedUp = true
+	p.CleanedUp = true
 	gracePeriod := int64(1)
 	deletionPolicy := metav1.DeletePropagationBackground
 
@@ -178,11 +150,7 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 	}
 }
 
-func (p *Plugin) getSecretName() string {
-	return fmt.Sprintf("daemonset-%s-%s", p.GetName(), p.SessionID)
-}
-
-// findDaemonSet gets the daemonset that we created, using a kubernetes label search
+// findDaemonSet gets the daemonset that we created, using a kubernetes label search.
 func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*appsv1beta2.DaemonSet, error) {
 	// TODO(EKF): Move to v1 in 1.11
 	dsets, err := kubeclient.AppsV1beta2().DaemonSets(p.Namespace).List(p.listOptions())
@@ -212,7 +180,7 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 		// enough time to create pods
 		time.Sleep(10 * time.Second)
 		// If we've cleaned up after ourselves, stop monitoring
-		if p.cleanedUp {
+		if p.CleanedUp {
 			break
 		}
 
@@ -272,17 +240,4 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 			}
 		}
 	}
-}
-
-func (p *Plugin) GetSessionID() string {
-	return p.SessionID
-}
-
-// GetName returns the name of this DaemonSet plugin
-func (p *Plugin) GetName() string {
-	return p.Definition.Name
-}
-
-func getMasterAddress(hostname string) string {
-	return fmt.Sprintf("https://%s/api/v1/results/by-node", hostname)
 }

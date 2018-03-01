@@ -58,6 +58,7 @@ type Definition struct {
 	ResultType     string
 	Spec           manifest.Container
 	ContainerImage string
+	PullPolicy     string
 }
 
 // ExpectedResult is an expected result that a plugin will submit.  This is so
