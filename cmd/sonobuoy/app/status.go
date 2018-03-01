@@ -27,6 +27,7 @@ import (
 
 	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 )
 
 var (
@@ -84,11 +85,11 @@ func getStatus(cmd *cobra.Command, args []string) {
 
 func humanReadableStatus(str string) string {
 	switch str {
-	case "running":
+	case aggregation.RunningStatus:
 		return "Sonobuoy is still running. Runs can take up to 60 minutes."
-	case "failed":
+	case aggregation.FailedStatus:
 		return "Sonobuoy has failed. You can see what happened with `sonobuoy logs`."
-	case "completed":
+	case aggregation.CompleteStatus:
 		return "Sonobuoy has completed. Use `sonobuoy retrieve` to get results."
 	default:
 		return fmt.Sprintf("Sonobuoy is in unknown state %q. Please report a bug at github.com/heptio/sonobuoy", str)
