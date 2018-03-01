@@ -32,49 +32,32 @@ import (
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
-	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 )
-
-const clientKeyName = "clientkey"
 
 // Plugin is a plugin driver that dispatches a single pod to the given
 // kubernetes cluster
 type Plugin struct {
-	Definition    plugin.Definition
-	SessionID     string
-	Namespace     string
-	SonobuoyImage string
-	cleanedUp     bool
+	plugin.Base
 }
 
 // Ensure Plugin implements plugin.Interface
 var _ plugin.Interface = &Plugin{}
 
-type templateData struct {
-	PluginName        string
-	ResultType        string
-	SessionID         string
-	Namespace         string
-	SonobuoyImage     string
-	ProducerContainer string
-	MasterAddress     string
-	CACert            string
-	SecretName        string
-}
-
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address
 func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
 	return &Plugin{
-		Definition:    dfn,
-		SessionID:     utils.GetSessionID(),
-		Namespace:     namespace,
-		SonobuoyImage: sonobuoyImage,
-		cleanedUp:     false, // be explicit
+		plugin.Base{
+			Definition:    dfn,
+			SessionID:     utils.GetSessionID(),
+			Namespace:     namespace,
+			SonobuoyImage: sonobuoyImage,
+			CleanedUp:     false, // be explicit
+		},
 	}
 }
 
-func getMasterAddress(hostname string) string {
+func (p *Plugin) GetMasterAddress(hostname string) string {
 	return fmt.Sprintf("https://%s/api/v1/results/global", hostname)
 }
 
@@ -86,37 +69,18 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	}
 }
 
-// GetResultType returns the ResultType for this plugin (to adhere to plugin.Interface)
-func (p *Plugin) GetResultType() string {
-	return p.Definition.ResultType
-}
-
-//FillTemplate populates the internal Job YAML template with the values for this particular job.
 func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error) {
 	var b bytes.Buffer
 
-	container, err := kuberuntime.Encode(manifest.Encoder, &p.Definition.Spec)
+	tmplData, err := p.GetTemplateData(hostname, cert)
 	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", p.Definition.Name)
+		return nil, errors.Wrapf(err, "couldn't get template data for %q", p.Definition.Name)
 	}
 
-	cacert := utils.GetCACertPEM(cert)
-
-	vars := templateData{
-		PluginName:        p.Definition.Name,
-		ResultType:        p.Definition.ResultType,
-		SessionID:         p.SessionID,
-		Namespace:         p.Namespace,
-		SonobuoyImage:     p.SonobuoyImage,
-		ProducerContainer: string(container),
-		MasterAddress:     getMasterAddress(hostname),
-		CACert:            cacert,
-		SecretName:        p.getSecretName(),
-	}
-
-	if err := jobTemplate.Execute(&b, vars); err != nil {
+	if err := jobTemplate.Execute(&b, tmplData); err != nil {
 		return nil, errors.Wrapf(err, "couldn't fill template %q", p.Definition.Name)
 	}
+
 	return b.Bytes(), nil
 }
 
@@ -136,7 +100,7 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 		return errors.Wrapf(err, "could not decode executed template into a Job for plugin %v", p.GetName())
 	}
 
-	secret, err := utils.MakeTLSSecret(cert, p.Namespace, p.getSecretName())
+	secret, err := p.MakeTLSSecret(cert)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't make secret for Job plugin %v", p.GetName())
 	}
@@ -161,7 +125,7 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, _ []v1.Node, resultsCh
 		// TODO: maybe use a watcher instead of polling.
 		time.Sleep(10 * time.Second)
 		// If we've cleaned up after ourselves, stop monitoring
-		if p.cleanedUp {
+		if p.CleanedUp {
 			break
 		}
 
@@ -185,7 +149,7 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, _ []v1.Node, resultsCh
 
 // Cleanup cleans up the k8s Job and ConfigMap created by this plugin instance
 func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
-	p.cleanedUp = true
+	p.CleanedUp = true
 	gracePeriod := int64(plugin.GracefulShutdownPeriod)
 	deletionPolicy := metav1.DeletePropagationBackground
 
@@ -218,10 +182,6 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 	}
 }
 
-func (p *Plugin) getSecretName() string {
-	return fmt.Sprintf("job-%s-%s", p.GetName(), p.GetSessionID())
-}
-
 // findPod finds the pod created by this plugin, using a kubernetes label
 // search.  If no pod is found, or if multiple pods are found, returns an
 // error.
@@ -236,14 +196,4 @@ func (p *Plugin) findPod(kubeclient kubernetes.Interface) (*v1.Pod, error) {
 	}
 
 	return &pods.Items[0], nil
-}
-
-// GetSessionID returns the session id associated with the plugin
-func (p *Plugin) GetSessionID() string {
-	return p.SessionID
-}
-
-// GetName returns the name of this Job plugin
-func (p *Plugin) GetName() string {
-	return p.Definition.Name
 }

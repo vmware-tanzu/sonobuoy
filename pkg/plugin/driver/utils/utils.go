@@ -18,20 +18,14 @@ package utils
 
 import (
 	"bytes"
-	"crypto/ecdsa"
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/hex"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/pkg/errors"
 	gouuid "github.com/satori/go.uuid"
 
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // GetSessionID generates a new session id.
@@ -94,67 +88,4 @@ func MakeErrorResult(resultType string, errdata map[string]interface{}, nodeName
 		NodeName:   nodeName,
 		MimeType:   "application/json",
 	}
-}
-
-// GetCACertPEM extracts the CA cert from a tls.Certificate.
-// If the provided Certificate has only one certificate in the chain, the CA
-// will be the leaf cert.
-func GetCACertPEM(cert *tls.Certificate) string {
-	cacert := ""
-	if len(cert.Certificate) > 0 {
-		caCertDER := cert.Certificate[len(cert.Certificate)-1]
-		cacert = string(pem.EncodeToMemory(&pem.Block{
-			Type:  "CERTIFICATE",
-			Bytes: caCertDER,
-		}))
-	}
-	return cacert
-}
-
-// GetKeyPEM turns an RSA Private Key into a PEM-encoded string
-func GetKeyPEM(key *ecdsa.PrivateKey) ([]byte, error) {
-	derKEY, err := x509.MarshalECPrivateKey(key)
-	if err != nil {
-		return nil, err
-	}
-	return pem.EncodeToMemory(&pem.Block{
-		Type:  "EC PRIVATE KEY",
-		Bytes: derKEY,
-	}), nil
-}
-
-// MakeTLSSecret makes a Kubernetes secret object for the given TLS certificate.
-func MakeTLSSecret(cert *tls.Certificate, namespace, secretName string) (*v1.Secret, error) {
-	rsaKey, ok := cert.PrivateKey.(*ecdsa.PrivateKey)
-	if !ok {
-		return nil, errors.New("private key not ECDSA")
-	}
-
-	if len(cert.Certificate) <= 0 {
-		return nil, errors.New("no certs in tls.certificate")
-	}
-
-	certDER := cert.Certificate[0]
-	certPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: certDER,
-	})
-
-	keyPEM, err := GetKeyPEM(rsaKey)
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't PEM encode TLS key")
-	}
-
-	return &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: namespace,
-		},
-		Data: map[string][]byte{
-			v1.TLSPrivateKeyKey: keyPEM,
-			v1.TLSCertKey:       certPEM,
-		},
-		Type: v1.SecretTypeTLS,
-	}, nil
-
 }
