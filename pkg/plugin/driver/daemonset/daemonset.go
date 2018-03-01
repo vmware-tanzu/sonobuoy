@@ -46,7 +46,7 @@ type Plugin struct {
 var _ plugin.Interface = &Plugin{}
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
-// and sonobuoy master address
+// and sonobuoy master address.
 func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
 	return &Plugin{
 		driver.Base{
@@ -59,7 +59,7 @@ func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
 	}
 }
 
-// ExpectedResults returns the list of results expected for this daemonset
+// ExpectedResults returns the list of results expected for this daemonset.
 func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	ret := make([]plugin.ExpectedResult, 0, len(nodes))
 
@@ -77,7 +77,7 @@ func getMasterAddress(hostname string) string {
 	return fmt.Sprintf("https://%s/api/v1/results/by-node", hostname)
 }
 
-//FillTemplate populates the internal Job YAML template with the values for this particular job.
+//FillTemplate populates the internal Job YAML template with the values for this particular daemonset.
 func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error) {
 	var b bytes.Buffer
 
@@ -121,7 +121,7 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 	return nil
 }
 
-// Cleanup cleans up the k8s DaemonSet and ConfigMap created by this plugin instance
+// Cleanup cleans up the k8s DaemonSet and ConfigMap created by this plugin instance.
 func (p *Plugin) Cleanup(kubeclient kubernetes.Interface) {
 	p.CleanedUp = true
 	gracePeriod := int64(1)
@@ -150,11 +150,7 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 	}
 }
 
-func (p *Plugin) getSecretName() string {
-	return fmt.Sprintf("daemonset-%s-%s", p.GetName(), p.SessionID)
-}
-
-// findDaemonSet gets the daemonset that we created, using a kubernetes label search
+// findDaemonSet gets the daemonset that we created, using a kubernetes label search.
 func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*appsv1beta2.DaemonSet, error) {
 	// TODO(EKF): Move to v1 in 1.11
 	dsets, err := kubeclient.AppsV1beta2().DaemonSets(p.Namespace).List(p.listOptions())

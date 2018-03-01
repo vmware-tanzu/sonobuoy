@@ -15,6 +15,7 @@ import (
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 )
 
+// Base is the  truct that stores state for plugin drivers and contains helper methods.
 type Base struct {
 	Definition    plugin.Definition
 	SessionID     string
@@ -23,6 +24,7 @@ type Base struct {
 	CleanedUp     bool
 }
 
+// TemplateData is all the fields available to plugin driver templates.
 type TemplateData struct {
 	PluginName        string
 	ResultType        string
@@ -35,26 +37,27 @@ type TemplateData struct {
 	SecretName        string
 }
 
-// GetSessionID returns the session id associated with the plugin
+// GetSessionID returns the session id associated with the plugin.
 func (b *Base) GetSessionID() string {
 	return b.SessionID
 }
 
-// GetName returns the name of this Job plugin
+// GetName returns the name of this Job plugin.
 func (b *Base) GetName() string {
 	return b.Definition.Name
 }
 
+// GetSecretName gets a name for a secret based on the plugin name and session ID.
 func (b *Base) GetSecretName() string {
-	return fmt.Sprintf("job-%s-%s", b.GetName(), b.GetSessionID())
+	return fmt.Sprintf("sonobuoy-plugin-%s-%s", b.GetName(), b.GetSessionID())
 }
 
-// GetResultType returns the ResultType for this plugin (to adhere to plugin.Interface)
+// GetResultType returns the ResultType for this plugin (to adhere to plugin.Interface).
 func (b *Base) GetResultType() string {
 	return b.Definition.ResultType
 }
 
-//FillTemplate populates the internal Job YAML template with the values for this particular job.
+//GetTemplateData fills a TemplateData struct with the passed in and state variables.
 func (b *Base) GetTemplateData(masterAddress string, cert *tls.Certificate) (*TemplateData, error) {
 
 	container, err := kuberuntime.Encode(manifest.Encoder, &b.Definition.Spec)
@@ -113,7 +116,7 @@ func (b *Base) MakeTLSSecret(cert *tls.Certificate) (*v1.Secret, error) {
 
 }
 
-// GetCACertPEM extracts the CA cert from a tls.Certificate.
+// getCACertPEM extracts the CA cert from a tls.Certificate.
 // If the provided Certificate has only one certificate in the chain, the CA
 // will be the leaf cert.
 func getCACertPEM(cert *tls.Certificate) string {
@@ -128,7 +131,7 @@ func getCACertPEM(cert *tls.Certificate) string {
 	return cacert
 }
 
-// GetKeyPEM turns an RSA Private Key into a PEM-encoded string
+// getKeyPEM turns an RSA Private Key into a PEM-encoded string
 func getKeyPEM(key *ecdsa.PrivateKey) ([]byte, error) {
 	derKEY, err := x509.MarshalECPrivateKey(key)
 	if err != nil {

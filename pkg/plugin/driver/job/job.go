@@ -36,7 +36,7 @@ import (
 )
 
 // Plugin is a plugin driver that dispatches a single pod to the given
-// kubernetes cluster
+// kubernetes cluster.
 type Plugin struct {
 	driver.Base
 }
@@ -45,7 +45,7 @@ type Plugin struct {
 var _ plugin.Interface = &Plugin{}
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
-// and sonobuoy master address
+// and sonobuoy master address.
 func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
 	return &Plugin{
 		driver.Base{
@@ -70,6 +70,7 @@ func getMasterAddress(hostname string) string {
 	return fmt.Sprintf("https://%s/api/v1/results/global", hostname)
 }
 
+//FillTemplate populates the internal Job YAML template with the values for this particular job.
 func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error) {
 	var b bytes.Buffer
 
@@ -87,9 +88,7 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 
 // Run dispatches worker pods according to the Job's configuration.
 func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate) error {
-	var (
-		job v1.Pod
-	)
+	var job v1.Pod
 
 	b, err := p.FillTemplate(hostname, cert)
 	if err != nil {
