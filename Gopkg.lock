@@ -212,6 +212,19 @@
   revision = "b4575eea38cca1123ec2dc90c26529b5c5acfcff"
 
 [[projects]]
+  name = "github.com/onsi/ginkgo"
+  packages = [
+    "config",
+    "reporters",
+    "reporters/stenographer",
+    "reporters/stenographer/support/go-colorable",
+    "reporters/stenographer/support/go-isatty",
+    "types"
+  ]
+  revision = "9eda700730cba42af70d53180f9dcce9266bc2bc"
+  version = "v1.4.0"
+
+[[projects]]
   name = "github.com/pelletier/go-toml"
   packages = ["."]
   revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
@@ -523,6 +536,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3846259892091a4ae0eb02e48ee5629fe416bddbbf38523aec3a10ae302b98f8"
+  inputs-digest = "228ff210906bc0844fbcec6806ffd8caa322af10bb22d34a37f3276d638beb81"
   solver-name = "gps-cdcl"
   solver-version = 1
