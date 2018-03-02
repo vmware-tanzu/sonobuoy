@@ -18,7 +18,9 @@ package app
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"sort"
 	"text/tabwriter"
 
 	"github.com/pkg/errors"
@@ -30,10 +32,11 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 )
 
-var (
-	statusNamespace  string
-	statusKubeconfig Kubeconfig
-)
+var statusFlags struct {
+	namespace string
+	kubecfg   Kubeconfig
+	showAll   bool
+}
 
 func init() {
 	cmd := &cobra.Command{
@@ -43,8 +46,12 @@ func init() {
 		Args:  cobra.ExactArgs(0),
 	}
 
-	AddNamespaceFlag(&statusNamespace, cmd)
-	AddKubeconfigFlag(&statusKubeconfig, cmd)
+	AddNamespaceFlag(&statusFlags.namespace, cmd)
+	AddKubeconfigFlag(&statusFlags.kubecfg, cmd)
+	cmd.Flags().BoolVar(
+		&statusFlags.showAll, "show-all", false,
+		"Don't summarize plugin statuses, show all individually",
+	)
 
 	RootCmd.AddCommand(cmd)
 }
@@ -52,7 +59,7 @@ func init() {
 // TODO (timothysc) summarize and aggregate daemonset-plugins by status done (24) running (24)
 // also --show-all
 func getStatus(cmd *cobra.Command, args []string) {
-	config, err := statusKubeconfig.Get()
+	config, err := statusFlags.kubecfg.Get()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't get kubernetes config"))
 		os.Exit(1)
@@ -63,24 +70,21 @@ func getStatus(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	status, err := ops.NewSonobuoyClient().GetStatus(statusNamespace, client)
+	status, err := ops.NewSonobuoyClient().GetStatus(statusFlags.namespace, client)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
 	}
 
-	tw := tabwriter.NewWriter(os.Stdout, 1, 8, 1, '\t', tabwriter.AlignRight)
-
-	fmt.Fprintf(tw, "PLUGIN\tNODE\tSTATUS\n")
-	for _, pluginStatus := range status.Plugins {
-		fmt.Fprintf(tw, "%s\t%s\t%s\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status)
+	if statusFlags.showAll {
+		err = printAll(os.Stdout, status)
+	} else {
+		err = printSummary(os.Stdout, status)
 	}
-
-	if err := tw.Flush(); err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't write status out"))
+	if err != nil {
+		errlog.LogError(err)
 		os.Exit(1)
 	}
-	fmt.Printf("\n%s\n", humanReadableStatus(status.Status))
 }
 
 func humanReadableStatus(str string) string {
@@ -94,4 +98,76 @@ func humanReadableStatus(str string) string {
 	default:
 		return fmt.Sprintf("Sonobuoy is in unknown state %q. Please report a bug at github.com/heptio/sonobuoy", str)
 	}
+}
+
+func printAll(w io.Writer, status *aggregation.Status) error {
+	tw := tabwriter.NewWriter(w, 1, 8, 1, '\t', tabwriter.AlignRight)
+
+	fmt.Fprintf(tw, "PLUGIN\tNODE\tSTATUS\n")
+	for _, pluginStatus := range status.Plugins {
+		fmt.Fprintf(tw, "%s\t%s\t%s\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status)
+	}
+
+	if err := tw.Flush(); err != nil {
+		return errors.Wrap(err, "couldn't write status out")
+	}
+
+	fmt.Fprintf(w, "\n%s\n", humanReadableStatus(status.Status))
+	return nil
+}
+
+func printSummary(w io.Writer, status *aggregation.Status) error {
+	tw := tabwriter.NewWriter(w, 1, 8, 1, '\t', tabwriter.AlignRight)
+	totals := map[string]map[string]int{}
+	for _, plugin := range status.Plugins {
+		if _, ok := totals[plugin.Plugin]; !ok {
+			totals[plugin.Plugin] = make(map[string]int)
+		}
+		totals[plugin.Plugin][plugin.Status]++
+	}
+
+	// sort everything nicely
+	summaries := make(pluginSummaries, 0)
+	for pluginName, pluginStats := range totals {
+		for status, count := range pluginStats {
+			summaries = append(summaries, pluginSummary{
+				plugin: pluginName,
+				status: status,
+				count:  count,
+			})
+		}
+	}
+	sort.Sort(summaries)
+	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tCOUNT\n")
+	for _, summary := range summaries {
+		fmt.Fprintf(tw, "%s\t%s\t%d\n", summary.plugin, summary.status, summary.count)
+	}
+
+	if err := tw.Flush(); err != nil {
+		return errors.Wrap(err, "couldn't write status out")
+	}
+
+	fmt.Fprintf(w, "\n%s\n", humanReadableStatus(status.Status))
+	return nil
+}
+
+type pluginSummaries []pluginSummary
+
+type pluginSummary struct {
+	plugin string
+	status string
+	count  int
+}
+
+// For sort.Interface
+func (p pluginSummaries) Len() int { return len(p) }
+func (p pluginSummaries) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+func (p pluginSummaries) Less(i, j int) bool {
+	pi, pj := p[i], p[j]
+	if pi.plugin == pj.plugin {
+		return pi.status < pj.status
+	}
+	return pi.plugin < pj.plugin
 }
