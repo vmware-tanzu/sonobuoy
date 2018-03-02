@@ -73,18 +73,21 @@ const (
 	e2eSkipFlag  = "e2e-skip"
 )
 
-// AddE2EConfigFlags adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig.
-func AddE2EConfigFlags(flags *pflag.FlagSet) {
+// AddE2EConfigFlags adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig. Instead, they are returned as a Flagset which should be passed to GetE2EConfig. The returned flagset will be added to the passed in flag set.
+func AddE2EConfigFlags(flags *pflag.FlagSet) *pflag.FlagSet {
+	e2eFlags := pflag.NewFlagSet("e2e", pflag.ExitOnError)
 	modeName := ops.Conformance
 	defaultMode := modeName.Get()
-	flags.String(
+	e2eFlags.String(
 		e2eFocusFlag, defaultMode.E2EConfig.Focus,
 		"Specify the E2E_FOCUS flag to the conformance tests. Overrides --mode.",
 	)
-	flags.String(
+	e2eFlags.String(
 		e2eSkipFlag, defaultMode.E2EConfig.Skip,
 		"Specify the E2E_SKIP flag to the conformance tests. Overrides --mode.",
 	)
+	flags.AddFlagSet(e2eFlags)
+	return e2eFlags
 }
 
 // GetE2EConfig gets the E2EConfig from the mode, then overrides them with e2e-focus and e2e-skip if they are provided.

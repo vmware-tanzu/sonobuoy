@@ -95,7 +95,7 @@ func e2es(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	e2eflags.FillConfig(cmd, &e2erunopts)
+	e2eflags.FillConfig(&e2erunopts)
 
 	fmt.Printf("Rerunning %d tests:\n", len(testCases))
 	if err := sonobuoy.Run(&runopts, restConfig); err != nil {

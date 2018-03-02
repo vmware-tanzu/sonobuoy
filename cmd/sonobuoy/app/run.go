@@ -42,8 +42,8 @@ func (r *runFlags) AddFlags(flags *pflag.FlagSet, cfg *ops.RunConfig) {
 	flags.AddFlagSet(runset)
 }
 
-func (r *runFlags) FillConfig(cmd *cobra.Command, cfg *ops.RunConfig) error {
-	return r.genFlags.FillConfig(cmd, &runopts.GenConfig)
+func (r *runFlags) FillConfig(cfg *ops.RunConfig) error {
+	return r.genFlags.FillConfig(&runopts.GenConfig)
 }
 
 func init() {
@@ -65,7 +65,7 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	if err := runflags.FillConfig(cmd, &runopts); err != nil {
+	if err := runflags.FillConfig(&runopts); err != nil {
 		errlog.LogError(errors.Wrap(err, "could not retrieve E2E config"))
 		os.Exit(1)
 	}

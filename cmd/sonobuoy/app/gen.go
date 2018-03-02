@@ -34,6 +34,7 @@ type genFlags struct {
 	mode           ops.Mode
 	rbacMode       RBACMode
 	kubecfg        Kubeconfig
+	e2eflags       *pflag.FlagSet
 }
 
 var genopts ops.GenConfig
@@ -44,7 +45,7 @@ func (g *genFlags) AddFlags(flags *pflag.FlagSet, cfg *ops.GenConfig, rbac RBACM
 	AddModeFlag(&g.mode, genset)
 	AddSonobuoyConfigFlag(&g.sonobuoyConfig, genset)
 	AddKubeconfigFlag(&g.kubecfg, genset)
-	AddE2EConfigFlags(genset)
+	g.e2eflags = AddE2EConfigFlags(genset)
 	AddRBACModeFlags(&g.rbacMode, genset, rbac)
 	flags.AddFlagSet(genset)
 
@@ -52,12 +53,12 @@ func (g *genFlags) AddFlags(flags *pflag.FlagSet, cfg *ops.GenConfig, rbac RBACM
 	AddSonobuoyImage(&cfg.Image, flags)
 }
 
-func (g *genFlags) FillConfig(cmd *cobra.Command, cfg *ops.GenConfig) error {
+func (g *genFlags) FillConfig(cfg *ops.GenConfig) error {
 	cfg.Config = GetConfigWithMode(&g.sonobuoyConfig, g.mode)
 
 	cfg.EnableRBAC = getRBACOrExit(&g.rbacMode, &g.kubecfg)
 
-	e2ecfg, err := GetE2EConfig(genflags.mode, cmd.Flags())
+	e2ecfg, err := GetE2EConfig(genflags.mode, g.e2eflags)
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve E2E config")
 	}
@@ -82,7 +83,7 @@ func init() {
 }
 
 func genManifest(cmd *cobra.Command, args []string) {
-	if err := genflags.FillConfig(cmd, &genopts); err != nil {
+	if err := genflags.FillConfig(&genopts); err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
