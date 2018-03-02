@@ -29,21 +29,28 @@ import (
 
 type runFlags struct {
 	genFlags
+	skipPreflight bool
 }
 
-var runopts ops.RunConfig
 var runflags runFlags
 
-func (r *runFlags) AddFlags(flags *pflag.FlagSet, cfg *ops.RunConfig) {
+func RunFlagSet(cfg *runFlags) *pflag.FlagSet {
 	runset := pflag.NewFlagSet("run", pflag.ExitOnError)
 	// Default to detect since we need kubeconfig regardless
-	runflags.genFlags.AddFlags(runset, &runopts.GenConfig, DetectRBACMode)
-	AddSkipPreflightFlag(&runopts.SkipPreflight, runset)
-	flags.AddFlagSet(runset)
+	runset.AddFlagSet(GenFlagSet(&cfg.genFlags, DetectRBACMode))
+	AddSkipPreflightFlag(&cfg.skipPreflight, runset)
+	return runset
 }
 
-func (r *runFlags) FillConfig(cfg *ops.RunConfig) error {
-	return r.genFlags.FillConfig(&runopts.GenConfig)
+func (r *runFlags) Config() (*ops.RunConfig, error) {
+	gencfg, err := r.genFlags.Config()
+	if err != nil {
+		return nil, err
+	}
+	return &ops.RunConfig{
+		GenConfig:     *gencfg,
+		SkipPreflight: r.skipPreflight,
+	}, nil
 }
 
 func init() {
@@ -54,7 +61,7 @@ func init() {
 		Args:  cobra.ExactArgs(0),
 	}
 
-	runflags.AddFlags(cmd.Flags(), &runopts)
+	cmd.Flags().AddFlagSet(RunFlagSet(&runflags))
 	RootCmd.AddCommand(cmd)
 }
 
@@ -65,13 +72,13 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	if err := runflags.FillConfig(&runopts); err != nil {
+	cfg, err := runflags.Config()
+	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not retrieve E2E config"))
 		os.Exit(1)
 	}
 
-	// TODO(timothysc) Need to add checks which include (detection-rbac, preflight-DNS, ...)
-	if err := ops.NewSonobuoyClient().Run(&runopts, restConfig); err != nil {
+	if err := ops.NewSonobuoyClient().Run(cfg, restConfig); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
 	}

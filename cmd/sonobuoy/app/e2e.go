@@ -34,16 +34,16 @@ type e2eFlags struct {
 	rerun bool
 }
 
-func (f *e2eFlags) AddFlags(flags *pflag.FlagSet, runopts *client.RunConfig) {
+func E2EFlagSet(cfg *e2eFlags) *pflag.FlagSet {
 	e2eset := pflag.NewFlagSet("e2e", pflag.ExitOnError)
-	e2eflags.runFlags.AddFlags(e2eset, runopts)
+	e2eset.AddFlagSet(RunFlagSet(&cfg.runFlags))
 
-	e2eset.StringVar(&e2eflags.show, "show", "failed", "Defines which tests to show, options are [passed, failed (default) or all]. Cannot be combined with --rerun-failed.")
-	e2eset.BoolVar(&e2eflags.rerun, "rerun-failed", false, "Rerun the failed tests reported by the archive. The --show flag will be ignored.")
-	flags.AddFlagSet(e2eset)
+	e2eset.StringVar(&cfg.show, "show", "failed", "Defines which tests to show, options are [passed, failed (default) or all]. Cannot be combined with --rerun-failed.")
+	e2eset.BoolVar(&cfg.rerun, "rerun-failed", false, "Rerun the failed tests reported by the archive. The --show flag will be ignored.")
+
+	return e2eset
 }
 
-var e2erunopts client.RunConfig
 var e2eflags e2eFlags
 
 func init() {
@@ -53,7 +53,7 @@ func init() {
 		Run:   e2es,
 		Args:  cobra.ExactArgs(1),
 	}
-	e2eflags.AddFlags(cmd.Flags(), &e2erunopts)
+	cmd.Flags().AddFlagSet(E2EFlagSet(&e2eflags))
 
 	RootCmd.AddCommand(cmd)
 }
@@ -95,10 +95,14 @@ func e2es(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	e2eflags.FillConfig(&e2erunopts)
+	cfg, err := e2eflags.Config()
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't make a Run config"))
+		os.Exit(1)
+	}
 
 	fmt.Printf("Rerunning %d tests:\n", len(testCases))
-	if err := sonobuoy.Run(&runopts, restConfig); err != nil {
+	if err := sonobuoy.Run(cfg, restConfig); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to rerun failed tests"))
 		os.Exit(1)
 	}
