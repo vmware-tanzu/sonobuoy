@@ -21,19 +21,29 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/kubernetes"
+	"github.com/spf13/pflag"
 
 	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
-var runopts ops.RunConfig
+type runFlags struct {
+	genFlags
+}
 
-var runFlags struct {
-	sonobuoyConfig SonobuoyConfig
-	mode           ops.Mode
-	kubecfg        Kubeconfig
-	rbacMode       RBACMode
+var runopts ops.RunConfig
+var runflags runFlags
+
+func (r *runFlags) AddFlags(flags *pflag.FlagSet, cfg *ops.RunConfig) {
+	runset := pflag.NewFlagSet("run", pflag.ExitOnError)
+	// Default to detect since we need kubeconfig regardless
+	runflags.genFlags.AddFlags(runset, &runopts.GenConfig, DetectRBACMode)
+	AddSkipPreflightFlag(&runopts.SkipPreflight, runset)
+	flags.AddFlagSet(runset)
+}
+
+func (r *runFlags) FillConfig(cmd *cobra.Command, cfg *ops.RunConfig) error {
+	return r.genFlags.FillConfig(cmd, &runopts.GenConfig)
 }
 
 func init() {
@@ -43,45 +53,22 @@ func init() {
 		Run:   submitSonobuoyRun,
 		Args:  cobra.ExactArgs(0),
 	}
-	AddGenFlags(&runopts.GenConfig, cmd)
-	AddModeFlag(&runFlags.mode, cmd)
-	AddSonobuoyConfigFlag(&runFlags.sonobuoyConfig, cmd)
-	AddE2EConfigFlags(cmd)
-	AddKubeconfigFlag(&runFlags.kubecfg, cmd)
-	// Default to detect since we need a kubeconfig regardless
-	AddRBACModeFlags(&runFlags.rbacMode, cmd, DetectRBACMode)
-	AddSkipPreflightFlag(&runopts.SkipPreflight, cmd)
 
+	runflags.AddFlags(cmd.Flags(), &runopts)
 	RootCmd.AddCommand(cmd)
 }
 
 func submitSonobuoyRun(cmd *cobra.Command, args []string) {
-	restConfig, err := runFlags.kubecfg.Get()
+	restConfig, err := runflags.kubecfg.Get()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
 		os.Exit(1)
 	}
 
-	client, err := kubernetes.NewForConfig(restConfig)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't create Kubernetes client"))
-		os.Exit(1)
-	}
-
-	rbacEnabled, err := runFlags.rbacMode.Enabled(client)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC mode"))
-		os.Exit(1)
-	}
-	runopts.GenConfig.EnableRBAC = rbacEnabled
-
-	runopts.Config = GetConfigWithMode(&runFlags.sonobuoyConfig, runFlags.mode)
-	e2ecfg, err := GetE2EConfig(runFlags.mode, cmd)
-	if err != nil {
+	if err := runflags.FillConfig(cmd, &runopts); err != nil {
 		errlog.LogError(errors.Wrap(err, "could not retrieve E2E config"))
 		os.Exit(1)
 	}
-	runopts.E2EConfig = e2ecfg
 
 	// TODO(timothysc) Need to add checks which include (detection-rbac, preflight-DNS, ...)
 	if err := ops.NewSonobuoyClient().Run(&runopts, restConfig); err != nil {
