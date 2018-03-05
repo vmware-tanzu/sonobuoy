@@ -22,19 +22,52 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"k8s.io/client-go/kubernetes"
 
 	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
-var genopts ops.GenConfig
-
-var genFlags struct {
+type genFlags struct {
 	sonobuoyConfig SonobuoyConfig
 	mode           ops.Mode
 	rbacMode       RBACMode
 	kubecfg        Kubeconfig
+	e2eflags       *pflag.FlagSet
+	namespace      string
+	sonobuoyImage  string
+}
+
+var genflags genFlags
+
+func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
+	genset := pflag.NewFlagSet("generate", pflag.ExitOnError)
+	AddModeFlag(&cfg.mode, genset)
+	AddSonobuoyConfigFlag(&cfg.sonobuoyConfig, genset)
+	AddKubeconfigFlag(&cfg.kubecfg, genset)
+	cfg.e2eflags = AddE2EConfigFlags(genset)
+	AddRBACModeFlags(&cfg.rbacMode, genset, rbac)
+
+	AddNamespaceFlag(&cfg.namespace, genset)
+	AddSonobuoyImage(&cfg.sonobuoyImage, genset)
+
+	return genset
+}
+
+func (g *genFlags) Config() (*ops.GenConfig, error) {
+	e2ecfg, err := GetE2EConfig(genflags.mode, g.e2eflags)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not retrieve E2E config")
+	}
+
+	return &ops.GenConfig{
+		E2EConfig:  e2ecfg,
+		Config:     GetConfigWithMode(&g.sonobuoyConfig, g.mode),
+		Image:      g.sonobuoyImage,
+		Namespace:  g.namespace,
+		EnableRBAC: getRBACOrExit(&g.rbacMode, &g.kubecfg),
+	}, nil
 }
 
 // GenCommand is exported so it can be extended.
@@ -46,37 +79,21 @@ var GenCommand = &cobra.Command{
 }
 
 func init() {
-	AddGenFlags(&genopts, GenCommand)
-
-	AddModeFlag(&genFlags.mode, GenCommand)
-	AddSonobuoyConfigFlag(&genFlags.sonobuoyConfig, GenCommand)
-	AddKubeconfigFlag(&genFlags.kubecfg, GenCommand)
-	AddE2EConfigFlags(GenCommand)
 	// Default to enabled here so we don't need a kubeconfig by default
-	AddRBACModeFlags(&genFlags.rbacMode, GenCommand, EnabledRBACMode)
+
+	GenCommand.Flags().AddFlagSet(GenFlagSet(&genflags, EnabledRBACMode))
 
 	RootCmd.AddCommand(GenCommand)
 }
 
-// AddGenFlags adds generation flags to a command.
-func AddGenFlags(gen *ops.GenConfig, cmd *cobra.Command) {
-	AddNamespaceFlag(&gen.Namespace, cmd)
-	AddSonobuoyImage(&gen.Image, cmd)
-}
-
 func genManifest(cmd *cobra.Command, args []string) {
-	genopts.Config = GetConfigWithMode(&genFlags.sonobuoyConfig, genFlags.mode)
-
-	e2ecfg, err := GetE2EConfig(genFlags.mode, cmd)
+	cfg, err := genflags.Config()
 	if err != nil {
-		errlog.LogError(errors.Wrap(err, "could not retrieve E2E config"))
+		errlog.LogError(err)
 		os.Exit(1)
 	}
-	genopts.E2EConfig = e2ecfg
 
-	genopts.EnableRBAC = getRBACOrExit(&genFlags.rbacMode, &genFlags.kubecfg)
-
-	bytes, err := ops.NewSonobuoyClient().GenerateManifest(&genopts)
+	bytes, err := ops.NewSonobuoyClient().GenerateManifest(cfg)
 
 	if err == nil {
 		fmt.Printf("%s\n", bytes)
@@ -107,7 +124,7 @@ func getRBACOrExit(mode *RBACMode, kubeconfig *Kubeconfig) bool {
 		kubeError = err
 	}
 
-	rbacEnabled, err := genFlags.rbacMode.Enabled(client)
+	rbacEnabled, err := genflags.rbacMode.Enabled(client)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC mode."))
 		if errors.Cause(err) == ErrRBACNoClient {

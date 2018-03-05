@@ -44,8 +44,8 @@ func init() {
 		"Specify if the logs should be streamed.",
 	)
 
-	AddKubeconfigFlag(&logsKubecfg, cmd)
-	AddNamespaceFlag(&logConfig.Namespace, cmd)
+	AddKubeconfigFlag(&logsKubecfg, cmd.Flags())
+	AddNamespaceFlag(&logConfig.Namespace, cmd.Flags())
 	RootCmd.AddCommand(cmd)
 }
 

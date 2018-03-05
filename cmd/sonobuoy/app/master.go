@@ -45,7 +45,7 @@ func init() {
 		&noExit, "no-exit", false,
 		"Use this if you want sonobuoy to block and not exit. Useful when you want to explicitly grab results.tar.gz",
 	)
-	AddKubeconfigFlag(&kubecfg, cmd)
+	AddKubeconfigFlag(&kubecfg, cmd.Flags())
 	RootCmd.AddCommand(cmd)
 }
 

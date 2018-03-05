@@ -45,10 +45,11 @@ func init() {
 		Run:   getStatus,
 		Args:  cobra.ExactArgs(0),
 	}
+	flags := cmd.Flags()
 
-	AddNamespaceFlag(&statusFlags.namespace, cmd)
-	AddKubeconfigFlag(&statusFlags.kubecfg, cmd)
-	cmd.Flags().BoolVar(
+	AddNamespaceFlag(&statusFlags.namespace, flags)
+	AddKubeconfigFlag(&statusFlags.kubecfg, flags)
+	flags.BoolVar(
 		&statusFlags.showAll, "show-all", false,
 		"Don't summarize plugin statuses, show all individually",
 	)
