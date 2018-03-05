@@ -73,11 +73,25 @@ type RetrieveConfig struct {
 }
 
 // SonobuoyClient is a high-level interface to Sonobuoy operations.
-type SonobuoyClient struct{}
+type SonobuoyClient struct {
+	RestConfig *rest.Config
+	Client     kubernetes.Interface
+	// TODO (timothysc) cache dynamic client
+}
 
 // NewSonobuoyClient creates a new SonobuoyClient
-func NewSonobuoyClient() *SonobuoyClient {
-	return &SonobuoyClient{}
+func NewSonobuoyClient(restConfig *rest.Config) (*SonobuoyClient, error) {
+	sc := &SonobuoyClient{
+		RestConfig: restConfig,
+	}
+	// TODO (timothysc) factor this out and provide a means to perform
+	// JIT creation of the client through an accessor function
+	clientset, err := kubernetes.NewForConfig(sc.RestConfig)
+	if err != nil {
+		return nil, err
+	}
+	sc.Client = clientset
+	return sc, nil
 }
 
 // Make sure SonobuoyClient implements the interface
@@ -89,15 +103,15 @@ var _ Interface = &SonobuoyClient{}
 type Interface interface {
 	// Run generates the manifest, then tries to apply it to the cluster.
 	// returns created resources or an error
-	Run(cfg *RunConfig, restConfig *rest.Config) error
+	Run(cfg *RunConfig) error
 	// GenerateManifest fills in a template with a Sonobuoy config
 	GenerateManifest(cfg *GenConfig) ([]byte, error)
 	// RetrieveResults copies results from a sonobuoy run into a Reader in tar format.
-	RetrieveResults(cfg *RetrieveConfig, restConfig *rest.Config) io.Reader
+	RetrieveResults(cfg *RetrieveConfig) io.Reader
 	// GetStatus determines the status of the sonobuoy run in order to assist the user.
-	GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error)
+	GetStatus(namespace string) (*aggregation.Status, error)
 	// GetLogs streams logs from the sonobuoy pod by default to stdout.
-	GetLogs(cfg *LogConfig, client kubernetes.Interface) error
+	GetLogs(cfg *LogConfig) error
 	// Delete removes a sonobuoy run, namespace, and all associated resources.
-	Delete(cfg *DeleteConfig, client kubernetes.Interface) error
+	Delete(cfg *DeleteConfig) error
 }
