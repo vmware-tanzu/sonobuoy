@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -20,11 +21,11 @@ var (
 
 const (
 	// DisableRBACMode means rbac is always disable
-	DisableRBACMode RBACMode = "disable"
+	DisableRBACMode RBACMode = "Disable"
 	// EnabledRBACMode means rbac is always enabled
-	EnabledRBACMode RBACMode = "enabled"
+	EnabledRBACMode RBACMode = "Enabled"
 	// DetectRBACMode means "query the server to see if RBAC is enabled"
-	DetectRBACMode RBACMode = "detect"
+	DetectRBACMode RBACMode = "Detect"
 )
 
 var rbacModeMap = map[string]RBACMode{
@@ -41,7 +42,9 @@ func (r *RBACMode) Type() string { return "RBACMode" }
 
 // Set the RBACMode to the given string, or error if it's not a known RBAC mode.
 func (r *RBACMode) Set(str string) error {
-	mode, ok := rbacModeMap[str]
+	// Allow lowercase on the command line
+	upcase := strings.Title(str)
+	mode, ok := rbacModeMap[upcase]
 	if !ok {
 		return fmt.Errorf("unknown RBAC mode %s", str)
 	}

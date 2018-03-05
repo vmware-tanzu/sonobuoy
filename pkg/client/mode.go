@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 )
@@ -14,50 +15,52 @@ type Mode string
 
 const (
 	// Quick runs a single E2E test and the systemd log tests.
-	Quick Mode = "quick"
+	Quick Mode = "Quick"
 	// Conformance runs all of the E2E tests and the systemd log tests.
-	Conformance Mode = "conformance"
+	Conformance Mode = "Conformance"
 	// Extended run all of the E2E tests, the systemd log tests, and
 	// Heptio's E2E Tests.
-	Extended Mode = "extended"
+	Extended Mode = "Extended"
 )
 
 const defaultSkipList = "Alpha|Disruptive|Feature|Flaky|Kubectl"
 
 var modeMap = map[string]Mode{
-	"conformance": Conformance,
-	"quick":       Quick,
-	"extended":    Extended,
+	string(Conformance): Conformance,
+	string(Quick):       Quick,
+	string(Extended):    Extended,
 }
 
 // ModeConfig represents the sonobuoy configuration for a given mode.
 type ModeConfig struct {
-	// E2EConfig is the focus and skip vars for the conformance tests
+	// E2EConfig is the focus and skip vars for the conformance tests.
 	E2EConfig E2EConfig
 	// Selectors are the plugins selected by this mode.
 	Selectors []plugin.Selection
 }
 
 // String needed for pflag.Value
-func (n *Mode) String() string { return string(*n) }
+func (m *Mode) String() string { return string(*m) }
 
 // Type needed for pflag.Value
-func (n *Mode) Type() string { return "Mode" }
+func (m *Mode) Type() string { return "Mode" }
 
-// Set the name with a given string. Returns error on unknown mode
-func (n *Mode) Set(str string) error {
-	mode, ok := modeMap[str]
+// Set the name with a given string. Returns error on unknown mode.
+func (m *Mode) Set(str string) error {
+	// Allow lowercase "conformance", "quick" etc in command line
+	upcase := strings.Title(str)
+	mode, ok := modeMap[upcase]
 	if !ok {
 		return fmt.Errorf("unknown mode %s", str)
 	}
-	*n = mode
+	*m = mode
 	return nil
 }
 
 // Get returns the ModeConfig associated with a mode name, or nil
 // if there's no associated mode
-func (n *Mode) Get() *ModeConfig {
-	switch *n {
+func (m *Mode) Get() *ModeConfig {
+	switch *m {
 	case Conformance:
 		return &ModeConfig{
 			E2EConfig: E2EConfig{

@@ -40,9 +40,9 @@ func AddNamespaceFlag(str *string, flags *pflag.FlagSet) {
 // The variables specified by those flags will overlay the defaults provided by the given mode.
 func AddModeFlag(mode *ops.Mode, flags *pflag.FlagSet) {
 	*mode = ops.Conformance // default
-	flags.Var(
-		mode, "mode",
-		fmt.Sprintf("What mode to run sonobuoy in. [%s]", strings.Join(ops.GetModes(), ", ")),
+	flags.VarP(
+		mode, "mode", "m",
+		fmt.Sprintf("What mode to run sonobuoy in. Valid modes are %s.", strings.Join(ops.GetModes(), ", ")),
 	)
 }
 
@@ -50,21 +50,21 @@ func AddModeFlag(mode *ops.Mode, flags *pflag.FlagSet) {
 func AddSonobuoyImage(image *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		image, "sonobuoy-image", config.DefaultImage,
-		"Container image override for the sonobuoy worker and container",
+		"Container image override for the sonobuoy worker and container.",
 	)
 }
 
 // AddKubeconfigFlag adds a kubeconfig flag to the provided command.
 func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	// The default is the empty string (look in the environment)
-	flags.Var(cfg, "kubeconfig", "Explict kubeconfig file")
+	flags.Var(cfg, "kubeconfig", "Path to explict kubeconfig file.")
 }
 
 // AddSonobuoyConfigFlag adds a SonobuoyConfig flag to the provided command.
 func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, flags *pflag.FlagSet) {
 	flags.Var(
 		cfg, "config",
-		"path to a sonobuoy configuration JSON file. Overrides --mode",
+		"Path to a sonobuoy configuration JSON file. Overrides --mode.",
 	)
 }
 
@@ -117,7 +117,8 @@ func AddRBACModeFlags(mode *RBACMode, flags *pflag.FlagSet, defaultMode RBACMode
 	*mode = defaultMode // default
 	flags.Var(
 		mode, "rbac",
-		`Whether to enable rbac on Sonobuoy. Options are "enable", "disable", and "detect" (query the server to see whether to enable Sonobuoy)`,
+		// Doesn't use the map in app.rbacModeMap to preserve order so we can add an explanation for detect.
+		"Whether to enable rbac on Sonobuoy. Valid modes are Enable, Disable, and Detect (query the server to see whether to enable Sonobuoy).",
 	)
 }
 
