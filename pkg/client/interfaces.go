@@ -31,6 +31,7 @@ type LogConfig struct {
 	Follow *bool
 	// Namespace is the namespace the sonobuoy aggregator is running in.
 	Namespace string
+	Out       io.Writer
 }
 
 // GenConfig are the input options for generating a Sonobuoy manifest.
@@ -96,8 +97,8 @@ type Interface interface {
 	RetrieveResults(cfg *RetrieveConfig, restConfig *rest.Config) io.Reader
 	// GetStatus determines the status of the sonobuoy run in order to assist the user.
 	GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error)
-	// GetLogs streams logs from the sonobuoy pod by default to stdout.
-	GetLogs(cfg *LogConfig, client kubernetes.Interface) error
+	// StreamLogs streams logs from the sonobuoy pod by default to stdout.
+	StreamLogs(cfg *LogConfig, client kubernetes.Interface) chan error
 	// Delete removes a sonobuoy run, namespace, and all associated resources.
 	Delete(cfg *DeleteConfig, client kubernetes.Interface) error
 }
