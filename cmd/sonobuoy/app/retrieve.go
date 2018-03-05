@@ -24,6 +24,7 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -69,6 +70,11 @@ func retrieveResults(cmd *cobra.Command, args []string) {
 		errlog.LogError(fmt.Errorf("failed to get kubernetes client: %v", err))
 		os.Exit(1)
 	}
+	sbc, err := client.NewSonobuoyClient(restConfig)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
+		os.Exit(1)
+	}
 
 	// TODO(chuckha) try to catch some errors and present user friendly messages.
 	// Setup error channel and synchronization so that all errors get reported before exiting.
@@ -91,7 +97,7 @@ func retrieveResults(cmd *cobra.Command, args []string) {
 	}
 
 	// Get a reader that contains the tar output of the results directory.
-	reader := client.NewSonobuoyClient().RetrieveResults(cfg, restConfig)
+	reader := sbc.RetrieveResults(cfg)
 
 	// RetrieveResults bailed early and will report an error.
 	if reader == nil {

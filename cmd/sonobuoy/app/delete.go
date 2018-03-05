@@ -23,7 +23,6 @@ import (
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/kubernetes"
 )
 
 var deleteopts client.DeleteConfig
@@ -56,20 +55,20 @@ func deleteSonobuoyRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	kubeclient, err := kubernetes.NewForConfig(cfg)
+	sbc, err := client.NewSonobuoyClient(cfg)
 	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't get kubernetes client"))
+		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
 	}
 
-	rbacEnabled, err := deleteFlags.rbacMode.Enabled(kubeclient)
+	rbacEnabled, err := deleteFlags.rbacMode.Enabled(sbc.Client)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC status"))
 		os.Exit(1)
 	}
 	deleteopts.EnableRBAC = rbacEnabled
 
-	if err := client.NewSonobuoyClient().Delete(&deleteopts, kubeclient); err != nil {
+	if err := sbc.Delete(&deleteopts); err != nil {
 		errlog.LogError(errors.Wrap(err, "failed to delete sonobuoy resources"))
 		os.Exit(1)
 	}

@@ -28,19 +28,12 @@ import (
 	"github.com/heptio/sonobuoy/pkg/config"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 )
 
-func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig, restConfig *rest.Config) io.Reader {
-	clientset, err := kubernetes.NewForConfig(restConfig)
-	if err != nil {
-		cfg.Errc <- fmt.Errorf("unable to create clientset: %v", err)
-		return nil
-	}
-	client := clientset.CoreV1().RESTClient()
+func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) io.Reader {
+	client := c.Client.CoreV1().RESTClient()
 	req := client.Post().
 		Resource("pods").
 		Name(config.MasterPodName).
@@ -54,7 +47,7 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig, restConfig *rest.C
 		Stdout:    true,
 		Stderr:    true,
 	}, scheme.ParameterCodec)
-	executor, err := remotecommand.NewSPDYExecutor(restConfig, "POST", req.URL())
+	executor, err := remotecommand.NewSPDYExecutor(c.RestConfig, "POST", req.URL())
 	if err != nil {
 		cfg.Errc <- fmt.Errorf("unable to get remote executor: %v", err)
 		return nil

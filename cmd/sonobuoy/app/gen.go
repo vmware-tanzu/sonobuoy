@@ -25,13 +25,13 @@ import (
 	"github.com/spf13/pflag"
 	"k8s.io/client-go/kubernetes"
 
-	ops "github.com/heptio/sonobuoy/pkg/client"
+	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
 type genFlags struct {
 	sonobuoyConfig SonobuoyConfig
-	mode           ops.Mode
+	mode           client.Mode
 	rbacMode       RBACMode
 	kubecfg        Kubeconfig
 	e2eflags       *pflag.FlagSet
@@ -55,13 +55,13 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	return genset
 }
 
-func (g *genFlags) Config() (*ops.GenConfig, error) {
+func (g *genFlags) Config() (*client.GenConfig, error) {
 	e2ecfg, err := GetE2EConfig(genflags.mode, g.e2eflags)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve E2E config")
 	}
 
-	return &ops.GenConfig{
+	return &client.GenConfig{
 		E2EConfig:  e2ecfg,
 		Config:     GetConfigWithMode(&g.sonobuoyConfig, g.mode),
 		Image:      g.sonobuoyImage,
@@ -79,10 +79,7 @@ var GenCommand = &cobra.Command{
 }
 
 func init() {
-	// Default to enabled here so we don't need a kubeconfig by default
-
 	GenCommand.Flags().AddFlagSet(GenFlagSet(&genflags, EnabledRBACMode))
-
 	RootCmd.AddCommand(GenCommand)
 }
 
@@ -92,9 +89,18 @@ func genManifest(cmd *cobra.Command, args []string) {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
+	kubeCfg, err := genflags.kubecfg.Get()
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't get kubernetes config"))
+		os.Exit(1)
+	}
+	sbc, err := client.NewSonobuoyClient(kubeCfg)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
+		os.Exit(1)
+	}
 
-	bytes, err := ops.NewSonobuoyClient().GenerateManifest(cfg)
-
+	bytes, err := sbc.GenerateManifest(cfg)
 	if err == nil {
 		fmt.Printf("%s\n", bytes)
 		return

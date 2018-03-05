@@ -38,13 +38,9 @@ import (
 
 const bufferSize = 4096
 
-func (c *SonobuoyClient) Run(cfg *RunConfig, restConfig *rest.Config) error {
+func (c *SonobuoyClient) Run(cfg *RunConfig) error {
 	if !cfg.SkipPreflight {
-		client, err := kubernetes.NewForConfig(restConfig)
-		if err != nil {
-			return errors.Wrap(err, "couln't create Kubernetes client")
-		}
-		if err := preflightCheck(client); err != nil {
+		if err := preflightCheck(c.Client); err != nil {
 			return errors.Wrap(err, "preflight check failed")
 		}
 	}
@@ -56,7 +52,7 @@ func (c *SonobuoyClient) Run(cfg *RunConfig, restConfig *rest.Config) error {
 
 	buf := bytes.NewBuffer(manifest)
 
-	mapper, err := newMapper(restConfig)
+	mapper, err := newMapper(c.RestConfig)
 	if err != nil {
 		return errors.Wrap(err, "couldn't retrieve API spec from server")
 	}
@@ -83,7 +79,7 @@ func (c *SonobuoyClient) Run(cfg *RunConfig, restConfig *rest.Config) error {
 			return errors.Wrap(err, "couldn't decode template")
 		}
 
-		err := createObject(restConfig, &obj, mapper)
+		err := createObject(c.RestConfig, &obj, mapper)
 		if err != nil {
 			return errors.Wrap(err, "failed to create object")
 		}

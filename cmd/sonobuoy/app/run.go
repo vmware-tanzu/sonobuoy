@@ -78,7 +78,13 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	if err := ops.NewSonobuoyClient().Run(cfg, restConfig); err != nil {
+	sbc, err := ops.NewSonobuoyClient(restConfig)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
+		os.Exit(1)
+	}
+
+	if err := sbc.Run(cfg); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
 	}

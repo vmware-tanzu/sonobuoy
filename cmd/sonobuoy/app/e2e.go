@@ -75,7 +75,16 @@ func e2es(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	defer gzr.Close()
-	sonobuoy := client.NewSonobuoyClient()
+	restConfig, err := e2eflags.kubecfg.Get()
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
+		os.Exit(1)
+	}
+	sonobuoy, err := client.NewSonobuoyClient(restConfig)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
+		os.Exit(1)
+	}
 	testCases, err := sonobuoy.GetTests(gzr, e2eflags.show)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not get tests from archive"))
@@ -89,12 +98,6 @@ func e2es(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	restConfig, err := e2eflags.kubecfg.Get()
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
-		os.Exit(1)
-	}
-
 	cfg, err := e2eflags.Config()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't make a Run config"))
@@ -102,7 +105,7 @@ func e2es(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Rerunning %d tests:\n", len(testCases))
-	if err := sonobuoy.Run(cfg, restConfig); err != nil {
+	if err := sonobuoy.Run(cfg); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to rerun failed tests"))
 		os.Exit(1)
 	}

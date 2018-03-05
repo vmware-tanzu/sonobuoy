@@ -33,19 +33,19 @@ const (
 	e2eNamespacePrefix = "e2e-"
 )
 
-func (c *SonobuoyClient) Delete(cfg *DeleteConfig, client kubernetes.Interface) error {
-	if err := cleanupNamespace(cfg.Namespace, client); err != nil {
+func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
+	if err := cleanupNamespace(cfg.Namespace, c.Client); err != nil {
 		return err
 	}
 
 	if cfg.EnableRBAC {
-		if err := deleteRBAC(client); err != nil {
+		if err := deleteRBAC(c.Client); err != nil {
 			return err
 		}
 	}
 
 	if cfg.DeleteAll {
-		if err := cleanupE2E(client); err != nil {
+		if err := cleanupE2E(c.Client); err != nil {
 			return err
 		}
 	}
