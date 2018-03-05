@@ -37,7 +37,7 @@ var (
 
 func (c *SonobuoyClient) GetLogs(cfg *LogConfig) error {
 	// TODO(EKF): Stream to a writer instead of just stdout
-	if *cfg.Follow {
+	if cfg.Follow {
 		return streamLogs(c.Client, cfg.Namespace, config.MasterPodName, &v1.PodLogOptions{Follow: true})
 	}
 
