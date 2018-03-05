@@ -65,7 +65,7 @@ spec:
           name: {{.SecretName}}
           key: tls.key
     image: {{.SonobuoyImage}}
-    imagePullPolicy: Always
+    imagePullPolicy: {{.ImagePullPolicy}}
     name: sonobuoy-worker
     volumeMounts:
     - mountPath: /tmp/results
