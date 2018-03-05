@@ -23,12 +23,12 @@ import (
 	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
-func AddNamespaceFlag(str *string, cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVarP(
+func AddNamespaceFlag(str *string, flags *pflag.FlagSet) {
+	flags.StringVarP(
 		str, "namespace", "n", config.DefaultPluginNamespace,
 		"The namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously.",
 	)
@@ -38,36 +38,34 @@ func AddNamespaceFlag(str *string, cmd *cobra.Command) {
 // The mode is a preset configuration of sonobuoy configuration and e2e configuration variables.
 // Mode can be partially or fully overridden by specifying config, e2e-focus, and e2e-skip.
 // The variables specified by those flags will overlay the defaults provided by the given mode.
-func AddModeFlag(mode *ops.Mode, cmd *cobra.Command) {
+func AddModeFlag(mode *ops.Mode, flags *pflag.FlagSet) {
 	*mode = ops.Conformance // default
-	cmd.PersistentFlags().Var(
+	flags.Var(
 		mode, "mode",
 		fmt.Sprintf("What mode to run sonobuoy in. [%s]", strings.Join(ops.GetModes(), ", ")),
 	)
 }
 
 // AddSonobuoyImage initialises an image url flag.
-func AddSonobuoyImage(image *string, cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVar(
+func AddSonobuoyImage(image *string, flags *pflag.FlagSet) {
+	flags.StringVar(
 		image, "sonobuoy-image", config.DefaultImage,
 		"Container image override for the sonobuoy worker and container",
 	)
 }
 
 // AddKubeconfigFlag adds a kubeconfig flag to the provided command.
-func AddKubeconfigFlag(cfg *Kubeconfig, cmd *cobra.Command) {
+func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	// The default is the empty string (look in the environment)
-	cmd.PersistentFlags().Var(cfg, "kubeconfig", "Explict kubeconfig file")
-	cmd.MarkFlagFilename("kubeconfig")
+	flags.Var(cfg, "kubeconfig", "Explict kubeconfig file")
 }
 
 // AddSonobuoyConfigFlag adds a SonobuoyConfig flag to the provided command.
-func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, cmd *cobra.Command) {
-	cmd.PersistentFlags().Var(
+func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, flags *pflag.FlagSet) {
+	flags.Var(
 		cfg, "config",
 		"path to a sonobuoy configuration JSON file. Overrides --mode",
 	)
-	cmd.MarkFlagFilename("config", "json")
 }
 
 const (
@@ -75,24 +73,26 @@ const (
 	e2eSkipFlag  = "e2e-skip"
 )
 
-// AddE2EConfigFlags adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig.
-func AddE2EConfigFlags(cmd *cobra.Command) {
+// AddE2EConfigFlags adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig. Instead, they are returned as a Flagset which should be passed to GetE2EConfig. The returned flagset will be added to the passed in flag set.
+func AddE2EConfigFlags(flags *pflag.FlagSet) *pflag.FlagSet {
+	e2eFlags := pflag.NewFlagSet("e2e", pflag.ExitOnError)
 	modeName := ops.Conformance
 	defaultMode := modeName.Get()
-	cmd.PersistentFlags().String(
+	e2eFlags.String(
 		e2eFocusFlag, defaultMode.E2EConfig.Focus,
 		"Specify the E2E_FOCUS flag to the conformance tests. Overrides --mode.",
 	)
-	cmd.PersistentFlags().String(
+	e2eFlags.String(
 		e2eSkipFlag, defaultMode.E2EConfig.Skip,
 		"Specify the E2E_SKIP flag to the conformance tests. Overrides --mode.",
 	)
+	flags.AddFlagSet(e2eFlags)
+	return e2eFlags
 }
 
 // GetE2EConfig gets the E2EConfig from the mode, then overrides them with e2e-focus and e2e-skip if they are provided.
 // We can't rely on the zero value of the flags, as "" is a valid  focus or skip value.
-func GetE2EConfig(mode ops.Mode, cmd *cobra.Command) (*ops.E2EConfig, error) {
-	flags := cmd.PersistentFlags()
+func GetE2EConfig(mode ops.Mode, flags *pflag.FlagSet) (*ops.E2EConfig, error) {
 	cfg := mode.Get().E2EConfig
 	if flags.Changed(e2eFocusFlag) {
 		focus, err := flags.GetString(e2eFocusFlag)
@@ -113,25 +113,25 @@ func GetE2EConfig(mode ops.Mode, cmd *cobra.Command) (*ops.E2EConfig, error) {
 }
 
 // AddRBACModeFlags adds an E2E Argument with the provided default.
-func AddRBACModeFlags(mode *RBACMode, cmd *cobra.Command, defaultMode RBACMode) {
+func AddRBACModeFlags(mode *RBACMode, flags *pflag.FlagSet, defaultMode RBACMode) {
 	*mode = defaultMode // default
-	cmd.PersistentFlags().Var(
+	flags.Var(
 		mode, "rbac",
 		`Whether to enable rbac on Sonobuoy. Options are "enable", "disable", and "detect" (query the server to see whether to enable Sonobuoy)`,
 	)
 }
 
 // AddSkipPreflightFlag adds a boolean flag to skip preflight checks.
-func AddSkipPreflightFlag(flag *bool, cmd *cobra.Command) {
-	cmd.PersistentFlags().BoolVar(
+func AddSkipPreflightFlag(flag *bool, flags *pflag.FlagSet) {
+	flags.BoolVar(
 		flag, "skip-preflight", false,
 		"If true, skip all checks before kicking off the sonobuoy run.",
 	)
 }
 
 // AddDeleteAllFlag adds a boolean flag for deleting everything (including E2E tests).
-func AddDeleteAllFlag(flag *bool, cmd *cobra.Command) {
-	cmd.PersistentFlags().BoolVar(
+func AddDeleteAllFlag(flag *bool, flags *pflag.FlagSet) {
+	flags.BoolVar(
 		flag, "all", false,
 		"In addition to deleting Sonobuoy namespaces, also clean up dangling e2e- namespaces.",
 	)

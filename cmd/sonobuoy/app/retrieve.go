@@ -45,8 +45,8 @@ func init() {
 		Args:  cobra.MaximumNArgs(1),
 	}
 
-	AddKubeconfigFlag(&cpKubecfg, cmd)
-	AddNamespaceFlag(&cpNamespace, cmd)
+	AddKubeconfigFlag(&cpKubecfg, cmd.Flags())
+	AddNamespaceFlag(&cpNamespace, cmd.Flags())
 
 	RootCmd.AddCommand(cmd)
 }

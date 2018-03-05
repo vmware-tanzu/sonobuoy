@@ -41,10 +41,10 @@ func init() {
 		Args:  cobra.ExactArgs(0),
 	}
 
-	AddKubeconfigFlag(&deleteFlags.kubeconfig, cmd)
-	AddNamespaceFlag(&deleteopts.Namespace, cmd)
-	AddRBACModeFlags(&deleteFlags.rbacMode, cmd, DetectRBACMode)
-	AddDeleteAllFlag(&deleteopts.DeleteAll, cmd)
+	AddKubeconfigFlag(&deleteFlags.kubeconfig, cmd.Flags())
+	AddNamespaceFlag(&deleteopts.Namespace, cmd.Flags())
+	AddRBACModeFlags(&deleteFlags.rbacMode, cmd.Flags(), DetectRBACMode)
+	AddDeleteAllFlag(&deleteopts.DeleteAll, cmd.Flags())
 
 	RootCmd.AddCommand(cmd)
 }
