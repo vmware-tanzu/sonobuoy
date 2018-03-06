@@ -18,16 +18,21 @@ package app
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	ops "github.com/heptio/sonobuoy/pkg/client"
+	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
-var logConfig ops.LogConfig
+const (
+	bufSize = 2048
+)
+
+var logConfig client.LogConfig
 var logsKubecfg Kubeconfig
 
 func init() {
@@ -42,7 +47,7 @@ func init() {
 		&logConfig.Follow, "follow", "f", false,
 		"Specify if the logs should be streamed.",
 	)
-
+	logConfig.Out = os.Stdout
 	AddKubeconfigFlag(&logsKubecfg, cmd.Flags())
 	AddNamespaceFlag(&logConfig.Namespace, cmd.Flags())
 	RootCmd.AddCommand(cmd)
@@ -54,13 +59,26 @@ func getLogs(cmd *cobra.Command, args []string) {
 		errlog.LogError(fmt.Errorf("failed to get rest config: %v", err))
 		os.Exit(1)
 	}
-	sbc, err := ops.NewSonobuoyClient(restConfig)
+	sbc, err := client.NewSonobuoyClient(restConfig)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
 	}
-	if err := sbc.GetLogs(&logConfig); err != nil {
-		errlog.LogError(errors.Wrap(err, "error attempting to get sonobuoy logs"))
+	logreader, err := sbc.LogReader(&logConfig)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "could not build a log reader"))
 		os.Exit(1)
+	}
+	b := make([]byte, bufSize)
+	for {
+		n, err := logreader.Read(b)
+		if err != nil && err != io.EOF {
+			errlog.LogError(errors.Wrap(err, "error reading logs"))
+			os.Exit(1)
+		}
+		fmt.Fprint(logConfig.Out, string(b[:n]))
+		if err == io.EOF {
+			return
+		}
 	}
 }
