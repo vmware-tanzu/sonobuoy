@@ -25,7 +25,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/kubernetes"
 
 	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
@@ -65,13 +64,13 @@ func getStatus(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "couldn't get kubernetes config"))
 		os.Exit(1)
 	}
-	client, err := kubernetes.NewForConfig(config)
+	sbc, err := ops.NewSonobuoyClient(config)
 	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't initialise kubernete client"))
+		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
 	}
 
-	status, err := ops.NewSonobuoyClient().GetStatus(statusFlags.namespace, client)
+	status, err := sbc.GetStatus(statusFlags.namespace)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)

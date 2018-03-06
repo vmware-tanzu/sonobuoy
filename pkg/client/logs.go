@@ -35,20 +35,20 @@ var (
 
 // Logs gathers the logs for the containers in the sonobuoy namespace and prints them
 
-func (c *SonobuoyClient) GetLogs(cfg *LogConfig, client kubernetes.Interface) error {
+func (c *SonobuoyClient) GetLogs(cfg *LogConfig) error {
 	// TODO(EKF): Stream to a writer instead of just stdout
 	if *cfg.Follow {
-		return streamLogs(client, cfg.Namespace, config.MasterPodName, &v1.PodLogOptions{Follow: true})
+		return streamLogs(c.Client, cfg.Namespace, config.MasterPodName, &v1.PodLogOptions{Follow: true})
 	}
 
-	pods, err := client.CoreV1().Pods(cfg.Namespace).List(metav1.ListOptions{})
+	pods, err := c.Client.CoreV1().Pods(cfg.Namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("could not list pods: %v", err)
 	}
 	for _, pod := range pods.Items {
 		for _, container := range pod.Spec.Containers {
 			logrus.WithFields(logrus.Fields{"pod": pod.Name, "container": container.Name}).Info("Printing container logs")
-			err := streamLogs(client, cfg.Namespace, pod.Name, &v1.PodLogOptions{
+			err := streamLogs(c.Client, cfg.Namespace, pod.Name, &v1.PodLogOptions{
 				Container: container.Name,
 			})
 			if err != nil {
