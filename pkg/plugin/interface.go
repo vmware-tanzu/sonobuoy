@@ -54,11 +54,9 @@ type Interface interface {
 // Definition defines a plugin's features, method of launch, and other
 // metadata about it.
 type Definition struct {
-	Name           string
-	ResultType     string
-	Spec           manifest.Container
-	ContainerImage string
-	PullPolicy     string
+	Name       string
+	ResultType string
+	Spec       manifest.Container
 }
 
 // ExpectedResult is an expected result that a plugin will submit.  This is so

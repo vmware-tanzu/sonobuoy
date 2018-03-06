@@ -89,7 +89,7 @@ data:
         value: "{{.E2ESkip}}"
       command: ["/run_e2e.sh"]
       image: gcr.io/heptio-images/kube-conformance:latest
-      imagePullPolicy: Always
+      imagePullPolicy: {{.ImagePullPolicy}}
       name: e2e
       volumeMounts:
       - mountPath: /tmp/results
@@ -112,7 +112,7 @@ data:
       - name: CHROOT_DIR
         value: /node
       image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
-      imagePullPolicy: Always
+      imagePullPolicy: {{.ImagePullPolicy}}
       name: sonobuoy-systemd-logs-config
       securityContext:
         privileged: true
@@ -151,7 +151,7 @@ spec:
         fieldRef:
           fieldPath: status.podIP
     image: {{.SonobuoyImage}}
-    imagePullPolicy: Always
+    imagePullPolicy: {{.ImagePullPolicy}}
     name: kube-sonobuoy
     volumeMounts:
     - mountPath: /etc/sonobuoy

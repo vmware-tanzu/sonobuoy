@@ -24,6 +24,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
+	"k8s.io/api/core/v1"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
@@ -135,5 +136,14 @@ func AddDeleteAllFlag(flag *bool, flags *pflag.FlagSet) {
 	flags.BoolVar(
 		flag, "all", false,
 		"In addition to deleting Sonobuoy namespaces, also clean up dangling e2e- namespaces.",
+	)
+}
+
+// AddImagePullPolicyFlag adds a boolean flag for deleting everything (including E2E tests).
+func AddImagePullPolicyFlag(policy *ImagePullPolicy, flags *pflag.FlagSet) {
+	*policy = ImagePullPolicy(v1.PullAlways) //default
+	flags.Var(
+		policy, "image-pull-policy",
+		fmt.Sprintf("The ImagePullPolicy Sonobuoy should use for the aggregators and workers. Valid options are %s.", strings.Join(ValidPullPolicies(), ", ")),
 	)
 }
