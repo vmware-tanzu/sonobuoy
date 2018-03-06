@@ -46,7 +46,7 @@ func TestFillTemplate(t *testing.T) {
 				Name: "producer-container",
 			},
 		},
-	}, expectedNamespace, expectedImageName)
+	}, expectedNamespace, expectedImageName, "Always")
 
 	auth, err := ca.NewAuthority()
 	if err != nil {

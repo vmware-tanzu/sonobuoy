@@ -46,14 +46,15 @@ var _ plugin.Interface = &Plugin{}
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address.
-func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage string) *Plugin {
+func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage, imagePullPolicy string) *Plugin {
 	return &Plugin{
 		driver.Base{
-			Definition:    dfn,
-			SessionID:     utils.GetSessionID(),
-			Namespace:     namespace,
-			SonobuoyImage: sonobuoyImage,
-			CleanedUp:     false, // be explicit
+			Definition:      dfn,
+			SessionID:       utils.GetSessionID(),
+			Namespace:       namespace,
+			SonobuoyImage:   sonobuoyImage,
+			ImagePullPolicy: imagePullPolicy,
+			CleanedUp:       false, // be explicit
 		},
 	}
 }

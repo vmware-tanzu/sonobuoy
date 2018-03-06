@@ -30,13 +30,14 @@ import (
 )
 
 type genFlags struct {
-	sonobuoyConfig SonobuoyConfig
-	mode           client.Mode
-	rbacMode       RBACMode
-	kubecfg        Kubeconfig
-	e2eflags       *pflag.FlagSet
-	namespace      string
-	sonobuoyImage  string
+	sonobuoyConfig  SonobuoyConfig
+	mode            client.Mode
+	rbacMode        RBACMode
+	kubecfg         Kubeconfig
+	e2eflags        *pflag.FlagSet
+	namespace       string
+	sonobuoyImage   string
+	imagePullPolicy ImagePullPolicy
 }
 
 var genflags genFlags
@@ -48,6 +49,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddKubeconfigFlag(&cfg.kubecfg, genset)
 	cfg.e2eflags = AddE2EConfigFlags(genset)
 	AddRBACModeFlags(&cfg.rbacMode, genset, rbac)
+	AddImagePullPolicyFlag(&cfg.imagePullPolicy, genset)
 
 	AddNamespaceFlag(&cfg.namespace, genset)
 	AddSonobuoyImage(&cfg.sonobuoyImage, genset)
@@ -62,11 +64,12 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 	}
 
 	return &client.GenConfig{
-		E2EConfig:  e2ecfg,
-		Config:     GetConfigWithMode(&g.sonobuoyConfig, g.mode),
-		Image:      g.sonobuoyImage,
-		Namespace:  g.namespace,
-		EnableRBAC: getRBACOrExit(&g.rbacMode, &g.kubecfg),
+		E2EConfig:       e2ecfg,
+		Config:          GetConfigWithMode(&g.sonobuoyConfig, g.mode),
+		Image:           g.sonobuoyImage,
+		Namespace:       g.namespace,
+		EnableRBAC:      getRBACOrExit(&g.rbacMode, &g.kubecfg),
+		ImagePullPolicy: g.imagePullPolicy.String(),
 	}, nil
 }
 

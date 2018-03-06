@@ -115,7 +115,7 @@ func TestLoadJobPlugin(t *testing.T) {
 		},
 	}
 
-	pluginIface, err := loadPlugin(jobDef, namespace, image)
+	pluginIface, err := loadPlugin(jobDef, namespace, image, "Always")
 	if err != nil {
 		t.Fatalf("unexpected error loading plugin: %v", err)
 	}
@@ -153,7 +153,7 @@ func TestLoadDaemonSet(t *testing.T) {
 		},
 	}
 
-	pluginIface, err := loadPlugin(daemonDef, namespace, image)
+	pluginIface, err := loadPlugin(daemonDef, namespace, image, "Always")
 	if err != nil {
 		t.Fatalf("unexpected error loading plugin: %v", err)
 	}
