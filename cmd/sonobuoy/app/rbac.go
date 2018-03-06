@@ -59,7 +59,7 @@ var supportedRBACGroupVersion = rbacv1.SchemeGroupVersion.String()
 // Enabled retrieves whether to enable or disable rbac. If the mode is disable or
 // enabled, the client is unused. If the mode is "detect", the client will be
 // used to query the server's API groups and detect whether an RBAC api group exists.
-func (r *RBACMode) Enabled(client *kubernetes.Clientset) (bool, error) {
+func (r *RBACMode) Enabled(client kubernetes.Interface) (bool, error) {
 	if r == nil {
 		return false, fmt.Errorf("RBACMode is nil")
 	}

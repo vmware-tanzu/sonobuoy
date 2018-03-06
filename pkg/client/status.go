@@ -23,17 +23,16 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 )
 
-func (c *SonobuoyClient) GetStatus(namespace string, client kubernetes.Interface) (*aggregation.Status, error) {
-	if _, err := client.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{}); err != nil {
+func (c *SonobuoyClient) GetStatus(namespace string) (*aggregation.Status, error) {
+	if _, err := c.Client.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{}); err != nil {
 		return nil, errors.Wrap(err, "sonobuoy namespace does not exist")
 	}
 
-	pod, err := client.CoreV1().Pods(namespace).Get(aggregation.StatusPodName, metav1.GetOptions{})
+	pod, err := c.Client.CoreV1().Pods(namespace).Get(aggregation.StatusPodName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve sonobuoy pod")
 	}
