@@ -41,42 +41,6 @@ const (
 
 const defaultSkipList = "Alpha|Disruptive|Feature|Flaky|Kubectl"
 
-var (
-	// ConformanceModeConfig is the conformance tests, and both e2e and systemd-logs plugins.
-	ConformanceModeConfig = ModeConfig{
-		E2EConfig: E2EConfig{
-			Focus: "Conformance",
-			Skip:  defaultSkipList,
-		},
-		Selectors: []plugin.Selection{
-			{Name: "e2e"},
-			{Name: "systemd-logs"},
-		},
-	}
-	// ExtendedModeConfig is ConformanceModeConfig, but adds the heptio-e2e plugin.
-	ExtendedModeConfig = ModeConfig{
-		E2EConfig: E2EConfig{
-			Focus: "Conformance",
-			Skip:  defaultSkipList,
-		},
-		Selectors: []plugin.Selection{
-			{Name: "e2e"},
-			{Name: "systemd-logs"},
-			{Name: "heptio-e2e"},
-		},
-	}
-	// QuickModeConfig runs only a single conformance test in the e2e plugin.
-	QuickModeConfig = ModeConfig{
-		E2EConfig: E2EConfig{
-			Focus: "Pods should be submitted and removed",
-			Skip:  defaultSkipList,
-		},
-		Selectors: []plugin.Selection{
-			{Name: "e2e"},
-		},
-	}
-)
-
 var modeMap = map[string]Mode{
 	string(Conformance): Conformance,
 	string(Quick):       Quick,
@@ -114,11 +78,38 @@ func (m *Mode) Set(str string) error {
 func (m *Mode) Get() *ModeConfig {
 	switch *m {
 	case Conformance:
-		return &ConformanceModeConfig
-	case Extended:
-		return &ExtendedModeConfig
+		return &ModeConfig{
+			E2EConfig: E2EConfig{
+				Focus: "Conformance",
+				Skip:  defaultSkipList,
+			},
+			Selectors: []plugin.Selection{
+				{Name: "e2e"},
+				{Name: "systemd-logs"},
+			},
+		}
 	case Quick:
-		return &QuickModeConfig
+		return &ModeConfig{
+			E2EConfig: E2EConfig{
+				Focus: "Pods should be submitted and removed",
+				Skip:  defaultSkipList,
+			},
+			Selectors: []plugin.Selection{
+				{Name: "e2e"},
+			},
+		}
+	case Extended:
+		return &ModeConfig{
+			E2EConfig: E2EConfig{
+				Focus: "Conformance",
+				Skip:  defaultSkipList,
+			},
+			Selectors: []plugin.Selection{
+				{Name: "e2e"},
+				{Name: "systemd-logs"},
+				{Name: "heptio-e2e"},
+			},
+		}
 	default:
 		return nil
 	}
