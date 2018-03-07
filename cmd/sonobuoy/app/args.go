@@ -30,7 +30,7 @@ import (
 // AddNamespaceFlag initialises a namespace flag.
 func AddNamespaceFlag(str *string, flags *pflag.FlagSet) {
 	flags.StringVarP(
-		str, "namespace", "n", config.DefaultPluginNamespace,
+		str, "namespace", "n", config.DefaultNamespace,
 		"The namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously.",
 	)
 }

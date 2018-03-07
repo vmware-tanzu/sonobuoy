@@ -304,7 +304,7 @@ func QueryNSResources(kubeClient kubernetes.Interface, recorder *QueryRecorder, 
 	}
 
 	var resources []string
-	if cfg.PluginNamespace == ns {
+	if cfg.Namespace == ns {
 		resources = config.NamespacedResources
 	} else {
 		resources = cfg.FilterResources(config.NamespacedResources)
