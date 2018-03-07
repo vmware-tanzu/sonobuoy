@@ -58,7 +58,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 }
 
 func (g *genFlags) Config() (*client.GenConfig, error) {
-	e2ecfg, err := GetE2EConfig(genflags.mode, g.e2eflags)
+	e2ecfg, err := GetE2EConfig(g.mode, g.e2eflags)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve E2E config")
 	}
