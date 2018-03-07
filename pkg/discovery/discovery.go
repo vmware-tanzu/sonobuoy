@@ -76,7 +76,7 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount int) {
 	}
 
 	// 2. Get the list of namespaces and apply the regex filter on the namespace
-	nsfilter := fmt.Sprintf("%s|%s", cfg.Filters.Namespaces, cfg.PluginNamespace)
+	nsfilter := fmt.Sprintf("%s|%s", cfg.Filters.Namespaces, cfg.Namespace)
 	logrus.Infof("Filtering namespaces based on the following regex:%s", nsfilter)
 	nslist, err := FilterNamespaces(kubeClient, nsfilter)
 	if err != nil {
@@ -94,7 +94,7 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount int) {
 
 	// 4. Run the plugin aggregator
 	trackErrorsFor("running plugins")(
-		pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.PluginNamespace, outpath),
+		pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.Namespace, outpath),
 	)
 
 	// 5. Run the queries

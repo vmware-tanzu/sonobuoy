@@ -124,7 +124,7 @@ func loadAllPlugins(cfg *Config) error {
 
 	// Load all Plugins
 	plugins, err := pluginloader.LoadAllPlugins(
-		cfg.PluginNamespace,
+		cfg.Namespace,
 		cfg.WorkerImage,
 		cfg.ImagePullPolicy,
 		cfg.PluginSearchPath,

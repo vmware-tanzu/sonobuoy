@@ -29,7 +29,7 @@ func NewGenConfig() *GenConfig {
 		E2EConfig:  &defaultE2E,
 		Config:     config.New(),
 		Image:      config.DefaultImage,
-		Namespace:  config.DefaultPluginNamespace,
+		Namespace:  config.DefaultNamespace,
 		EnableRBAC: true,
 	}
 }
@@ -55,6 +55,6 @@ func NewDeleteConfig() *DeleteConfig {
 func NewLogConfig() *LogConfig {
 	return &LogConfig{
 		Follow:    false,
-		Namespace: config.DefaultPluginNamespace,
+		Namespace: config.DefaultNamespace,
 	}
 }
