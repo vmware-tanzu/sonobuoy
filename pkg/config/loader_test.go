@@ -27,7 +27,7 @@ import (
 )
 
 func TestSaveAndLoad(t *testing.T) {
-	cfg := NewWithDefaults()
+	cfg := New()
 
 	cfg.Filters.Namespaces = "funky*"
 

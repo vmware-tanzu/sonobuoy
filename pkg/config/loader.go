@@ -32,7 +32,7 @@ import (
 // and environment variables, and returns a config object
 func LoadConfig() (*Config, error) {
 	var err error
-	cfg := NewWithDefaults()
+	cfg := New()
 
 	// 0 - load defaults
 	viper.SetConfigType("json")

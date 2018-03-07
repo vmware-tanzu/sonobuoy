@@ -76,7 +76,7 @@ func GetConfigWithMode(sonobuoyCfg *SonobuoyConfig, mode client.Mode) *config.Co
 		return suppliedConfig
 	}
 
-	defaultConfig := config.NewWithDefaults()
+	defaultConfig := config.New()
 	modeConfig := mode.Get()
 	if modeConfig != nil {
 		defaultConfig.PluginSelections = modeConfig.Selectors

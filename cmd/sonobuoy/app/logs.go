@@ -38,8 +38,8 @@ func init() {
 		Args:  cobra.ExactArgs(0),
 	}
 
-	logConfig.Follow = cmd.Flags().BoolP(
-		"follow", "f", false,
+	cmd.Flags().BoolVarP(
+		&logConfig.Follow, "follow", "f", false,
 		"Specify if the logs should be streamed.",
 	)
 
