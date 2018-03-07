@@ -17,10 +17,16 @@ limitations under the License.
 package main
 
 import (
+	"os"
+
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app"
 )
 
 // main entry point of the program
 func main() {
-	app.RootCmd.Execute()
+	err := app.RootCmd.Execute()
+	if err != nil {
+		// Execute takes care of printing the error
+		os.Exit(1)
+	}
 }
