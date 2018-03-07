@@ -48,6 +48,10 @@ func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		cfg.Config.ImagePullPolicy = cfg.ImagePullPolicy
 	}
 
+	if cfg.Namespace != "" {
+		cfg.Config.Namespace = cfg.Namespace
+	}
+
 	marshalledConfig, err := json.Marshal(cfg.Config)
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't marshall selector")

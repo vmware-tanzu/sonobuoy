@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	// DefaultPluginNamespace is the namespace where the master and plugin workers will run (but not necessarily the pods created by the plugin workers).
-	DefaultPluginNamespace = "heptio-sonobuoy"
+	// DefaultNamespace is the namespace where the master and plugin workers will run (but not necessarily the pods created by the plugin workers).
+	DefaultNamespace = "heptio-sonobuoy"
 	// DefaultImage is the URL of the docker image to run for the aggregator and workers
 	DefaultImage = "gcr.io/heptio-images/sonobuoy:master"
 	// MasterPodName is the name of the main pod that runs plugins and collects results.
@@ -139,7 +139,7 @@ type Config struct {
 	Aggregation      plugin.AggregationConfig `json:"Server" mapstructure:"Server"`
 	PluginSelections []plugin.Selection       `json:"Plugins" mapstructure:"Plugins"`
 	PluginSearchPath []string                 `json:"PluginSearchPath" mapstructure:"PluginSearchPath"`
-	PluginNamespace  string                   `json:"PluginNamespace" mapstructure:"PluginNamespace"`
+	Namespace        string                   `json:"Namespace" mapstructure:"Namespace"`
 	LoadedPlugins    []plugin.Interface       // this is assigned when plugins are loaded.
 
 	///////////////////////////////////////////////
@@ -239,7 +239,7 @@ func New() *Config {
 	cfg.Resources = ClusterResources
 	cfg.Resources = append(cfg.Resources, NamespacedResources...)
 
-	cfg.PluginNamespace = DefaultPluginNamespace
+	cfg.Namespace = DefaultNamespace
 
 	cfg.Aggregation.BindAddress = "0.0.0.0"
 	cfg.Aggregation.BindPort = 8080
