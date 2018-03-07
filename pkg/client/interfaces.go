@@ -21,6 +21,8 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+	"github.com/pkg/errors"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -77,24 +79,39 @@ type RetrieveConfig struct {
 
 // SonobuoyClient is a high-level interface to Sonobuoy operations.
 type SonobuoyClient struct {
-	RestConfig *rest.Config
-	Client     kubernetes.Interface
-	// TODO (timothysc) cache dynamic client
+	RestConfig    *rest.Config
+	client        kubernetes.Interface
+	dynamicClient dynamic.ClientPool
 }
 
 // NewSonobuoyClient creates a new SonobuoyClient
 func NewSonobuoyClient(restConfig *rest.Config) (*SonobuoyClient, error) {
 	sc := &SonobuoyClient{
-		RestConfig: restConfig,
+		RestConfig:    restConfig,
+		client:        nil,
+		dynamicClient: nil,
 	}
-	// TODO (timothysc) factor this out and provide a means to perform
-	// JIT creation of the client through an accessor function
-	clientset, err := kubernetes.NewForConfig(sc.RestConfig)
-	if err != nil {
-		return nil, err
-	}
-	sc.Client = clientset
 	return sc, nil
+}
+
+// Client creates or retrieves an existing kubernetes client from the SonobuoyClient's RESTConfig.
+func (s *SonobuoyClient) Client() (kubernetes.Interface, error) {
+	if s.client == nil {
+		client, err := kubernetes.NewForConfig(s.RestConfig)
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't create kubernetes client")
+		}
+		s.client = client
+	}
+	return s.client, nil
+}
+
+// DynamicClientPool creates or retrieves an existing dynamic client from the SonobuoyClient's RESTConfig.
+func (s *SonobuoyClient) DynamicClientPool() dynamic.ClientPool {
+	if s.dynamicClient == nil {
+		s.dynamicClient = dynamic.NewDynamicClientPool(s.RestConfig)
+	}
+	return s.dynamicClient
 }
 
 // Make sure SonobuoyClient implements the interface

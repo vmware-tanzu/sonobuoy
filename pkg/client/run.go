@@ -39,8 +39,13 @@ import (
 const bufferSize = 4096
 
 func (c *SonobuoyClient) Run(cfg *RunConfig) error {
+	client, err := c.Client()
+	if err != nil {
+		return err
+	}
+
 	if !cfg.SkipPreflight {
-		if err := preflightCheck(c.Client); err != nil {
+		if err := preflightCheck(client); err != nil {
 			return errors.Wrap(err, "preflight check failed")
 		}
 	}
@@ -79,7 +84,7 @@ func (c *SonobuoyClient) Run(cfg *RunConfig) error {
 			return errors.Wrap(err, "couldn't decode template")
 		}
 
-		err := createObject(c.RestConfig, &obj, mapper)
+		err := createObject(c.DynamicClientPool(), &obj, mapper)
 		if err != nil {
 			return errors.Wrap(err, "failed to create object")
 		}
@@ -87,8 +92,8 @@ func (c *SonobuoyClient) Run(cfg *RunConfig) error {
 	return nil
 }
 
-func createObject(cfg *rest.Config, obj *unstructured.Unstructured, mapper meta.RESTMapper) error {
-	client, err := getClient(cfg, obj.GroupVersionKind())
+func createObject(pool dynamic.ClientPool, obj *unstructured.Unstructured, mapper meta.RESTMapper) error {
+	client, err := pool.ClientForGroupVersionKind(obj.GroupVersionKind())
 	if err != nil {
 		return errors.Wrap(err, "could not make kubernetes client")
 	}
@@ -131,19 +136,6 @@ func createObject(cfg *rest.Config, obj *unstructured.Unstructured, mapper meta.
 	}
 
 	return nil
-}
-
-func getClient(cfg *rest.Config, gvk schema.GroupVersionKind) (*dynamic.Client, error) {
-	gk := gvk.GroupVersion()
-
-	cfg.GroupVersion = &gk
-	if gvk.Group == "" {
-		cfg.APIPath = "/api"
-	} else {
-		cfg.APIPath = "/apis"
-	}
-
-	return dynamic.NewClient(cfg)
 }
 
 func newMapper(cfg *rest.Config) (meta.RESTMapper, error) {
