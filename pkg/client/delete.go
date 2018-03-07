@@ -34,18 +34,23 @@ const (
 )
 
 func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
-	if err := cleanupNamespace(cfg.Namespace, c.Client); err != nil {
+	client, err := c.Client()
+	if err != nil {
+		return err
+	}
+
+	if err := cleanupNamespace(cfg.Namespace, client); err != nil {
 		return err
 	}
 
 	if cfg.EnableRBAC {
-		if err := deleteRBAC(c.Client); err != nil {
+		if err := deleteRBAC(client); err != nil {
 			return err
 		}
 	}
 
 	if cfg.DeleteAll {
-		if err := cleanupE2E(c.Client); err != nil {
+		if err := cleanupE2E(client); err != nil {
 			return err
 		}
 	}
@@ -96,6 +101,7 @@ func deleteRBAC(client kubernetes.Interface) error {
 
 func cleanupE2E(client kubernetes.Interface) error {
 	// Delete any dangling E2E namespaces
+
 	namespaces, err := client.CoreV1().Namespaces().List(metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to list namespaces")

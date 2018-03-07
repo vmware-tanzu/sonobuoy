@@ -61,7 +61,13 @@ func deleteSonobuoyRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	rbacEnabled, err := deleteFlags.rbacMode.Enabled(sbc.Client)
+	client, err := sbc.Client()
+	if err != nil {
+		errlog.LogError(err)
+		os.Exit(1)
+	}
+
+	rbacEnabled, err := deleteFlags.rbacMode.Enabled(client)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC status"))
 		os.Exit(1)

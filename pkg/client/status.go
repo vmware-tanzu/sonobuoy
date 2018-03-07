@@ -28,11 +28,16 @@ import (
 )
 
 func (c *SonobuoyClient) GetStatus(namespace string) (*aggregation.Status, error) {
-	if _, err := c.Client.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{}); err != nil {
+	client, err := c.Client()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := client.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{}); err != nil {
 		return nil, errors.Wrap(err, "sonobuoy namespace does not exist")
 	}
 
-	pod, err := c.Client.CoreV1().Pods(namespace).Get(aggregation.StatusPodName, metav1.GetOptions{})
+	pod, err := client.CoreV1().Pods(namespace).Get(aggregation.StatusPodName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve sonobuoy pod")
 	}

@@ -111,7 +111,11 @@ func (r *Reader) Read(p []byte) (int, error) {
 
 // LogReader configures a Reader that provides an io.Reader interface to a merged stream of logs from various containers.
 func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
-	pods, err := s.Client.CoreV1().Pods(cfg.Namespace).List(metav1.ListOptions{})
+	client, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	pods, err := client.CoreV1().Pods(cfg.Namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list pods")
 	}
@@ -134,7 +138,7 @@ func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
 					Container: container.Name,
 					Follow:    cfg.Follow,
 				},
-				client: s.Client,
+				client: client,
 			}
 
 			go func(w *sync.WaitGroup, ls *logStreamer) {
