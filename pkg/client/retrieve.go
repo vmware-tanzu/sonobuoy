@@ -18,7 +18,6 @@ package client
 
 import (
 	"archive/tar"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -26,6 +25,7 @@ import (
 	"path/filepath"
 
 	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/pkg/errors"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -33,7 +33,12 @@ import (
 )
 
 func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) io.Reader {
-	client := c.Client.CoreV1().RESTClient()
+	kubeClient, err := c.Client()
+	if err != nil {
+		cfg.Errc <- err
+		return nil
+	}
+	client := kubeClient.CoreV1().RESTClient()
 	req := client.Post().
 		Resource("pods").
 		Name(config.MasterPodName).
@@ -49,7 +54,7 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) io.Reader {
 	}, scheme.ParameterCodec)
 	executor, err := remotecommand.NewSPDYExecutor(c.RestConfig, "POST", req.URL())
 	if err != nil {
-		cfg.Errc <- fmt.Errorf("unable to get remote executor: %v", err)
+		cfg.Errc <- errors.Wrap(err, "unable to get remote executor")
 		return nil
 	}
 	reader, writer := io.Pipe()
