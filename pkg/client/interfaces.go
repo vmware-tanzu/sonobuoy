@@ -31,6 +31,8 @@ type LogConfig struct {
 	Follow bool
 	// Namespace is the namespace the sonobuoy aggregator is running in.
 	Namespace string
+	// Out is the writer to write to.
+	Out io.Writer
 }
 
 // GenConfig are the input options for generating a Sonobuoy manifest.
@@ -111,8 +113,8 @@ type Interface interface {
 	RetrieveResults(cfg *RetrieveConfig) io.Reader
 	// GetStatus determines the status of the sonobuoy run in order to assist the user.
 	GetStatus(namespace string) (*aggregation.Status, error)
-	// GetLogs streams logs from the sonobuoy pod by default to stdout.
-	GetLogs(cfg *LogConfig) error
+	// LogReader returns a reader that contains a merged stream of sonobuoy logs.
+	LogReader(cfg *LogConfig) (*Reader, error)
 	// Delete removes a sonobuoy run, namespace, and all associated resources.
 	Delete(cfg *DeleteConfig) error
 }
