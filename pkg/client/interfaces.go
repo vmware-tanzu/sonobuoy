@@ -28,7 +28,7 @@ import (
 // LogConfig are the options passed to GetLogs.
 type LogConfig struct {
 	// Follow determines if the logs should be followed or not (tail -f).
-	Follow *bool
+	Follow bool
 	// Namespace is the namespace the sonobuoy aggregator is running in.
 	Namespace string
 }
