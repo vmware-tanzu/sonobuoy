@@ -20,30 +20,30 @@ import (
 	"github.com/heptio/sonobuoy/pkg/config"
 )
 
-// NewGenConfigWithDefaults is a GenConfig using the default config and Conformance mode
-func NewGenConfigWithDefaults() *GenConfig {
+// NewGenConfig is a GenConfig using the default config and Conformance mode
+func NewGenConfig() *GenConfig {
 	modeName := Conformance
 	defaultE2E := modeName.Get().E2EConfig
 
 	return &GenConfig{
 		E2EConfig:  &defaultE2E,
-		Config:     config.NewWithDefaults(),
+		Config:     config.New(),
 		Image:      config.DefaultImage,
 		Namespace:  config.DefaultPluginNamespace,
 		EnableRBAC: true,
 	}
 }
 
-// NewRunConfigWithDefaults is a RunConfig with DefaultGenConfig and and preflight checks enabled.
-func NewRunConfigWithDefaults() *RunConfig {
+// NewRunConfig is a RunConfig with DefaultGenConfig and and preflight checks enabled.
+func NewRunConfig() *RunConfig {
 	return &RunConfig{
-		GenConfig:     *NewGenConfigWithDefaults(),
+		GenConfig:     *NewGenConfig(),
 		SkipPreflight: false,
 	}
 }
 
-// NewDeleteConfigWithDefaults is a DeleteConfig using default images, RBAC enabled, and DeleteAll enabled.
-func NewDeleteConfigWithDefaults() *DeleteConfig {
+// NewDeleteConfig is a DeleteConfig using default images, RBAC enabled, and DeleteAll enabled.
+func NewDeleteConfig() *DeleteConfig {
 	return &DeleteConfig{
 		Namespace:  config.DefaultImage,
 		EnableRBAC: true,
@@ -51,8 +51,8 @@ func NewDeleteConfigWithDefaults() *DeleteConfig {
 	}
 }
 
-// NewLogConfigWithDefaults is a LogConfig with follow disabled and default images.
-func NewLogConfigWithDefaults() *LogConfig {
+// NewLogConfig is a LogConfig with follow disabled and default images.
+func NewLogConfig() *LogConfig {
 	return &LogConfig{
 		Follow:    false,
 		Namespace: config.DefaultPluginNamespace,

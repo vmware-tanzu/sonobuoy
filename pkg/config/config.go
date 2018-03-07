@@ -226,8 +226,8 @@ func (c SizeOrTimeLimitConfig) timeLimitDuration() (val time.Duration, defaulted
 	return val, false, err
 }
 
-// NewWithDefaults returns a newly-constructed Config object with default values.
-func NewWithDefaults() *Config {
+// New returns a newly-constructed Config object with default values.
+func New() *Config {
 	var cfg Config
 	cfg.UUID = uuid.NewV4().String()
 	cfg.Description = "DEFAULT"

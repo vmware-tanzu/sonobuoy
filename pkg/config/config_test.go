@@ -22,8 +22,8 @@ import (
 )
 
 func TestDefaults(t *testing.T) {
-	cfg1 := NewWithDefaults()
-	cfg2 := NewWithDefaults()
+	cfg1 := New()
+	cfg2 := New()
 
 	if reflect.DeepEqual(&cfg2, &cfg1) {
 		t.Fatalf("Defaults should not match UUIDs collided")
