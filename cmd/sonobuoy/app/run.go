@@ -95,7 +95,7 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 	}
 
 	if !runflags.skipPreflight {
-		if errs := sbc.PreflightChecks(); len(errs) > 0 {
+		if errs := sbc.PreflightChecks(&ops.PreflightConfig{runflags.namespace}); len(errs) > 0 {
 			errlog.LogError(errors.New("Preflight checks failed"))
 			for _, err := range errs {
 				errlog.LogError(err)

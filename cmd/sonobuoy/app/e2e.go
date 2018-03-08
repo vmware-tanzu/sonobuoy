@@ -105,7 +105,7 @@ func e2es(cmd *cobra.Command, args []string) {
 	}
 
 	if !e2eflags.skipPreflight {
-		if errs := sonobuoy.PreflightChecks(); len(errs) > 0 {
+		if errs := sonobuoy.PreflightChecks(&client.PreflightConfig{e2eflags.namespace}); len(errs) > 0 {
 			errlog.LogError(errors.New("Preflight checks failed"))
 			for _, err := range errs {
 				errlog.LogError(err)
