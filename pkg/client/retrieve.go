@@ -35,8 +35,12 @@ import (
 )
 
 func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, error) {
-	client := c.client.CoreV1().RESTClient()
-	req := client.Post().
+	client, err := c.Client()
+	if err != nil {
+		return nil, err
+	}
+	restClient := client.CoreV1().RESTClient()
+	req := restClient.Post().
 		Resource("pods").
 		Name(config.MasterPodName).
 		Namespace(cfg.Namespace).
