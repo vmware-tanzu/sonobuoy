@@ -28,7 +28,7 @@ import (
 
 	"k8s.io/api/core/v1"
 
-	"github.com/heptio/sonobuoy/pkg/results"
+	"github.com/heptio/sonobuoy/pkg/client/results"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sver "k8s.io/apimachinery/pkg/version"
 )
@@ -39,7 +39,7 @@ type version struct {
 }
 
 func (v *version) path() string {
-	return fmt.Sprintf("test_data/results-%v.%v.tar.gz", v.major, v.minor)
+	return fmt.Sprintf("testdata/results-%v.%v.tar.gz", v.major, v.minor)
 }
 func (v *version) String() string {
 	return fmt.Sprintf("v%v.%v", v.major, v.minor)
