@@ -22,8 +22,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/heptio/sonobuoy/pkg/results"
-	"github.com/heptio/sonobuoy/pkg/results/e2e"
+	"github.com/heptio/sonobuoy/pkg/client/results"
+	"github.com/heptio/sonobuoy/pkg/client/results/e2e"
 	"github.com/onsi/ginkgo/reporters"
 	"github.com/pkg/errors"
 )
