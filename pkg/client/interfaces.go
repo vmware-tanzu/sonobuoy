@@ -71,6 +71,11 @@ type RetrieveConfig struct {
 	Namespace string
 }
 
+// PreflightConfig are the options passed to PreflightChecks.
+type PreflightConfig struct {
+	Namespace string
+}
+
 // SonobuoyClient is a high-level interface to Sonobuoy operations.
 type SonobuoyClient struct {
 	RestConfig    *rest.Config
@@ -129,5 +134,5 @@ type Interface interface {
 	// Delete removes a sonobuoy run, namespace, and all associated resources.
 	Delete(cfg *DeleteConfig) error
 	// PreflightChecks runs a number of preflight checks to confirm the environment is good for Sonobuoy
-	PreflightChecks() []error
+	PreflightChecks(cfg *PreflightConfig) []error
 }
