@@ -24,3 +24,9 @@ var Version = "v0.11.0-alpha"
 
 // DockerImage is the full path to the docker image for this build, example gcr.io/heptio-images/sonobuoy
 var DockerImage string
+
+// MinimumKubeVersion is the lowest API version of Kubernetes this release of Sonobuoy supports.
+var MinimumKubeVersion = "1.8.0"
+
+// MaximumKubeVersion is the highest API version of Kubernetes this release of Sonobuoy supports.
+var MaximumKubeVersion = "1.11.0"

@@ -56,8 +56,6 @@ type E2EConfig struct {
 // RunConfig are the input options for running Sonobuoy.
 type RunConfig struct {
 	GenConfig
-	// SkipPreflight means don't run any checks before kicking off the Sonobuoy run.
-	SkipPreflight bool
 }
 
 // DeleteConfig are the input options for cleaning up a Sonobuoy run.
@@ -130,4 +128,6 @@ type Interface interface {
 	LogReader(cfg *LogConfig) (*Reader, error)
 	// Delete removes a sonobuoy run, namespace, and all associated resources.
 	Delete(cfg *DeleteConfig) error
+	// PreflightChecks runs a number of preflight checks to confirm the environment is good for Sonobuoy
+	PreflightChecks() []error
 }
