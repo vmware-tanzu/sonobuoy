@@ -50,8 +50,7 @@ func (r *runFlags) Config() (*ops.RunConfig, error) {
 		return nil, err
 	}
 	return &ops.RunConfig{
-		GenConfig:     *gencfg,
-		SkipPreflight: r.skipPreflight,
+		GenConfig: *gencfg,
 	}, nil
 }
 
@@ -85,6 +84,7 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
 	}
+
 	m := genflags.mode.Get()
 	plugins := []string{}
 	for _, plugin := range m.Selectors {
@@ -93,6 +93,17 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 	if len(plugins) > 0 {
 		fmt.Printf("Running plugins: %v\n", strings.Join(plugins, ", "))
 	}
+
+	if !runflags.skipPreflight {
+		if errs := sbc.PreflightChecks(); len(errs) > 0 {
+			errlog.LogError(errors.New("Preflight checks failed"))
+			for _, err := range errs {
+				errlog.LogError(err)
+			}
+			os.Exit(1)
+		}
+	}
+
 	if err := sbc.Run(cfg); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)

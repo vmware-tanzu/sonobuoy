@@ -104,6 +104,16 @@ func e2es(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	if !e2eflags.skipPreflight {
+		if errs := sonobuoy.PreflightChecks(); len(errs) > 0 {
+			errlog.LogError(errors.New("Preflight checks failed"))
+			for _, err := range errs {
+				errlog.LogError(err)
+			}
+			os.Exit(1)
+		}
+	}
+
 	fmt.Printf("Rerunning %d tests:\n", len(testCases))
 	if err := sonobuoy.Run(cfg); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to rerun failed tests"))
