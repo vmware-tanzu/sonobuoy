@@ -37,8 +37,7 @@ func NewGenConfig() *GenConfig {
 // NewRunConfig is a RunConfig with DefaultGenConfig and and preflight checks enabled.
 func NewRunConfig() *RunConfig {
 	return &RunConfig{
-		GenConfig:     *NewGenConfig(),
-		SkipPreflight: false,
+		GenConfig: *NewGenConfig(),
 	}
 }
 
