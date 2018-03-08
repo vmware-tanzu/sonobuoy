@@ -20,6 +20,8 @@ import (
 	"github.com/spf13/pflag"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	// Add GCP auth provider
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
 // Kubeconfig represents an explict or implict kubeconfig
