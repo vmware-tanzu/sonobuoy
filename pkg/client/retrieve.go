@@ -24,6 +24,8 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 
@@ -32,13 +34,8 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
-func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) io.Reader {
-	kubeClient, err := c.Client()
-	if err != nil {
-		cfg.Errc <- err
-		return nil
-	}
-	client := kubeClient.CoreV1().RESTClient()
+func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, error) {
+	client := c.client.CoreV1().RESTClient()
 	req := client.Post().
 		Resource("pods").
 		Name(config.MasterPodName).
@@ -54,25 +51,27 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) io.Reader {
 	}, scheme.ParameterCodec)
 	executor, err := remotecommand.NewSPDYExecutor(c.RestConfig, "POST", req.URL())
 	if err != nil {
-		cfg.Errc <- errors.Wrap(err, "unable to get remote executor")
-		return nil
+		return nil, err
 	}
 	reader, writer := io.Pipe()
-	// We use a goroutine here to allow this function to return a reader that lets the caller
-	// deal with what to do with this stream of data and keep that detail out of this function.
-	go func() {
+	go func(writer *io.PipeWriter) {
 		defer writer.Close()
-
 		err = executor.Stream(remotecommand.StreamOptions{
 			Stdout: writer,
-			Stderr: cfg.CmdErr,
+			Stderr: os.Stderr,
 			Tty:    false,
 		})
 		if err != nil {
-			cfg.Errc <- fmt.Errorf("error streaming: %v", err)
+			// Since this function returns an io.Reader to the consumer and does
+			// not buffer the entire (potentially large) output, RetrieveResults
+			// has to return the reader first to be read from. This means we
+			// either lose this error (easy) or provide a significantly more
+			// complex error mechanism for the consumer (hard).
+			logrus.Error(err)
 		}
-	}()
-	return reader
+	}(writer)
+
+	return reader, nil
 }
 
 /** Everything below this marker has been copy/pasta'd from k8s/k8s. The only modification is exporting UntarAll **/
