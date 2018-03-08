@@ -17,7 +17,9 @@ limitations under the License.
 package app
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -83,7 +85,14 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
 	}
-
+	m := genflags.mode.Get()
+	plugins := []string{}
+	for _, plugin := range m.Selectors {
+		plugins = append(plugins, plugin.Name)
+	}
+	if len(plugins) > 0 {
+		fmt.Printf("Running plugins: %v\n", strings.Join(plugins, ", "))
+	}
 	if err := sbc.Run(cfg); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
