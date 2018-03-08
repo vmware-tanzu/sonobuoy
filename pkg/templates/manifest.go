@@ -38,7 +38,7 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     component: sonobuoy
-  name: sonobuoy-serviceaccount
+  name: sonobuoy-serviceaccount-{{.Namespace}}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
