@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
@@ -33,10 +32,12 @@ var (
 	defaultOutDir = "."
 )
 
-var (
-	cpKubecfg   Kubeconfig
-	cpNamespace string
-)
+type receiveFlags struct {
+	namespace string
+	kubecfg   Kubeconfig
+}
+
+var rcvFlags receiveFlags
 
 func init() {
 	cmd := &cobra.Command{
@@ -46,26 +47,19 @@ func init() {
 		Args:  cobra.MaximumNArgs(1),
 	}
 
-	AddKubeconfigFlag(&cpKubecfg, cmd.Flags())
-	AddNamespaceFlag(&cpNamespace, cmd.Flags())
+	AddKubeconfigFlag(&rcvFlags.kubecfg, cmd.Flags())
+	AddNamespaceFlag(&rcvFlags.namespace, cmd.Flags())
 
 	RootCmd.AddCommand(cmd)
 }
 
-// TODO (timothysc) abstract retrieve details into a lower level function.
 func retrieveResults(cmd *cobra.Command, args []string) {
-	namespace, err := cmd.Flags().GetString("namespace")
-	if err != nil {
-		errlog.LogError(fmt.Errorf("failed to get namespace flag: %v", err))
-		os.Exit(1)
-	}
-
 	outDir := defaultOutDir
 	if len(args) > 0 {
 		outDir = args[0]
 	}
 
-	restConfig, err := cpKubecfg.Get()
+	restConfig, err := rcvFlags.kubecfg.Get()
 	if err != nil {
 		errlog.LogError(fmt.Errorf("failed to get kubernetes client: %v", err))
 		os.Exit(1)
@@ -76,50 +70,16 @@ func retrieveResults(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	// TODO(chuckha) try to catch some errors and present user friendly messages.
-	// Setup error channel and synchronization so that all errors get reported before exiting.
-	errc := make(chan error)
-	errcount := 0
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for err := range errc {
-			errcount++
-			errlog.LogError(err)
-		}
-	}()
-
-	cfg := &client.RetrieveConfig{
-		Namespace: namespace,
-		CmdErr:    os.Stderr,
-		Errc:      errc,
-	}
-
 	// Get a reader that contains the tar output of the results directory.
-	reader := sbc.RetrieveResults(cfg)
-
-	// RetrieveResults bailed early and will report an error.
-	if reader == nil {
-		close(errc)
-		wg.Wait()
+	reader, err := sbc.RetrieveResults(&client.RetrieveConfig{Namespace: rcvFlags.namespace})
+	if err != nil {
+		errlog.LogError(err)
 		os.Exit(1)
 	}
 
 	// Extract the tar output into a local directory under the prefix.
 	err = client.UntarAll(reader, outDir, prefix)
 	if err != nil {
-		close(errc)
-		wg.Wait()
-		errlog.LogError(fmt.Errorf("error untarring output: %v", err))
-		os.Exit(1)
-	}
-
-	// Everything has been written from the reader which means we're done.
-	close(errc)
-	wg.Wait()
-
-	if errcount != 0 {
 		os.Exit(1)
 	}
 }
