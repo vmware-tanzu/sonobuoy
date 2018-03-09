@@ -34,8 +34,9 @@ func TestLateErrors(t *testing.T) {
 		for _, quote := range quotes {
 			bytestream <- []byte(quote)
 		}
+		close(bytestream)
 	}()
-	errc := make(chan error, 1)
+	errc := make(chan error)
 
 	reader := NewReader(bytestream, errc)
 
@@ -50,7 +51,7 @@ func TestLateErrors(t *testing.T) {
 		t.Fatalf("unexpected number of bytes read: %v", n)
 	}
 
-	errc <- errors.New("introduce an error")
+	go func() { errc <- errors.New("introduce an error") }()
 
 	// We are guaranteed to eventually get the error because we never close bytestream.
 	errcount := 0
@@ -67,20 +68,20 @@ func TestLateErrors(t *testing.T) {
 
 func TestLogEarlyErrors(t *testing.T) {
 	input := "sonobuoy will help you on your way to greatness"
-	bytestream := make(chan []byte, 1)
-	bytestream <- []byte(input)
-
-	errc := make(chan error, 1)
-	errc <- errors.New("A seriously bad error")
+	bytestream := make(chan []byte)
+	go func() {
+		defer close(bytestream)
+		bytestream <- []byte(input)
+	}()
+	errc := make(chan error)
+	go func() { errc <- errors.New("A seriously bad error") }()
 
 	reader := NewReader(bytestream, errc)
 
 	mybuf := make([]byte, 1024)
 	errcount := 0
-	// We are guaranteed to read the error after we've drained bytestream, but the order is unspecified.
 	for i := 0; i <= 5; i++ {
 		_, err := reader.Read(mybuf)
-		// This will never be EOF since we never close the channel.
 		if err != nil && err != io.EOF {
 			errcount++
 		}
@@ -160,13 +161,15 @@ func TestLogReaderNoError(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			bytestream := make(chan []byte)
-			go func(data chan []byte) {
-				defer close(bytestream)
-				for _, input := range tc.input {
+			errc := make(chan error)
+
+			go func(data chan []byte, e chan error, inputs []string) {
+				for _, input := range inputs {
 					data <- []byte(input)
 				}
-			}(bytestream)
-			errc := make(chan error)
+				close(data)
+				errc <- io.EOF
+			}(bytestream, errc, tc.input)
 			reader := NewReader(bytestream, errc)
 			mybuf := make([]byte, tc.bufsize)
 			i := 0
