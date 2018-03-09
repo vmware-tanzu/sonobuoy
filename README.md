@@ -14,7 +14,7 @@ Its selective data dumps of Kubernetes resource objects and cluster nodes allow 
 * Workload debugging
 * Custom data collection via extensible plugins
 
-Sonobuoy supports all upstream supported versions of Kubernetes (1.7.x-v1.9.y).
+Sonobuoy supports Kubernetes (1.8+).
 
 ## Prerequisites
 
