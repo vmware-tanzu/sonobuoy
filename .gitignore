@@ -34,3 +34,4 @@ debug
 
 .svn/
 _site/
+.DS_Store

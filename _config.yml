@@ -1,11 +1,9 @@
 name: sonobuoy
 baseurl: /sonobuoy
 google_analytics: FILL_OUT
-latest: v0.10.0
+latest: v0.11.1
 versions:
-- v0.10.0
-- v0.9.0
-- v0.8.0
+- v0.11.1
 versioning: false
 logo: assets/img/logo.svg
 exclude:
@@ -26,18 +24,4 @@ defaults:
   values:
     version: latest
     gh: https://github.com/heptio/sonobuoy/tree/master
-- scope:
-    path: v0.10.0
-  values:
-    version: v0.10.0
-    gh: https://github.com/heptio/sonobuoy/tree/v0.10.0
-- scope:
-    path: v0.9.0
-  values:
-    version: v0.9.0
-    gh: https://github.com/heptio/sonobuoy/tree/v0.9.0
-- scope:
-    path: v0.8.0
-  values:
-    version: v0.8.0
-    gh: https://github.com/heptio/sonobuoy/tree/v0.8.0
+
