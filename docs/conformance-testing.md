@@ -1,4 +1,4 @@
-# Conformance Testing - [1.7+][6]
+# Conformance Testing - [1.8+][6]
 
 * [Overview][0]
 * [Integration with Sonobuoy][1]
