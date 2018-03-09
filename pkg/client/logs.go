@@ -31,8 +31,11 @@ const (
 	bufSize = 4096
 )
 
-// Reader provides an io.Reader interface to a channel of bytes.
-// The first error received on the error channel will be returned by Read and all subsequent calls to Read.
+// Reader provides an io.Reader interface to a channel of bytes. The first error
+// received on the error channel will be returned by Read after the bytestream
+// is drained and on all subsequent calls to Read. It is the responsibility of
+// the program writing to bytestream to write an io.EOF to the error stream when
+// it is done and close all channels.
 type Reader struct {
 	bytestream chan []byte
 	errc       chan error
@@ -64,9 +67,6 @@ func (r *Reader) Read(p []byte) (int, error) {
 		return 0, r.err
 	}
 
-	// n is the number of bytes written to `p`.
-	n := 0
-
 	// Send any overflow before grabbing new messages.
 	if len(r.overflowBuffer) > 0 {
 		// If we need to chunk it, copy as much as we can and reduce the overflow buffer.
@@ -77,36 +77,30 @@ func (r *Reader) Read(p []byte) (int, error) {
 		}
 		// At this point the entire overflow will fit into the buffer.
 		copy(p, r.overflowBuffer)
-		n += len(r.overflowBuffer)
-		r.overflowBuffer = []byte{}
-		// This is suboptimal (does not use entire buffer) but gets output to the user faster.
+		n := len(r.overflowBuffer)
+		r.overflowBuffer = nil
 		return n, nil
 	}
 
-	// One message a time.
-	select {
-	// it's ok to keep reading messages and miss an error.
-	case err := <-r.errc:
-		r.err = err
-		return n, r.err
-	case data, ok := <-r.bytestream:
-		if !ok {
-			return 0, io.EOF
-		}
-
-		// The incoming data is bigger than size of the remaining size of the buffer. Save overflow data for next read.
-		remainingSize := len(p) - n
-		if len(data) > remainingSize {
-			copy(p[n:], data[:remainingSize])
-			r.overflowBuffer = data[remainingSize:]
-			return len(p), nil
-		}
-
-		// We have enough headroom in the buffer, copy all of it.
-		copy(p[n:], data)
-		n += len(data)
-		return n, nil
+	data, ok := <-r.bytestream
+	// If the bytestream is done then save the error for future calls to Read.
+	if !ok {
+		r.err = <-r.errc
+		return 0, r.err
 	}
+
+	// TODO(chuckha) this code and the code above in the overflow buffer is identical. Might be an indication of a cleaner way to do this.
+
+	// The incoming data is bigger than size of the remaining size of the buffer. Save overflow data for next read.
+	if len(data) > len(p) {
+		copy(p, data[:len(p)])
+		r.overflowBuffer = data[len(p):]
+		return len(p), nil
+	}
+
+	// We have enough headroom in the buffer, copy all of it.
+	copy(p, data)
+	return len(data), nil
 }
 
 // LogReader configures a Reader that provides an io.Reader interface to a merged stream of logs from various containers.
@@ -168,6 +162,7 @@ type message struct {
 }
 
 func newMessage(preamble string, data []byte) *message {
+	// Copy the bytes out of data so that byte slice can be reused.
 	d := make([]byte, len(data))
 	copy(d, data)
 	return &message{
@@ -196,7 +191,7 @@ func (l *logStreamer) stream() {
 	defer readCloser.Close()
 
 	// newline because logs have new lines in them
-	preamble := fmt.Sprintf("namespace=%v pod=%v container=%v\n", l.ns, l.pod, l.container)
+	preamble := fmt.Sprintf("namespace=%q pod=%q container=%q\n", l.ns, l.pod, l.container)
 
 	buf := make([]byte, bufSize)
 	// Loop until EOF (streaming case won't get an EOF)
@@ -229,6 +224,7 @@ func applyHeaders(mesc chan *message) chan []byte {
 			}
 			out <- message.buffer
 		}
+		close(out)
 	}()
 	return out
 }
