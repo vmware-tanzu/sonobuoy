@@ -39,11 +39,20 @@ This guide executes a Sonobuoy run on your cluster, and records the following re
 * *(Via plugin)* [`systemd`][14] logs from each host
 * *(Via plugin)* The results of a single e2e conformance test ("Pods should be submitted and removed"). See the [conformance guide][4] for configuration details.
 
+### 0. Prerequisites
+
+Prior to building the CLI, you will need to have golang properly installed on your machine.  We recommend using [gimme][21], with golang version 1.9.4. 
+
+Also, make certain that you update your $PATH settings appropriately:
+```
+$ export PATH=$GOROOT/bin:$GOPATH/bin:$PATH 
+```  
+
 ### 1. Download
 
 Sonobuoy is written in golang and can easily be obtained by running:
 ```
-$ go get github.com/heptio/sonobuoy
+$ go get -u -v github.com/heptio/sonobuoy
 ```
 
 ### 2. Run
@@ -127,3 +136,4 @@ See [the list of releases](https://github.com/heptio/sonobuoy/releases) to find 
 [18]: https://scanner.heptio.com/
 [19]: #quickstart
 [20]: docs/img/scanner.png
+[21]: https://github.com/travis-ci/gimme
