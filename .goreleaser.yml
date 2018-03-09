@@ -1,0 +1,13 @@
+builds:
+- binary: sonobuoy
+  goos:
+    - windows
+    - darwin
+    - linux
+  goarch:
+    - amd64
+  ldflags: -s -w -X github.com/heptio/sonobuoy/pkg/buildinfo.Version={{.Version}}
+archive:
+  format: tar.gz 
+  files:
+  - LICENSE
