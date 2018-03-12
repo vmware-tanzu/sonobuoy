@@ -49,18 +49,22 @@ const (
 const (
 	// UnknownVersion lets the consumer know if this client can detect the archive version or not.
 	UnknownVersion = "v?.?"
-	versionEight   = "v0.8"
-	versionNine    = "v0.9"
-	versionTen     = "v0.10"
+	VersionEight   = "v0.8"
+	VersionNine    = "v0.9"
+	VersionTen     = "v0.10"
 )
 
-// Reader holds a reader and a version. It uses the version to know
-// where to find certain files within the archive stream.
+// Reader holds a reader and a version. It uses the version to know where to
+// find files within the archive.
 type Reader struct {
 	io.Reader
 	Version string
 }
 
+// NewReaderWithVersion creates a results.Reader that interprets a results
+// archive of the version passed in.
+// Useful if the reader can be read only once and if the version of the data to
+// read is known.
 func NewReaderWithVersion(reader io.Reader, version string) *Reader {
 	return &Reader{
 		Reader:  reader,
@@ -110,12 +114,12 @@ func DiscoverVersion(reader io.Reader) (string, error) {
 	var version string
 	// Get rid of any of the extra version information that doesn't affect archive layout.
 	// Example: v0.10.0-a2b3d4
-	if strings.HasPrefix(conf.Version, versionEight) {
-		version = versionEight
-	} else if strings.HasPrefix(conf.Version, versionNine) {
-		version = versionNine
-	} else if strings.HasPrefix(conf.Version, versionTen) {
-		version = versionTen
+	if strings.HasPrefix(conf.Version, VersionEight) {
+		version = VersionEight
+	} else if strings.HasPrefix(conf.Version, VersionNine) {
+		version = VersionNine
+	} else if strings.HasPrefix(conf.Version, VersionTen) {
+		version = VersionTen
 	} else {
 		return "", errors.New("cannot discover Sonobuoy archive version")
 	}
@@ -212,47 +216,52 @@ func ExtractFileIntoStruct(file, path string, info os.FileInfo, object interface
 // ExtractConfig populates the config object regardless of version.
 func ExtractConfig(path string, info os.FileInfo, conf *config.Config) error {
 	return ExtractIntoStruct(func(file string) bool {
-		return path == ConfigFile(versionTen) || path == ConfigFile(versionEight)
+		return path == ConfigFile(VersionTen) || path == ConfigFile(VersionEight)
 	}, path, info, conf)
 }
 
 // Functions for helping with backwards compatibility
 
-func (a *Reader) Metadata() string {
+// Metadata is the location of the metadata directory in the results archive.
+func (r *Reader) Metadata() string {
 	return metadataDir
 }
 
-func (a *Reader) ServerVersionFile() string {
-	switch a.Version {
-	case versionEight:
+// ServerVersionFile is the location of the file that contains the Kubernetes
+// version Sonobuoy ran on.
+func (r *Reader) ServerVersionFile() string {
+	switch r.Version {
+	case VersionEight:
 		return "serverversion/serverversion.json"
 	default:
 		return defaultServerVersionFile
 	}
 }
 
-// NamespacedResources returns the path to
-func (a *Reader) NamespacedResources() string {
+// NamespacedResources returns the path to the directory that contains
+// information about namespaced Kubernetes resources.
+func (r *Reader) NamespacedResources() string {
 	return namespacedResourcesDir
 }
 
 // NonNamespacedResources returns the path to the non-namespaced directory.
-func (a *Reader) NonNamespacedResources() string {
-	switch a.Version {
-	case versionEight:
+func (r *Reader) NonNamespacedResources() string {
+	switch r.Version {
+	case VersionEight:
 		return "resources/non-ns/"
 	default:
 		return nonNamespacedResourcesDir
 	}
 }
 
-// NodesFile returns the path to the file listing nodes.
-func (a *Reader) NodesFile() string {
-	return filepath.Join(a.NonNamespacedResources(), defaultNodesFile)
+// NodesFile returns the path to the file that lists the nodes of the Kubernetes
+// cluster.
+func (r *Reader) NodesFile() string {
+	return filepath.Join(r.NonNamespacedResources(), defaultNodesFile)
 }
 
-// ServerGroupsFile returns the path to the groups the k8s api supported at the time of the run.
-func (a *Reader) ServerGroupsFile() string {
+// ServerGroupsFile returns the path to the groups the Kubernetes API supported at the time of the run.
+func (r *Reader) ServerGroupsFile() string {
 	return defaultServerGroupsFile
 }
 
@@ -260,7 +269,7 @@ func (a *Reader) ServerGroupsFile() string {
 // This is not a method as it is used to determine the version of the archive.
 func ConfigFile(version string) string {
 	switch version {
-	case versionEight:
+	case VersionEight:
 		return "config.json"
 	default:
 		return "meta/config.json"
