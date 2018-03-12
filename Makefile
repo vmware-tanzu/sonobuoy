@@ -71,7 +71,7 @@ lint:
 vet:
 	$(DOCKER_BUILD) '$(VET)'
 
-container: test
+container:
 	$(DOCKER) build \
 		-t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \
 		-t $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH) \
