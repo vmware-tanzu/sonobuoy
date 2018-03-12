@@ -24,7 +24,7 @@ deploy:
     tags: true
 # Push to GCR
 - provider: script
-  script: DOCKER="gcloud docker" make container push
+  script: DOCKER="gcloud docker --" make container push
   on:
     # latest and tag only pushed when tag is exact match
     repo: heptio/sonobuoy
