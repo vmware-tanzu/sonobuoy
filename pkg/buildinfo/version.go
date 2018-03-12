@@ -20,10 +20,7 @@ limitations under the License.
 package buildinfo
 
 // Version is the current version of Sonobuoy, set by the go linker's -X flag at build time
-var Version = "v0.11.0-alpha.1"
-
-// DockerImage is the full path to the docker image for this build, example gcr.io/heptio-images/sonobuoy
-var DockerImage string
+var Version = "v0.11.0-alpha.3"
 
 // MinimumKubeVersion is the lowest API version of Kubernetes this release of Sonobuoy supports.
 var MinimumKubeVersion = "1.8.0"
