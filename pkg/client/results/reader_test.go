@@ -342,3 +342,34 @@ func TestExtractBytes(t *testing.T) {
 
 	}
 }
+
+func ExampleNewReaderFromBytes() {
+	path := "testdata/results-0.8.tar.gz"
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	results, err := results.NewReaderFromBytes(data)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(results.Version)
+	// Output:
+	// v0.8
+}
+
+func ExampleNewReaderWithVersion() {
+	path := "testdata/results-0.9.tar.gz"
+	f, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+	reader, err := gzip.NewReader(f)
+	if err != nil {
+		panic(err)
+	}
+	r := results.NewReaderWithVersion(reader, results.VersionNine)
+	fmt.Println(r.Version)
+	// Output:
+	// v0.9
+}
