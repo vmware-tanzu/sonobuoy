@@ -31,7 +31,7 @@ func Filter(predicate func(testCase reporters.JUnitTestCase) bool, testSuite rep
 	return out
 }
 
-// AlphabetizedTestCases implements Sort over the list of testCases we have.s
+// AlphabetizedTestCases implements Sort over the list of testCases.
 type AlphabetizedTestCases []reporters.JUnitTestCase
 
 func (a AlphabetizedTestCases) Len() int           { return len(a) }
