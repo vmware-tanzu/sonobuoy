@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// LogConfig are the options passed to GetLogs.
+// LogConfig are the input options for viewing a Sonobuoy run's logs.
 type LogConfig struct {
 	// Follow determines if the logs should be followed or not (tail -f).
 	Follow bool
@@ -47,7 +47,7 @@ type GenConfig struct {
 	ImagePullPolicy string
 }
 
-// E2EConfig is the configuration of the E2E test.
+// E2EConfig is the configuration of the E2E tests.
 type E2EConfig struct {
 	Focus string
 	Skip  string
@@ -65,7 +65,7 @@ type DeleteConfig struct {
 	DeleteAll  bool
 }
 
-// RetrieveConfig are the options passed to RetrieveResults.
+// RetrieveConfig are the input options for retrieving a Sonobuoy run's results.
 type RetrieveConfig struct {
 	// Namespace is the namespace the sonobuoy aggregator is running in.
 	Namespace string

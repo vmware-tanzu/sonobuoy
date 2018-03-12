@@ -14,20 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package results provides a low level API to extract data from a Sonobuoy
+// result archive.
 package results
-
-import (
-	"github.com/heptio/sonobuoy/pkg/config"
-	"github.com/heptio/sonobuoy/pkg/discovery"
-)
-
-// Metadata is the data about the Sonobuoy run and how long it took to query the
-// system.
-type Metadata struct {
-	// Config is the config used during this Sonobuoy run.
-	Config config.Config
-
-	// QueryMetadata shows information about each query Sonobuoy ran in the
-	// cluster.
-	QueryData []discovery.QueryData
-}
