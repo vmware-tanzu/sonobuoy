@@ -2,13 +2,12 @@
 
 **Maintainers:** [Heptio][heptio]
 
-[![Build Status][status]][jenkins]
+[![Build Status][status]][travis]
 
 [heptio]: https://github.com/heptio
-[status]: https://jenkins.i.heptio.com/buildStatus/icon?job=sonobuoy-deployer
-[jenkins]: https://jenkins.i.heptio.com/job/sonobuoy-deployer/
+[status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
+[travis]: https://travis-ci.org/heptio/sonobuoy/#
 
-https://travis-ci.org/heptio/sonobuoy.svg?branch=master
 ## Overview
 
 Heptio Sonobuoy is a diagnostic tool that makes it easier to understand the
