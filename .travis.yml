@@ -26,6 +26,7 @@ deploy:
     tags: true
 # Push to GCR
 - provider: script
+  skip_cleanup: true
   script: DOCKER="gcloud docker -- " make container push
   on:
     # latest and tag only pushed when tag is exact match
