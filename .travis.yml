@@ -20,16 +20,8 @@ before_install:
 deploy:
 - provider: script
   skip_cleanup: true
-  script: curl -sL https://git.io/goreleaser | bash
+  script: ./travis-deploy.sh
   on:
-    repo: heptio/sonobuoy
-    tags: true
-# Push to GCR
-- provider: script
-  skip_cleanup: true
-  script: IMAGE_BRANCH="$TRAVIS_BRANCH" DOCKER="gcloud docker -- " make container push
-  on:
-    # latest and tag only pushed by `make push` when commit is tag, so no tags: true
     repo: heptio/sonobuoy
   
 env:
