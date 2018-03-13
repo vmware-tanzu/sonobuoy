@@ -14,6 +14,8 @@ before_install:
 - if [ ! -d ${HOME}/google-cloud-sdk ]; then
     curl https://sdk.cloud.google.com | bash /dev/stdin --disable-prompts;
   fi
+- openssl aes-256-cbc -K $encrypted_708bef23737d_key -iv $encrypted_708bef23737d_iv -in heptio-images-ee4b0474b93e.json.enc -out ./heptio-images-ee4b0474b93e.json -d
+- gcloud auth activate-service-account --key-file heptio-images-ee4b0474b93e.json
 
 deploy:
 - provider: script
@@ -24,10 +26,7 @@ deploy:
     tags: true
 # Push to GCR
 - provider: script
-  script:
-  - openssl aes-256-cbc -K $encrypted_708bef23737d_key -iv $encrypted_708bef23737d_iv -in heptio-images-ee4b0474b93e.json.enc -out ./heptio-images-ee4b0474b93e.json -d
-  - gcloud auth activate-service-account --key-file heptio-images-ee4b0474b93e.json
-  - DOCKER="gcloud docker -- " make container push
+  script: DOCKER="gcloud docker -- " make container push
   on:
     # latest and tag only pushed when tag is exact match
     repo: heptio/sonobuoy
