@@ -54,20 +54,31 @@ const (
 	kubeSystemNamespace = "kube-system"
 	kubeDNSLabelKey     = "k8s-app"
 	kubeDNSLabelValue   = "kube-dns"
+	coreDNSLabelValue   = "coredns"
 )
 
 func preflightDNSCheck(client kubernetes.Interface, cfg *PreflightConfig) error {
-	selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, kubeDNSLabelKey, kubeDNSLabelValue)
-
-	obj, err := client.CoreV1().Pods(kubeSystemNamespace).List(
-		metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)},
-	)
-	if err != nil {
-		return errors.Wrap(err, "could not retrieve list of pods")
+	var dnsLanels = []string{
+		kubeDNSLabelValue,
+		coreDNSLabelValue,
 	}
 
-	if len(obj.Items) == 0 {
-		return errors.New("no kube-dns tests found")
+	var nDNSpods = 0
+	for _, label := range dnsLanels {
+		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, kubeDNSLabelKey, label)
+
+		obj, err := client.CoreV1().Pods(kubeSystemNamespace).List(
+			metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)},
+		)
+		if err != nil {
+			return errors.Wrap(err, "could not retrieve list of pods")
+		}
+
+		nDNSpods += len(obj.Items)
+	}
+
+	if nDNSpods == 0 {
+		return errors.New("no dns pod tests found")
 	}
 
 	return nil
