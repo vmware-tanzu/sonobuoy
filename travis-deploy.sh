@@ -21,7 +21,7 @@ if [ ! -z "$TRAVIS_TAG" ]; then
     gcr_push
 fi
 
-if [ "$TRAVIS_BRANCH" == "master"]; then
+if [ "$TRAVIS_BRANCH" == "master" ]; then
     gcr_push
 fi
 
