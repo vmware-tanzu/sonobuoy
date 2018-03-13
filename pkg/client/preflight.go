@@ -58,14 +58,14 @@ const (
 )
 
 func preflightDNSCheck(client kubernetes.Interface, cfg *PreflightConfig) error {
-	var dnsLanels = []string{
+	var dnsLabels = []string{
 		kubeDNSLabelValue,
 		coreDNSLabelValue,
 	}
 
-	var nDNSpods = 0
-	for _, label := range dnsLanels {
-		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, kubeDNSLabelKey, label)
+	var nPods = 0
+	for _, labelValue := range dnsLabels {
+		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, kubeDNSLabelKey, labelValue)
 
 		obj, err := client.CoreV1().Pods(kubeSystemNamespace).List(
 			metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)},
@@ -74,10 +74,10 @@ func preflightDNSCheck(client kubernetes.Interface, cfg *PreflightConfig) error 
 			return errors.Wrap(err, "could not retrieve list of pods")
 		}
 
-		nDNSpods += len(obj.Items)
+		nPods += len(obj.Items)
 	}
 
-	if nDNSpods == 0 {
+	if nPods == 0 {
 		return errors.New("no dns pod tests found")
 	}
 
