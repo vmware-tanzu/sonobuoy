@@ -5,10 +5,8 @@ if [ -z "$TRAVIS" ]; then
     exit 1
 fi
 
-
 if [ ! -z "$TRAVIS_TAG" ]; then
     curl -sL https://git.io/goreleaser | bash;
 fi
 
 IMAGE_BRANCH="$TRAVIS_BRANCH" DOCKER="gcloud docker -- " make container push
-TRAVIS
