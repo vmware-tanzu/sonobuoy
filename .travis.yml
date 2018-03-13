@@ -27,7 +27,7 @@ deploy:
 # Push to GCR
 - provider: script
   skip_cleanup: true
-  script: DOCKER="gcloud docker -- " make container push
+  script: IMAGE_BRANCH="$TRAVIS_BRANCH" DOCKER="gcloud docker -- " make container push
   on:
     # latest and tag only pushed by `make push` when commit is tag, so no tags: true
     repo: heptio/sonobuoy
