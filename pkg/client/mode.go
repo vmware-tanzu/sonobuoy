@@ -39,7 +39,7 @@ const (
 	Extended Mode = "Extended"
 )
 
-const defaultSkipList = "Alpha|Disruptive|Feature|Flaky|Kubectl"
+const defaultSkipList = `Alpha|Kubectl|\[(Disruptive|Feature:[^\]]+|Flaky)\]`
 
 var modeMap = map[string]Mode{
 	string(Conformance): Conformance,
@@ -80,7 +80,7 @@ func (m *Mode) Get() *ModeConfig {
 	case Conformance:
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
-				Focus: "Conformance",
+				Focus: `\[Conformance\]`,
 				Skip:  defaultSkipList,
 			},
 			Selectors: []plugin.Selection{
@@ -101,7 +101,7 @@ func (m *Mode) Get() *ModeConfig {
 	case Extended:
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
-				Focus: "Conformance",
+				Focus: `\[Conformance\]`,
 				Skip:  defaultSkipList,
 			},
 			Selectors: []plugin.Selection{

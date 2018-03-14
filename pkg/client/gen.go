@@ -19,6 +19,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -57,9 +58,17 @@ func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		return nil, errors.Wrap(err, "couldn't marshall selector")
 	}
 
+	// Template values that are regexps (`E2EFocus` and `E2ESkip`) are
+	// embedded in YAML files using single quotes to remove the need to
+	// escape characters e.g. `\` as they would be if using double quotes.
+	// As these strings are regexps, it is expected that they will contain,
+	// among other characters, backslashes. Only single quotes need to be
+	// escaped in single quote YAML strings, hence the substitions below.
+	// See http://www.yaml.org/spec/1.2/spec.html#id2788097 for more details
+	// on YAML escaping.
 	tmplVals := &templateValues{
-		E2EFocus:        cfg.E2EConfig.Focus,
-		E2ESkip:         cfg.E2EConfig.Skip,
+		E2EFocus:        strings.Replace(cfg.E2EConfig.Focus, "'", "''", -1),
+		E2ESkip:         strings.Replace(cfg.E2EConfig.Skip, "'", "''", -1),
 		SonobuoyConfig:  string(marshalledConfig),
 		SonobuoyImage:   cfg.Image,
 		Version:         buildinfo.Version,
