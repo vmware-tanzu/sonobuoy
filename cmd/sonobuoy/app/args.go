@@ -55,6 +55,14 @@ func AddSonobuoyImage(image *string, flags *pflag.FlagSet) {
 	)
 }
 
+// AddKubeConformanceImage initialises an image url flag.
+func AddKubeConformanceImage(image *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		image, "kube-conformance-image", config.DefaultKubeConformanceImage,
+		"Container image override for the kube conformance image.",
+	)
+}
+
 // AddKubeconfigFlag adds a kubeconfig flag to the provided command.
 func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	// The default is the empty string (look in the environment)

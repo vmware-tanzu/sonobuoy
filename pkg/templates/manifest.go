@@ -88,7 +88,7 @@ data:
       - name: E2E_SKIP
         value: '{{.E2ESkip}}'
       command: ["/run_e2e.sh"]
-      image: gcr.io/heptio-images/kube-conformance:latest
+      image: {{.KubeConformanceImage}}
       imagePullPolicy: {{.ImagePullPolicy}}
       name: e2e
       volumeMounts:

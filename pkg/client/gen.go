@@ -29,14 +29,15 @@ import (
 
 // templateValues are used for direct template substitution for manifest generation.
 type templateValues struct {
-	E2EFocus        string
-	E2ESkip         string
-	SonobuoyConfig  string
-	SonobuoyImage   string
-	Version         string
-	Namespace       string
-	EnableRBAC      bool
-	ImagePullPolicy string
+	E2EFocus             string
+	E2ESkip              string
+	SonobuoyConfig       string
+	SonobuoyImage        string
+	Version              string
+	Namespace            string
+	EnableRBAC           bool
+	ImagePullPolicy      string
+	KubeConformanceImage string
 }
 
 // GenerateManifest fills in a template with a Sonobuoy config
@@ -67,14 +68,15 @@ func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	// See http://www.yaml.org/spec/1.2/spec.html#id2788097 for more details
 	// on YAML escaping.
 	tmplVals := &templateValues{
-		E2EFocus:        strings.Replace(cfg.E2EConfig.Focus, "'", "''", -1),
-		E2ESkip:         strings.Replace(cfg.E2EConfig.Skip, "'", "''", -1),
-		SonobuoyConfig:  string(marshalledConfig),
-		SonobuoyImage:   cfg.Image,
-		Version:         buildinfo.Version,
-		Namespace:       cfg.Namespace,
-		EnableRBAC:      cfg.EnableRBAC,
-		ImagePullPolicy: cfg.ImagePullPolicy,
+		E2EFocus:             strings.Replace(cfg.E2EConfig.Focus, "'", "''", -1),
+		E2ESkip:              strings.Replace(cfg.E2EConfig.Skip, "'", "''", -1),
+		SonobuoyConfig:       string(marshalledConfig),
+		SonobuoyImage:        cfg.Image,
+		Version:              buildinfo.Version,
+		Namespace:            cfg.Namespace,
+		EnableRBAC:           cfg.EnableRBAC,
+		ImagePullPolicy:      cfg.ImagePullPolicy,
+		KubeConformanceImage: cfg.KubeConformanceImage,
 	}
 
 	var buf bytes.Buffer

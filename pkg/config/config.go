@@ -29,6 +29,8 @@ import (
 const (
 	// DefaultNamespace is the namespace where the master and plugin workers will run (but not necessarily the pods created by the plugin workers).
 	DefaultNamespace = "heptio-sonobuoy"
+	// DefaultKubeConformanceImage is the URL of the docker image to run for the kube conformance tests
+	DefaultKubeConformanceImage = "gcr.io/heptio-images/kube-conformance:latest"
 	// MasterPodName is the name of the main pod that runs plugins and collects results.
 	MasterPodName = "sonobuoy"
 	// MasterContainerName is the name of the main container in the master pod.
