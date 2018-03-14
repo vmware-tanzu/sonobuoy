@@ -44,8 +44,10 @@ func init() {
 // 3. The done file contains a single string of the results to be sent to the master
 func GatherResults(waitfile string, url string, client *http.Client) error {
 	logrus.WithField("waitfile", waitfile).Info("Waiting for waitfile")
-	stop := sigHandler()
+	signals := sigHandler()
 	ticker := time.Tick(1 * time.Second)
+	stop := make(chan struct{}, 1)
+	// TODO(chuckha) evaluate wait.Until [https://github.com/kubernetes/apimachinery/blob/e9ff529c66f83aeac6dff90f11ea0c5b7c4d626a/pkg/util/wait/wait.go]
 	for {
 		select {
 		case <-ticker:
@@ -53,10 +55,15 @@ func GatherResults(waitfile string, url string, client *http.Client) error {
 				logrus.WithField("resultFile", string(resultFile)).Info("Detected done file, transmitting result file")
 				return handleWaitFile(string(resultFile), url, client)
 			}
+		case <-signals:
+			// Run a goroutine here so we can keep checking the done file before cleaning up.
+			go func() {
+				time.Sleep(plugin.GracefulShutdownPeriod)
+				stop <- struct{}{}
+			}()
 		case <-stop:
-			// Sleep to give plugins time to finish up
-			time.Sleep(plugin.GracefulShutdownPeriod)
-			logrus.Info("Forced shutdown. Stopping.")
+			logrus.Info("Did not receive plugin results in time. Shutting down worker.")
+			close(stop)
 			return nil
 		}
 	}
@@ -91,7 +98,6 @@ func sigHandler() <-chan struct{} {
 		signal.Notify(sigc, syscall.SIGTERM)
 		sig := <-sigc
 		logrus.WithField("signal", sig).Info("got a signal, waiting then sending the real shutdown signal")
-		close(stop)
 	}()
 	return stop
 }
