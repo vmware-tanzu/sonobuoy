@@ -22,12 +22,16 @@ import (
 	"encoding/pem"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/worker"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -62,6 +66,21 @@ var singleNodeCmd = &cobra.Command{
 
 func runGather(cmd *cobra.Command, args []string) {
 	cmd.Help()
+}
+
+// sigHandler returns a channel that will receive a message after the timeout
+// elapses after a SIGTERM is received.
+func sigHandler(timeout time.Duration) <-chan struct{} {
+	stop := make(chan struct{})
+	go func() {
+		sigc := make(chan os.Signal, 1)
+		signal.Notify(sigc, syscall.SIGTERM)
+		sig := <-sigc
+		logrus.WithField("signal", sig).Info("received a signal. Waiting then sending the real shutdown signal.")
+		time.Sleep(timeout)
+		stop <- struct{}{}
+	}()
+	return stop
 }
 
 // loadAndValidateConfig loads the config for this sonobuoy worker, validating
@@ -108,7 +127,7 @@ func runGatherSingleNode(cmd *cobra.Command, args []string) {
 	// http://sonobuoy-master:8080/api/v1/results/by-node/node1/systemd_logs
 	url := cfg.MasterURL + "/" + cfg.NodeName + "/" + cfg.ResultType
 
-	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client)
+	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
@@ -132,7 +151,7 @@ func runGatherGlobal(cmd *cobra.Command, args []string) {
 	// http://sonobuoy-master:8080/api/v1/results/global/systemd_logs
 	url := cfg.MasterURL + "/" + cfg.ResultType
 
-	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client)
+	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)

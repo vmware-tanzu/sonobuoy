@@ -22,12 +22,9 @@ import (
 	"mime"
 	"net/http"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -42,11 +39,9 @@ func init() {
 // 1. Output data will be placed into an agreed upon results directory.
 // 2. The Job will wait for a done file
 // 3. The done file contains a single string of the results to be sent to the master
-func GatherResults(waitfile string, url string, client *http.Client) error {
+func GatherResults(waitfile string, url string, client *http.Client, stopc <-chan struct{}) error {
 	logrus.WithField("waitfile", waitfile).Info("Waiting for waitfile")
-	signals := sigHandler()
 	ticker := time.Tick(1 * time.Second)
-	stop := make(chan struct{}, 1)
 	// TODO(chuckha) evaluate wait.Until [https://github.com/kubernetes/apimachinery/blob/e9ff529c66f83aeac6dff90f11ea0c5b7c4d626a/pkg/util/wait/wait.go]
 	for {
 		select {
@@ -55,15 +50,8 @@ func GatherResults(waitfile string, url string, client *http.Client) error {
 				logrus.WithField("resultFile", string(resultFile)).Info("Detected done file, transmitting result file")
 				return handleWaitFile(string(resultFile), url, client)
 			}
-		case <-signals:
-			// Run a goroutine here so we can keep checking the done file before cleaning up.
-			go func() {
-				time.Sleep(plugin.GracefulShutdownPeriod)
-				stop <- struct{}{}
-			}()
-		case <-stop:
+		case <-stopc:
 			logrus.Info("Did not receive plugin results in time. Shutting down worker.")
-			close(stop)
 			return nil
 		}
 	}
@@ -88,16 +76,4 @@ func handleWaitFile(resultFile, url string, client *http.Client) error {
 		outfile, err = os.Open(resultFile)
 		return outfile, mimeType, errors.WithStack(err)
 	})
-}
-
-// sigHandler is used to manage graceful cleanups when a TERM signal is received.
-func sigHandler() <-chan struct{} {
-	stop := make(chan struct{})
-	go func() {
-		sigc := make(chan os.Signal, 1)
-		signal.Notify(sigc, syscall.SIGTERM)
-		sig := <-sigc
-		logrus.WithField("signal", sig).Info("got a signal, waiting then sending the real shutdown signal")
-	}()
-	return stop
 }
