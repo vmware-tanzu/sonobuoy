@@ -78,8 +78,9 @@ func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, flags *pflag.FlagSet) {
 }
 
 const (
-	e2eFocusFlag = "e2e-focus"
-	e2eSkipFlag  = "e2e-skip"
+	e2eFocusFlag    = "e2e-focus"
+	e2eSkipFlag     = "e2e-skip"
+	e2eParallelFlag = "e2e-parallel"
 )
 
 // AddE2EConfigFlags adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig. Instead, they are returned as a Flagset which should be passed to GetE2EConfig. The returned flagset will be added to the passed in flag set.
@@ -95,12 +96,16 @@ func AddE2EConfigFlags(flags *pflag.FlagSet) *pflag.FlagSet {
 		e2eSkipFlag, defaultMode.E2EConfig.Skip,
 		"Specify the E2E_SKIP flag to the conformance tests. Overrides --mode.",
 	)
+	e2eFlags.String(
+		e2eParallelFlag, defaultMode.E2EConfig.Parallel,
+		"Specify the E2E_PARALLEL flag to the conformance tests. Overrides --mode.",
+	)
 	flags.AddFlagSet(e2eFlags)
 	return e2eFlags
 }
 
-// GetE2EConfig gets the E2EConfig from the mode, then overrides them with e2e-focus and e2e-skip if they are provided.
-// We can't rely on the zero value of the flags, as "" is a valid  focus or skip value.
+// GetE2EConfig gets the E2EConfig from the mode, then overrides them with e2e-focus, e2e-skip and e2e-parallel if they
+// are provided. We can't rely on the zero value of the flags, as "" is a valid focus, skip or parallel value.
 func GetE2EConfig(mode ops.Mode, flags *pflag.FlagSet) (*ops.E2EConfig, error) {
 	cfg := mode.Get().E2EConfig
 	if flags.Changed(e2eFocusFlag) {
@@ -117,6 +122,14 @@ func GetE2EConfig(mode ops.Mode, flags *pflag.FlagSet) (*ops.E2EConfig, error) {
 			return nil, errors.Wrap(err, "couldn't retrieve skip flag")
 		}
 		cfg.Skip = skip
+	}
+
+	if flags.Changed(e2eParallelFlag) {
+		parallel, err := flags.GetString(e2eParallelFlag)
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't retrieve parallel flag")
+		}
+		cfg.Parallel = parallel
 	}
 	return &cfg, nil
 }

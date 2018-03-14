@@ -87,6 +87,8 @@ data:
         value: '{{.E2EFocus}}'
       - name: E2E_SKIP
         value: '{{.E2ESkip}}'
+      - name: E2E_PARALLEL
+        value: '{{.E2EParallel}}'
       command: ["/run_e2e.sh"]
       image: {{.KubeConformanceImage}}
       imagePullPolicy: {{.ImagePullPolicy}}

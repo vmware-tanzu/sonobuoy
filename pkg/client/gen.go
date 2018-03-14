@@ -31,6 +31,7 @@ import (
 type templateValues struct {
 	E2EFocus             string
 	E2ESkip              string
+	E2EParallel          string
 	SonobuoyConfig       string
 	SonobuoyImage        string
 	Version              string
@@ -70,6 +71,7 @@ func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	tmplVals := &templateValues{
 		E2EFocus:             strings.Replace(cfg.E2EConfig.Focus, "'", "''", -1),
 		E2ESkip:              strings.Replace(cfg.E2EConfig.Skip, "'", "''", -1),
+		E2EParallel:          strings.Replace(cfg.E2EConfig.Parallel, "'", "''", -1),
 		SonobuoyConfig:       string(marshalledConfig),
 		SonobuoyImage:        cfg.Image,
 		Version:              buildinfo.Version,
