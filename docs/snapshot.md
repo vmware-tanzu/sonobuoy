@@ -11,26 +11,27 @@
 	- [/serverversion.json](#serverversionjson)
 - [File formats](#file-formats)
 
-This document describes the standard layout of a Sonobuoy results tarball, how it is formatted, as well as how data is named and laid out.
+This document describes the standard layout of a Sonobuoy results tarball, how it is formatted, and how data is named and laid out.
 
 ## Filename
 
 A Sonobuoy snapshot is a gzipped tarball, named `YYYYmmDDHHMM_sonobuoy_<uuid>.tar.gz`.
 
-Where YYYYmmDDHHMM is a timestamp containing the year, month, day, hour, and minute of the run.  The `<uuid>` string in the Sonobuoy must be an RFC4122 UUID, consisting of lowercase hexadecimal characters and dashes (e.g. "dfe30ebc-f635-42f4-9608-8abcd6311916").  This UUID should match the UUID from the snapshot's [meta/config.json][1], stored at the root of the tarball.
+where YYYYmmDDHHMM is a timestamp containing the year, month, day, hour, and minute of the run.  The `<uuid>` string is an RFC4122 UUID, consisting of lowercase hexadecimal characters and dashes (e.g. "dfe30ebc-f635-42f4-9608-8abcd6311916").  This UUID should match the UUID from the snapshot's [meta/config.json][1], stored at the root of the tarball.
 
 ## Contents
 
-The top-level directories in the results tarball look like the following:
+The top-level directories in the results tarball look like this:
 
 ![tarball overview screenshot][3]
 
 ### /hosts
 
-The `/hosts` directory contains information gathered about each host in the system by directly querying their HTTP endpoints.  *This is distinct from information you'd find in `/resources/cluster/Nodes.json`*, because it contains things like health and configuration for each host, which aren't part of the Kubernetes API objects.
+The `/hosts` directory contains the information gathered about each host in the system by directly querying their HTTP endpoints.
+This is different from what you find in `/resources/cluster/Nodes.json` -- it contains items that aren't part of the Kubernetes API objects:
 
-- `/hosts/<hostname>/configz.json` - Contains the output of querying the `/configz` endpoint for this host, that is the hosts's component configuration.
-- `/hosts/<hostname>/healthz.json` - Contains a json-formatted representation of the result of querying `/healthz` for this host, example: `{"status":200}`
+- `/hosts/<hostname>/configz.json` - Contains the output of querying the `/configz` endpoint for this host -- that is, the component configuration for the host.
+- `/hosts/<hostname>/healthz.json` - Contains a json-formatted representation of the result of querying `/healthz` for this host, for example `{"status":200}`
 
 This looks like the following:
 
@@ -49,13 +50,13 @@ This looks like the following:
 
 ### /plugins
 
-The `/plugins` directory contains output for each plugin selected for this Sonobuoy run.  The structure is listed below.
+The `/plugins` directory contains output for each plugin selected for this Sonobuoy run:
 
-- `/plugins/<plugin>/results.<format>` - For plugins that run on an any arbitrary node to collect cluster-wide data (ones that use the Job driver, for instance) and don't run one-per-node, this will contain the results for this plugin, using the format that the plugin expects.  See [file formats][2] for details.
+- `/plugins/<plugin>/results.<format>` - For plugins that run on an arbitrary node to collect cluster-wide data, for example using the Job driver. Contains the results for the plugin, using the format that the plugin expects. See [file formats][2] for details.
 
-- `/plugins/<plugin>/results/<hostname>.<format>` - For plugins that run once on every node to collect node-specific data (ones that use the DaemonSet driver, for instance), this will contain the results for this plugin, for each node, using the format that the plugin expects.  See [file formats][2] for details.
+- `/plugins/<plugin>/results/<hostname>.<format>` - For plugins that run once on every node to collect node-specific data, for example using the DaemonSet driver. Contains the results for the plugin, for each node, using the format that the plugin expects.  See [file formats][2] for details.
 
-Some plugins can include several files as part of their results.  To do this, a plugin will submit a `.tar.gz` file, the contents of which are extracted into the following:
+Some plugins can include several files as part of their results.  The extracted files for these plugins comprise:
 
 - `/plugins/<plugin>/results/<extracted files>` - For plugins that collect cluster-wide data into a `.tar.gz` file
 
@@ -67,9 +68,9 @@ This looks like the following:
 
 ### /podlogs
 
-The `/podlogs` directory contains logs for each pod found during the Sonobuoy run, similarly to what you would get with `kubectl logs -n <namespace> <pod> <container>`.
+The `/podlogs` directory contains logs for each pod found during the Sonobuoy run, similar to what you get with `kubectl logs -n <namespace> <pod> <container>`.
 
-- `/podlogs/<namespace>/<podname>/<containername>.log` - Contains the logs for the each container, for each pod in each namespace.
+- `/podlogs/<namespace>/<podname>/<containername>.log` - Contains the logs for each container, for each pod in each namespace.
 
 This looks like the following:
 
@@ -77,7 +78,7 @@ This looks like the following:
 
 ### /resources
 
-The `/resources` directory contains JSON-serialized Kubernetes objects, taken from querying the Kubernetes REST API. The directory has the following structure:
+The `/resources` directory lists JSON-serialized Kubernetes objects, taken from querying the Kubernetes REST API. The directory has the following structure:
 
 - `/resources/ns/<namespace>/<type>.json` - For all resources that belong to a namespace, where `<namespace>` is the namespace of that resource (eg. `kube-system`), and `<type>` is the type of resource, pluralized (eg. `Pods`).
 - `/resources/cluster/<type>.json` - For all resources that don't belong to a namespace, where `<type>` is the type of resource, pluralized (eg. `Nodes`).
@@ -96,12 +97,12 @@ This looks like the following:
 
 ## File formats
 
-For each type of result in a Sonobuoy tarball, the file extension should denote how the file should be parsed.  This allows any automated system to ingest the contents of the Sonobuoy tarball, even without precise knowledge of its directory layout.
+For each type of result in a Sonobuoy tarball, the file extension indicates how the file should be parsed. This allows any automated system to ingest the contents of the Sonobuoy tarball, without precise knowledge of its directory layout.
 
-- `.json` - This file must be a valid JSON file, with either an array at the root (`[...]`), or a json object (`{...}`)
-- `.txt` - This file should be treated as opaque text, and there is no reliable way for its contents to be parsed.  Generally this is used for data intended to be read by humans.
-- `.log` - This file should be parsed as a series of log entries, one per line.
-- `.xml` - This file must be valid XML
+- `.json` - The file must be a valid JSON file, with either an array at the root (`[...]`), or a json object (`{...}`)
+- `.txt` - The file is treated as opaque text, and there is no reliable way for its contents to be parsed. This format is typically used for data intended to be read by humans.
+- `.log` - The file should be parsed as a series of log entries, one per line.
+- `.xml` - The file must be valid XML.
 
 [1]: #meta
 [2]: #file-formats

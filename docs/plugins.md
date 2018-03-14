@@ -14,25 +14,23 @@
 
 ## Overview
 
-In addition to querying API objects, Sonobuoy also supports a *Plugin model*. In this model, "worker" pods are dispatched into the cluster to collect data from each node, and use an aggregation URL to submit their results back to a waiting "aggregation" pod. See the diagram below:
+In addition to querying API objects, Sonobuoy also supports a plugin model. In this model, worker pods are dispatched into the cluster to collect data from each node, and use an aggregation URL to submit their results back to a waiting aggregation pod. See the diagram below:
 
 ![sonobuoy plugins diagram][diagram]
 
 
 [diagram]: img/sonobuoy-plugins.png
 
-There are two main components that specify plugin behavior:
+Two main components specify plugin behavior:
 
-1. **Plugin Selection**: A section in the main config (`config.json`) that declares *which* plugins should be used in the Sonobuoy run.
-  This can be auto-generated or passed in via the `--config` flag to `sonobuoy run` or `sonobuoy gen`.
+1. **Plugin Selection**: A section in the main config (`config.json`) that declares which plugins to use in the Sonobuoy run.
+  This can be generated or passed in with the `--config` flag to `sonobuoy run` or `sonobuoy gen`.
 
-    *These configs are defined by the **end user**.*
+    These configs are defined by the end user.
 
-2. **Plugin Definition**: A YAML document that defines some metadata and a pod to produce a result.
+2. **Plugin Definition**: A YAML document that defines metadata and a pod to produce a result.
 
-    *This YAML is defined by the plugin **developer**, and can be taken as a given by the end user.*
-
-The remainder of this document focuses on **Plugin Definition**.
+    This YAML is defined by the plugin developer, and can be taken as a given by the end user.
 
 ## Plugin Definition
 
@@ -67,21 +65,22 @@ spec:                # A kubernetes container spec
 
 #### Contract
 
-A definition file defines a container that will run the tests. This container
+A definition file defines a container that runs the tests. This container
 can be anything you want, but must fulfil a contract.
 
-When your container has completed its work, it needs to signal to Sonobuoy that
-it's done. This is done by writing out a filename to a results file (by default
-`/tmp/results/done`, configurable by `ResultsDir` in the sonobuoy config) with a
-filename leading to the results file.
+After your container completes its work, it needs to signal to Sonobuoy that
+it's done. This is done by writing out a filename to a results file. The default
+value is `/tmp/results/done`, which you can configure with the `ResultsDir` value 
+in the Sonobuoy config.
 
-Sonobuoy waits for this done file to be present, then transmits the indicated
-file back to the aggregator. The results file is opaque to Sonobuoy, and will be
-made available in the Sonobuoy results tarbal in its original form.
+Sonobuoy waits for the `done` file to be present, then transmits the indicated
+file back to the aggregator. The results file is opaque to Sonobuoy, and is
+made available in the Sonobuoy results tarball in its original form.
 
 ## Available Plugins
 
-The current, default set of Sonobuoy plugins are available in the `examples/plugins.d` directory within this repo. You can also use the list below as a reference:
+The default Sonobuoy plugins are available in the `examples/plugins.d` directory in this repository.
+Here's the current list:
 
 | Plugin                    | Overview                                                                                     | Source Code Repository                              | Env Variables (Config)                                                                                    |
 | ---                       | ---                                                                                          | ---                                                 | ---                                                                                                       |
