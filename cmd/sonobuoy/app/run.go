@@ -85,7 +85,7 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	m := genflags.mode.Get()
+	m := runflags.mode.Get()
 	plugins := []string{}
 	for _, plugin := range m.Selectors {
 		plugins = append(plugins, plugin.Name)
