@@ -31,7 +31,7 @@ import (
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 )
 
-// Base is the  truct that stores state for plugin drivers and contains helper methods.
+// Base is the struct that stores state for plugin drivers and contains helper methods.
 type Base struct {
 	Definition      plugin.Definition
 	SessionID       string
