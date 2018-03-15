@@ -83,7 +83,13 @@ const (
 	e2eParallelFlag = "e2e-parallel"
 )
 
-// AddE2EConfigFlags adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig. Instead, they are returned as a Flagset which should be passed to GetE2EConfig. The returned flagset will be added to the passed in flag set.
+// AddE2EConfigFlags adds three arguments: --e2e-focus, --e2e-skip and
+// --e2e-parallel. These are not taken as pointers, as they are only used by
+// GetE2EConfig. Instead, they are returned as a Flagset which should be passed
+// to GetE2EConfig. The returned flagset will be added to the passed in flag set.
+//
+// e2e-parallel is added as a hidden flag that should only be used by "power"
+// users. Using e2e-parallel incorrectly has the potential to destroy clusters!
 func AddE2EConfigFlags(flags *pflag.FlagSet) *pflag.FlagSet {
 	e2eFlags := pflag.NewFlagSet("e2e", pflag.ExitOnError)
 	modeName := ops.Conformance
