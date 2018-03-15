@@ -51,7 +51,7 @@ func TestRun(t *testing.T) {
 			withTempDir(t, func(tmpdir string) {
 				ioutil.WriteFile(tmpdir+"/systemd_logs", []byte("{}"), 0755)
 				ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs"), 0755)
-				err := GatherResults(tmpdir+"/done", URL, srv.Client())
+				err := GatherResults(tmpdir+"/done", URL, srv.Client(), nil)
 				if err != nil {
 					t.Fatalf("Got error running agent: %v", err)
 				}
@@ -78,7 +78,7 @@ func TestRunGlobal(t *testing.T) {
 		withTempDir(t, func(tmpdir string) {
 			ioutil.WriteFile(tmpdir+"/systemd_logs.json", []byte("{}"), 0755)
 			ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs.json"), 0755)
-			err := GatherResults(tmpdir+"/done", url, srv.Client())
+			err := GatherResults(tmpdir+"/done", url, srv.Client(), nil)
 			if err != nil {
 				t.Fatalf("Got error running agent: %v", err)
 			}
@@ -103,12 +103,35 @@ func TestRunGlobal_noExtension(t *testing.T) {
 		withTempDir(t, func(tmpdir string) {
 			ioutil.WriteFile(tmpdir+"/systemd_logs", []byte("{}"), 0755)
 			ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs"), 0755)
-			err := GatherResults(tmpdir+"/done", url, srv.Client())
+			err := GatherResults(tmpdir+"/done", url, srv.Client(), nil)
 			if err != nil {
 				t.Fatalf("Got error running agent: %v", err)
 			}
 
 			ensureExists(t, path.Join(aggr.OutputDir, "systemd_logs", "results"))
+		})
+	})
+}
+
+func TestRunGlobalCleanup(t *testing.T) {
+
+	// Create an expectedResults array
+	expectedResults := []plugin.ExpectedResult{
+		plugin.ExpectedResult{ResultType: "systemd_logs"},
+	}
+	stopc := make(chan struct{}, 1)
+	stopc <- struct{}{}
+	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator, srv *authtest.Server) {
+		url, err := aggregation.GlobalResultURL(srv.URL, "systemd_logs")
+		if err != nil {
+			t.Fatalf("unexpected error getting global result url %v", err)
+		}
+
+		withTempDir(t, func(tmpdir string) {
+			err := GatherResults(tmpdir+"/done", url, srv.Client(), stopc)
+			if err != nil {
+				t.Fatalf("Got error running agent: %v", err)
+			}
 		})
 	})
 }
