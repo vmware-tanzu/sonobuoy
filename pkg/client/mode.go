@@ -80,8 +80,9 @@ func (m *Mode) Get() *ModeConfig {
 	case Conformance:
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
-				Focus: `\[Conformance\]`,
-				Skip:  defaultSkipList,
+				Focus:    `\[Conformance\]`,
+				Skip:     defaultSkipList,
+				Parallel: "1",
 			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
@@ -91,8 +92,9 @@ func (m *Mode) Get() *ModeConfig {
 	case Quick:
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
-				Focus: "Pods should be submitted and removed",
-				Skip:  defaultSkipList,
+				Focus:    "Pods should be submitted and removed",
+				Skip:     defaultSkipList,
+				Parallel: "1",
 			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
@@ -101,8 +103,9 @@ func (m *Mode) Get() *ModeConfig {
 	case Extended:
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
-				Focus: `\[Conformance\]`,
-				Skip:  defaultSkipList,
+				Focus:    `\[Conformance\]`,
+				Skip:     defaultSkipList,
+				Parallel: "1",
 			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
