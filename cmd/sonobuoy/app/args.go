@@ -100,6 +100,7 @@ func AddE2EConfigFlags(flags *pflag.FlagSet) *pflag.FlagSet {
 		e2eParallelFlag, defaultMode.E2EConfig.Parallel,
 		"Specify the E2E_PARALLEL flag to the conformance tests. Overrides --mode.",
 	)
+	e2eFlags.MarkHidden(e2eParallelFlag)
 	flags.AddFlagSet(e2eFlags)
 	return e2eFlags
 }
