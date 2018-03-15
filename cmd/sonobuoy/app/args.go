@@ -55,6 +55,14 @@ func AddSonobuoyImage(image *string, flags *pflag.FlagSet) {
 	)
 }
 
+// AddKubeConformanceImage initialises an image url flag.
+func AddKubeConformanceImage(image *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		image, "kube-conformance-image", config.DefaultKubeConformanceImage,
+		"Container image override for the kube conformance image.",
+	)
+}
+
 // AddKubeconfigFlag adds a kubeconfig flag to the provided command.
 func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	// The default is the empty string (look in the environment)
@@ -70,11 +78,18 @@ func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, flags *pflag.FlagSet) {
 }
 
 const (
-	e2eFocusFlag = "e2e-focus"
-	e2eSkipFlag  = "e2e-skip"
+	e2eFocusFlag    = "e2e-focus"
+	e2eSkipFlag     = "e2e-skip"
+	e2eParallelFlag = "e2e-parallel"
 )
 
-// AddE2EConfigFlags adds two arguments: --e2e-focus and --e2e-skip. These are not taken as pointers, as they are only used by GetE2EConfig. Instead, they are returned as a Flagset which should be passed to GetE2EConfig. The returned flagset will be added to the passed in flag set.
+// AddE2EConfigFlags adds three arguments: --e2e-focus, --e2e-skip and
+// --e2e-parallel. These are not taken as pointers, as they are only used by
+// GetE2EConfig. Instead, they are returned as a Flagset which should be passed
+// to GetE2EConfig. The returned flagset will be added to the passed in flag set.
+//
+// e2e-parallel is added as a hidden flag that should only be used by "power"
+// users. Using e2e-parallel incorrectly has the potential to destroy clusters!
 func AddE2EConfigFlags(flags *pflag.FlagSet) *pflag.FlagSet {
 	e2eFlags := pflag.NewFlagSet("e2e", pflag.ExitOnError)
 	modeName := ops.Conformance
@@ -87,12 +102,17 @@ func AddE2EConfigFlags(flags *pflag.FlagSet) *pflag.FlagSet {
 		e2eSkipFlag, defaultMode.E2EConfig.Skip,
 		"Specify the E2E_SKIP flag to the conformance tests. Overrides --mode.",
 	)
+	e2eFlags.String(
+		e2eParallelFlag, defaultMode.E2EConfig.Parallel,
+		"Specify the E2E_PARALLEL flag to the conformance tests. Overrides --mode.",
+	)
+	e2eFlags.MarkHidden(e2eParallelFlag)
 	flags.AddFlagSet(e2eFlags)
 	return e2eFlags
 }
 
-// GetE2EConfig gets the E2EConfig from the mode, then overrides them with e2e-focus and e2e-skip if they are provided.
-// We can't rely on the zero value of the flags, as "" is a valid  focus or skip value.
+// GetE2EConfig gets the E2EConfig from the mode, then overrides them with e2e-focus, e2e-skip and e2e-parallel if they
+// are provided. We can't rely on the zero value of the flags, as "" is a valid focus, skip or parallel value.
 func GetE2EConfig(mode ops.Mode, flags *pflag.FlagSet) (*ops.E2EConfig, error) {
 	cfg := mode.Get().E2EConfig
 	if flags.Changed(e2eFocusFlag) {
@@ -109,6 +129,14 @@ func GetE2EConfig(mode ops.Mode, flags *pflag.FlagSet) (*ops.E2EConfig, error) {
 			return nil, errors.Wrap(err, "couldn't retrieve skip flag")
 		}
 		cfg.Skip = skip
+	}
+
+	if flags.Changed(e2eParallelFlag) {
+		parallel, err := flags.GetString(e2eParallelFlag)
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't retrieve parallel flag")
+		}
+		cfg.Parallel = parallel
 	}
 	return &cfg, nil
 }

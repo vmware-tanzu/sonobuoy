@@ -87,8 +87,10 @@ data:
         value: '{{.E2EFocus}}'
       - name: E2E_SKIP
         value: '{{.E2ESkip}}'
+      - name: E2E_PARALLEL
+        value: '{{.E2EParallel}}'
       command: ["/run_e2e.sh"]
-      image: gcr.io/heptio-images/kube-conformance:latest
+      image: {{.KubeConformanceImage}}
       imagePullPolicy: {{.ImagePullPolicy}}
       name: e2e
       volumeMounts:
