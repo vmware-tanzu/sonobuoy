@@ -6,7 +6,7 @@ builds:
     - linux
   goarch:
     - amd64
-  ldflags: -s -w -X github.com/heptio/sonobuoy/pkg/buildinfo.Version={{.Version}}
+  ldflags: -s -w -X github.com/heptio/sonobuoy/pkg/buildinfo.Version=v{{.Version}}
 archive:
   format: tar.gz 
   files:
