@@ -17,6 +17,14 @@ function gcr_push() {
 }
 
 if [ ! -z "$TRAVIS_TAG" ]; then
+
+    if [ "$(./sonobuoy version)" != "$TRAVIS_TAG"]; then
+        echo "sonobuoy version does not match tagged version!" >&2
+        echo "sonobuoy version is $(./sonobuoy version)" >&2
+        echo "tag is $TRAVIS_TAG" >&2
+        exit 1
+    fi
+
     goreleaser
     gcr_push
 fi
