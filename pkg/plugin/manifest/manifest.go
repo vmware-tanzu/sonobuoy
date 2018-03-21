@@ -44,6 +44,7 @@ func (s *SonobuoyConfig) DeepCopy() *SonobuoyConfig {
 type Manifest struct {
 	SonobuoyConfig SonobuoyConfig `json:"sonobuoy-config"`
 	Spec           Container      `json:"spec"`
+	ExtraVolumes   []v1.Volume    `json:"extra-volumes"`
 	objectKind
 }
 

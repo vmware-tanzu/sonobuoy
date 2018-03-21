@@ -18,6 +18,8 @@ package manifest
 
 import (
 	"fmt"
+	"io/ioutil"
+	"reflect"
 	"testing"
 
 	yaml "gopkg.in/yaml.v2"
@@ -26,7 +28,6 @@ import (
 )
 
 func TestContainerToYAML(t *testing.T) {
-
 	var (
 		expectedName  = "test-container"
 		expectedImage = "gcr.io/heptio/test-image:master"
@@ -63,4 +64,63 @@ func TestContainerToYAML(t *testing.T) {
 	if fmt.Sprintf("%v", parsed["command"]) != fmt.Sprintf("%v", expectedCmd) {
 		t.Errorf("expected command %v, got %v", expectedCmd, parsed["command"])
 	}
+}
+
+func TestUnmarshallWithExtraVolumes(t *testing.T) {
+	expected := Manifest{
+		SonobuoyConfig: SonobuoyConfig{
+			Driver:     "Job",
+			PluginName: "e2e",
+			ResultType: "e2e",
+		},
+		Spec: v1.Container{
+			Env: []v1.EnvVar{
+				{
+					Name:  "E2E_FOCUS",
+					Value: "Pods should be submitted and removed",
+				},
+			},
+			Image:           "gcr.io/heptio-images/kube-conformance:latest",
+			ImagePullPolicy: v1.PullAlways,
+			Name:            "e2e",
+			VolumeMounts: []v1.VolumeMount{
+				{
+					MountPath: "/tmp/results",
+					Name:      "results",
+					ReadOnly:  false,
+				},
+				{
+					MountPath: "/var/lib",
+					Name:      "test-volume",
+				},
+			},
+		},
+		ExtraVolumes: []v1.Volume{
+			{
+				Name: "test-volume",
+				VolumeSource: v1.VolumeSource{
+					AWSElasticBlockStore: &v1.AWSElasticBlockStoreVolumeSource{
+						VolumeID: "112358",
+						FSType:   "ext4",
+					},
+				},
+			},
+		},
+	}
+
+	manifest, err := ioutil.ReadFile("testdata/extravolumes.yaml")
+	if err != nil {
+		t.Fatalf("couldn't load file: %v", err)
+	}
+
+	var parsed Manifest
+
+	if err := kuberuntime.DecodeInto(Decoder, manifest, &parsed); err != nil {
+		t.Fatalf("couldn't decode manifest: %v", err)
+	}
+
+	if !reflect.DeepEqual(parsed, expected) {
+		t.Errorf("Expected:\n%+v\nGot:\n%+v", expected, parsed)
+	}
+
 }
