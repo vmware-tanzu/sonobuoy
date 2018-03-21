@@ -97,4 +97,7 @@ spec:
       - hostPath:
           path: /
         name: root
+			{{- range .ExtraVolumes }}
+      - {{ . | indent 8 }}
+      {{- end -}}
 `)

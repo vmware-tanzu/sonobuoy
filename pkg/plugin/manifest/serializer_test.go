@@ -73,35 +73,39 @@ func TestUnmarshallWithExtraVolumes(t *testing.T) {
 			PluginName: "e2e",
 			ResultType: "e2e",
 		},
-		Spec: v1.Container{
-			Env: []v1.EnvVar{
-				{
-					Name:  "E2E_FOCUS",
-					Value: "Pods should be submitted and removed",
+		Spec: Container{
+			Container: v1.Container{
+				Env: []v1.EnvVar{
+					{
+						Name:  "E2E_FOCUS",
+						Value: "Pods should be submitted and removed",
+					},
 				},
-			},
-			Image:           "gcr.io/heptio-images/kube-conformance:latest",
-			ImagePullPolicy: v1.PullAlways,
-			Name:            "e2e",
-			VolumeMounts: []v1.VolumeMount{
-				{
-					MountPath: "/tmp/results",
-					Name:      "results",
-					ReadOnly:  false,
-				},
-				{
-					MountPath: "/var/lib",
-					Name:      "test-volume",
+				Image:           "gcr.io/heptio-images/kube-conformance:latest",
+				ImagePullPolicy: v1.PullAlways,
+				Name:            "e2e",
+				VolumeMounts: []v1.VolumeMount{
+					{
+						MountPath: "/tmp/results",
+						Name:      "results",
+						ReadOnly:  false,
+					},
+					{
+						MountPath: "/var/lib",
+						Name:      "test-volume",
+					},
 				},
 			},
 		},
-		ExtraVolumes: []v1.Volume{
+		ExtraVolumes: []Volume{
 			{
-				Name: "test-volume",
-				VolumeSource: v1.VolumeSource{
-					AWSElasticBlockStore: &v1.AWSElasticBlockStoreVolumeSource{
-						VolumeID: "112358",
-						FSType:   "ext4",
+				Volume: v1.Volume{
+					Name: "test-volume",
+					VolumeSource: v1.VolumeSource{
+						AWSElasticBlockStore: &v1.AWSElasticBlockStoreVolumeSource{
+							VolumeID: "112358",
+							FSType:   "ext4",
+						},
 					},
 				},
 			},

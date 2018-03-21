@@ -27,6 +27,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 
 	corev1 "k8s.io/api/core/v1"
+
 	"k8s.io/api/extensions/v1beta1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -44,6 +45,28 @@ func TestFillTemplate(t *testing.T) {
 		Spec: manifest.Container{
 			Container: corev1.Container{
 				Name: "producer-container",
+			},
+		},
+		ExtraVolumes: []manifest.Volume{
+			{
+				Volume: corev1.Volume{
+					Name: "test1",
+					VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+							Path: "/var/test",
+						},
+					},
+				},
+			},
+			{
+				Volume: corev1.Volume{
+					Name: "test2",
+					VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+							Path: "/var/test2",
+						},
+					},
+				},
 			},
 		},
 	}, expectedNamespace, expectedImageName, "Always")
@@ -121,4 +144,9 @@ func TestFillTemplate(t *testing.T) {
 	if caCertFingerprint != sha1.Sum(auth.CACert().Raw) {
 		t.Errorf("CA_CERT fingerprint didn't match")
 	}
+
+	if len(daemonSet.Spec.Template.Spec.Volumes) != 4 {
+		t.Errorf("Expected 2 volumes defined, got %d", len(daemonSet.Spec.Template.Spec.Volumes))
+	}
+
 }
