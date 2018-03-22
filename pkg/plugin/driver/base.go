@@ -88,7 +88,7 @@ func (b *Base) GetTemplateData(masterAddress string, cert *tls.Certificate) (*Te
 	for i, volume := range b.Definition.ExtraVolumes {
 		enc, err := kuberuntime.Encode(manifest.Encoder, &volume)
 		if err != nil {
-			return nil, errors.Wrap(err, "couldn't serialise extra volume")
+			return nil, errors.Wrap(err, "couldn't serialize extra volume")
 		}
 		volumes[i] = string(enc)
 	}
