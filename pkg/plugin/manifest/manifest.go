@@ -44,6 +44,7 @@ func (s *SonobuoyConfig) DeepCopy() *SonobuoyConfig {
 type Manifest struct {
 	SonobuoyConfig SonobuoyConfig `json:"sonobuoy-config"`
 	Spec           Container      `json:"spec"`
+	ExtraVolumes   []Volume       `json:"extra-volumes"`
 	objectKind
 }
 
@@ -78,3 +79,23 @@ func (c *Container) DeepCopyObject() kuberuntime.Object { return c.DeepCopy() }
 
 // GetObjectKind returns the underlying objectKind, needed for runtime.Object
 func (c *Container) GetObjectKind() schema.ObjectKind { return c }
+
+// Volume is a thin wrapper around coreV1.Volume that supplies DeepCopyObject and GetObjectKind
+type Volume struct {
+	v1.Volume
+	objectKind
+}
+
+// DeepCopy wraps Volume.DeepCopy, copying the objectKind as well.
+func (v *Volume) DeepCopy() *Volume {
+	return &Volume{
+		Volume:     *v.Volume.DeepCopy(),
+		objectKind: objectKind{v.gvk},
+	}
+}
+
+// DeepCopyObject is just DeepCopy, needed for runtime.Object
+func (v *Volume) DeepCopyObject() kuberuntime.Object { return v.DeepCopy() }
+
+// GetObjectKind returns the underlying objectKind, needed for runtime.Object
+func (v *Volume) GetObjectKind() schema.ObjectKind { return v }
