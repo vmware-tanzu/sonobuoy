@@ -41,6 +41,7 @@ func init() {
 	schema.AddKnownTypes(GroupVersion,
 		&Container{},
 		&Manifest{},
+		&Volume{},
 	)
 	codecs := serializer.NewCodecFactory(schema)
 
@@ -82,6 +83,8 @@ func (c *creator) New(kind schema.GroupVersionKind) (kuberuntime.Object, error) 
 		return &Container{}, nil
 	case "manifest":
 		return &Manifest{}, nil
+	case "volume":
+		return &Volume{}, nil
 	default:
 		return nil, fmt.Errorf("unrecognised kind %v", kind.Kind)
 	}
@@ -95,8 +98,10 @@ func (t *typer) ObjectKinds(obj kuberuntime.Object) ([]schema.GroupVersionKind, 
 		return []schema.GroupVersionKind{GroupVersion.WithKind("container")}, true, nil
 	case (*Manifest):
 		return []schema.GroupVersionKind{GroupVersion.WithKind("manifest")}, true, nil
+	case (*Volume):
+		return []schema.GroupVersionKind{GroupVersion.WithKind("volume")}, true, nil
 	default:
-		return []schema.GroupVersionKind{}, false, errors.New("not a pod")
+		return []schema.GroupVersionKind{}, false, errors.New("no known kind")
 	}
 }
 
@@ -108,6 +113,8 @@ func (t *typer) Recognizes(kind schema.GroupVersionKind) bool {
 	case "container":
 		return true
 	case "manifest":
+		return true
+	case "volume":
 		return true
 	default:
 		return false

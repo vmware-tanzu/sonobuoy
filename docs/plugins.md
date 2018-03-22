@@ -61,6 +61,13 @@ spec:                # A kubernetes container spec
   - mountPath: /tmp/results
     name: results
     readOnly: false
+  - mountPath: /var/log/test
+    name: test-volume
+extra-volumes:
+- name: test-volume
+  hostPath:
+    # directory location on host
+    path: /data
 ```
 
 #### Contract
@@ -76,6 +83,9 @@ in the Sonobuoy config.
 Sonobuoy waits for the `done` file to be present, then transmits the indicated
 file back to the aggregator. The results file is opaque to Sonobuoy, and is
 made available in the Sonobuoy results tarball in its original form.
+
+If you need additional mounts besides the default `results` mount that Sonobuoy
+always provides, you can define them in the `extra-volumes` field.
 
 ## Available Plugins
 
