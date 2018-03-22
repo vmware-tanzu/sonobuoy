@@ -41,6 +41,7 @@ func init() {
 	schema.AddKnownTypes(GroupVersion,
 		&Container{},
 		&Manifest{},
+		&Volume{},
 	)
 	codecs := serializer.NewCodecFactory(schema)
 
