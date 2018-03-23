@@ -21,9 +21,12 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/imdario/mergo"
+
 	"github.com/pkg/errors"
 
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
+	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/templates"
 )
 
@@ -43,18 +46,8 @@ type templateValues struct {
 
 // GenerateManifest fills in a template with a Sonobuoy config
 func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
-	if cfg.Image != "" {
-		cfg.Config.WorkerImage = cfg.Image
-	}
-
-	if cfg.ImagePullPolicy != "" {
-		cfg.Config.ImagePullPolicy = cfg.ImagePullPolicy
-	}
-
-	if cfg.Namespace != "" {
-		cfg.Config.Namespace = cfg.Namespace
-	}
-
+	// Provide defaults but don't overwrite any customized configuration.
+	mergo.Merge(cfg.Config, config.New())
 	marshalledConfig, err := json.Marshal(cfg.Config)
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't marshall selector")
