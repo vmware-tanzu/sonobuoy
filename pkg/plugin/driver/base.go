@@ -53,6 +53,7 @@ type TemplateData struct {
 	MasterAddress     string
 	CACert            string
 	SecretName        string
+	ExtraVolumes      []string
 }
 
 // GetSessionID returns the session id associated with the plugin.
@@ -83,6 +84,15 @@ func (b *Base) GetTemplateData(masterAddress string, cert *tls.Certificate) (*Te
 		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", b.Definition.Name)
 	}
 
+	volumes := make([]string, len(b.Definition.ExtraVolumes))
+	for i, volume := range b.Definition.ExtraVolumes {
+		enc, err := kuberuntime.Encode(manifest.Encoder, &volume)
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't serialize extra volume")
+		}
+		volumes[i] = string(enc)
+	}
+
 	cacert := getCACertPEM(cert)
 
 	return &TemplateData{
@@ -96,6 +106,7 @@ func (b *Base) GetTemplateData(masterAddress string, cert *tls.Certificate) (*Te
 		MasterAddress:     masterAddress,
 		CACert:            cacert,
 		SecretName:        b.GetSecretName(),
+		ExtraVolumes:      volumes,
 	}, nil
 }
 

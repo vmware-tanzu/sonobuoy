@@ -46,6 +46,28 @@ func TestFillTemplate(t *testing.T) {
 				Name: "producer-container",
 			},
 		},
+		ExtraVolumes: []manifest.Volume{
+			{
+				Volume: corev1.Volume{
+					Name: "test1",
+					VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+							Path: "/var/test",
+						},
+					},
+				},
+			},
+			{
+				Volume: corev1.Volume{
+					Name: "test2",
+					VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+							Path: "/var/test2",
+						},
+					},
+				},
+			},
+		},
 	}, expectedNamespace, expectedImageName, "Always")
 
 	auth, err := ca.NewAuthority()
@@ -121,4 +143,9 @@ func TestFillTemplate(t *testing.T) {
 	if caCertFingerprint != sha1.Sum(auth.CACert().Raw) {
 		t.Errorf("CA_CERT fingerprint didn't match")
 	}
+
+	if len(daemonSet.Spec.Template.Spec.Volumes) != 4 {
+		t.Errorf("Expected 2 volumes defined, got %d", len(daemonSet.Spec.Template.Spec.Volumes))
+	}
+
 }

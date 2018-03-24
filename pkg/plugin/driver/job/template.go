@@ -82,4 +82,7 @@ spec:
   volumes:
   - emptyDir: {}
     name: results
+  {{- range .ExtraVolumes }}
+  - {{. | indent 4 -}}
+  {{- end -}}
 `)
