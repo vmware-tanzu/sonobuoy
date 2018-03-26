@@ -116,9 +116,10 @@ func loadDefinition(bytes []byte) (*manifest.Manifest, error) {
 
 func loadPlugin(def *manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy string) (plugin.Interface, error) {
 	pluginDef := plugin.Definition{
-		Name:       def.SonobuoyConfig.PluginName,
-		ResultType: def.SonobuoyConfig.ResultType,
-		Spec:       def.Spec,
+		Name:         def.SonobuoyConfig.PluginName,
+		ResultType:   def.SonobuoyConfig.ResultType,
+		ExtraVolumes: def.ExtraVolumes,
+		Spec:         def.Spec,
 	}
 
 	switch def.SonobuoyConfig.Driver {
