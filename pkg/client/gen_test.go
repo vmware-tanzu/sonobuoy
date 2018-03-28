@@ -3,7 +3,7 @@ package client_test
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/client"
@@ -21,20 +21,15 @@ func TestGenerateManifest(t *testing.T) {
 		expected *config.Config
 	}{
 		{
-			name: "easy",
+			name: "Defaults in yield a default manifest.",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				Config:    &config.Config{},
 			},
-			expected: &config.Config{
-				Aggregation: plugin.AggregationConfig{
-					BindAddress: "0.0.0.0",
-					BindPort:    8080,
-				},
-			},
+			expected: &config.Config{},
 		},
 		{
-			name: "override bind address",
+			name: "Overriding the bind address",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				Config: &config.Config{
@@ -46,12 +41,11 @@ func TestGenerateManifest(t *testing.T) {
 			expected: &config.Config{
 				Aggregation: plugin.AggregationConfig{
 					BindAddress: "10.0.0.1",
-					BindPort:    8080,
 				},
 			},
 		},
 		{
-			name: "https://github.com/heptio/sonobuoy/issues/390",
+			name: "Overriding the plugin selection",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				Config: &config.Config{
@@ -68,10 +62,20 @@ func TestGenerateManifest(t *testing.T) {
 						Name: "systemd-logs",
 					},
 				},
-				Aggregation: plugin.AggregationConfig{
-					BindAddress: "0.0.0.0",
-					BindPort:    8080,
+				Aggregation: plugin.AggregationConfig{},
+			},
+		},
+		{
+			name: "The plugin search path is not modified",
+			inputcm: &client.GenConfig{
+				E2EConfig: &client.E2EConfig{},
+				Config: &config.Config{
+					PluginSearchPath: []string{"a", "b", "c", "a"},
 				},
+			},
+			expected: &config.Config{
+				Aggregation:      plugin.AggregationConfig{},
+				PluginSearchPath: []string{"a", "b", "c", "a"},
 			},
 		},
 	}
@@ -101,33 +105,19 @@ func TestGenerateManifest(t *testing.T) {
 				if !ok {
 					t.Fatal("was not a config map...")
 				}
-				// Ignore everything but the config map we're looking for
+
+				// TODO(chuckha) test other pieces of the generated yaml
 				if cm.ObjectMeta.Name != "sonobuoy-config-cm" {
 					continue
 				}
 
 				configuration := &config.Config{}
-				fmt.Println(cm.Data["config.json"])
 				err = json.Unmarshal([]byte(cm.Data["config.json"]), configuration)
 				if err != nil {
 					t.Errorf("got error %v", err)
 				}
-				if configuration.UUID == "" {
-					t.Error("Expected UUID to not be empty")
-				}
-				if configuration.Aggregation.BindAddress != tc.expected.Aggregation.BindAddress {
-					t.Errorf("Expected %v but got %v", tc.expected.Aggregation.BindAddress, configuration.Aggregation.BindAddress)
-				}
-				if configuration.Aggregation.BindPort != tc.expected.Aggregation.BindPort {
-					t.Errorf("Expected %v but got %v", tc.expected.Aggregation.BindPort, configuration.Aggregation.BindPort)
-				}
-				if len(configuration.PluginSelections) != len(tc.expected.PluginSelections) {
-					t.Fatalf("Expected %v plugins but found %v", len(configuration.PluginSelections), len(tc.expected.PluginSelections))
-				}
-				for i, ps := range configuration.PluginSelections {
-					if tc.expected.PluginSelections[i] != ps {
-						t.Fatalf("Expected plugin %v but found plugin %v", tc.expected.PluginSelections[i], ps)
-					}
+				if !reflect.DeepEqual(configuration, tc.expected) {
+					t.Fatalf("Expected %v to equal %v", tc.expected, configuration)
 				}
 			}
 		})

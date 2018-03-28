@@ -14,16 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package config
+package config_test
 
 import (
 	"reflect"
 	"testing"
+
+	"github.com/heptio/sonobuoy/pkg/config"
 )
 
 func TestDefaults(t *testing.T) {
-	cfg1 := New()
-	cfg2 := New()
+	cfg1 := config.New()
+	cfg2 := config.New()
 
 	if reflect.DeepEqual(&cfg2, &cfg1) {
 		t.Fatalf("Defaults should not match UUIDs collided")
