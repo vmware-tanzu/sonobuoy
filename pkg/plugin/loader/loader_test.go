@@ -192,3 +192,48 @@ func TestFilterList(t *testing.T) {
 		t.Errorf("expected %+#v, got %+#v", expected, filtered)
 	}
 }
+
+func TestLoadAllPlugins(t *testing.T) {
+	testcases := []struct {
+		testname            string
+		namespace           string
+		sonobuoyImage       string
+		imagePullPolicy     string
+		searchPath          []string
+		selections          []plugin.Selection
+		expectedPluginNames []string
+	}{
+		{
+			testname:   "ensure duplicate paths do not result in duplicate loaded plugins.",
+			searchPath: []string{path.Join("testdata", "plugin.d"), path.Join("testdata", "plugin.d")},
+			selections: []plugin.Selection{
+				plugin.Selection{Name: "test-job-plugin"},
+				plugin.Selection{Name: "test-daemon-set-plugin"},
+			},
+			expectedPluginNames: []string{"test-job-plugin", "test-daemon-set-plugin"},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.testname, func(t *testing.T) {
+			plugins, err := LoadAllPlugins(tc.namespace, tc.sonobuoyImage, tc.imagePullPolicy, tc.searchPath, tc.selections)
+			if err != nil {
+				t.Fatalf("error loading all plugins: %v", err)
+			}
+			if len(plugins) != len(tc.expectedPluginNames) {
+				t.Fatalf("expected %v plugins but got %v", len(tc.expectedPluginNames), len(plugins))
+			}
+			for i, plugin := range plugins {
+				found := false
+				for _, expectedPlugin := range tc.expectedPluginNames {
+					if plugin.GetName() == expectedPlugin {
+						found = true
+					}
+				}
+				if !found {
+					t.Fatalf("Expected %v but got %v", tc.expectedPluginNames[i], plugin.GetName())
+				}
+			}
+		})
+	}
+}
