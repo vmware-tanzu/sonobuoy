@@ -89,6 +89,8 @@ data:
         value: '{{.E2ESkip}}'
       - name: E2E_PARALLEL
         value: '{{.E2EParallel}}'
+      - name: E2E_REGISTRY_OVERRIDE
+        value: '{{.PrivateRegistry}}'
       command: ["/run_e2e.sh"]
       image: {{.KubeConformanceImage}}
       imagePullPolicy: {{.ImagePullPolicy}}
@@ -113,7 +115,7 @@ data:
         value: /tmp/results
       - name: CHROOT_DIR
         value: /node
-      image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
+      image: {{if .PrivateRegistry}}{{.PrivateRegistry}}{{else}}{{"gcr.io/heptio-images"}}{{end}}/sonobuoy-plugin-systemd-logs:latest
       imagePullPolicy: {{.ImagePullPolicy}}
       name: sonobuoy-systemd-logs-config
       securityContext:

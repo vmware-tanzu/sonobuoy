@@ -69,6 +69,14 @@ func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	flags.Var(cfg, "kubeconfig", "Path to explict kubeconfig file.")
 }
 
+// AddPrivateRegistryConfigFlag adds a PrivateRegistry flag to the provided command.
+func AddPrivateRegistryConfigFlag(privateRegistry *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		privateRegistry, "private-registry", "",
+		"Use a private registry for all e2e images and supported plugins",
+	)
+}
+
 // AddSonobuoyConfigFlag adds a SonobuoyConfig flag to the provided command.
 func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, flags *pflag.FlagSet) {
 	flags.Var(

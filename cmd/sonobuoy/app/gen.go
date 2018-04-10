@@ -39,6 +39,7 @@ type genFlags struct {
 	sonobuoyImage        string
 	kubeConformanceImage string
 	imagePullPolicy      ImagePullPolicy
+	privateRegistry      string
 }
 
 var genflags genFlags
@@ -54,6 +55,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 
 	AddNamespaceFlag(&cfg.namespace, genset)
 	AddSonobuoyImage(&cfg.sonobuoyImage, genset)
+	AddPrivateRegistryConfigFlag(&cfg.privateRegistry, genset)
 	AddKubeConformanceImage(&cfg.kubeConformanceImage, genset)
 
 	return genset
@@ -73,6 +75,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		EnableRBAC:           getRBACOrExit(&g.rbacMode, &g.kubecfg),
 		ImagePullPolicy:      g.imagePullPolicy.String(),
 		KubeConformanceImage: g.kubeConformanceImage,
+		PrivateRegistry:      g.privateRegistry,
 	}, nil
 }
 

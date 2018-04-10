@@ -39,6 +39,7 @@ type templateValues struct {
 	EnableRBAC           bool
 	ImagePullPolicy      string
 	KubeConformanceImage string
+	PrivateRegistry      string
 }
 
 // GenerateManifest fills in a template with a Sonobuoy config
@@ -67,6 +68,7 @@ func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		EnableRBAC:           cfg.EnableRBAC,
 		ImagePullPolicy:      cfg.ImagePullPolicy,
 		KubeConformanceImage: cfg.KubeConformanceImage,
+		PrivateRegistry:      cfg.PrivateRegistry,
 	}
 
 	var buf bytes.Buffer
