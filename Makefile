@@ -30,7 +30,7 @@ VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
 BUILD_IMAGE ?= gcr.io/heptio-images/golang:1.9-alpine3.6
-BUILDCMD = go build -o $(TARGET) $(VERBOSE_FLAG) -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION)"
+BUILDCMD = CGO_ENABLED=0 go build -o $(TARGET) $(VERBOSE_FLAG) -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION)"
 BUILD = $(BUILDCMD) $(GOTARGET)
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
