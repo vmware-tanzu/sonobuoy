@@ -17,6 +17,7 @@ limitations under the License.
 package config
 
 import (
+	"os"
 	"path"
 	"time"
 
@@ -258,10 +259,13 @@ func New() *Config {
 		"~/sonobuoy/plugins.d",
 	}
 
-	// TODO (timothysc) reference the other consts
-	cfg.WorkerImage = "gcr.io/heptio-images/sonobuoy:latest"
+	var custSbImage = os.Getenv("SONOBUOY_IMAGE")
+	if len(custSbImage) == 0 {
+		// TODO (timothysc) reference the other consts
+		custSbImage = "gcr.io/heptio-images/sonobuoy:latest"
+	}
+	cfg.WorkerImage = custSbImage
 	cfg.ImagePullPolicy = "Always"
-
 	return &cfg
 }
 
