@@ -172,8 +172,8 @@ welcome pull requests. Feel free to dig through the [issues][issue] and jump in.
 * There is a [mailing list][list] and [Slack channel][slack] if you want to
   interact with other members of the community
 
-[coc]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
-[contrib]: https://github.com/heptio/sonobuoy/blob/master/CODE_OF_CONDUCT.md
+[coc]: https://github.com/heptio/sonobuoy/blob/master/CODE_OF_CONDUCT.md
+[contrib]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
 [list]: https://groups.google.com/forum/#!forum/heptio-sonobuoy
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 
