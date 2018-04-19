@@ -104,7 +104,7 @@ func TestDecodeTarball(t *testing.T) {
 
 	rBuffer := bytes.NewBuffer(buffer.Bytes())
 
-	file, err := os.Open(path.Join("test_data/archive.tar.gz"))
+	file, err := os.Open(path.Join("testdata/archive.tar.gz"))
 	if err != nil {
 		t.Fatalf("couldn't extract archive: %v", err)
 	}
