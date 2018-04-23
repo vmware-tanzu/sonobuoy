@@ -197,7 +197,6 @@ header h1 {
   align-self: center;
   margin: 0 0 0 12px;
   padding-bottom: 0;
-	min-width: 180px;
 }
 
 header span {
@@ -315,6 +314,9 @@ section {
 
 .logo-version--container {
   display: flex;
+  a {
+    width: 250px;
+  }
 }
 
 .fa {
