@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/heptio-images/golang:1.9-alpine3.6
+FROM golang:1.9-alpine3.6
 MAINTAINER Timothy St. Clair "tstclair@heptio.com"
 
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates bash
 ADD sonobuoy /sonobuoy
 ADD scripts/run_master.sh /run_master.sh
 ADD scripts/run_single_node_worker.sh /run_single_node_worker.sh
