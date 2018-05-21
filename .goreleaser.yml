@@ -1,5 +1,7 @@
 builds:
 - binary: sonobuoy
+  env:
+    - CGO_ENABLED=0
   goos:
     - windows
     - darwin
@@ -8,6 +10,6 @@ builds:
     - amd64
   ldflags: -s -w -X github.com/heptio/sonobuoy/pkg/buildinfo.Version=v{{.Version}}
 archive:
-  format: tar.gz 
+  format: tar.gz
   files:
   - LICENSE
