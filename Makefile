@@ -29,7 +29,7 @@ ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
-BUILD_IMAGE ?= golang:1.9-alpine3.6
+BUILD_IMAGE ?= golang:1.10-alpine
 BUILDCMD = CGO_ENABLED=0 go build -o $(TARGET) $(VERBOSE_FLAG) -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION)"
 BUILD = $(BUILDCMD) $(GOTARGET)
 
