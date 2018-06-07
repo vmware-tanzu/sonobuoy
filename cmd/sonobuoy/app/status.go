@@ -40,7 +40,7 @@ var statusFlags struct {
 func init() {
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Gets a summarizes status of a sonobuoy run",
+		Short: "Gets a summarized status of a sonobuoy run",
 		Run:   getStatus,
 		Args:  cobra.ExactArgs(0),
 	}
