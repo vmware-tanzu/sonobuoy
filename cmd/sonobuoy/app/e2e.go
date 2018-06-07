@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"k8s.io/client-go/rest"
 )
 
 type e2eFlags struct {
@@ -76,9 +77,17 @@ func e2es(cmd *cobra.Command, args []string) {
 	}
 	defer gzr.Close()
 
-	// Passing in `nil` and no `kubeconfig` because it is not required by the method
-	// for generating any manifests
-	sonobuoy, err := client.NewSonobuoyClient(nil)
+	var restConfig *rest.Config
+	// If we are doing a rerun, only then, we need kubeconfig
+	if e2eflags.rerun {
+		restConfig, err = e2eflags.kubecfg.Get()
+		if err != nil {
+			errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
+			os.Exit(1)
+		}
+	}
+
+	sonobuoy, err := client.NewSonobuoyClient(restConfig)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
