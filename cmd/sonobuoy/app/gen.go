@@ -95,12 +95,9 @@ func genManifest(cmd *cobra.Command, args []string) {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
-	kubeCfg, err := genflags.kubecfg.Get()
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't get kubernetes config"))
-		os.Exit(1)
-	}
-	sbc, err := client.NewSonobuoyClient(kubeCfg)
+	// Passing in `nil` and no `kubeconfig` because it is not required by the method
+	// for generating any manifests
+	sbc, err := client.NewSonobuoyClient(nil)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
