@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"k8s.io/client-go/rest"
 )
 
 type e2eFlags struct {
@@ -75,11 +76,17 @@ func e2es(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	defer gzr.Close()
-	restConfig, err := e2eflags.kubecfg.Get()
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
-		os.Exit(1)
+
+	var restConfig *rest.Config
+	// If we are doing a rerun, only then, we need kubeconfig
+	if e2eflags.rerun {
+		restConfig, err = e2eflags.kubecfg.Get()
+		if err != nil {
+			errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
+			os.Exit(1)
+		}
 	}
+
 	sonobuoy, err := client.NewSonobuoyClient(restConfig)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
@@ -105,7 +112,10 @@ func e2es(cmd *cobra.Command, args []string) {
 	}
 
 	if !e2eflags.skipPreflight {
-		if errs := sonobuoy.PreflightChecks(&client.PreflightConfig{e2eflags.namespace}); len(errs) > 0 {
+		errs := sonobuoy.PreflightChecks(&client.PreflightConfig{
+			Namespace: e2eflags.namespace,
+		})
+		if len(errs) > 0 {
 			errlog.LogError(errors.New("Preflight checks failed"))
 			for _, err := range errs {
 				errlog.LogError(err)
