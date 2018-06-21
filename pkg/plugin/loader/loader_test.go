@@ -57,46 +57,50 @@ func TestLoadNonexistentPlugin(t *testing.T) {
 }
 
 func TestLoadValidPlugin(t *testing.T) {
-	jobDefFileName := "testdata/plugin.d/job.yml"
-	jobDefFile, err := loadDefinitionFromFile(jobDefFileName)
-	if err != nil {
-		t.Fatalf("Unexpected error reading job plugin: %v", err)
+	testcases := []struct {
+		name           string
+		file           string
+		expectedDriver string
+		expectedPlugin string
+		expectedImage  string
+	}{
+		{
+			name:           "job plugin",
+			file:           "testdata/plugin.d/job.yml",
+			expectedDriver: "Job",
+			expectedPlugin: "test-job-plugin",
+			expectedImage:  "some-job-image:master",
+		},
+		{
+			name:           "daemonset plugin",
+			file:           "testdata/plugin.d/daemonset.yaml",
+			expectedDriver: "DaemonSet",
+			expectedPlugin: "test-daemon-set-plugin",
+			expectedImage:  "some-daemonset-image:master",
+		},
 	}
 
-	jobDef, err := loadDefinition(jobDefFile)
-	if err != nil {
-		t.Fatalf("Unexpected error loading job plugin: %v", err)
-	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			definition, err := loadDefinitionFromFile(tc.file)
+			if err != nil {
+				t.Fatalf("Unexpected error reading job plugin: %v", err)
+			}
+			jobDef, err := loadDefinition(definition)
+			if err != nil {
+				t.Fatalf("Unexpected error loading job plugin: %v", err)
+			}
+			if jobDef.SonobuoyConfig.Driver != tc.expectedDriver {
+				t.Errorf("expected driver %q, got %q", tc.expectedDriver, jobDef.SonobuoyConfig.Driver)
+			}
+			if jobDef.SonobuoyConfig.PluginName != tc.expectedPlugin {
+				t.Errorf("expected name %q, got %q", tc.expectedPlugin, jobDef.SonobuoyConfig.PluginName)
+			}
+			if jobDef.Spec.Image != tc.expectedImage {
+				t.Errorf("expected name %q, got %q", tc.expectedImage, jobDef.Spec.Image)
+			}
 
-	if jobDef.SonobuoyConfig.Driver != "Job" {
-		t.Errorf("expected driver Job, got %q", jobDef.SonobuoyConfig.Driver)
-	}
-	if jobDef.SonobuoyConfig.PluginName != "test-job-plugin" {
-		t.Errorf("expected name test-job-plugin, got %q", jobDef.SonobuoyConfig.PluginName)
-	}
-
-	if jobDef.Spec.Image != "gcr.io/heptio-images/heptio-e2e:master" {
-		t.Errorf("expected name gcr.io/heptio-images/heptio-e2e:master, got %q", jobDef.Spec.Image)
-	}
-
-	daemonDefFileName := "testdata/plugin.d/daemonset.yaml"
-	daemonDefFile, err := loadDefinitionFromFile(daemonDefFileName)
-	if err != nil {
-		t.Fatalf("Unexpected error creating daemonset plugin: %v", err)
-	}
-	daemonDef, err := loadDefinition(daemonDefFile)
-	if err != nil {
-		t.Fatalf("Unexpected error loading daemonset plugin: %v", err)
-	}
-
-	if daemonDef.SonobuoyConfig.Driver != "DaemonSet" {
-		t.Errorf("expected driver DaemonSet, got %q", daemonDef.SonobuoyConfig.Driver)
-	}
-	if daemonDef.SonobuoyConfig.PluginName != "test-daemon-set-plugin" {
-		t.Errorf("expected name test-daemon-set-plugin, got %q", daemonDef.SonobuoyConfig.PluginName)
-	}
-	if daemonDef.Spec.Image != "gcr.io/heptio-images/heptio-e2e:master" {
-		t.Errorf("expected name gcr.io/heptio-images/heptio-e2e:master, got %q", jobDef.Spec.Image)
+		})
 	}
 }
 
@@ -110,7 +114,7 @@ func TestLoadJobPlugin(t *testing.T) {
 		},
 		Spec: manifest.Container{
 			Container: corev1.Container{
-				Image: "gcr.io/heptio-images/heptio-e2e:master",
+				Image: "some-job-image:master",
 			},
 		},
 	}
@@ -129,8 +133,8 @@ func TestLoadJobPlugin(t *testing.T) {
 	if jobPlugin.Definition.Name != "test-job-plugin" {
 		t.Errorf("expected plugin name 'test-job-plugin', got '%v'", jobPlugin.Definition.Name)
 	}
-	if jobPlugin.Definition.Spec.Image != "gcr.io/heptio-images/heptio-e2e:master" {
-		t.Errorf("expected plugin name 'gcr.io/heptio-images/heptio-e2e:master', got '%v'", jobPlugin.Definition.Spec.Image)
+	if jobPlugin.Definition.Spec.Image != "some-job-image:master" {
+		t.Errorf("expected plugin name 'some-job-image:master', got '%v'", jobPlugin.Definition.Spec.Image)
 	}
 	if jobPlugin.Namespace != namespace {
 		t.Errorf("expected plugin name '%q', got '%v'", namespace, jobPlugin.Namespace)
@@ -148,7 +152,7 @@ func TestLoadDaemonSet(t *testing.T) {
 		},
 		Spec: manifest.Container{
 			Container: corev1.Container{
-				Image: "gcr.io/heptio-images/heptio-e2e:master",
+				Image: "some-daemonset-image:master",
 			},
 		},
 	}
@@ -167,8 +171,8 @@ func TestLoadDaemonSet(t *testing.T) {
 	if daemonPlugin.Definition.Name != "test-daemon-set-plugin" {
 		t.Errorf("expected plugin name 'test-daemon-set-plugin', got '%v'", daemonPlugin.Definition.Name)
 	}
-	if daemonPlugin.Definition.Spec.Image != "gcr.io/heptio-images/heptio-e2e:master" {
-		t.Errorf("expected plugin name 'gcr.io/heptio-images/heptio-e2e:master', got '%v'", daemonPlugin.Definition.Spec.Image)
+	if daemonPlugin.Definition.Spec.Image != "some-daemonset-image:master" {
+		t.Errorf("expected plugin name 'some-daemonset-image:master', got '%v'", daemonPlugin.Definition.Spec.Image)
 	}
 	if daemonPlugin.Namespace != namespace {
 		t.Errorf("expected plugin name '%q', got '%v'", namespace, daemonPlugin.Namespace)

@@ -34,9 +34,6 @@ const (
 	Quick Mode = "Quick"
 	// Conformance runs all of the E2E tests and the systemd log tests.
 	Conformance Mode = "Conformance"
-	// Extended run all of the E2E tests, the systemd log tests, and
-	// Heptio's E2E Tests.
-	Extended Mode = "Extended"
 )
 
 const defaultSkipList = `Alpha|Kubectl|\[(Disruptive|Feature:[^\]]+|Flaky)\]`
@@ -44,7 +41,6 @@ const defaultSkipList = `Alpha|Kubectl|\[(Disruptive|Feature:[^\]]+|Flaky)\]`
 var modeMap = map[string]Mode{
 	string(Conformance): Conformance,
 	string(Quick):       Quick,
-	string(Extended):    Extended,
 }
 
 // ModeConfig represents the sonobuoy configuration for a given mode.
@@ -98,19 +94,6 @@ func (m *Mode) Get() *ModeConfig {
 			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
-			},
-		}
-	case Extended:
-		return &ModeConfig{
-			E2EConfig: E2EConfig{
-				Focus:    `\[Conformance\]`,
-				Skip:     defaultSkipList,
-				Parallel: "1",
-			},
-			Selectors: []plugin.Selection{
-				{Name: "e2e"},
-				{Name: "systemd-logs"},
-				{Name: "heptio-e2e"},
 			},
 		}
 	default:
