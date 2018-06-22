@@ -105,7 +105,7 @@ func checkRBACEnabled(client rest.Interface) (bool, error) {
 
 	groups, ok := result.(*metav1.APIGroupList)
 	if !ok {
-		return false, fmt.Errorf("Unknown type for API group %t", groups)
+		return false, fmt.Errorf("Unknown type for API group %T", groups)
 	}
 
 	for _, group := range groups.Groups {
