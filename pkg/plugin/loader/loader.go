@@ -37,7 +37,7 @@ import (
 // address (host:port) and returning all of the active, configured plugins for
 // this sonobuoy run.
 func LoadAllPlugins(namespace, sonobuoyImage, imagePullPolicy string, searchPath []string, selections []plugin.Selection) (ret []plugin.Interface, err error) {
-	pluginDefinitionFiles := []string{}
+	pluginDefinitionFiles := make(map[string]struct{})
 	for _, dir := range searchPath {
 		wd, _ := os.Getwd()
 		logrus.Infof("Scanning plugins in %v (pwd: %v)", dir, wd)
@@ -53,11 +53,13 @@ func LoadAllPlugins(namespace, sonobuoyImage, imagePullPolicy string, searchPath
 		if err != nil {
 			return []plugin.Interface{}, errors.Wrapf(err, "couldn't scan %v for plugins", dir)
 		}
-		pluginDefinitionFiles = append(pluginDefinitionFiles, files...)
+		for _, file := range files {
+			pluginDefinitionFiles[file] = struct{}{}
+		}
 	}
 
 	pluginDefinitions := []*manifest.Manifest{}
-	for _, file := range pluginDefinitionFiles {
+	for file := range pluginDefinitionFiles {
 		definitionFile, err := loadDefinitionFromFile(file)
 		if err != nil {
 			return []plugin.Interface{}, errors.Wrapf(err, "couldn't load plugin definition file %v", file)

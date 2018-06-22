@@ -29,14 +29,14 @@ ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
-BUILD_IMAGE ?= gcr.io/heptio-images/golang:1.9-alpine3.6
-BUILDCMD = go build -o $(TARGET) $(VERBOSE_FLAG) -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION)"
+BUILD_IMAGE ?= golang:1.9-alpine3.6
+BUILDCMD = CGO_ENABLED=0 go build -o $(TARGET) $(VERBOSE_FLAG) -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION)"
 BUILD = $(BUILDCMD) $(GOTARGET)
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
 TEST_CMD = go test $(TESTARGS)
-TEST = $(TEST_CMD) $(TEST_PKGS) 
+TEST = $(TEST_CMD) $(TEST_PKGS)
 
 INT_TEST_PKGS ?= $(GOTARGET)/test/...
 INT_TEST= $(TEST_CMD) $(INT_TEST_PKGS)
@@ -50,19 +50,19 @@ LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 WORKDIR ?= /sonobuoy
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 
-.PHONY: all container push clean cbuild test local-test local generate plugins int 
+.PHONY: all container push clean test local-test local generate plugins int
 
 all: container
 
-local-test: 
+local-test:
 	$(TEST)
 
-# Unit tests 
-test: cbuild vet
+# Unit tests
+test: sonobuoy vet
 	$(DOCKER_BUILD) '$(TEST)'
 
 # Integration tests
-int: cbuild
+int: sonobuoy
 	$(DOCKER_BUILD) '$(INT_TEST)'
 
 lint:
@@ -71,14 +71,14 @@ lint:
 vet:
 	$(DOCKER_BUILD) '$(VET)'
 
-container:
+container: sonobuoy
 	$(DOCKER) build \
 		-t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \
 		-t $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH) \
 		-t $(REGISTRY)/$(TARGET):$(GIT_REF) \
 		.
 
-cbuild:
+sonobuoy:
 	$(DOCKER_BUILD) '$(BUILD)'
 
 push:

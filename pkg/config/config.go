@@ -29,8 +29,12 @@ import (
 const (
 	// DefaultNamespace is the namespace where the master and plugin workers will run (but not necessarily the pods created by the plugin workers).
 	DefaultNamespace = "heptio-sonobuoy"
-	// DefaultKubeConformanceImage is the URL of the docker image to run for the kube conformance tests
+	// DefaultKubeConformanceImage is the URL of the docker image to run for the kube conformance tests.
 	DefaultKubeConformanceImage = "gcr.io/heptio-images/kube-conformance:latest"
+	// DefaultAggregationServerBindPort is the default port for the aggregation server to bind to.
+	DefaultAggregationServerBindPort = 8080
+	// DefaultAggregationServerBindAddress is the default address for the aggregation server to bind to.
+	DefaultAggregationServerBindAddress = "0.0.0.0"
 	// MasterPodName is the name of the main pod that runs plugins and collects results.
 	MasterPodName = "sonobuoy"
 	// MasterContainerName is the name of the main container in the master pod.
@@ -244,8 +248,8 @@ func New() *Config {
 
 	cfg.Namespace = DefaultNamespace
 
-	cfg.Aggregation.BindAddress = "0.0.0.0"
-	cfg.Aggregation.BindPort = 8080
+	cfg.Aggregation.BindAddress = DefaultAggregationServerBindAddress
+	cfg.Aggregation.BindPort = DefaultAggregationServerBindPort
 	cfg.Aggregation.TimeoutSeconds = 5400 // 90 minutes
 
 	cfg.PluginSearchPath = []string{
