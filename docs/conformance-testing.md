@@ -14,7 +14,7 @@ A conformance-passing cluster provides the following guarantees:
 
 Individual Kubernetes distributions may offer additional features beyond conformance testing, but if you change distributions, these features can't be expected to be provided.
 
-**NOTE:** Kubernetes documentation also describes the concept of [node conformance tests][3]. Although they are useful, these tests are more component-focused than system-wide. They validate only the behavior of a specific node, not cluster behavior as a whole.
+**NOTE:** Kubernetes documentation also describes the concept of "node conformance tests". Although they are useful, these tests are more component-focused than system-wide. They validate only the behavior of a specific node, not cluster behavior as a whole.
 
 See the [official documentation][4] for Kubernetes's existing conformance tests.
 
@@ -30,7 +30,7 @@ To customize the set of tests that are run as part of the report, the following 
 | `E2E_SKIP` | "Alpha&#124;Disruptive&#124;Feature&#124;Flaky&#124;Kubectl" | Which subset of tests to skip |
 | `E2E_PROVIDER` | "local" | The platform that the cluster is running on |
 
-*NOTE: The length of time it takes to run conformance can vary based on the size of your cluster---the timeout can be adjusted in the [Server.timeoutseconds][9] field of the Sonobuoy `config.json`.*
+*NOTE: The length of time it takes to run conformance can vary based on the size of your cluster---the timeout can be adjusted in the Server.timeoutseconds field of the Sonobuoy `config.json`.*
 
 [0]: #overview
 [1]: #integration-with-sonobuoy
@@ -41,4 +41,3 @@ To customize the set of tests that are run as part of the report, the following 
 [6]: https://github.com/kubernetes/kubernetes/issues/49313
 [7]: ../plugins.d/e2e.tmpl
 [8]: ../examples/quickstart.yaml#L133
-[9]: ../examples/quickstart.yaml#L102

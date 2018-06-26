@@ -30,18 +30,17 @@ Sonobuoy supports Kubernetes versions 1.8 and later.
 
 ## More information
 
-[The documentation][docs] provides detailed information about the conformance
-tests, plugins, and snapshots.
+[The documentation][docs] provides further information about the conformance
+tests, plugins, etc.
 
-[docs]: https://heptio.github.io/sonobuoy/
+[docs]: https://github.com/heptio/sonobuoy/tree/master/docs
 
 ## Prerequisites
 
 * Access to an up-and-running Kubernetes cluster. If you do not have a cluster,
-  follow the [AWS Quickstart Kubernetes Tutorial][quickstart] to set one up with
-  a single command.
+  we recommend following the [AWS Quickstart for Kubernetes][quickstart] instructions.
 
-[quickstart]: http://docs.heptio.com/content/tutorials/aws-cloudformation-k8s.html
+[quickstart]: https://aws.amazon.com/quickstart/architecture/heptio-kubernetes/
 
 * `kubectl` installed. See [installing via Homebrew (MacOS)][brew] or [building
   the binary (Linux)][linux].
@@ -70,12 +69,10 @@ Sonobuoy also provides a CLI that lets you run Sonobuoy on your cluster. The CLI
 records the following results:
 
 * Information about your cluster's hosts, Kubernetes resources, and versions.
-* [`systemd`][systemd] logs from each host. Requires a plugin.
+* systemd logs from each host. Requires a plugin.
 * The results of a single e2e conformance test ("Pods should be submitted and
   removed"). See the [conformance guide][conformance] for configuration details.
   Requires a plugin.
-
-[systemd]: https://github.com/systemd/systemd
 
 ### CLI Prerequisites
 
