@@ -106,7 +106,6 @@ func TestLoadAllPlugins(t *testing.T) {
 		PluginSelections: []plugin.Selection{
 			plugin.Selection{Name: "systemd-logs"},
 			plugin.Selection{Name: "e2e"},
-			plugin.Selection{Name: "heptio-e2e"},
 		},
 	}
 

@@ -3,9 +3,9 @@ sonobuoy-config:
   plugin-name: test-job-plugin
   result-type: test-job-plugin
 spec:
-  image: gcr.io/heptio-images/heptio-e2e:master
+  image: some-job-image:master
   imagePullPolicy: Always
-  name: heptio-e2e
+  name: some-plugin
   volumeMounts:
     - mountPath: /tmp/results
       name: results
