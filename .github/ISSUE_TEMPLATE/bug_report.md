@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Tell us about a problem you are experiencing
 
 ---
 
@@ -14,9 +14,10 @@ about: Create a report to help us improve
 
 **Environment:**
 
-- Heptio product version: 
+- Sonobuoy version: 
 - Kubernetes version: (use `kubectl version`):
 - Kubernetes installer & version:
 - Cloud provider or hardware configuration:
-- OS (e.g. from /etc/os-release): 
-- Kernel (e.g. uname -a):
+- OS (e.g. from `/etc/os-release`): 
+
+Sonobuoy tarball which contains (*)
