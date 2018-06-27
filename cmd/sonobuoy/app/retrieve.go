@@ -17,6 +17,7 @@ limitations under the License.
 package app
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -24,6 +25,8 @@ import (
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/errgroup"
+	"k8s.io/client-go/util/exec"
 )
 
 var (
@@ -70,15 +73,23 @@ func retrieveResults(cmd *cobra.Command, args []string) {
 	}
 
 	// Get a reader that contains the tar output of the results directory.
-	reader, err := sbc.RetrieveResults(&client.RetrieveConfig{Namespace: rcvFlags.namespace})
+	reader, ec := sbc.RetrieveResults(&client.RetrieveConfig{Namespace: rcvFlags.namespace})
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
 
-	// Extract the tar output into a local directory under the prefix.
-	err = client.UntarAll(reader, outDir, prefix)
-	if err != nil {
+	eg := &errgroup.Group{}
+	eg.Go(func() error { return <-ec })
+	eg.Go(func() error { return client.UntarAll(reader, outDir, prefix) })
+
+	err = eg.Wait()
+	if _, ok := err.(exec.CodeExitError); ok {
+		fmt.Fprintln(os.Stderr, "Results not ready yet. Check `sonobuoy status` for status.")
 		os.Exit(1)
+
+	} else if err != nil {
+		fmt.Fprintf(os.Stderr, "error retrieving results: %v\n", err)
+		os.Exit(2)
 	}
 }
