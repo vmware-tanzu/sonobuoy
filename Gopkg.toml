@@ -80,3 +80,7 @@
 [[constraint]]
   branch = "release-8.0"
   name = "k8s.io/client-go"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/sync"
