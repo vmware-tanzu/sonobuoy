@@ -66,17 +66,17 @@
   name = "github.com/viniciuschiele/tarx"
 
 [[constraint]]
-  branch = "release-1.9"
+  branch = "release-1.11"
   name = "k8s.io/api"
 
 [[constraint]]
-  branch = "release-1.9"
+  branch = "release-1.11"
   name = "k8s.io/apiextensions-apiserver"
 
 [[constraint]]
-  branch = "release-1.9"
+  branch = "release-1.11"
   name = "k8s.io/apimachinery"
 
 [[constraint]]
-  branch = "release-6.0"
+  branch = "release-8.0"
   name = "k8s.io/client-go"
