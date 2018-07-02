@@ -23,7 +23,7 @@ func NewLogger() *logrus.Logger {
 		logrus.ErrorLevel: "/var/log/error.log",
 	}
 
-	
+	Log = logrus.New()
 	Log.Hooks.Add(lfshook.NewHook(
 		pathMap,
 		&logrus.JSONFormatter{},
@@ -39,7 +39,7 @@ If no formatter is provided via `lfshook.NewHook`, a default text formatter will
 
 ### Log rotation
 In order to enable automatic log rotation it's possible to provide an io.Writer instead of the path string of a log file.
-In combination with pakages like [go-file-rotatelogs](https://github.com/lestrrat/go-file-rotatelogs) log rotation can easily be achieved.
+In combination with packages like [go-file-rotatelogs](https://github.com/lestrrat/go-file-rotatelogs) log rotation can easily be achieved.
 
 ```go
 package main
@@ -58,7 +58,7 @@ func NewLogger() *logrus.Logger {
 	}
 
 	path := "/var/log/go.log"
-	writer := rotatelogs.NewRotateLogs(
+	writer := rotatelogs.New(
 		path+".%Y%m%d%H%M",
 		rotatelogs.WithLinkName(path),
 		rotatelogs.WithMaxAge(time.Duration(86400)*time.Second),
