@@ -26,7 +26,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 )
@@ -59,12 +58,12 @@ func init() {
 // TODO (timothysc) summarize and aggregate daemonset-plugins by status done (24) running (24)
 // also --show-all
 func getStatus(cmd *cobra.Command, args []string) {
-	config, err := statusFlags.kubecfg.Get()
+	cfg, err := statusFlags.kubecfg.Get()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't get kubernetes config"))
 		os.Exit(1)
 	}
-	sbc, err := ops.NewSonobuoyClient(config)
+	sbc, err := getSonobuoyClient(cfg)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)

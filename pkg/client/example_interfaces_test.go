@@ -19,6 +19,7 @@ package client_test
 import (
 	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/heptio/sonobuoy/pkg/dynamic"
 	"k8s.io/client-go/rest"
 )
 
@@ -27,8 +28,14 @@ var cfg *rest.Config
 
 // Example shows how to create a client and run Sonobuoy.
 func Example() {
+	// Get an APIHelper with default implementations from client-go.
+	apiHelper, err := dynamic.NewAPIHelperFromRESTConfig(cfg)
+	if err != nil {
+		panic(err)
+	}
+
 	// client.NewSonobuoyClient returns a struct that implements the client.Interface.
-	sonobuoy, err := client.NewSonobuoyClient(cfg)
+	sonobuoy, err := client.NewSonobuoyClient(cfg, apiHelper)
 	if err != nil {
 		panic(err)
 	}

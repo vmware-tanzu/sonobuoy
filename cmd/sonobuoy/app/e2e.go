@@ -77,17 +77,16 @@ func e2es(cmd *cobra.Command, args []string) {
 	}
 	defer gzr.Close()
 
-	var restConfig *rest.Config
+	var cfg *rest.Config
 	// If we are doing a rerun, only then, we need kubeconfig
 	if e2eflags.rerun {
-		restConfig, err = e2eflags.kubecfg.Get()
+		cfg, err = e2eflags.kubecfg.Get()
 		if err != nil {
 			errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
 			os.Exit(1)
 		}
 	}
-
-	sonobuoy, err := client.NewSonobuoyClient(restConfig)
+	sonobuoy, err := getSonobuoyClient(cfg)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
@@ -105,7 +104,7 @@ func e2es(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	cfg, err := e2eflags.Config()
+	runCfg, err := e2eflags.Config()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't make a Run config"))
 		os.Exit(1)
@@ -125,7 +124,7 @@ func e2es(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Rerunning %d tests:\n", len(testCases))
-	if err := sonobuoy.Run(cfg); err != nil {
+	if err := sonobuoy.Run(runCfg); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to rerun failed tests"))
 		os.Exit(1)
 	}

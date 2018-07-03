@@ -82,7 +82,7 @@ func TestGenerateManifest(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			sbc, err := client.NewSonobuoyClient(nil)
+			sbc, err := client.NewSonobuoyClient(nil, nil)
 			if err != nil {
 				t.Fatal(err)
 			}

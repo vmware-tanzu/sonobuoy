@@ -17,7 +17,6 @@ limitations under the License.
 package app
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -59,12 +58,12 @@ func retrieveResults(cmd *cobra.Command, args []string) {
 		outDir = args[0]
 	}
 
-	restConfig, err := rcvFlags.kubecfg.Get()
+	cfg, err := rcvFlags.kubecfg.Get()
 	if err != nil {
-		errlog.LogError(fmt.Errorf("failed to get kubernetes client: %v", err))
+		errlog.LogError(errors.Wrap(err, "failed to get kubernetes client"))
 		os.Exit(1)
 	}
-	sbc, err := client.NewSonobuoyClient(restConfig)
+	sbc, err := getSonobuoyClient(cfg)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)

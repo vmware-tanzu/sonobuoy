@@ -95,13 +95,9 @@ func genManifest(cmd *cobra.Command, args []string) {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
-	// Passing in `nil` and no `kubeconfig` because it is not required by the method
-	// for generating any manifests
-	sbc, err := client.NewSonobuoyClient(nil)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
-		os.Exit(1)
-	}
+
+	// Generate does not require any client configuration
+	sbc := &client.SonobuoyClient{}
 
 	bytes, err := sbc.GenerateManifest(cfg)
 	if err == nil {
