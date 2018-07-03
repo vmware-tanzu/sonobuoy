@@ -55,7 +55,7 @@ func deleteSonobuoyRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	sbc, err := client.NewSonobuoyClient(cfg)
+	sbc, err := getSonobuoyClient(cfg)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)

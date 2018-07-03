@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	ops "github.com/heptio/sonobuoy/pkg/client"
+	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
@@ -44,12 +44,12 @@ func RunFlagSet(cfg *runFlags) *pflag.FlagSet {
 	return runset
 }
 
-func (r *runFlags) Config() (*ops.RunConfig, error) {
+func (r *runFlags) Config() (*client.RunConfig, error) {
 	gencfg, err := r.genFlags.Config()
 	if err != nil {
 		return nil, err
 	}
-	return &ops.RunConfig{
+	return &client.RunConfig{
 		GenConfig: *gencfg,
 	}, nil
 }
@@ -67,26 +67,25 @@ func init() {
 }
 
 func submitSonobuoyRun(cmd *cobra.Command, args []string) {
-	restConfig, err := runflags.kubecfg.Get()
+	cfg, err := runflags.kubecfg.Get()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
 		os.Exit(1)
 	}
 
-	cfg, err := runflags.Config()
+	runCfg, err := runflags.Config()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not retrieve E2E config"))
 		os.Exit(1)
 	}
-
-	sbc, err := ops.NewSonobuoyClient(restConfig)
+	sbc, err := getSonobuoyClient(cfg)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
 	}
 
-	plugins := make([]string, len(cfg.Config.PluginSelections))
-	for i, plugin := range cfg.Config.PluginSelections {
+	plugins := make([]string, len(runCfg.Config.PluginSelections))
+	for i, plugin := range runCfg.Config.PluginSelections {
 		plugins[i] = plugin.Name
 	}
 
@@ -95,7 +94,7 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 	}
 
 	if !runflags.skipPreflight {
-		if errs := sbc.PreflightChecks(&ops.PreflightConfig{Namespace: runflags.namespace}); len(errs) > 0 {
+		if errs := sbc.PreflightChecks(&client.PreflightConfig{Namespace: runflags.namespace}); len(errs) > 0 {
 			errlog.LogError(errors.New("Preflight checks failed"))
 			for _, err := range errs {
 				errlog.LogError(err)
@@ -104,7 +103,7 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if err := sbc.Run(cfg); err != nil {
+	if err := sbc.Run(runCfg); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
 	}
