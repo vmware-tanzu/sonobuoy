@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -317,7 +318,8 @@ func QueryNSResources(kubeClient kubernetes.Interface, recorder *QueryRecorder, 
 			start := time.Now()
 			err := gatherPodLogs(kubeClient, ns, opts, cfg)
 			if err != nil {
-				return err
+				errlog.LogError(err)
+				continue
 			}
 			duration := time.Since(start)
 			recorder.RecordQuery("PodLogs", ns, duration, err)
