@@ -17,6 +17,7 @@ limitations under the License.
 package discovery
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"time"
@@ -354,29 +355,44 @@ func QueryClusterResources(kubeClient kubernetes.Interface, recorder *QueryRecor
 				return untypedQuery(cfg.OutputDir(), "serverversion.json", objqry)
 			}
 			timedQuery(recorder, "serverversion", "", query)
+			continue
 		case "ServerGroups":
 			objqry := func() (interface{}, error) { return kubeClient.Discovery().ServerGroups() }
 			query := func() (time.Duration, error) {
 				return untypedQuery(cfg.OutputDir(), "servergroups.json", objqry)
 			}
 			timedQuery(recorder, "servergroups", "", query)
+			continue
 		case "Nodes":
 			// cfg.Nodes configures whether users want to gather the Nodes resource in the
 			// cluster, but we also use that option to guide whether we get node data such
 			// as configz and healthz endpoints.
 
+			// TODO(chuckha) Use a separate configuration like NodeConfiguration for node configz/healthz to make
+			// this switch flow less confusing. "Nodes" is responsible for too much.
+
 			// NOTE: Node data collection is an aggregated time b/c propagating that detail back up
 			// is odd and would pollute some of the output.
+
 			start := time.Now()
-			err := gatherNodeData(kubeClient, cfg)
+			nodeList, err := kubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
+			if err != nil {
+				errlog.LogError(fmt.Errorf("failed to get node list: %v", err))
+				// Do not return or continue because we also want to query nodes as resources
+				break
+			}
+			nodeNames := make([]string, nodeList.Size())
+			for i, node := range nodeList.Items {
+				nodeNames[i] = node.Name
+			}
+			err = gatherNodeData(nodeNames, kubeClient.CoreV1().RESTClient(), cfg)
 			duration := time.Since(start)
 			recorder.RecordQuery("Nodes", "", duration, err)
-			fallthrough
-		default:
-			lister := func() (runtime.Object, error) { return queryNonNsResource(resourceKind, kubeClient) }
-			query := func() (time.Duration, error) { return objListQuery(outdir+"/", resourceKind+".json", lister) }
-			timedQuery(recorder, resourceKind, "", query)
+			// do not continue because we want to now query nodes as resources
 		}
+		lister := func() (runtime.Object, error) { return queryNonNsResource(resourceKind, kubeClient) }
+		query := func() (time.Duration, error) { return objListQuery(outdir+"/", resourceKind+".json", lister) }
+		timedQuery(recorder, resourceKind, "", query)
 	}
 
 	return nil
