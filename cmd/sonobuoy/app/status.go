@@ -80,9 +80,20 @@ func getStatus(cmd *cobra.Command, args []string) {
 	} else {
 		err = printSummary(os.Stdout, status)
 	}
+
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
+	}
+	os.Exit(exitCode(status))
+}
+
+func exitCode(status *aggregation.Status) int {
+	switch status.Status {
+	case aggregation.FailedStatus:
+		return 1
+	default:
+		return 0
 	}
 }
 
