@@ -59,7 +59,15 @@ func AddSonobuoyImage(image *string, flags *pflag.FlagSet) {
 func AddKubeConformanceImage(image *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		image, "kube-conformance-image", config.DefaultKubeConformanceImage,
-		"Container image override for the kube conformance image.",
+		"Container image override for the kube conformance image. Overrides --kube-conformance-image-version.",
+	)
+}
+
+// AddKubeConformanceImageVersion initialises an image version flag.
+func AddKubeConformanceImageVersion(imageVersion *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		imageVersion, "kube-conformance-image-version", "auto",
+		"Use Heptio's KubeConformance image, but override the version. Default is 'auto', which will be set to your cluster's version.",
 	)
 }
 
