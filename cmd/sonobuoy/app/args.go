@@ -58,9 +58,25 @@ func AddSonobuoyImage(image *string, flags *pflag.FlagSet) {
 // AddKubeConformanceImage initialises an image url flag.
 func AddKubeConformanceImage(image *string, flags *pflag.FlagSet) {
 	flags.StringVar(
-		image, "kube-conformance-image", config.DefaultKubeConformanceImage,
-		"Container image override for the kube conformance image.",
+		image, "kube-conformance-image", "",
+		"Container image override for the kube conformance image. Overrides --kube-conformance-image-version.",
 	)
+}
+
+// AddKubeConformanceImageVersion initialises an image version flag.
+func AddKubeConformanceImageVersion(imageVersion *ConformanceImageVersion, flags *pflag.FlagSet, defaultVersion ConformanceImageVersion) {
+	help := "Use Heptio's KubeConformance image, but override the version. "
+	switch defaultVersion {
+	case ConformanceImageVersionAuto:
+		help += "Default is 'auto', which will be set to your cluster's version."
+	case ConformanceImageVersionLatest:
+		help += "Default is 'latest', which will run the tests for the most recently released Sonobuoy conformance image."
+	default:
+		help += fmt.Sprintf("Default is '%s'", defaultVersion)
+	}
+
+	*imageVersion = defaultVersion // default
+	flags.Var(imageVersion, "kube-conformance-image-version", help)
 }
 
 // AddKubeconfigFlag adds a kubeconfig flag to the provided command.
@@ -147,7 +163,7 @@ func AddRBACModeFlags(mode *RBACMode, flags *pflag.FlagSet, defaultMode RBACMode
 	flags.Var(
 		mode, "rbac",
 		// Doesn't use the map in app.rbacModeMap to preserve order so we can add an explanation for detect.
-		"Whether to enable rbac on Sonobuoy. Valid modes are Enable, Disable, and Detect (query the server to see whether to enable Sonobuoy).",
+		"Whether to enable rbac on Sonobuoy. Valid modes are Enable, Disable, and Detect (query the server to see whether to enable RBAC).",
 	)
 }
 
