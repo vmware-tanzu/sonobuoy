@@ -23,27 +23,30 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/heptio/sonobuoy/pkg/client"
+	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
 type genFlags struct {
-	sonobuoyConfig       SonobuoyConfig
-	mode                 client.Mode
-	rbacMode             RBACMode
-	kubecfg              Kubeconfig
-	e2eflags             *pflag.FlagSet
-	namespace            string
-	sonobuoyImage        string
-	kubeConformanceImage string
-	imagePullPolicy      ImagePullPolicy
+	sonobuoyConfig              SonobuoyConfig
+	mode                        client.Mode
+	rbacMode                    RBACMode
+	kubecfg                     Kubeconfig
+	e2eflags                    *pflag.FlagSet
+	namespace                   string
+	sonobuoyImage               string
+	kubeConformanceImage        string
+	kubeConformanceImageVersion ConformanceImageVersion
+	imagePullPolicy             ImagePullPolicy
 }
 
 var genflags genFlags
 
-func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
+func GenFlagSet(cfg *genFlags, rbac RBACMode, version ConformanceImageVersion) *pflag.FlagSet {
 	genset := pflag.NewFlagSet("generate", pflag.ExitOnError)
 	AddModeFlag(&cfg.mode, genset)
 	AddSonobuoyConfigFlag(&cfg.sonobuoyConfig, genset)
@@ -55,6 +58,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddNamespaceFlag(&cfg.namespace, genset)
 	AddSonobuoyImage(&cfg.sonobuoyImage, genset)
 	AddKubeConformanceImage(&cfg.kubeConformanceImage, genset)
+	AddKubeConformanceImageVersion(&cfg.kubeConformanceImageVersion, genset, version)
 
 	return genset
 }
@@ -65,14 +69,46 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		return nil, errors.Wrap(err, "could not retrieve E2E config")
 	}
 
+	kubeclient, kubeError := maybeGetClient(&g.kubecfg)
+
+	rbacEnabled, err := genflags.rbacMode.Enabled(kubeclient)
+	if err != nil {
+		if errors.Cause(err) == ErrRBACNoClient {
+			return nil, errors.Wrap(err, kubeError.Error())
+		}
+		return nil, err
+	}
+
+	var discoveryClient discovery.ServerVersionInterface
+	var image string
+
+	if g.kubeConformanceImage != "" {
+		image = g.kubeConformanceImage
+	} else {
+		if kubeclient != nil {
+			discoveryClient = kubeclient.DiscoveryClient
+		}
+
+		imageVersion, err := g.kubeConformanceImageVersion.Get(discoveryClient)
+		if err != nil {
+			if errors.Cause(err) == ErrImageVersionNoClient {
+				return nil, errors.Wrap(err, kubeError.Error())
+			} else {
+				return nil, err
+			}
+		}
+
+		image = fmt.Sprintf(config.DefaultKubeConformanceImage, imageVersion)
+	}
+
 	return &client.GenConfig{
 		E2EConfig:            e2ecfg,
 		Config:               GetConfigWithMode(&g.sonobuoyConfig, g.mode),
 		Image:                g.sonobuoyImage,
 		Namespace:            g.namespace,
-		EnableRBAC:           getRBACOrExit(&g.rbacMode, &g.kubecfg),
+		EnableRBAC:           rbacEnabled,
 		ImagePullPolicy:      g.imagePullPolicy.String(),
-		KubeConformanceImage: g.kubeConformanceImage,
+		KubeConformanceImage: image,
 	}, nil
 }
 
@@ -85,7 +121,7 @@ var GenCommand = &cobra.Command{
 }
 
 func init() {
-	GenCommand.Flags().AddFlagSet(GenFlagSet(&genflags, EnabledRBACMode))
+	GenCommand.Flags().AddFlagSet(GenFlagSet(&genflags, EnabledRBACMode, ConformanceImageVersionLatest))
 	RootCmd.AddCommand(GenCommand)
 }
 
@@ -112,11 +148,8 @@ func genManifest(cmd *cobra.Command, args []string) {
 	os.Exit(1)
 }
 
-// getRBACOrExit is a helper function for working with RBACMode. RBACMode is a bit of a special case
-// because it only needs a kubeconfig for detect, otherwise errors from kubeconfig can be ignored.
-// This function returns a bool because it os.Exit()s in error cases.
-func getRBACOrExit(mode *RBACMode, kubeconfig *Kubeconfig) bool {
-
+// maybeGetClient returns a client if one can be found, and the error attempting to retrieve that client if not.
+func maybeGetClient(kubeconfig *Kubeconfig) (*kubernetes.Clientset, error) {
 	// Usually we don't need a client. But in this case, we _might_ if we're using detect.
 	// So pass in nil if we get an error, then display the errors from trying to get a client
 	// if it turns out we needed it.
@@ -133,13 +166,5 @@ func getRBACOrExit(mode *RBACMode, kubeconfig *Kubeconfig) bool {
 		kubeError = err
 	}
 
-	rbacEnabled, err := genflags.rbacMode.Enabled(client)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC mode."))
-		if errors.Cause(err) == ErrRBACNoClient {
-			errlog.LogError(kubeError)
-		}
-		os.Exit(1)
-	}
-	return rbacEnabled
+	return client, kubeError
 }

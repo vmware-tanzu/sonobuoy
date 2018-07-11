@@ -39,7 +39,7 @@ var runflags runFlags
 func RunFlagSet(cfg *runFlags) *pflag.FlagSet {
 	runset := pflag.NewFlagSet("run", pflag.ExitOnError)
 	// Default to detect since we need kubeconfig regardless
-	runset.AddFlagSet(GenFlagSet(&cfg.genFlags, DetectRBACMode))
+	runset.AddFlagSet(GenFlagSet(&cfg.genFlags, DetectRBACMode, ConformanceImageVersionAuto))
 	AddSkipPreflightFlag(&cfg.skipPreflight, runset)
 	return runset
 }

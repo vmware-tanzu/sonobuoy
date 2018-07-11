@@ -21,6 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/discovery"
 )
 
 func TestSetConformanceImageVersion(t *testing.T) {
@@ -87,6 +88,12 @@ func TestGetConformanceImageVersion(t *testing.T) {
 		},
 	}
 
+	betaServerVersion := &fakeServerVersionInterface{
+		version: version.Info{
+			GitVersion: "v1.11.0-beta.2.78+e0b33dbc2bde88",
+		},
+	}
+
 	brokenServerVersion := &fakeServerVersionInterface{
 		err: errors.New("can't connect"),
 	}
@@ -94,7 +101,7 @@ func TestGetConformanceImageVersion(t *testing.T) {
 	tests := []struct {
 		name          string
 		version       ConformanceImageVersion
-		serverVersion *fakeServerVersionInterface
+		serverVersion discovery.ServerVersionInterface
 		expected      string
 		error         bool
 	}{
@@ -108,6 +115,12 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			name:          "auto returns error if upstream fails",
 			version:       "auto",
 			serverVersion: brokenServerVersion,
+			error:         true,
+		},
+		{
+			name:          "beta server version throws error",
+			version:       "auto",
+			serverVersion: betaServerVersion,
 			error:         true,
 		},
 		{
@@ -133,6 +146,12 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			version:       "latest",
 			serverVersion: brokenServerVersion,
 			expected:      "latest",
+		},
+		{
+			name:          "nil serverVersion",
+			version:       "auto",
+			serverVersion: nil,
+			error:         true,
 		},
 	}
 

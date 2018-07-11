@@ -27,6 +27,11 @@ import (
 // ConformanceImageVersion represents the version of a conformance image, or "auto" to detect the version
 type ConformanceImageVersion string
 
+var (
+	//ErrImageVersionNoClient is the error returned when we need a client but didn't get on
+	ErrImageVersionNoClient = errors.New(`can't use nil client with "auto" image version`)
+)
+
 const (
 	// ConformanceImageVersionAuto represents detecting the server's kubernetes version.
 	ConformanceImageVersionAuto = "auto"
@@ -42,28 +47,18 @@ func (c *ConformanceImageVersion) Type() string { return "ConformanceImageVersio
 
 // Set the ImageVersion to either the string "auto" or a version string
 func (c *ConformanceImageVersion) Set(str string) error {
-	if str == ConformanceImageVersionAuto {
+	switch str {
+	case ConformanceImageVersionAuto:
 		*c = ConformanceImageVersionAuto
-		return nil
-	} else if str == ConformanceImageVersionLatest {
+	case ConformanceImageVersionLatest:
 		*c = ConformanceImageVersionLatest
-		return nil
+	default:
+		if err := validateVersion(str); err != nil {
+			return err
+		}
+		*c = ConformanceImageVersion(str)
 	}
 
-	version, err := version.NewVersion(str)
-	if err != nil {
-		return err
-	}
-
-	if version.Metadata() != "" || version.Prerelease() != "" {
-		return errors.New("version cannot have prelease or metadata")
-	}
-
-	if !strings.HasPrefix(str, "v") {
-		return errors.New("version must start with v")
-	}
-
-	*c = ConformanceImageVersion(str)
 	return nil
 }
 
@@ -71,11 +66,31 @@ func (c *ConformanceImageVersion) Set(str string) error {
 // kubernetes.Interface.Discovery() provides ServerVersionInterface.
 func (c *ConformanceImageVersion) Get(client discovery.ServerVersionInterface) (string, error) {
 	if *c == ConformanceImageVersionAuto {
+		if client == nil {
+			return "", ErrImageVersionNoClient
+		}
 		version, err := client.ServerVersion()
 		if err != nil {
 			return "", errors.Wrap(err, "couldn't retrieve server version")
 		}
+
+		if err := validateVersion(version.GitVersion); err != nil {
+			return "", err
+		}
+
 		return version.GitVersion, nil
 	}
 	return string(*c), nil
+}
+
+func validateVersion(v string) error {
+	version, err := version.NewVersion(v)
+	if err == nil {
+		if version.Metadata() != "" || version.Prerelease() != "" {
+			err = errors.New("version cannot have prelease or metadata, please use a stable version")
+		} else if !strings.HasPrefix(v, "v") {
+			err = errors.New("version must start with v")
+		}
+	}
+	return errors.Wrapf(err, "version %q is invalid", v)
 }
