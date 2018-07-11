@@ -69,7 +69,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		return nil, errors.Wrap(err, "could not retrieve E2E config")
 	}
 
-	kubeclient, kubeError := maybeGetClient(&g.kubecfg)
+	kubeclient, kubeError := getClient(&g.kubecfg)
 
 	rbacEnabled, err := genflags.rbacMode.Enabled(kubeclient)
 	if err != nil {
@@ -93,12 +93,11 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		if err != nil {
 			if errors.Cause(err) == ErrImageVersionNoClient {
 				return nil, errors.Wrap(err, kubeError.Error())
-			} else {
-				return nil, err
 			}
+			return nil, err
 		}
 
-		image = fmt.Sprintf(config.DefaultKubeConformanceImage, imageVersion)
+		image = config.DefaultKubeConformanceImageURL + ":" + imageVersion
 	}
 
 	return &client.GenConfig{
@@ -148,8 +147,8 @@ func genManifest(cmd *cobra.Command, args []string) {
 	os.Exit(1)
 }
 
-// maybeGetClient returns a client if one can be found, and the error attempting to retrieve that client if not.
-func maybeGetClient(kubeconfig *Kubeconfig) (*kubernetes.Clientset, error) {
+// getClient returns a client if one can be found, and the error attempting to retrieve that client if not.
+func getClient(kubeconfig *Kubeconfig) (*kubernetes.Clientset, error) {
 	// Usually we don't need a client. But in this case, we _might_ if we're using detect.
 	// So pass in nil if we get an error, then display the errors from trying to get a client
 	// if it turns out we needed it.

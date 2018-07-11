@@ -29,8 +29,11 @@ import (
 const (
 	// DefaultNamespace is the namespace where the master and plugin workers will run (but not necessarily the pods created by the plugin workers).
 	DefaultNamespace = "heptio-sonobuoy"
-	// DefaultKubeConformanceImage is the URL of the docker image to run for the kube conformance tests.
-	DefaultKubeConformanceImage = "gcr.io/heptio-images/kube-conformance:%s"
+
+	// DefaultKubeConformanceImageURL is the URL of the docker image to run for the kube conformance tests.
+	DefaultKubeConformanceImageURL = "gcr.io/heptio-images/kube-conformance"
+	// DefaultKubeConformanceImageTag is the default tag of the conformance image
+	DefaultKubeConformanceImageTag = "latest"
 	// DefaultAggregationServerBindPort is the default port for the aggregation server to bind to.
 	DefaultAggregationServerBindPort = 8080
 	// DefaultAggregationServerBindAddress is the default address for the aggregation server to bind to.
@@ -43,8 +46,12 @@ const (
 	MasterResultsPath = "/tmp/sonobuoy"
 )
 
-// DefaultImage is the URL of the docker image to run for the aggregator and workers
-var DefaultImage = "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version
+var (
+	// DefaultKubeConformanceImage is the URL and tag of the docker image to run for the kube conformance tests.
+	DefaultKubeConformanceImage = DefaultKubeConformanceImageURL + ":" + DefaultKubeConformanceImageTag
+	// DefaultImage is the URL of the docker image to run for the aggregator and workers
+	DefaultImage = "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version
+)
 
 ///////////////////////////////////////////////////////
 // Note: The described resources are a 1:1 match
