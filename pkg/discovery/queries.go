@@ -172,8 +172,6 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 		return kubeClient.CoreV1().Pods(ns).List(opts)
 	case "PodDisruptionBudgets":
 		return kubeClient.PolicyV1beta1().PodDisruptionBudgets(ns).List(opts)
-	case "PodPresets":
-		return kubeClient.SettingsV1alpha1().PodPresets(ns).List(opts)
 	case "PodTemplates":
 		return kubeClient.CoreV1().PodTemplates(ns).List(opts)
 	case "ReplicaSets":
@@ -210,8 +208,6 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 			return lst, err
 		}
 		return lst, err
-	case "Secrets":
-		return kubeClient.CoreV1().Secrets(ns).List(opts)
 	case "ServiceAccounts":
 		return kubeClient.CoreV1().ServiceAccounts(ns).List(opts)
 	case "Services":
