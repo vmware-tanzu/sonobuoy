@@ -375,13 +375,14 @@ func QueryClusterResources(kubeClient kubernetes.Interface, recorder *QueryRecor
 			// is odd and would pollute some of the output.
 
 			start := time.Now()
+			// TODO(chuckha) look at FieldSelector for list options{}
 			nodeList, err := kubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
 			if err != nil {
 				errlog.LogError(fmt.Errorf("failed to get node list: %v", err))
 				// Do not return or continue because we also want to query nodes as resources
 				break
 			}
-			nodeNames := make([]string, nodeList.Size())
+			nodeNames := make([]string, len(nodeList.Items))
 			for i, node := range nodeList.Items {
 				nodeNames[i] = node.Name
 			}
