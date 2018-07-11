@@ -64,6 +64,7 @@ func (c *ConformanceImageVersion) Set(str string) error {
 
 // Get retrieves the preset version if there is one, or queries client if the ConformanceImageVersion is set to `auto`.
 // kubernetes.Interface.Discovery() provides ServerVersionInterface.
+// don't require the entire kubernetes.Interface to simplify the required test mocks
 func (c *ConformanceImageVersion) Get(client discovery.ServerVersionInterface) (string, error) {
 	if *c == ConformanceImageVersionAuto {
 		if client == nil {

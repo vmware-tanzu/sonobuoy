@@ -69,8 +69,14 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		return nil, errors.Wrap(err, "could not retrieve E2E config")
 	}
 
+	// TODO: Refactor this logic to be less convuled: https://github.com/heptio/sonobuoy/issues/481
+
+	// In some configurations, the kube client isn't actually needed for correct executation
+	// Therefore, delay reporting the error until we're sure we need the client
 	kubeclient, kubeError := getClient(&g.kubecfg)
 
+	// the Enabled and Disabled modes of rbacmode don't need the client, so kubeclient can be nil.
+	// if kubeclient is needed, ErrRBACNoClient will be returned and that error can be reported back up.
 	rbacEnabled, err := genflags.rbacMode.Enabled(kubeclient)
 	if err != nil {
 		if errors.Cause(err) == ErrRBACNoClient {
@@ -82,13 +88,17 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 	var discoveryClient discovery.ServerVersionInterface
 	var image string
 
+	// --kube-conformance-image overrides --kube-conformance-image-version
 	if g.kubeConformanceImage != "" {
 		image = g.kubeConformanceImage
 	} else {
+		// kubeclient can be null. Prevent a null-pointer exception by gating on that to retrieve the discovery client
 		if kubeclient != nil {
 			discoveryClient = kubeclient.DiscoveryClient
 		}
 
+		// Only the `auto`  value requires the discovery client to be non-nil
+		// if discoveryClient is needed, ErrImageVersionNoClient will be returned and that error can be reported back up
 		imageVersion, err := g.kubeConformanceImageVersion.Get(discoveryClient)
 		if err != nil {
 			if errors.Cause(err) == ErrImageVersionNoClient {
