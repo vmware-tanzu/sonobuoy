@@ -248,7 +248,7 @@ func New() *Config {
 
 	cfg.Aggregation.BindAddress = DefaultAggregationServerBindAddress
 	cfg.Aggregation.BindPort = DefaultAggregationServerBindPort
-	cfg.Aggregation.TimeoutSeconds = 5400 // 90 minutes
+	cfg.Aggregation.TimeoutSeconds = 10800 // 180 minutes
 
 	cfg.PluginSearchPath = []string{
 		"./plugins.d",
