@@ -19,6 +19,7 @@ package worker
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -55,8 +56,11 @@ func DoRequest(url string, client *http.Client, callback func() (io.Reader, stri
 
 		// And if we can't even do that, log it.
 		resp, err := pesterClient.Do(req)
-		if err != nil || resp.StatusCode != http.StatusOK {
-			errlog.LogError(errors.Wrapf(err, "could not send error message to master URL (%v)", url))
+		if err == nil && resp.StatusCode != http.StatusOK {
+			err = fmt.Errorf("unexpected status code %d", resp.StatusCode)
+		}
+		if err != nil {
+			errlog.LogError(errors.Wrapf(err, "could not send error message to master URL (%s)", url))
 		}
 
 		return errors.WithStack(err)
@@ -68,7 +72,7 @@ func DoRequest(url string, client *http.Client, callback func() (io.Reader, stri
 	}
 	req.Header.Add("content-type", mimeType)
 
-	resp, err := client.Do(req)
+	resp, err := pesterClient.Do(req)
 	if err != nil {
 		return errors.Wrapf(err, "error encountered dialing master at %v", url)
 	}
