@@ -39,7 +39,7 @@ const (
 	// DisableRBACMode means rbac is always disable
 	DisableRBACMode RBACMode = "Disable"
 	// EnabledRBACMode means rbac is always enabled
-	EnabledRBACMode RBACMode = "Enabled"
+	EnabledRBACMode RBACMode = "Enable"
 	// DetectRBACMode means "query the server to see if RBAC is enabled"
 	DetectRBACMode RBACMode = "Detect"
 )
