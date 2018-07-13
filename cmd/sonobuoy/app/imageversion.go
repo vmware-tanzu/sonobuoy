@@ -17,6 +17,7 @@ limitations under the License.
 package app
 
 import (
+	"fmt"
 	"strings"
 
 	version "github.com/hashicorp/go-version"
@@ -79,7 +80,10 @@ func (c *ConformanceImageVersion) Get(client discovery.ServerVersionInterface) (
 			return "", err
 		}
 
-		return version.GitVersion, nil
+		// NOTE: Until the kube-conformance container is pushed upstream we can't
+		// guarantee alignment with exact versioning see https://github.com/heptio/kube-conformance/issues/25
+		// for more details
+		return fmt.Sprintf("v%s.%s", version.Major, version.Minor), nil
 	}
 	return string(*c), nil
 }
