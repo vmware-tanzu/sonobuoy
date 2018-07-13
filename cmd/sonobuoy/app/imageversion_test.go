@@ -84,12 +84,16 @@ func TestSetConformanceImageVersion(t *testing.T) {
 func TestGetConformanceImageVersion(t *testing.T) {
 	workingServerVersion := &fakeServerVersionInterface{
 		version: version.Info{
+			Major:      "1",
+			Minor:      "11",
 			GitVersion: "v1.11.0",
 		},
 	}
 
 	betaServerVersion := &fakeServerVersionInterface{
 		version: version.Info{
+			Major:      "1",
+			Minor:      "11",
 			GitVersion: "v1.11.0-beta.2.78+e0b33dbc2bde88",
 		},
 	}
@@ -109,7 +113,7 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			name:          "auto retrieves server version",
 			version:       "auto",
 			serverVersion: workingServerVersion,
-			expected:      "v1.11.0",
+			expected:      "v1.11",
 		},
 		{
 			name:          "auto returns error if upstream fails",
