@@ -13,12 +13,14 @@
 # limitations under the License.
 #
 
+BINARY = sonobuoy
 TARGET = sonobuoy
 GOTARGET = github.com/heptio/$(TARGET)
 REGISTRY ?= gcr.io/heptio-images
 IMAGE = $(REGISTRY)/$(TARGET)
 DIR := ${CURDIR}
 DOCKER ?= docker
+LINUX_ARCH := amd64 arm64
 
 GIT_VERSION ?= $(shell git describe --always --dirty)
 IMAGE_VERSION ?= $(shell git describe --always --dirty)
@@ -30,8 +32,6 @@ VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
 BUILD_IMAGE ?= golang:1.10-alpine
-BUILDCMD = CGO_ENABLED=0 go build -o $(TARGET) $(VERBOSE_FLAG) -ldflags "-X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION)"
-BUILD = $(BUILDCMD) $(GOTARGET)
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
@@ -78,8 +78,17 @@ container: sonobuoy
 		-t $(REGISTRY)/$(TARGET):$(GIT_REF) \
 		.
 
+build_sonobuoy:
+	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(SYSTEM) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION)" $(GOTARGET)'
+
 sonobuoy:
-	$(DOCKER_BUILD) '$(BUILD)'
+	for arch in $(LINUX_ARCH); do \
+		mkdir -p build/linux/$$arch; \
+		echo Building: linux/$$arch; \
+		$(MAKE) build_sonobuoy SYSTEM="GOOS=linux GOARCH=$$arch" BINARY="build/linux/$$arch/sonobuoy"; \
+	done
+	@echo Building: host
+	make build_sonobuoy
 
 push:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH)
@@ -93,4 +102,5 @@ push:
 
 clean:
 	rm -f $(TARGET)
+	rm -rf build
 	$(DOCKER) rmi $(REGISTRY)/$(TARGET) || true
