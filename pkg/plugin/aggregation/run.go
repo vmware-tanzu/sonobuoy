@@ -17,6 +17,7 @@ limitations under the License.
 package aggregation
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -27,10 +28,15 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
+
 	"k8s.io/client-go/kubernetes"
 )
 
-var annotationUpdateFreq = 5 * time.Second
+const (
+	annotationUpdateFreq = 5 * time.Second
+	jitterFactor         = 1.2
+)
 
 // Run runs an aggregation server and gathers results, in accordance with the
 // given sonobuoy configuration.
@@ -113,21 +119,32 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	}()
 
 	updater := newUpdater(expectedResults, namespace, client)
-	ticker := time.NewTicker(annotationUpdateFreq)
-
-	// 3. Regularly annotate the Aggregator pod with the current run status
-	go func() {
-		defer ticker.Stop()
-		for range ticker.C {
-			updater.ReceiveAll(aggr.Results)
-			if err := updater.Annotate(); err != nil {
+	ctx, cancel := context.WithCancel(context.TODO())
+	pluginsdone := false
+	defer func() {
+		if pluginsdone == false {
+			logrus.Info("Last update to annotations on exit")
+			// This is the async exit cleanup function.
+			// 1. Stop the annotation updater
+			cancel()
+			// 2. Try one last time to get an update out on exit
+			if err := updater.Annotate(aggr.Results); err != nil {
 				logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
-			}
-			if aggr.isComplete() {
-				return
 			}
 		}
 	}()
+
+	// 3. Regularly annotate the Aggregator pod with the current run status
+	wait.JitterUntil(func() {
+		pluginsdone = aggr.isComplete()
+		if err := updater.Annotate(aggr.Results); err != nil {
+			logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
+		}
+		if pluginsdone {
+			logrus.Info("All plugins have completed, status has been updated")
+			cancel()
+		}
+	}, annotationUpdateFreq, jitterFactor, true, ctx.Done())
 
 	// 4. Launch each plugin, to dispatch workers which submit the results back
 	for _, p := range plugins {
