@@ -23,7 +23,7 @@ for the following use cases:
 * Workload debugging
 * Custom data collection via extensible plugins
 
-Sonobuoy supports Kubernetes versions 1.8 and later.
+Sonobuoy supports Kubernetes versions 1.9 and later.
 
 [k8s]: https://github.com/kubernetes/kubernetes
 [e2e]: /docs/conformance-testing.md

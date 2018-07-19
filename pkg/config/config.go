@@ -56,7 +56,7 @@ var (
 ///////////////////////////////////////////////////////
 // Note: The described resources are a 1:1 match
 // with kubectl UX for consistent user experience.
-// xref: https://kubernetes.io/docs/api-reference/v1.8/
+// xref: https://kubernetes.io/docs/api-reference/v1.11/
 ///////////////////////////////////////////////////////
 
 // ClusterResources is the list of API resources that are scoped to the entire
