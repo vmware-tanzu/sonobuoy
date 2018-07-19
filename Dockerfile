@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.10-alpine
+FROM BASEIMAGE
 MAINTAINER Timothy St. Clair "tstclair@heptio.com"
 
-RUN apk add --no-cache ca-certificates bash
-ADD sonobuoy /sonobuoy
+CMD1
+
+ADD BINARY /sonobuoy
 ADD scripts/run_master.sh /run_master.sh
 ADD scripts/run_single_node_worker.sh /run_single_node_worker.sh
 WORKDIR /
