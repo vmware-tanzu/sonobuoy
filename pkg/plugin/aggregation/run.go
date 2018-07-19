@@ -114,7 +114,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		logrus.WithFields(logrus.Fields{
 			"address": cfg.BindAddress,
 			"port":    cfg.BindPort,
-		}).Info("starting aggregation server")
+		}).Info("Starting aggregation server")
 		doneServ <- srv.ListenAndServeTLS("", "")
 	}()
 
@@ -135,16 +135,19 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	}()
 
 	// 3. Regularly annotate the Aggregator pod with the current run status
-	wait.JitterUntil(func() {
-		pluginsdone = aggr.isComplete()
-		if err := updater.Annotate(aggr.Results); err != nil {
-			logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
-		}
-		if pluginsdone {
-			logrus.Info("All plugins have completed, status has been updated")
-			cancel()
-		}
-	}, annotationUpdateFreq, jitterFactor, true, ctx.Done())
+	logrus.Info("Starting annotation update routine")
+	go func() {
+		wait.JitterUntil(func() {
+			pluginsdone = aggr.isComplete()
+			if err := updater.Annotate(aggr.Results); err != nil {
+				logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
+			}
+			if pluginsdone {
+				logrus.Info("All plugins have completed, status has been updated")
+				cancel()
+			}
+		}, annotationUpdateFreq, jitterFactor, true, ctx.Done())
+	}()
 
 	// 4. Launch each plugin, to dispatch workers which submit the results back
 	for _, p := range plugins {
