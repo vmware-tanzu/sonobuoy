@@ -65,14 +65,12 @@ viewing your scan results.
 
 ## Using the CLI
 
-Sonobuoy also provides a CLI that lets you run Sonobuoy on your cluster. The CLI
+Sonobuoy also provides a CLI that lets you run Sonobuoy on your cluster. By default, the CLI
 records the following results:
 
 * Information about your cluster's hosts, Kubernetes resources, and versions.
 * systemd logs from each host. Requires a plugin.
-* The results of a single e2e conformance test ("Pods should be submitted and
-  removed"). See the [conformance guide][conformance] for configuration details.
-  Requires a plugin.
+* The results of a e2e conformance tests.
 
 ### CLI Prerequisites
 
