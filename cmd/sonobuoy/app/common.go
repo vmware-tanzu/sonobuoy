@@ -9,9 +9,13 @@ import (
 )
 
 func getSonobuoyClient(cfg *rest.Config) (*client.SonobuoyClient, error) {
-	skc, err := sonodynamic.NewAPIHelperFromRESTConfig(cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't get sonobuoy api helper")
+	var skc *sonodynamic.APIHelper
+	var err error
+	if cfg != nil {
+		skc, err = sonodynamic.NewAPIHelperFromRESTConfig(cfg)
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't get sonobuoy api helper")
+		}
 	}
 	return client.NewSonobuoyClient(cfg, skc)
 }
