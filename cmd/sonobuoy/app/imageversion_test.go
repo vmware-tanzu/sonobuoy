@@ -70,6 +70,11 @@ func TestSetConformanceImageVersion(t *testing.T) {
 			version: "v1.11.0-beta.2.78+e0b33dbc2bde88",
 			error:   false,
 		},
+		{
+			name:    "version with plus",
+			version: "v1.10+",
+			error:   true,
+		},
 	}
 
 	for _, test := range tests {
@@ -106,6 +111,14 @@ func TestGetConformanceImageVersion(t *testing.T) {
 		},
 	}
 
+	gkeServerVersion := &fakeServerVersionInterface{
+		version: version.Info{
+			Major:      "1",
+			Minor:      "10+",
+			GitVersion: "v1.10.5-gke.3",
+		},
+	}
+
 	brokenServerVersion := &fakeServerVersionInterface{
 		err: errors.New("can't connect"),
 	}
@@ -131,11 +144,17 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			error:         true,
 		},
 		{
-			name:          "beta server version throws error",
+			name:          "beta server version throws warning",
 			version:       "auto",
 			serverVersion: betaServerVersion,
 			warning:       true,
 			expected:      "v1.11",
+		},
+		{
+			name:          "gke server strips plus sign",
+			version:       "auto",
+			serverVersion: gkeServerVersion,
+			expected:      "v1.10",
 		},
 		{
 			name:          "set version ignores server version",
