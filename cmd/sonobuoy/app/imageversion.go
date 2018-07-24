@@ -22,6 +22,7 @@ import (
 
 	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/discovery"
 )
 
@@ -92,7 +93,7 @@ func validateVersion(v string) error {
 	version, err := version.NewVersion(v)
 	if err == nil {
 		if version.Metadata() != "" || version.Prerelease() != "" {
-			err = errors.New("version cannot have prelease or metadata, please use a stable version")
+			logrus.Warningf("Version %v is not a stable version, conformance image may not exist upstream", v)
 		} else if !strings.HasPrefix(v, "v") {
 			err = errors.New("version must start with v")
 		}
