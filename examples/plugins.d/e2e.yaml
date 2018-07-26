@@ -14,3 +14,6 @@ spec:
   - mountPath: /tmp/results
     name: results
     readOnly: false
+  tolerations:
+  - operator: "Exists"
+
