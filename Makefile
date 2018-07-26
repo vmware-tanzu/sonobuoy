@@ -78,7 +78,8 @@ vet:
 	$(DOCKER_BUILD) '$(VET)'
 
 pre:
-	go get github.com/estesp/manifest-tool
+	go version
+	go get -v -u github.com/estesp/manifest-tool
 
 build_container:
 	$(DOCKER) build \
