@@ -1,4 +1,4 @@
-# Conformance Testing - [1.8+][6]
+# Conformance Testing - [1.9+][6]
 
 ## Overview
 

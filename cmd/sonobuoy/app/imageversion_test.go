@@ -17,14 +17,18 @@ limitations under the License.
 package app
 
 import (
+	"io/ioutil"
 	"testing"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	testhook "github.com/sirupsen/logrus/hooks/test"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/discovery"
 )
 
 func TestSetConformanceImageVersion(t *testing.T) {
+	logrus.SetOutput(ioutil.Discard)
 
 	tests := []struct {
 		name    string
@@ -64,6 +68,11 @@ func TestSetConformanceImageVersion(t *testing.T) {
 		{
 			name:    "version with addendum",
 			version: "v1.11.0-beta.2.78+e0b33dbc2bde88",
+			error:   false,
+		},
+		{
+			name:    "version with plus",
+			version: "v1.10+",
 			error:   true,
 		},
 	}
@@ -82,6 +91,10 @@ func TestSetConformanceImageVersion(t *testing.T) {
 }
 
 func TestGetConformanceImageVersion(t *testing.T) {
+	testHook := &testhook.Hook{}
+	logrus.AddHook(testHook)
+	logrus.SetOutput(ioutil.Discard)
+
 	workingServerVersion := &fakeServerVersionInterface{
 		version: version.Info{
 			Major:      "1",
@@ -98,6 +111,14 @@ func TestGetConformanceImageVersion(t *testing.T) {
 		},
 	}
 
+	gkeServerVersion := &fakeServerVersionInterface{
+		version: version.Info{
+			Major:      "1",
+			Minor:      "10+",
+			GitVersion: "v1.10.5-gke.3",
+		},
+	}
+
 	brokenServerVersion := &fakeServerVersionInterface{
 		err: errors.New("can't connect"),
 	}
@@ -108,6 +129,7 @@ func TestGetConformanceImageVersion(t *testing.T) {
 		serverVersion discovery.ServerVersionInterface
 		expected      string
 		error         bool
+		warning       bool
 	}{
 		{
 			name:          "auto retrieves server version",
@@ -122,10 +144,17 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			error:         true,
 		},
 		{
-			name:          "beta server version throws error",
+			name:          "beta server version throws warning",
 			version:       "auto",
 			serverVersion: betaServerVersion,
-			error:         true,
+			warning:       true,
+			expected:      "v1.11",
+		},
+		{
+			name:          "gke server strips plus sign",
+			version:       "auto",
+			serverVersion: gkeServerVersion,
+			expected:      "v1.10",
 		},
 		{
 			name:          "set version ignores server version",
@@ -161,11 +190,21 @@ func TestGetConformanceImageVersion(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			testHook.Reset()
 			v, err := test.version.Get(test.serverVersion)
 			if test.error && err == nil {
 				t.Fatalf("expected error, got nil")
 			} else if !test.error && err != nil {
 				t.Fatalf("unexpecter error %v", err)
+			}
+
+			if test.warning {
+				last := testHook.LastEntry()
+				if last == nil {
+					t.Errorf("expected warning entry, got nothing")
+				} else if last.Level != logrus.WarnLevel {
+					t.Errorf("expected level %v, got %v", logrus.WarnLevel, last.Level)
+				}
 			}
 
 			if v != test.expected {

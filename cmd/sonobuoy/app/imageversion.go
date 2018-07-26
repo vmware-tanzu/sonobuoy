@@ -22,6 +22,7 @@ import (
 
 	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/discovery"
 )
 
@@ -54,10 +55,11 @@ func (c *ConformanceImageVersion) Set(str string) error {
 	case ConformanceImageVersionLatest:
 		*c = ConformanceImageVersionLatest
 	default:
-		if err := validateVersion(str); err != nil {
+		version, err := validateVersion(str)
+		if err != nil {
 			return err
 		}
-		*c = ConformanceImageVersion(str)
+		*c = ConformanceImageVersion(version.String())
 	}
 
 	return nil
@@ -76,26 +78,34 @@ func (c *ConformanceImageVersion) Get(client discovery.ServerVersionInterface) (
 			return "", errors.Wrap(err, "couldn't retrieve server version")
 		}
 
-		if err := validateVersion(version.GitVersion); err != nil {
+		parsedVersion, err := validateVersion(version.GitVersion)
+		if err != nil {
 			return "", err
+		}
+
+		segments := parsedVersion.Segments()
+		if len(segments) < 2 {
+			return "", fmt.Errorf("version %q only has %d segments, need at least 2", version.GitVersion, len(segments))
 		}
 
 		// NOTE: Until the kube-conformance container is pushed upstream we can't
 		// guarantee alignment with exact versioning see https://github.com/heptio/kube-conformance/issues/25
 		// for more details
-		return fmt.Sprintf("v%s.%s", version.Major, version.Minor), nil
+		// Use the segments instead of .major and .minor because GKE's .minor is `10+` instead of `10`.
+		return fmt.Sprintf("v%d.%d", segments[0], segments[1]), nil
 	}
 	return string(*c), nil
 }
 
-func validateVersion(v string) error {
+func validateVersion(v string) (*version.Version, error) {
 	version, err := version.NewVersion(v)
 	if err == nil {
 		if version.Metadata() != "" || version.Prerelease() != "" {
-			err = errors.New("version cannot have prelease or metadata, please use a stable version")
+			logrus.Warningf("Version %v is not a stable version, conformance image may not exist upstream", v)
 		} else if !strings.HasPrefix(v, "v") {
 			err = errors.New("version must start with v")
 		}
 	}
-	return errors.Wrapf(err, "version %q is invalid", v)
+
+	return version, errors.Wrapf(err, "version %q is invalid", v)
 }
