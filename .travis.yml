@@ -4,9 +4,6 @@ language: go
 services:
 - docker
 
-install: true
-
-
 script: VERBOSE=true make test int
 
 before_install:
