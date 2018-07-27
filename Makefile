@@ -28,8 +28,8 @@ LINUX_ARCH := amd64 arm64
 DOCKERFILE :=
 PLATFORMS := $(subst $(SPACE),$(COMMA),$(foreach arch,$(LINUX_ARCH),linux/$(arch)))
 
-GIT_VERSION ?= $(shell git describe --always --dirty)
-IMAGE_VERSION ?= $(shell git describe --always --dirty)
+GIT_VERSION ?= $(shell git describe --always --dirty --tags)
+IMAGE_VERSION ?= $(shell git describe --always --dirty --tags)
 IMAGE_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF = $(shell git rev-parse --short=8 --verify HEAD)
 

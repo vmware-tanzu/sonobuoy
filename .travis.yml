@@ -4,6 +4,8 @@ language: go
 services:
 - docker
 
+install: true
+
 script: VERBOSE=true make test int
 
 before_install:
@@ -11,6 +13,7 @@ before_install:
 - if [ ! -d ${HOME}/google-cloud-sdk ]; then
     curl https://sdk.cloud.google.com | bash /dev/stdin --disable-prompts;
   fi
+# go get doesn't work in deploy step
 - go get -u github.com/estesp/manifest-tool
 
 deploy:
