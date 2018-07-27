@@ -26,8 +26,8 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 )
@@ -79,7 +79,7 @@ func TestFillTemplate(t *testing.T) {
 		t.Fatalf("couldn't make client certificate %v", err)
 	}
 
-	var daemonSet v1beta1.DaemonSet
+	var daemonSet appsv1.DaemonSet
 	b, err := testDaemonSet.FillTemplate("", clientCert)
 	if err != nil {
 		t.Fatalf("Failed to fill template: %v", err)
