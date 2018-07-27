@@ -1,5 +1,6 @@
 # Build artifacts
 /sonobuoy
+build/
 
 # we output results to this directory by default
 /archive
@@ -9,3 +10,4 @@ examples/dev.yaml
 
 # Unencrypted credentials
 heptio-images-ee4b0474b93e.json
+
