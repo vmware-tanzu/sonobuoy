@@ -29,7 +29,6 @@ DOCKERFILE :=
 PLATFORMS := $(subst $(SPACE),$(COMMA),$(foreach arch,$(LINUX_ARCH),linux/$(arch)))
 
 GIT_VERSION ?= $(shell git describe --always --dirty)
-IMAGE_VERSION ?= $(shell git describe --always --dirty)
 IMAGE_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF = $(shell git rev-parse --short=8 --verify HEAD)
 
@@ -61,35 +60,35 @@ DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_
 all: container
 
 local-test:
-	$(TEST)
+$(TEST)
 
 # Unit tests
 test: sonobuoy vet
-	$(DOCKER_BUILD) '$(TEST)'
+$(DOCKER_BUILD) '$(TEST)'
 
 # Integration tests
 int: sonobuoy
-	$(DOCKER_BUILD) '$(INT_TEST)'
+$(DOCKER_BUILD) '$(INT_TEST)'
 
 lint:
-	$(DOCKER_BUILD) '$(LINT)'
+$(DOCKER_BUILD) '$(LINT)'
 
 vet:
-	$(DOCKER_BUILD) '$(VET)'
+$(DOCKER_BUILD) '$(VET)'
 
 pre:
-	go get github.com/estesp/manifest-tool
+go get github.com/estesp/manifest-tool
 
 build_container:
-	$(DOCKER) build \
-       -t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \
-       -t $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH) \
-       -t $(REGISTRY)/$(TARGET):$(GIT_REF) \
-       -f $(DOCKERFILE) \
-		.
+$(DOCKER) build \
+-t $(REGISTRY)/$(TARGET):$(GIT_VERSION) \
+-t $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH) \
+-t $(REGISTRY)/$(TARGET):$(GIT_REF) \
+-f $(DOCKERFILE) \
+.
 
 container: sonobuoy
-	for arch in $(LINUX_ARCH); do \
+for arch in $(LINUX_ARCH); do \
 		if [ $$arch = amd64 ]; then \
 			sed -e 's|BASEIMAGE|alpine:3.7|g' \
 			-e 's|CMD1|RUN apk add --no-cache ca-certificates bash|g' \
@@ -123,8 +122,8 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_REF)
 	if git describe --tags --exact-match >/dev/null 2>&1; \
 	then \
-		$(DOCKER) tag $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) $(REGISTRY)/$(TARGET):latest; \
-		$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION); \
+		$(DOCKER) tag $(REGISTRY)/$(TARGET):$(GIT_VERSION) $(REGISTRY)/$(TARGET):latest; \
+		$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_VERSION); \
 		$(DOCKER) push $(REGISTRY)/$(TARGET):latest; \
 	fi
 
@@ -141,7 +140,7 @@ push: pre container
 
 	if git describe --tags --exact-match >/dev/null 2>&1; \
 	then \
-		$(MAKE) push_manifest VERSION=$(IMAGE_VERSION) TARGET="sonobuoy"; \
+		$(MAKE) push_manifest VERSION=$(GIT_VERSION) TARGET="sonobuoy"; \
 		$(MAKE) push_manifest VERSION=latest TARGET="sonobuoy"; \
 	fi
 
