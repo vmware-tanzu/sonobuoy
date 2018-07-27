@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Don't fail silently when a step doesn't succeed
+set -e
 
 if [ -z "$TRAVIS" ]; then
     echo "this script is intended to be run only on travis" >&2
