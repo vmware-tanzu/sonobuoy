@@ -31,6 +31,7 @@ PLATFORMS := $(subst $(SPACE),$(COMMA),$(foreach arch,$(LINUX_ARCH),linux/$(arch
 # --tags allows detecting non-annotated tags as well as annotated ones
 GIT_VERSION ?= $(shell git describe --always --dirty --tags)
 IMAGE_VERSION ?= $(shell git describe --always --dirty --tags)
+IMAGE_TAG := $(shell echo $(IMAGE_VERSION) | cut -d. -f1,2)
 IMAGE_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF = $(shell git rev-parse --short=8 --verify HEAD)
 
@@ -84,6 +85,7 @@ pre:
 build_container:
 	$(DOCKER) build \
        -t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \
+       -t $(REGISTRY)/$(TARGET):$(IMAGE_TAG) \
        -t $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH) \
        -t $(REGISTRY)/$(TARGET):$(GIT_REF) \
        -f $(DOCKERFILE) \
@@ -124,8 +126,9 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_REF)
 	if git describe --tags --exact-match >/dev/null 2>&1; \
 	then \
-		$(DOCKER) tag $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) $(REGISTRY)/$(TARGET):latest; \
+		$(DOCKER) tag $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) $(REGISTRY)/$(TARGET):$(IMAGE_TAG) $(REGISTRY)/$(TARGET):latest ; \
 		$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION); \
+		$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_TAG); \
 		$(DOCKER) push $(REGISTRY)/$(TARGET):latest; \
 	fi
 
