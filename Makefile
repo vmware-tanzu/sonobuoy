@@ -126,7 +126,8 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_REF)
 	if git describe --tags --exact-match >/dev/null 2>&1; \
 	then \
-		$(DOCKER) tag $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) $(REGISTRY)/$(TARGET):$(IMAGE_TAG) $(REGISTRY)/$(TARGET):latest ; \
+		$(DOCKER) tag $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) $(REGISTRY)/$(TARGET):$(IMAGE_TAG); \
+		$(DOCKER) tag $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) $(REGISTRY)/$(TARGET):latest; \
 		$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION); \
 		$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_TAG); \
 		$(DOCKER) push $(REGISTRY)/$(TARGET):latest; \
