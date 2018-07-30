@@ -15,6 +15,8 @@ function goreleaser() {
 function gcr_push() {
     openssl aes-256-cbc -K $encrypted_708bef23737d_key -iv $encrypted_708bef23737d_iv -in heptio-images-ee4b0474b93e.json.enc -out ./heptio-images-ee4b0474b93e.json -d
     gcloud auth activate-service-account --key-file heptio-images-ee4b0474b93e.json
+    # https://github.com/travis-ci/travis-ci/issues/9905
+    unset GIT_HTTP_USER_AGENT
     IMAGE_BRANCH="$TRAVIS_BRANCH" DOCKER="gcloud docker -- " make container push
 }
 

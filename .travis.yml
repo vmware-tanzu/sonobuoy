@@ -13,8 +13,6 @@ before_install:
 - if [ ! -d ${HOME}/google-cloud-sdk ]; then
     curl https://sdk.cloud.google.com | bash /dev/stdin --disable-prompts;
   fi
-# go get doesn't seem to work in deploy step, so fetch it here instead
-- go get -u github.com/estesp/manifest-tool
 
 deploy:
 - provider: script
