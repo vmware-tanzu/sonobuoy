@@ -147,6 +147,7 @@ push: pre container
 	if git describe --tags --exact-match >/dev/null 2>&1; \
 	then \
 		$(MAKE) push_manifest VERSION=$(IMAGE_VERSION) TARGET="sonobuoy"; \
+		$(MAKE) push_manifest VERSION=$(IMAGE_TAG) TARGET="sonobuoy"; \
 		$(MAKE) push_manifest VERSION=latest TARGET="sonobuoy"; \
 	fi
 
