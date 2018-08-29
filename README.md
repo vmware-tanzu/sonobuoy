@@ -8,7 +8,7 @@
 [status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
 [travis]: https://travis-ci.org/heptio/sonobuoy/#
 
-## Overview
+## [Overview][oview]
 
 Heptio Sonobuoy is a diagnostic tool that makes it easier to understand the
 state of a Kubernetes cluster by running a set of [Kubernetes][k8s] conformance
@@ -27,6 +27,7 @@ Sonobuoy supports Kubernetes versions 1.9 and later.
 
 [k8s]: https://github.com/kubernetes/kubernetes
 [e2e]: /docs/conformance-testing.md
+[oview]: https://youtu.be/k-P4hXdruRs?t=9m27s
 
 ## More information
 
