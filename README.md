@@ -23,7 +23,7 @@ for the following use cases:
 * Workload debugging
 * Custom data collection via extensible plugins
 
-Sonobuoy supports Kubernetes versions 1.9 and later.
+Sonobuoy supports Kubernetes versions 1.10, 1.11 and 1.12.
 
 [k8s]: https://github.com/kubernetes/kubernetes
 [e2e]: /docs/conformance-testing.md
@@ -75,7 +75,7 @@ records the following results:
 
 ### CLI Prerequisites
 
-* Golang installed. We recommend [gimme][gimme], with golang version 1.9.4.
+* Golang installed. We recommend [gimme][gimme], with golang version 1.10.4.
 
 * Your $PATH configured:
 
