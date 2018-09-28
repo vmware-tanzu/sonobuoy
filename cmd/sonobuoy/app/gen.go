@@ -40,6 +40,8 @@ type genFlags struct {
 	namespace                   string
 	sonobuoyImage               string
 	kubeConformanceImage        string
+	sshKeyPath                  string
+	sshUser                     string
 	kubeConformanceImageVersion ConformanceImageVersion
 	imagePullPolicy             ImagePullPolicy
 }
@@ -59,6 +61,8 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode, version ConformanceImageVersion) *
 	AddSonobuoyImage(&cfg.sonobuoyImage, genset)
 	AddKubeConformanceImage(&cfg.kubeConformanceImage, genset)
 	AddKubeConformanceImageVersion(&cfg.kubeConformanceImageVersion, genset, version)
+	AddSSHKeyPathFlag(&cfg.sshKeyPath, genset)
+	AddSSHUserFlag(&cfg.sshUser, genset)
 
 	return genset
 }
@@ -118,6 +122,8 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		EnableRBAC:           rbacEnabled,
 		ImagePullPolicy:      g.imagePullPolicy.String(),
 		KubeConformanceImage: image,
+		SSHKeyPath:           g.sshKeyPath,
+		SSHUser:              g.sshUser,
 	}, nil
 }
 

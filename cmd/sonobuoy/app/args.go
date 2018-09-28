@@ -191,3 +191,22 @@ func AddImagePullPolicyFlag(policy *ImagePullPolicy, flags *pflag.FlagSet) {
 		fmt.Sprintf("The ImagePullPolicy Sonobuoy should use for the aggregators and workers. Valid options are %s.", strings.Join(ValidPullPolicies(), ", ")),
 	)
 }
+
+// AddSSHKeyPathFlag initialises an SSH key path flag. The SSH key is uploaded
+// as a secret and used in the containers to enable running of E2E tests which
+// require SSH keys to be present.
+func AddSSHKeyPathFlag(path *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		path, "ssh-key", "",
+		fmt.Sprintf("Path to the private key enabling SSH to cluster nodes."),
+	)
+}
+
+// AddSSHUserFlag initialises an SSH user flag. Used by the container when
+// enabling E2E tests which require SSH.
+func AddSSHUserFlag(user *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		user, "ssh-user", "",
+		fmt.Sprintf("SSH user for ssh-key."),
+	)
+}

@@ -46,6 +46,8 @@ type GenConfig struct {
 	EnableRBAC           bool
 	ImagePullPolicy      string
 	KubeConformanceImage string
+	SSHKeyPath           string
+	SSHUser              string
 }
 
 // E2EConfig is the configuration of the E2E tests.

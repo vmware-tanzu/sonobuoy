@@ -3,6 +3,9 @@ package client_test
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
+	"io/ioutil"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -13,6 +16,8 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 )
+
+var update = flag.Bool("update", false, "update .golden files")
 
 func TestGenerateManifest(t *testing.T) {
 	tcs := []struct {
@@ -118,6 +123,50 @@ func TestGenerateManifest(t *testing.T) {
 				}
 				if !reflect.DeepEqual(configuration, tc.expected) {
 					t.Fatalf("Expected %v to equal %v", tc.expected, configuration)
+				}
+			}
+		})
+	}
+}
+
+func TestGenerateManifestSSH(t *testing.T) {
+	tcs := []struct {
+		name       string
+		inputcm    *client.GenConfig
+		goldenFile string
+	}{
+		{
+			name: "Enabling SSH",
+			inputcm: &client.GenConfig{
+				E2EConfig:  &client.E2EConfig{},
+				Config:     &config.Config{},
+				SSHKeyPath: filepath.Join("testdata", "test_ssh.key"),
+				SSHUser:    "ssh-user",
+			},
+			goldenFile: filepath.Join("testdata", "ssh.golden"),
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			sbc, err := client.NewSonobuoyClient(nil, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			manifest, err := sbc.GenerateManifest(tc.inputcm)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if *update {
+				ioutil.WriteFile(tc.goldenFile, manifest, 0666)
+			} else {
+				fileData, err := ioutil.ReadFile(tc.goldenFile)
+				if err != nil {
+					t.Fatalf("Failed to read golden file %v: %v", tc.goldenFile, err)
+				}
+				if !bytes.Equal(fileData, manifest) {
+					t.Errorf("Expected manifest to equal goldenfile: %v but instead got: %v", tc.goldenFile, string(manifest))
 				}
 			}
 		})
