@@ -39,7 +39,7 @@ const (
 	Extended Mode = "Extended"
 )
 
-const defaultSkipList = `Alpha|Kubectl|\[(Disruptive|Feature:[^\]]+|Flaky)\]`
+const defaultSkipList = `Alpha|\[(Disruptive|Feature:[^\]]+|Flaky)\]`
 
 var modeMap = map[string]Mode{
 	string(Conformance): Conformance,

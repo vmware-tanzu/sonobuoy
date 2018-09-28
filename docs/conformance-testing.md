@@ -1,4 +1,4 @@
-# Conformance Testing - [1.9+][6]
+# Conformance Testing - [1.10+][6]
 
 ## Overview
 
@@ -27,7 +27,7 @@ To customize the set of tests that are run as part of the report, the following 
 | Variable | Default Value | Description |
 |---|---|---|
 | `E2E_FOCUS` | "Conformance" | The test suite to run.<br><br>*NOTE*: Because the real conformance suite can take up to an hour to run, the quickstart example's [e2e config][8] specifies just a single test, "Pods should be submitted and removed". |
-| `E2E_SKIP` | "Alpha&#124;Disruptive&#124;Feature&#124;Flaky&#124;Kubectl" | Which subset of tests to skip |
+| `E2E_SKIP` | "Alpha&#124;Disruptive&#124;Feature&#124;Flaky" | Which subset of tests to skip |
 | `E2E_PROVIDER` | "local" | The platform that the cluster is running on |
 
 *NOTE: The length of time it takes to run conformance can vary based on the size of your cluster---the timeout can be adjusted in the Server.timeoutseconds field of the Sonobuoy `config.json`.*
