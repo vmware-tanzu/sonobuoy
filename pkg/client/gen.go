@@ -18,7 +18,9 @@ package client
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
+	"io/ioutil"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -39,6 +41,8 @@ type templateValues struct {
 	EnableRBAC           bool
 	ImagePullPolicy      string
 	KubeConformanceImage string
+	SSHKey               string
+	SSHUser              string
 }
 
 // GenerateManifest fills in a template with a Sonobuoy config
@@ -46,6 +50,15 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	marshalledConfig, err := json.Marshal(cfg.Config)
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't marshall selector")
+	}
+
+	sshKeyData := []byte{}
+	if len(cfg.SSHKeyPath) > 0 {
+		var err error
+		sshKeyData, err = ioutil.ReadFile(cfg.SSHKeyPath)
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to read SSH key file: %v", cfg.SSHKeyPath)
+		}
 	}
 
 	// Template values that are regexps (`E2EFocus` and `E2ESkip`) are
@@ -67,6 +80,8 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		EnableRBAC:           cfg.EnableRBAC,
 		ImagePullPolicy:      cfg.ImagePullPolicy,
 		KubeConformanceImage: cfg.KubeConformanceImage,
+		SSHKey:               base64.StdEncoding.EncodeToString(sshKeyData),
+		SSHUser:              cfg.SSHUser,
 	}
 
 	var buf bytes.Buffer

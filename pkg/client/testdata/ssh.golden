@@ -1,28 +1,9 @@
-/*
-Copyright 2018 Heptio Inc.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package templates
-
-// Manifest is the template found in examples
-var Manifest = NewTemplate("manifest", `
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{.Namespace}}
+  name: 
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -30,60 +11,27 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-serviceaccount
-  namespace: {{.Namespace}}
-{{- if .EnableRBAC }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    component: sonobuoy
-  name: sonobuoy-serviceaccount-{{.Namespace}}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: sonobuoy-serviceaccount
-subjects:
-- kind: ServiceAccount
-  name: sonobuoy-serviceaccount
-  namespace: {{.Namespace}}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    component: sonobuoy
-  name: sonobuoy-serviceaccount
-rules:
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - '*'
-{{- end }}
-{{- if .SSHKey }}
+  namespace: 
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: ssh-key
-  namespace: {{.Namespace}}
+  namespace: 
 type: Opaque
 data:
-  id_rsa: {{.SSHKey}}
-{{- end }}
+  id_rsa: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlDV2dJQkFBS0JnR2gzQ3k2S01SUVhrbVlRRFpYMjZLNUYvalAwUFZPR1RsNHpqTGVnV3dxZlNrenFWNjl0ClMyWi8vSFFmYUJHVlpBVUZadUw5Rjh0RmliTGFod0FNWjIvOFUwK2JCT05jd2dPRnl2ZXd4WGpwQ04xR1JKL3QKMW12Q3NucHY2OUdHZjFDSmd2UU9XbWRJRVliUnF1WWRrZURDaE9YSkQvWEt6SUsweGIvZ3phWHpBZ01CQUFFQwpnWUExc3lRclcxeFpRTGpBQUhhTFpXNDh6N3daeHU2VGRoSG8rTVRZUy9VZzQ3dFZDSTNrbnVGSW9uZ0sxVzR3Cnc4T3psUkJMbE9EYlhEYXBtdzRVcDB1d0xDM2xTQUJtcUVNUnl2TjM3d0kyUU9LelBuWnRVU1VsNlBJdVRMU00KcFc2eFJPc0JxRm9Ta1NyR21ZZHk1eFJOL3RvQlRQZS93NDlCZDl1RUozQ0VHUUpCQUtla0ZyRWVnYUpKK2pzcQpuQ0MwbkNWNGZBRzY4SmtDVWJaZWc1RHZSeTJXWFB2SnNraWlHVUVOOThQbUxzMWsySHdHa3B2aUJWL0pJUVFGCjBOK2UvOFVDUVFDZmhwUnRvUzVVOVA0VlBBSFlwazd0NmNIbzJCdC9aT1lVRkFSL0xFQlpZdGtSRllhMjhTejgKU0JoaEQwKzJqZmllMHNOUVhxS1NoUlJxaVN6N1UzSlhBa0JDVS9BT2dDMTJVcUxKQ2lEZjU5WG9GWFdyRVpYawpWRUNVVVd6b3lXTjJMQW42TFdGMnozd0NlMDVPbWlKbWJjSWh3RS85a1QzakdpY1ArbVVjTlVLcEFrQXZPaDV6CkhrYWpMQ3lVaU1GYkxGRXRxZ2lZTUhKamtyRnl2RUpnaSs4NUIwU1FCRGx2cTVMUDFXQXlTK0FqZ1lCYk5MWlIKOHRKYVlqK2JFcVZZZW1uZEFrQk5HUTVWbFI0ZktVa2Q2cEZ5NW5oYUlWY0EybnF2M3llWWxCSzNWUy90SUd6SApoVDczTkpFYlovU1l6MUhiQmVnbFQrUDE5alVwRGtHclZCS1RJTS9vCi0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0tCg==
 ---
 apiVersion: v1
 data:
   config.json: |
-    {{.SonobuoyConfig}}
+    {"Description":"","UUID":"","Version":"","ResultsDir":"","Resources":null,"Filters":{"Namespaces":"","LabelSelector":""},"Limits":{"PodLogs":{"LimitSize":"","LimitTime":""}},"Server":{"bindaddress":"","bindport":0,"advertiseaddress":"","timeoutseconds":0},"Plugins":null,"PluginSearchPath":null,"Namespace":"","LoadedPlugins":null,"WorkerImage":"","ImagePullPolicy":""}
 kind: ConfigMap
 metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-config-cm
-  namespace: {{.Namespace}}
+  namespace: 
 ---
 apiVersion: v1
 data:
@@ -95,44 +43,36 @@ data:
     spec:
       env:
       - name: E2E_FOCUS
-        value: '{{.E2EFocus}}'
+        value: ''
       - name: E2E_SKIP
-        value: '{{.E2ESkip}}'
+        value: ''
       - name: E2E_PARALLEL
-        value: '{{.E2EParallel}}'
-{{- if .SSHKey }}
+        value: ''
       - name: LOCAL_SSH_KEY
         value: 'id_rsa'
       - name: AWS_SSH_KEY
         value: '/root/.ssh/id_rsa'
       - name: KUBE_SSH_KEY
         value: 'id_rsa'
-{{- end}}
-{{- if .SSHUser }}
       - name: KUBE_SSH_USER
-        value: {{.SSHUser}}
-{{- end}}
+        value: ssh-user
       command: ["/run_e2e.sh"]
-      image: {{.KubeConformanceImage}}
-      imagePullPolicy: {{.ImagePullPolicy}}
+      image: 
+      imagePullPolicy: 
       name: e2e
       volumeMounts:
       - mountPath: /tmp/results
         name: results
         readOnly: false
-{{- if .SSHKey }}
       - mountPath: /root/.ssh
         name: sshkey-vol
-{{- end}}
       tolerations:
         - operator: "Exists"
-{{- if .SSHKey }}
     extra-volumes:
     - name: sshkey-vol
       secret:
         secretName: ssh-key
         defaultMode: 256
-{{- end}}
   systemd-logs.yaml: |
     sonobuoy-config:
       driver: DaemonSet
@@ -150,7 +90,7 @@ data:
       - name: CHROOT_DIR
         value: /node
       image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
-      imagePullPolicy: {{.ImagePullPolicy}}
+      imagePullPolicy: 
       name: sonobuoy-systemd-logs-config
       securityContext:
         privileged: true
@@ -166,7 +106,7 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-plugins-cm
-  namespace: {{.Namespace}}
+  namespace: 
 ---
 apiVersion: v1
 kind: Pod
@@ -176,7 +116,7 @@ metadata:
     run: sonobuoy-master
     tier: analysis
   name: sonobuoy
-  namespace: {{.Namespace}}
+  namespace: 
 spec:
   containers:
   - command:
@@ -188,8 +128,8 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: {{.SonobuoyImage}}
-    imagePullPolicy: {{.ImagePullPolicy}}
+    image: 
+    imagePullPolicy: 
     name: kube-sonobuoy
     volumeMounts:
     - mountPath: /etc/sonobuoy
@@ -217,7 +157,7 @@ metadata:
     component: sonobuoy
     run: sonobuoy-master
   name: sonobuoy-master
-  namespace: {{.Namespace}}
+  namespace: 
 spec:
   ports:
   - port: 8080
@@ -226,4 +166,3 @@ spec:
   selector:
     run: sonobuoy-master
   type: ClusterIP
-`)
