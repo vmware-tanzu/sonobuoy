@@ -308,12 +308,12 @@
   version = "v2.3"
 
 [[projects]]
-  digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
+  branch = "master"
+  digest = "1:dd6ba1917df517806c9dcee5c87f15643c9b1ca6260d5b3f25eb863c6fe092ce"
   name = "github.com/satori/go.uuid"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
-  version = "v1.2.0"
+  revision = "8ccf5352a842c034b1a69f28c863aff9b1cdb116"
 
 [[projects]]
   branch = "master"
