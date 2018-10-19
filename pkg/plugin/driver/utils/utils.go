@@ -31,7 +31,7 @@ import (
 // GetSessionID generates a new session id.
 // This is essentially an instance of a running plugin.
 func GetSessionID() string {
-	uuid := gouuid.NewV4()
+	uuid, _ := gouuid.NewV4()
 	ret := make([]byte, hex.EncodedLen(8))
 	hex.Encode(ret, uuid.Bytes()[0:8])
 	return string(ret)
