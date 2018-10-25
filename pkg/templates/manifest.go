@@ -61,6 +61,12 @@ rules:
   - '*'
   verbs:
   - '*'
+- nonResourceURLs:
+  - '/metrics'
+  - '/logs'
+  - '/logs/*'
+  verbs:
+  - 'get'
 {{- end }}
 {{- if .SSHKey }}
 ---
