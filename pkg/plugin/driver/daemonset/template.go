@@ -85,6 +85,7 @@ spec:
       hostIPC: true
       hostNetwork: true
       hostPID: true
+      serviceAccountName: sonobuoy-serviceaccount
       tolerations:
       - operator: Exists
       volumes:
