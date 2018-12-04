@@ -20,15 +20,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/heptio/sonobuoy/pkg/client"
+	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
-
-	"github.com/heptio/sonobuoy/pkg/client"
-	"github.com/heptio/sonobuoy/pkg/config"
-	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
 type genFlags struct {

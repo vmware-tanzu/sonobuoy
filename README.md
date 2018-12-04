@@ -23,7 +23,7 @@ for the following use cases:
 * Workload debugging
 * Custom data collection via extensible plugins
 
-Sonobuoy supports Kubernetes versions 1.10, 1.11 and 1.12.
+Sonobuoy supports Kubernetes versions 1.11, 1.12 and 1.13.
 
 [k8s]: https://github.com/kubernetes/kubernetes
 [e2e]: /docs/conformance-testing.md
