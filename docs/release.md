@@ -12,4 +12,8 @@
    `upstream` or `origin`). If you are unsure, use the first option.
 1. Open a browser tab and go to: https://travis-ci.org/heptio/sonobuoy/builds 
     and verify go releaser for tag v0.13.0 completes successfully
-
+1. Upon successful completion of build job above, check the releases tab of
+   https://github.com/heptio/sonobuoy and verify the artifacts and changelog were published correctly.
+1. Finally, as a sanity check, run the following command to make sure the image was pushed
+   correctly: `docker run -it gcr.io/heptio-images/sonobuoy:v0.13.0 /sonobuoy version`. The output should
+   match the release tag above.  
