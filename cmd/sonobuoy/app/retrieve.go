@@ -85,7 +85,7 @@ func retrieveResults(cmd *cobra.Command, args []string) {
 
 	err = eg.Wait()
 	if _, ok := err.(exec.CodeExitError); ok {
-		fmt.Fprintln(os.Stderr, "Results not ready yet. Check `sonobuoy status` for status.")
+		fmt.Fprintln(os.Stderr, "Results not ready yet at /tmp/sonobuoy/. Check `sonobuoy status` for status.")
 		os.Exit(1)
 
 	} else if err != nil {
