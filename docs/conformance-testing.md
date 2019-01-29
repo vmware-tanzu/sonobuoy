@@ -39,5 +39,5 @@ To customize the set of tests that are run as part of the report, the following 
 [4]: https://github.com/kubernetes/community/blob/master/contributors/devel/e2e-tests.md#conformance-tests
 [5]: plugins.md
 [6]: https://github.com/kubernetes/kubernetes/issues/49313
-[7]: ../plugins.d/e2e.tmpl
-[8]: ../examples/quickstart.yaml#L133
+[7]: ../examples/plugins.d/e2e.yaml
+[8]: ../examples/plugins.d/e2e.yaml
