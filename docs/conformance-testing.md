@@ -26,7 +26,7 @@ To customize the set of tests that are run as part of the report, the following 
 
 | Variable | Default Value | Description |
 |---|---|---|
-| `E2E_FOCUS` | "Conformance" | The test suite to run.<br><br>*NOTE*: Because the real conformance suite can take up to an hour to run, the quickstart example's [e2e config][8] specifies just a single test, "Pods should be submitted and removed". |
+| `E2E_FOCUS` | "Conformance" | The test suite to run.<br><br>*NOTE*: Because the real conformance suite can take up to an hour to run, the quickstart example's [e2e config][7] specifies just a single test, "Pods should be submitted and removed". |
 | `E2E_SKIP` | "Alpha&#124;Disruptive&#124;Feature&#124;Flaky" | Which subset of tests to skip |
 | `E2E_PROVIDER` | "local" | The platform that the cluster is running on |
 
@@ -40,4 +40,3 @@ To customize the set of tests that are run as part of the report, the following 
 [5]: plugins.md
 [6]: https://github.com/kubernetes/kubernetes/issues/49313
 [7]: ../examples/plugins.d/e2e.yaml
-[8]: ../examples/plugins.d/e2e.yaml
