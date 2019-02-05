@@ -1,8 +1,6 @@
-# Sonobuoy
+# Sonobuoy [![Build Status][status]][travis]
 
-**Maintainers:** [Heptio][heptio]
-
-[![Build Status][status]][travis]
+<img src="../assets/img/vmw-os-lgo-heptio-sonobuoy.png" width="100px" >
 
 [heptio]: https://github.com/heptio
 [status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
@@ -10,7 +8,7 @@
 
 ## Overview
 
-Heptio Sonobuoy is a diagnostic tool that makes it easier to understand the
+Sonobuoy is a diagnostic tool that makes it easier to understand the
 state of a Kubernetes cluster by running a set of [Kubernetes][k8s] conformance
 tests in an accessible and non-destructive manner. It is a customizable,
 extendable, and cluster-agnostic way to generate clear, informative reports
@@ -50,19 +48,6 @@ tests, plugins, and snapshots.
 
 [brew]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
-
-## Getting Started
-
-The browser-based [Sonobuoy Scanner tool][scanner] is the quickest way to get
-started with Sonobuoy. Sonobuoy Scanner also provides a user-friendly way of
-viewing your scan results.
-
-**NOTE:** Sonobuoy Scanner runs conformance tests only.
-
-![tarball overview screenshot][screenshot]
-
-[scanner]: https://scanner.heptio.com/
-[screenshot]: img/scanner.png
 
 ## Using the CLI
 
