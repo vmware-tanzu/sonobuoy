@@ -175,6 +175,13 @@ header img {
   margin-left: 20px;
 }
 
+header img[alt="slack"] {
+  margin-left: 8px;
+  margin-top: -11px;
+  height: 40px;
+  width: 40px;
+}
+
 header {
   .icon--menu {
     width: 32px;
