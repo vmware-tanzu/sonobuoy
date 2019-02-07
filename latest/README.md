@@ -1,3 +1,7 @@
+---
+title: Sonobuoy
+---
+
 # Sonobuoy [![Build Status][status]][travis]
 
 <img src="../assets/img/vmw-os-lgo-heptio-sonobuoy.png" width="100px" >

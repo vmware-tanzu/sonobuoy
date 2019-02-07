@@ -1,4 +1,5 @@
 ---
+title: Sonobuoy
 permalink: /
 redirect_to:
 - /latest/
