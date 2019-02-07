@@ -1,10 +1,8 @@
----
-title: Sonobuoy
----
-
-# Sonobuoy [![Build Status][status]][travis]
+# Sonobuoy
 
 <img src="../assets/img/vmw-os-lgo-heptio-sonobuoy.png" width="100px" >
+
+[![Build Status][status]][travis]
 
 [heptio]: https://github.com/heptio
 [status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
