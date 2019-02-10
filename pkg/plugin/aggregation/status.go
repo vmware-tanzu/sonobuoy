@@ -16,13 +16,26 @@ limitations under the License.
 
 package aggregation
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/pkg/errors"
+	"k8s.io/client-go/kubernetes"
+
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 const (
 	// RunningStatus means the sonobuoy run is still in progress.
 	RunningStatus string = "running"
 	// CompleteStatus means the sonobuoy run is complete.
 	CompleteStatus string = "complete"
+	// PostProcessingStatus means the plugins are complete. The state is not
+	// put in the more finalized, complete, status until any postprocessing is
+	// done.
+	PostProcessingStatus string = "post-processing"
 	// FailedStatus means one or more plugins has failed and the run will not complete successfully.
 	FailedStatus string = "failed"
 )
@@ -42,7 +55,7 @@ type Status struct {
 }
 
 func (s *Status) updateStatus() error {
-	status := CompleteStatus
+	status := PostProcessingStatus
 	for _, plugin := range s.Plugins {
 		switch plugin.Status {
 		case CompleteStatus:
@@ -59,4 +72,34 @@ func (s *Status) updateStatus() error {
 	}
 	s.Status = status
 	return nil
+}
+
+// GetStatus returns the current status status on the sonobuoy pod. If the pod
+// does not exist, is not running, or is missing the status annotation, an error
+// is returned.
+func GetStatus(client kubernetes.Interface, namespace string) (*Status, error) {
+	if _, err := client.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{}); err != nil {
+		return nil, errors.Wrap(err, "sonobuoy namespace does not exist")
+	}
+
+	pod, err := client.CoreV1().Pods(namespace).Get(StatusPodName, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not retrieve sonobuoy pod")
+	}
+
+	if pod.Status.Phase != corev1.PodRunning {
+		return nil, fmt.Errorf("pod has status %q", pod.Status.Phase)
+	}
+
+	statusJSON, ok := pod.Annotations[StatusAnnotationName]
+	if !ok {
+		return nil, fmt.Errorf("missing status annotation %q", StatusAnnotationName)
+	}
+
+	var status Status
+	if err := json.Unmarshal([]byte(statusJSON), &status); err != nil {
+		return nil, errors.Wrap(err, "couldn't unmarshal the JSON status annotation")
+	}
+
+	return &status, nil
 }

@@ -26,12 +26,14 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/errlog"
-	pluginaggregation "github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	"github.com/viniciuschiele/tarx"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
+
+	pluginaggregation "github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 )
 
 // Run is the main entrypoint for discovery
@@ -124,7 +126,46 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount int) {
 		defer os.RemoveAll(outpath)
 	}
 	trackErrorsFor("assembling results tarball")(err)
+
+	// 9. Mark final annotation stating the results are available and status is completed.
+	trackErrorsFor("updating pod status")(
+		updateStatus(kubeClient, cfg.Namespace, pluginaggregation.CompleteStatus),
+	)
+
 	logrus.Infof("Results available at %v", tb)
 
 	return errCount
+}
+
+// updateStatus changes the summary status of the sonobuoy pod in order to
+// effect the finalized status the user sees. This does not change the status
+// of individual plugins.
+func updateStatus(client kubernetes.Interface, namespace string, status string) error {
+	podStatus, err := pluginaggregation.GetStatus(client, namespace)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the existing status")
+	}
+
+	// Update status
+	logrus.Infof("podstatus at first schnake %v", podStatus)
+
+	podStatus.Status = status
+
+	// Marshal back into json, inject into the patch, then serialize again.
+
+	logrus.Infof("podstatus at myupdate schnake %v", podStatus)
+	statusBytes, err := json.Marshal(podStatus)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal the status")
+	}
+
+	logrus.Infof("podstatus at statusbytes schnake %v", string(statusBytes))
+	patch := pluginaggregation.GetPatch(string(statusBytes))
+	patchBytes, err := json.Marshal(patch)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal the patch")
+	}
+
+	_, err = client.CoreV1().Pods(namespace).Patch(pluginaggregation.StatusPodName, types.MergePatchType, patchBytes)
+	return err
 }

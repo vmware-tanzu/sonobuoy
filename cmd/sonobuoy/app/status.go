@@ -105,6 +105,8 @@ func humanReadableStatus(str string) string {
 		return "Sonobuoy has failed. You can see what happened with `sonobuoy logs`."
 	case aggregation.CompleteStatus:
 		return "Sonobuoy has completed. Use `sonobuoy retrieve` to get results."
+	case aggregation.PostProcessingStatus:
+		return "Sonobuoy plugins have completed. Preparing results for download."
 	default:
 		return fmt.Sprintf("Sonobuoy is in unknown state %q. Please report a bug at github.com/heptio/sonobuoy", str)
 	}
