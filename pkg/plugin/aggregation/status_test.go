@@ -25,14 +25,14 @@ func TestUpdateStatus(t *testing.T) {
 		expectedStatus string
 	}{
 		{
-			name:           "empty is complete",
+			name:           "empty is post-processing",
 			pluginStatuses: []string{},
-			expectedStatus: "complete",
+			expectedStatus: "post-processing",
 		},
 		{
-			name:           "all completed is complete",
+			name:           "all completed is post-processing",
 			pluginStatuses: []string{"complete", "complete", "complete"},
-			expectedStatus: "complete",
+			expectedStatus: "post-processing",
 		},
 		{
 			name:           "one running is running",

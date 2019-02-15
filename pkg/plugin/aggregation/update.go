@@ -109,7 +109,7 @@ func (u *updater) Annotate(results map[string]*plugin.Result) error {
 		return errors.Wrap(err, "couldn't serialize status")
 	}
 
-	patch := getPatch(str)
+	patch := GetPatch(str)
 	bytes, err := json.Marshal(patch)
 	if err != nil {
 		return errors.Wrap(err, "couldn't encode patch")
@@ -146,7 +146,9 @@ func (u *updater) ReceiveAll(results map[string]*plugin.Result) {
 	}
 }
 
-func getPatch(annotation string) map[string]interface{} {
+// GetPatch takes a json encoded string and creates a map which can be used as
+// a patch to indicate the Sonobuoy status.
+func GetPatch(annotation string) map[string]interface{} {
 	return map[string]interface{}{
 		"metadata": map[string]interface{}{
 			"annotations": map[string]string{
