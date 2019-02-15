@@ -28,6 +28,12 @@ LINUX_ARCH := amd64 arm64
 DOCKERFILE :=
 PLATFORMS := $(subst $(SPACE),$(COMMA),$(foreach arch,$(LINUX_ARCH),linux/$(arch)))
 
+# Not used for pushing images, just for local building on other GOOS. Defaults to
+# grabbing from the local go env but can be set manually to avoid that requirement.
+HOST_GOOS ?= $(shell go env GOOS)
+HOST_GOARCH ?= $(shell go env GOARCH)
+GO_SYSTEM_FLAGS ?= GOOS=$(HOST_GOOS) GOARCH=$(HOST_GOARCH)
+
 # --tags allows detecting non-annotated tags as well as annotated ones
 GIT_VERSION ?= $(shell git describe --always --dirty --tags)
 IMAGE_VERSION ?= $(shell git describe --always --dirty --tags)
@@ -111,16 +117,16 @@ container: sonobuoy
 	done
 
 build_sonobuoy:
-	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(SYSTEM) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)'
+	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)'
 
 sonobuoy:
 	for arch in $(LINUX_ARCH); do \
 		mkdir -p build/linux/$$arch; \
 		echo Building: linux/$$arch; \
-		$(MAKE) build_sonobuoy SYSTEM="GOOS=linux GOARCH=$$arch" BINARY="build/linux/$$arch/sonobuoy"; \
+		$(MAKE) build_sonobuoy GO_SYSTEM_FLAGS="GOOS=linux GOARCH=$$arch" BINARY="build/linux/$$arch/sonobuoy"; \
 	done
 	@echo Building: host
-	make build_sonobuoy
+	$(MAKE) build_sonobuoy
 
 push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH)
