@@ -18,18 +18,26 @@ package client
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	"time"
 
+	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	kubeerror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
 const bufferSize = 4096
+
+var (
+	pollInterval = 20 * time.Second
+)
 
 func (c *SonobuoyClient) Run(cfg *RunConfig) error {
 	manifest, err := c.GenerateManifest(&cfg.GenConfig)
@@ -77,6 +85,39 @@ func (c *SonobuoyClient) Run(cfg *RunConfig) error {
 			return errors.Wrap(err, "failed to create object")
 		}
 	}
+
+	if cfg.Wait > time.Duration(0) {
+		// The runCondition will be a closure around this variable so that subsequent
+		// polling attempts know if the status has been present yet.
+		seenStatus := false
+		runCondition := func() (bool, error) {
+			// Get the heptio pod and check if its status is completed or terminated.
+			status, err := c.GetStatus(cfg.Namespace)
+			switch {
+			case err != nil && seenStatus:
+				return false, errors.Wrap(err, "failed to get status")
+			case err != nil && !seenStatus:
+				// Allow more time for the status to reported.
+				return false, nil
+			case status != nil:
+				seenStatus = true
+			}
+
+			switch {
+			case status.Status == aggregation.CompleteStatus:
+				return true, nil
+			case status.Status == aggregation.FailedStatus:
+				return true, fmt.Errorf("Pod entered a fatal terminal status: %v", status.Status)
+			}
+			return false, nil
+		}
+
+		err := wait.Poll(pollInterval, cfg.Wait, runCondition)
+		if err != nil {
+			return errors.Wrap(err, "waiting for run to finish")
+		}
+	}
+
 	return nil
 }
 

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -32,6 +33,7 @@ import (
 type runFlags struct {
 	genFlags
 	skipPreflight bool
+	wait          int
 }
 
 var runflags runFlags
@@ -41,6 +43,7 @@ func RunFlagSet(cfg *runFlags) *pflag.FlagSet {
 	// Default to detect since we need kubeconfig regardless
 	runset.AddFlagSet(GenFlagSet(&cfg.genFlags, DetectRBACMode, ConformanceImageVersionAuto))
 	AddSkipPreflightFlag(&cfg.skipPreflight, runset)
+	AddRunWaitFlag(&cfg.wait, runset)
 	return runset
 }
 
@@ -51,6 +54,7 @@ func (r *runFlags) Config() (*client.RunConfig, error) {
 	}
 	return &client.RunConfig{
 		GenConfig: *gencfg,
+		Wait:      time.Duration(r.wait) * time.Minute,
 	}, nil
 }
 

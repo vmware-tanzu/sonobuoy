@@ -18,6 +18,7 @@ package client
 
 import (
 	"io"
+	"time"
 
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
@@ -60,6 +61,7 @@ type E2EConfig struct {
 // RunConfig are the input options for running Sonobuoy.
 type RunConfig struct {
 	GenConfig
+	Wait time.Duration
 }
 
 // DeleteConfig are the input options for cleaning up a Sonobuoy run.
@@ -67,6 +69,7 @@ type DeleteConfig struct {
 	Namespace  string
 	EnableRBAC bool
 	DeleteAll  bool
+	Wait       time.Duration
 }
 
 // RetrieveConfig are the input options for retrieving a Sonobuoy run's results.

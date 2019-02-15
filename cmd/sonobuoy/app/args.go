@@ -189,6 +189,24 @@ func AddDeleteAllFlag(flag *bool, flags *pflag.FlagSet) {
 	)
 }
 
+// AddDeleteWaitFlag adds a boolean flag for waiting for the delete process to complete.
+func AddDeleteWaitFlag(flag *int, flags *pflag.FlagSet) {
+	flags.IntVar(
+		flag, "wait", 0,
+		"Wait for resources to be deleted before completing. 0 indicates do not wait. By providing --wait the default is to wait for 1 hour.",
+	)
+	flags.Lookup("wait").NoOptDefVal = "60"
+}
+
+// AddRunWaitFlag adds an int flag for waiting for the entire run to finish.
+func AddRunWaitFlag(flag *int, flags *pflag.FlagSet) {
+	flags.IntVar(
+		flag, "wait", 0,
+		"Wait for sonobuoy run to be completed (or fail). 0 indicates do not wait. By providing --wait the default is to wait for 1 day.",
+	)
+	flags.Lookup("wait").NoOptDefVal = "1440"
+}
+
 // AddImagePullPolicyFlag adds a boolean flag for deleting everything (including E2E tests).
 func AddImagePullPolicyFlag(policy *ImagePullPolicy, flags *pflag.FlagSet) {
 	*policy = ImagePullPolicy(v1.PullAlways) //default
