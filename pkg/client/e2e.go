@@ -73,6 +73,10 @@ func Focus(testCases []reporters.JUnitTestCase) string {
 type PrintableTestCases []reporters.JUnitTestCase
 
 func (p PrintableTestCases) String() string {
+	if len(p) == 0 {
+		return ""
+	}
+
 	out := make([]string, len(p))
 	for i, tc := range p {
 		out[i] = tc.Name

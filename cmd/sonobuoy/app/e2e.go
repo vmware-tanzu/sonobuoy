@@ -99,8 +99,11 @@ func e2es(cmd *cobra.Command, args []string) {
 
 	// If we are not doing a rerun, print and exit.
 	if !e2eflags.rerun {
-		fmt.Printf("%v tests\n", e2eflags.show)
-		fmt.Println(client.PrintableTestCases(testCases))
+		numTests := len(testCases)
+		fmt.Printf("%v tests: %v\n", e2eflags.show, numTests)
+		if numTests > 0 {
+			fmt.Println(client.PrintableTestCases(testCases))
+		}
 		return
 	}
 
