@@ -33,7 +33,8 @@ GIT_VERSION ?= $(shell git describe --always --dirty --tags)
 IMAGE_VERSION ?= $(shell git describe --always --dirty --tags)
 IMAGE_TAG := $(shell echo $(IMAGE_VERSION) | cut -d. -f1,2)
 IMAGE_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | sed 's/\///g')
-GIT_REF = $(shell git rev-parse --short=8 --verify HEAD)
+GIT_REF_SHORT = $(shell git rev-parse --short=8 --verify HEAD)
+GIT_REF_LONG = $(shell git rev-parse --verify HEAD)
 
 ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
@@ -87,7 +88,7 @@ build_container:
        -t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \
        -t $(REGISTRY)/$(TARGET):$(IMAGE_TAG) \
        -t $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH) \
-       -t $(REGISTRY)/$(TARGET):$(GIT_REF) \
+       -t $(REGISTRY)/$(TARGET):$(GIT_REF_SHORT) \
        -f $(DOCKERFILE) \
 		.
 
@@ -110,7 +111,7 @@ container: sonobuoy
 	done
 
 build_sonobuoy:
-	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(SYSTEM) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X github.com/heptio/sonobuoy/pkg/buildinfo.Version=$(GIT_VERSION)" $(GOTARGET)'
+	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(SYSTEM) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)'
 
 sonobuoy:
 	for arch in $(LINUX_ARCH); do \
@@ -123,7 +124,7 @@ sonobuoy:
 
 push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH)
-	$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_REF)
+	$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_REF_SHORT)
 	if git describe --tags --exact-match >/dev/null 2>&1; \
 	then \
 		$(DOCKER) tag $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) $(REGISTRY)/$(TARGET):$(IMAGE_TAG); \
@@ -142,7 +143,7 @@ push: pre container
 	done
 
 	$(MAKE) push_manifest VERSION=$(IMAGE_BRANCH) TARGET="sonobuoy"
-	$(MAKE) push_manifest VERSION=$(GIT_REF) TARGET="sonobuoy"
+	$(MAKE) push_manifest VERSION=$(GIT_REF_SHORT) TARGET="sonobuoy"
 
 	if git describe --tags --exact-match >/dev/null 2>&1; \
 	then \
