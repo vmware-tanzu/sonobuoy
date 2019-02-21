@@ -20,9 +20,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/imdario/mergo"
-
-	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
@@ -67,28 +64,4 @@ func (c *SonobuoyConfig) Get() *config.Config {
 	}
 
 	return &c.Config
-}
-
-// GetConfigWithMode creates a config with the following algorithm:
-// If no config is supplied defaults will be returned.
-// If a config is supplied then the default values will be merged into the supplied config
-// in order to allow users to supply a minimal config that will still work.
-func GetConfigWithMode(sonobuoyCfg *SonobuoyConfig, mode client.Mode) *config.Config {
-	conf := config.New()
-
-	suppliedConfig := sonobuoyCfg.Get()
-	if suppliedConfig != nil {
-		// Provide defaults but don't overwrite any customized configuration.
-		mergo.Merge(suppliedConfig, conf)
-		conf = suppliedConfig
-	}
-
-	// if there are no plugins yet, set some based on the mode, otherwise use whatever was supplied.
-	if len(conf.PluginSelections) == 0 {
-		modeConfig := mode.Get()
-		if modeConfig != nil {
-			conf.PluginSelections = modeConfig.Selectors
-		}
-	}
-	return conf
 }

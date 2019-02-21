@@ -23,6 +23,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -35,7 +36,6 @@ type genFlags struct {
 	mode                        client.Mode
 	rbacMode                    RBACMode
 	kubecfg                     Kubeconfig
-	e2eflags                    *pflag.FlagSet
 	namespace                   string
 	sonobuoyImage               string
 	kubeConformanceImage        string
@@ -43,6 +43,12 @@ type genFlags struct {
 	sshUser                     string
 	kubeConformanceImageVersion ConformanceImageVersion
 	imagePullPolicy             ImagePullPolicy
+
+	// These two fields are here since to properly squash settings down into nested
+	// configs we need to tell whether or not values are default values or the user
+	// provided them on the command line/config file.
+	e2eflags *pflag.FlagSet
+	genflags *pflag.FlagSet
 }
 
 var genflags genFlags
@@ -63,6 +69,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode, version ConformanceImageVersion) *
 	AddSSHKeyPathFlag(&cfg.sshKeyPath, genset)
 	AddSSHUserFlag(&cfg.sshUser, genset)
 
+	cfg.genflags = genset
 	return genset
 }
 
@@ -115,7 +122,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 
 	return &client.GenConfig{
 		E2EConfig:            e2ecfg,
-		Config:               GetConfigWithMode(&g.sonobuoyConfig, g.mode),
+		Config:               g.getConfig(),
 		Image:                g.sonobuoyImage,
 		Namespace:            g.namespace,
 		EnableRBAC:           rbacEnabled,
@@ -177,4 +184,54 @@ func getClient(kubeconfig *Kubeconfig) (*kubernetes.Clientset, error) {
 	}
 
 	return client, kubeError
+}
+
+// getConfig creates a config with the following algorithm:
+// If no config is supplied defaults will be returned.
+// If a config is supplied then the default values will be merged into the supplied config
+//   in order to allow users to supply a minimal config that will still work.
+// Lastly, options provided on the command line will override
+//   any values in the config.
+func (g *genFlags) getConfig() *config.Config {
+	if g == nil {
+		return config.New()
+	}
+
+	conf := config.New()
+
+	suppliedConfig := g.sonobuoyConfig.Get()
+	if suppliedConfig != nil {
+		// Provide defaults but don't overwrite any customized configuration.
+		mergo.Merge(suppliedConfig, conf)
+		conf = suppliedConfig
+	}
+
+	// if there are no plugins yet, set some based on the mode, otherwise use whatever was supplied.
+	if len(conf.PluginSelections) == 0 {
+		modeConfig := g.mode.Get()
+		if modeConfig != nil {
+			conf.PluginSelections = modeConfig.Selectors
+		}
+	}
+
+	// Have to embed the flagset itself so we can inspect if these fields
+	// have been set explicitly or not on the command line. Otherwise
+	// we fail to properly prioritize command line/config/default values.
+	if g.genflags == nil {
+		return conf
+	}
+
+	if g.genflags.Changed(namespaceFlag) {
+		conf.Namespace = g.namespace
+	}
+
+	if g.genflags.Changed(sonobuoyImageFlag) {
+		conf.WorkerImage = g.sonobuoyImage
+	}
+
+	if g.genflags.Changed(imagePullPolicyFlag) {
+		conf.ImagePullPolicy = g.imagePullPolicy.String()
+	}
+
+	return conf
 }
