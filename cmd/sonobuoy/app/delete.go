@@ -18,6 +18,7 @@ package app
 
 import (
 	"os"
+	"time"
 
 	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
@@ -30,6 +31,7 @@ var deleteopts client.DeleteConfig
 var deleteFlags struct {
 	kubeconfig Kubeconfig
 	rbacMode   RBACMode
+	wait       int
 }
 
 func init() {
@@ -44,6 +46,7 @@ func init() {
 	AddNamespaceFlag(&deleteopts.Namespace, cmd.Flags())
 	AddRBACModeFlags(&deleteFlags.rbacMode, cmd.Flags(), DetectRBACMode)
 	AddDeleteAllFlag(&deleteopts.DeleteAll, cmd.Flags())
+	AddDeleteWaitFlag(&deleteFlags.wait, cmd.Flags())
 
 	RootCmd.AddCommand(cmd)
 }
@@ -73,6 +76,7 @@ func deleteSonobuoyRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	deleteopts.EnableRBAC = rbacEnabled
+	deleteopts.Wait = time.Duration(deleteFlags.wait) * time.Minute
 
 	if err := sbc.Delete(&deleteopts); err != nil {
 		errlog.LogError(errors.Wrap(err, "failed to delete sonobuoy resources"))

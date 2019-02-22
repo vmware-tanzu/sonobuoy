@@ -18,11 +18,13 @@ package client
 
 import (
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	kubeerror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -33,46 +35,84 @@ const (
 	e2eNamespacePrefix = "e2e-"
 )
 
+var (
+	pollFreq = 5 * time.Second
+)
+
+// Delete removes all the resources that Sonobuoy had created including
+// its own namespace, cluster roles/bindings, and optionally e2e scoped
+// namespaces.
 func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 	client, err := c.Client()
 	if err != nil {
 		return err
 	}
 
-	if err := cleanupNamespace(cfg.Namespace, client); err != nil {
+	conditions := []wait.ConditionFunc{}
+	nsCondition, err := cleanupNamespace(cfg.Namespace, client)
+	if err != nil {
 		return err
 	}
+	conditions = append(conditions, nsCondition)
 
 	if cfg.EnableRBAC {
-		if err := deleteRBAC(client); err != nil {
+		rbacCondition, err := deleteRBAC(client)
+		if err != nil {
 			return err
 		}
+		conditions = append(conditions, rbacCondition)
 	}
 
 	if cfg.DeleteAll {
-		if err := cleanupE2E(client); err != nil {
+		e2eCondition, err := cleanupE2E(client)
+		if err != nil {
 			return err
 		}
+		conditions = append(conditions, e2eCondition)
 	}
+
+	if cfg.Wait > time.Duration(0) {
+		allConditions := func() (bool, error) {
+			for _, condition := range conditions {
+				done, err := condition()
+				if !done || err != nil {
+					return done, err
+				}
+			}
+			return true, nil
+		}
+		if err := wait.Poll(pollFreq, cfg.Wait, allConditions); err != nil {
+			return errors.Wrap(err, "waiting for delete conditions to be met")
+		}
+	}
+
 	return nil
 }
 
-func cleanupNamespace(namespace string, client kubernetes.Interface) error {
+func cleanupNamespace(namespace string, client kubernetes.Interface) (wait.ConditionFunc, error) {
 	// Delete the namespace
 	log := logrus.WithFields(logrus.Fields{
 		"kind":      "namespace",
 		"namespace": namespace,
 	})
 
-	err := client.CoreV1().Namespaces().Delete(namespace, &metav1.DeleteOptions{})
-	if err := logDelete(log, err); err != nil {
-		return errors.Wrap(err, "couldn't delete namespace")
+	nsDeletedCondition := func() (bool, error) {
+		_, err := client.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{})
+		if kubeerror.IsNotFound(err) {
+			return true, nil
+		}
+		return false, err
 	}
 
-	return nil
+	err := client.CoreV1().Namespaces().Delete(namespace, &metav1.DeleteOptions{})
+	if err := logDelete(log, err); err != nil {
+		return nsDeletedCondition, errors.Wrap(err, "couldn't delete namespace")
+	}
+
+	return nsDeletedCondition, nil
 }
 
-func deleteRBAC(client kubernetes.Interface) error {
+func deleteRBAC(client kubernetes.Interface) (wait.ConditionFunc, error) {
 	// ClusterRole and ClusterRoleBindings aren't namespaced, so delete them seperately
 	selector := metav1.AddLabelToSelector(
 		&metav1.LabelSelector{},
@@ -85,42 +125,68 @@ func deleteRBAC(client kubernetes.Interface) error {
 		LabelSelector: metav1.FormatLabelSelector(selector),
 	}
 
+	rbacDeleteCondition := func() (bool, error) {
+		bindingList, err := client.RbacV1().ClusterRoleBindings().List(listOpts)
+		if err != nil || len(bindingList.Items) > 0 {
+			return false, err
+		}
+
+		roleList, err := client.RbacV1().ClusterRoles().List(listOpts)
+		if err != nil || len(roleList.Items) > 0 {
+			return false, err
+		}
+
+		return true, nil
+	}
+
 	err := client.RbacV1().ClusterRoleBindings().DeleteCollection(deleteOpts, listOpts)
 	if err := logDelete(logrus.WithField("kind", "clusterrolebindings"), err); err != nil {
-		return errors.Wrap(err, "failed to delete cluster role binding")
+		return rbacDeleteCondition, errors.Wrap(err, "failed to delete cluster role binding")
 	}
 
 	// ClusterRole and ClusterRole bindings aren't namespaced, so delete them manually
 	err = client.RbacV1().ClusterRoles().DeleteCollection(deleteOpts, listOpts)
 	if err := logDelete(logrus.WithField("kind", "clusterroles"), err); err != nil {
-		return errors.Wrap(err, "failed to delete cluster role")
+		return rbacDeleteCondition, errors.Wrap(err, "failed to delete cluster role")
 	}
 
-	return nil
+	return rbacDeleteCondition, nil
 }
 
-func cleanupE2E(client kubernetes.Interface) error {
+func cleanupE2E(client kubernetes.Interface) (wait.ConditionFunc, error) {
 	// Delete any dangling E2E namespaces
+	e2eNamespaceCondition := func() (bool, error) {
+		namespaces, err := client.CoreV1().Namespaces().List(metav1.ListOptions{})
+		if err != nil {
+			return false, errors.Wrap(err, "failed to list namespaces")
+		}
+		for _, namespace := range namespaces.Items {
+			if strings.HasPrefix(namespace.Name, e2eNamespacePrefix) {
+				return false, nil
+			}
+		}
+		return true, nil
+	}
 
 	namespaces, err := client.CoreV1().Namespaces().List(metav1.ListOptions{})
 	if err != nil {
-		return errors.Wrap(err, "failed to list namespaces")
+		return e2eNamespaceCondition, errors.Wrap(err, "failed to list namespaces")
 	}
 
 	for _, namespace := range namespaces.Items {
 		if strings.HasPrefix(namespace.Name, e2eNamespacePrefix) {
-
 			log := logrus.WithFields(logrus.Fields{
 				"kind":      "namespace",
 				"namespace": namespace.Name,
 			})
 			err := client.CoreV1().Namespaces().Delete(namespace.Name, &metav1.DeleteOptions{})
 			if err := logDelete(log, err); err != nil {
-				return errors.Wrap(err, "couldn't delete namespace")
+				return e2eNamespaceCondition, errors.Wrap(err, "couldn't delete namespace")
 			}
 		}
 	}
-	return nil
+
+	return e2eNamespaceCondition, nil
 }
 
 func logDelete(log logrus.FieldLogger, err error) error {
