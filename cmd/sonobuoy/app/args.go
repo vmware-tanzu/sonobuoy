@@ -24,13 +24,19 @@ import (
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+)
+
+const (
+	namespaceFlag       = "namespace"
+	sonobuoyImageFlag   = "sonobuoy-image"
+	imagePullPolicyFlag = "image-pull-policy"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
 func AddNamespaceFlag(str *string, flags *pflag.FlagSet) {
 	flags.StringVarP(
-		str, "namespace", "n", config.DefaultNamespace,
+		str, namespaceFlag, "n", config.DefaultNamespace,
 		"The namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously.",
 	)
 }
@@ -50,7 +56,7 @@ func AddModeFlag(mode *ops.Mode, flags *pflag.FlagSet) {
 // AddSonobuoyImage initialises an image url flag.
 func AddSonobuoyImage(image *string, flags *pflag.FlagSet) {
 	flags.StringVar(
-		image, "sonobuoy-image", config.DefaultImage,
+		image, sonobuoyImageFlag, config.DefaultImage,
 		"Container image override for the sonobuoy worker and container.",
 	)
 }
@@ -187,7 +193,7 @@ func AddDeleteAllFlag(flag *bool, flags *pflag.FlagSet) {
 func AddImagePullPolicyFlag(policy *ImagePullPolicy, flags *pflag.FlagSet) {
 	*policy = ImagePullPolicy(v1.PullAlways) //default
 	flags.Var(
-		policy, "image-pull-policy",
+		policy, imagePullPolicyFlag,
 		fmt.Sprintf("The ImagePullPolicy Sonobuoy should use for the aggregators and workers. Valid options are %s.", strings.Join(ValidPullPolicies(), ", ")),
 	)
 }
