@@ -102,7 +102,7 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 		return errors.Wrap(err, "couldn't fill template")
 	}
 	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &daemonSet); err != nil {
-		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: ", p.GetName())
+		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: %v", p.GetName())
 	}
 
 	secret, err := p.MakeTLSSecret(cert)
