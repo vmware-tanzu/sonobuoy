@@ -1,8 +1,5 @@
-# Sonobuoy [![Build Status][status]][travis]
+# <img src="docs/img/sonobuoy-logo.png" width="400px" > [![Build Status][status]][travis]
 
-<img src="docs/img/vmw-os-lgo-heptio-sonobuoy.png" width="100px" >
-
-[heptio]: https://github.com/heptio
 [status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
 [travis]: https://travis-ci.org/heptio/sonobuoy/#
 
