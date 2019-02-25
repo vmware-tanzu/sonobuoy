@@ -81,20 +81,21 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 	return reader, ec
 }
 
-/** Everything below this marker has been copy/pasta'd from k8s/k8s. The only modification is exporting UntarAll **/
+/** Most everything below this marker has been copy/pasta'd from k8s/k8s. The only modification is exporting UntarAll and returning the list of files created. **/
 
 // UntarAll expects a reader that contains tar'd data. It will untar the contents of the reader and write
-// the output into destFile under the prefix, prefix.
-func UntarAll(reader io.Reader, destFile, prefix string) error {
+// the output into destFile under the prefix, prefix. It returns a list of all the
+// files it created.
+func UntarAll(reader io.Reader, destFile, prefix string) ([]string, error) {
 	entrySeq := -1
-
+	filenames := []string{}
 	// TODO: use compression here?
 	tarReader := tar.NewReader(reader)
 	for {
 		header, err := tarReader.Next()
 		if err != nil {
 			if err != io.EOF {
-				return err
+				return filenames, err
 			}
 			break
 		}
@@ -103,11 +104,11 @@ func UntarAll(reader io.Reader, destFile, prefix string) error {
 		outFileName := path.Join(destFile, header.Name[len(prefix):])
 		baseName := path.Dir(outFileName)
 		if err := os.MkdirAll(baseName, 0755); err != nil {
-			return err
+			return filenames, err
 		}
 		if header.FileInfo().IsDir() {
 			if err := os.MkdirAll(outFileName, 0755); err != nil {
-				return err
+				return filenames, err
 			}
 			continue
 		}
@@ -116,7 +117,7 @@ func UntarAll(reader io.Reader, destFile, prefix string) error {
 		if entrySeq == 0 && !header.FileInfo().IsDir() {
 			exists, err := dirExists(outFileName)
 			if err != nil {
-				return err
+				return filenames, err
 			}
 			if exists {
 				outFileName = filepath.Join(outFileName, path.Base(header.Name))
@@ -126,19 +127,20 @@ func UntarAll(reader io.Reader, destFile, prefix string) error {
 		if mode&os.ModeSymlink != 0 {
 			err := os.Symlink(header.Linkname, outFileName)
 			if err != nil {
-				return err
+				return filenames, err
 			}
 		} else {
 			outFile, err := os.Create(outFileName)
 			if err != nil {
-				return err
+				return filenames, err
 			}
+			filenames = append(filenames, outFileName)
 			defer outFile.Close()
 			if _, err := io.Copy(outFile, tarReader); err != nil {
-				return err
+				return filenames, err
 			}
 			if err := outFile.Close(); err != nil {
-				return err
+				return filenames, err
 			}
 		}
 	}
@@ -146,9 +148,9 @@ func UntarAll(reader io.Reader, destFile, prefix string) error {
 	if entrySeq == -1 {
 		//if no file was copied
 		errInfo := fmt.Sprintf("error: %s no such file or directory", prefix)
-		return errors.New(errInfo)
+		return filenames, errors.New(errInfo)
 	}
-	return nil
+	return filenames, nil
 }
 
 // dirExists checks if a path exists and is a directory.

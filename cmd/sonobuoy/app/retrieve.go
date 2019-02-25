@@ -81,7 +81,16 @@ func retrieveResults(cmd *cobra.Command, args []string) {
 
 	eg := &errgroup.Group{}
 	eg.Go(func() error { return <-ec })
-	eg.Go(func() error { return client.UntarAll(reader, outDir, prefix) })
+	eg.Go(func() error {
+		filesCreated, err := client.UntarAll(reader, outDir, prefix)
+		if err != nil {
+			return err
+		}
+		for _, name := range filesCreated {
+			fmt.Println(name)
+		}
+		return nil
+	})
 
 	err = eg.Wait()
 	if _, ok := err.(exec.CodeExitError); ok {
