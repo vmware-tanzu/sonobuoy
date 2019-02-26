@@ -18,6 +18,7 @@ package app
 
 import (
 	"flag"
+
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/spf13/cobra"
 )
@@ -43,6 +44,7 @@ func NewSonobuoyCommand() *cobra.Command {
 	cmds.AddCommand(NewCmdRetrieve())
 	cmds.AddCommand(NewCmdRun())
 	cmds.AddCommand(NewCmdGenPlugin())
+	cmds.AddCommand(NewCmdImages())
 
 	cmds.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 	cmds.PersistentFlags().BoolVarP(&errlog.DebugOutput, "debug", "d", false, "Enable debug output (includes stack traces)")
