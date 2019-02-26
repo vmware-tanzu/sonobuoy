@@ -169,3 +169,6 @@ clean:
 	for arch in $(LINUX_ARCH); do \
 		$(MAKE) clean_image TARGET=$(TARGET)-$$arch; \
 	done
+
+deploy_kind:
+	kind load docker-image $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) || true
