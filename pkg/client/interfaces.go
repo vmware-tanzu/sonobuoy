@@ -56,6 +56,11 @@ type E2EConfig struct {
 	Focus    string
 	Skip     string
 	Parallel string
+
+	// CustomRegistries is the contents of a yaml file which will be
+	// used as KUBE_TEST_REPO_LIST which overrides which registries
+	// e2e tests use.
+	CustomRegistries string
 }
 
 // RunConfig are the input options for running Sonobuoy.

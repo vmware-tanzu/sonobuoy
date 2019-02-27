@@ -18,7 +18,10 @@ package app
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 
 	ops "github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
@@ -100,9 +103,10 @@ func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, flags *pflag.FlagSet) {
 }
 
 const (
-	e2eFocusFlag    = "e2e-focus"
-	e2eSkipFlag     = "e2e-skip"
-	e2eParallelFlag = "e2e-parallel"
+	e2eFocusFlag          = "e2e-focus"
+	e2eSkipFlag           = "e2e-skip"
+	e2eParallelFlag       = "e2e-parallel"
+	e2eRegistryConfigFlag = "e2e-repo-config"
 )
 
 // AddE2EConfigFlags adds three arguments: --e2e-focus, --e2e-skip and
@@ -127,6 +131,10 @@ func AddE2EConfigFlags(flags *pflag.FlagSet) *pflag.FlagSet {
 	e2eFlags.String(
 		e2eParallelFlag, defaultMode.E2EConfig.Parallel,
 		"Specify the E2E_PARALLEL flag to the conformance tests. Overrides --mode.",
+	)
+	e2eFlags.String(
+		e2eRegistryConfigFlag, "",
+		"Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.",
 	)
 	e2eFlags.MarkHidden(e2eParallelFlag)
 	flags.AddFlagSet(e2eFlags)
@@ -160,6 +168,26 @@ func GetE2EConfig(mode ops.Mode, flags *pflag.FlagSet) (*ops.E2EConfig, error) {
 		}
 		cfg.Parallel = parallel
 	}
+
+	if flags.Changed(e2eRegistryConfigFlag) {
+		repoFile, err := flags.GetString(e2eRegistryConfigFlag)
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't retrieve registry list flag")
+		}
+		contents, err := ioutil.ReadFile(repoFile)
+		if err != nil {
+			return nil, errors.Wrap(err, "couldn't read registry list")
+		}
+
+		// Unmarshal just to validate yaml and short circuit failures from malformed files.
+		err = yaml.Unmarshal(contents, map[string]string{})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse yaml registry list:")
+		}
+
+		cfg.CustomRegistries = string(contents)
+	}
+
 	return &cfg, nil
 }
 
