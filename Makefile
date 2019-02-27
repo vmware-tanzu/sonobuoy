@@ -46,7 +46,7 @@ ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
-BUILD_IMAGE ?= golang:1.10-alpine
+BUILD_IMAGE ?= golang:1.12.0-alpine3.9
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
@@ -74,17 +74,17 @@ local-test:
 
 # Unit tests
 test: sonobuoy vet
-	$(DOCKER_BUILD) '$(TEST)'
+	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(TEST)'
 
 # Integration tests
 int: sonobuoy
-	$(DOCKER_BUILD) '$(INT_TEST)'
+	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(INT_TEST)'
 
 lint:
 	$(DOCKER_BUILD) '$(LINT)'
 
 vet:
-	$(DOCKER_BUILD) '$(VET)'
+	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(VET)'
 
 pre:
 	go get github.com/estesp/manifest-tool
