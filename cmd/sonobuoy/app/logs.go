@@ -35,7 +35,7 @@ const (
 var logConfig client.LogConfig
 var logsKubecfg Kubeconfig
 
-func init() {
+func NewCmdLogs() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logs",
 		Short: "Dumps the logs of the currently running sonobuoy containers for diagnostics",
@@ -50,7 +50,7 @@ func init() {
 	logConfig.Out = os.Stdout
 	AddKubeconfigFlag(&logsKubecfg, cmd.Flags())
 	AddNamespaceFlag(&logConfig.Namespace, cmd.Flags())
-	RootCmd.AddCommand(cmd)
+	return cmd
 }
 
 func getLogs(cmd *cobra.Command, args []string) {

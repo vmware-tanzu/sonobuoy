@@ -41,7 +41,7 @@ type receiveFlags struct {
 
 var rcvFlags receiveFlags
 
-func init() {
+func NewCmdRetrieve() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "retrieve [path]",
 		Short: "Retrieves the results of a sonobuoy run to a specified path",
@@ -52,7 +52,7 @@ func init() {
 	AddKubeconfigFlag(&rcvFlags.kubecfg, cmd.Flags())
 	AddNamespaceFlag(&rcvFlags.namespace, cmd.Flags())
 
-	RootCmd.AddCommand(cmd)
+	return cmd
 }
 
 func retrieveResults(cmd *cobra.Command, args []string) {

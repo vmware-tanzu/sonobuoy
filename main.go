@@ -24,7 +24,7 @@ import (
 
 // main entry point of the program
 func main() {
-	err := app.RootCmd.Execute()
+	err := app.NewSonobuoyCommand().Execute()
 	if err != nil {
 		// Execute takes care of printing the error
 		os.Exit(1)

@@ -18,7 +18,6 @@ package app
 
 import (
 	"fmt"
-
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
@@ -31,7 +30,7 @@ type versionFlags struct {
 
 var versionflags versionFlags
 
-func init() {
+func NewCmdVersion() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print sonobuoy version",
@@ -41,7 +40,7 @@ func init() {
 
 	AddKubeconfigFlag(&versionflags.kubecfg, cmd.Flags())
 
-	RootCmd.AddCommand(cmd)
+	return cmd
 }
 
 func runVersion(cmd *cobra.Command, args []string) {

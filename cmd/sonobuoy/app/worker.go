@@ -35,20 +35,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() {
+func NewCmdWorker() *cobra.Command {
+
+	var workerCmd = &cobra.Command{
+		Use:    "worker",
+		Short:  "Gather and send data to the sonobuoy master instance (for internal use)",
+		Run:    runGather,
+		Hidden: true,
+		Args:   cobra.ExactArgs(0),
+	}
+
 	workerCmd.AddCommand(singleNodeCmd)
 	workerCmd.AddCommand(globalCmd)
 
-	RootCmd.AddCommand(workerCmd)
+	return workerCmd
 }
 
-var workerCmd = &cobra.Command{
-	Use:    "worker",
-	Short:  "Gather and send data to the sonobuoy master instance (for internal use)",
-	Run:    runGather,
-	Hidden: true,
-	Args:   cobra.ExactArgs(0),
-}
+
 
 var globalCmd = &cobra.Command{
 	Use:   "global",
