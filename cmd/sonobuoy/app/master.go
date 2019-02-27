@@ -32,7 +32,7 @@ import (
 var noExit bool
 var kubecfg Kubeconfig
 
-func init() {
+func NewCmdMaster() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "master",
 		Short:  "Runs the master/aggregator component (for internal use)",
@@ -46,7 +46,7 @@ func init() {
 		"Use this if you want sonobuoy to block and not exit. Useful when you want to explicitly grab results.tar.gz",
 	)
 	AddKubeconfigFlag(&kubecfg, cmd.Flags())
-	RootCmd.AddCommand(cmd)
+	return cmd
 }
 
 func runMaster(cmd *cobra.Command, args []string) {

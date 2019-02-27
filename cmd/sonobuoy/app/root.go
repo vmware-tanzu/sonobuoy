@@ -18,24 +18,36 @@ package app
 
 import (
 	"flag"
-
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/spf13/cobra"
 )
 
-func init() {
-	// import `flag` flags into this command to support glog flags
-	RootCmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-	RootCmd.PersistentFlags().BoolVarP(&errlog.DebugOutput, "debug", "d", false, "Enable debug output (includes stack traces)")
-}
+func NewSonobuoyCommand() *cobra.Command {
+	cmds := &cobra.Command{
+		Use:   "sonobuoy",
+		Short: "Generate reports on your kubernetes cluster",
+		Long:  "Sonobuoy is an introspective kubernetes component that generates reports on cluster conformance, configuration, and more",
+		Run:   rootCmd,
+	}
 
-// RootCmd is the root command that is executed when sonobuoy is run without
-// any subcommands.
-var RootCmd = &cobra.Command{
-	Use:   "sonobuoy",
-	Short: "Generate reports on your kubernetes cluster",
-	Long:  "Sonobuoy is an introspective kubernetes component that generates reports on cluster conformance, configuration, and more",
-	Run:   rootCmd,
+	cmds.ResetFlags()
+	cmds.AddCommand(NewCmdMaster())
+	cmds.AddCommand(NewCmdDelete())
+	cmds.AddCommand(NewCmdE2E())
+	cmds.AddCommand(NewCmdGen())
+	cmds.AddCommand(NewCmdLogs())
+	cmds.AddCommand(NewCmdGenPlugin())
+	cmds.AddCommand(NewCmdVersion())
+	cmds.AddCommand(NewCmdStatus())
+	cmds.AddCommand(NewCmdWorker())
+	cmds.AddCommand(NewCmdRetrieve())
+	cmds.AddCommand(NewCmdRun())
+	cmds.AddCommand(NewCmdGenPlugin())
+
+	cmds.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+	cmds.PersistentFlags().BoolVarP(&errlog.DebugOutput, "debug", "d", false, "Enable debug output (includes stack traces)")
+	return cmds
+
 }
 
 func rootCmd(cmd *cobra.Command, args []string) {

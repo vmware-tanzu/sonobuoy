@@ -58,7 +58,7 @@ func (r *runFlags) Config() (*client.RunConfig, error) {
 	}, nil
 }
 
-func init() {
+func NewCmdRun() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run",
 		Short: "Submits a sonobuoy run",
@@ -67,7 +67,7 @@ func init() {
 	}
 
 	cmd.Flags().AddFlagSet(RunFlagSet(&runflags))
-	RootCmd.AddCommand(cmd)
+	return cmd
 }
 
 func submitSonobuoyRun(cmd *cobra.Command, args []string) {

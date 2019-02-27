@@ -47,7 +47,7 @@ func E2EFlagSet(cfg *e2eFlags) *pflag.FlagSet {
 
 var e2eflags e2eFlags
 
-func init() {
+func NewCmdE2E() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "e2e archive.tar.gz",
 		Short: "Inspect e2e test results. Optionally rerun failed tests",
@@ -56,7 +56,7 @@ func init() {
 	}
 	cmd.Flags().AddFlagSet(E2EFlagSet(&e2eflags))
 
-	RootCmd.AddCommand(cmd)
+	return cmd
 }
 
 func e2es(cmd *cobra.Command, args []string) {

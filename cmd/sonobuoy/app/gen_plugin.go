@@ -46,7 +46,7 @@ type GenPluginConfig struct {
 
 var genPluginOpts GenPluginConfig
 
-func init() {
+func NewCmdGenPlugin() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "plugin",
 		Short:  "Generates the manifest Sonobuoy uses to run a worker for the given plugin",
@@ -55,12 +55,11 @@ func init() {
 		Args:   cobra.ExactArgs(1),
 	}
 
-	GenCommand.PersistentFlags().StringArrayVarP(
+	cmd.PersistentFlags().StringArrayVarP(
 		&genPluginOpts.Paths, "paths", "p", []string{".", "./examples/plugins.d/"},
 		"the paths to search for the plugins in. Defaults to . and ./plugins.d/",
 	)
-	// TODO: Other options?
-	GenCommand.AddCommand(cmd)
+	return cmd
 }
 
 func genPluginManifest(cmd *cobra.Command, args []string) {

@@ -133,17 +133,15 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 	}, nil
 }
 
-// GenCommand is exported so it can be extended.
-var GenCommand = &cobra.Command{
-	Use:   "gen",
-	Short: "Generates a sonobuoy manifest for submission via kubectl",
-	Run:   genManifest,
-	Args:  cobra.ExactArgs(0),
-}
-
-func init() {
+func NewCmdGen() *cobra.Command {
+	var GenCommand = &cobra.Command{
+		Use:   "gen",
+		Short: "Generates a sonobuoy manifest for submission via kubectl",
+		Run:   genManifest,
+		Args:  cobra.ExactArgs(0),
+	}
 	GenCommand.Flags().AddFlagSet(GenFlagSet(&genflags, EnabledRBACMode, ConformanceImageVersionLatest))
-	RootCmd.AddCommand(GenCommand)
+	return GenCommand
 }
 
 func genManifest(cmd *cobra.Command, args []string) {

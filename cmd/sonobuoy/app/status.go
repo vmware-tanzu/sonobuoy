@@ -36,7 +36,7 @@ var statusFlags struct {
 	showAll   bool
 }
 
-func init() {
+func NewCmdStatus() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Gets a summarized status of a sonobuoy run",
@@ -52,7 +52,7 @@ func init() {
 		"Don't summarize plugin statuses, show all individually",
 	)
 
-	RootCmd.AddCommand(cmd)
+	return cmd
 }
 
 // TODO (timothysc) summarize and aggregate daemonset-plugins by status done (24) running (24)
