@@ -57,7 +57,7 @@ records the following results:
 
 ### CLI Prerequisites
 
-* Golang installed. We recommend [gimme][gimme], with golang version 1.10.4.
+* Golang installed. We recommend [gimme][gimme], with golang version 1.12.0.
 
 * Your $PATH configured:
 
