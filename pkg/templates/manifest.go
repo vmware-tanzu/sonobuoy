@@ -106,6 +106,10 @@ data:
         value: '{{.E2ESkip}}'
       - name: E2E_PARALLEL
         value: '{{.E2EParallel}}'
+{{- if .CustomRegistries }}
+      - name: KUBE_TEST_REPO_LIST
+        value: /tmp/sonobuoy/repo-list.yaml
+{{- end}}
 {{- if .SSHKey }}
       - name: LOCAL_SSH_KEY
         value: 'id_rsa'
@@ -130,14 +134,25 @@ data:
       - mountPath: /root/.ssh
         name: sshkey-vol
 {{- end}}
+{{- if .CustomRegistries }}
+      - mountPath: /tmp/sonobuoy
+        name: repolist-vol
+{{- end}}
       tolerations:
         - operator: "Exists"
-{{- if .SSHKey }}
+{{- if or .SSHKey .CustomRegistries }}
     extra-volumes:
+{{- end}}
+{{- if .SSHKey }}
     - name: sshkey-vol
       secret:
         secretName: ssh-key
         defaultMode: 256
+{{- end}}
+{{- if .CustomRegistries }}
+    - name: repolist-vol
+      configMap:
+        name: repolist-cm
 {{- end}}
   systemd-logs.yaml: |
     sonobuoy-config:
@@ -216,6 +231,17 @@ spec:
   - emptyDir: {}
     name: output-volume
 ---
+{{- if .CustomRegistries }}
+apiVersion: v1
+data:
+  repo-list.yaml: |
+    {{ indent 4 .CustomRegistries }}
+kind: ConfigMap
+metadata:
+  name: repolist-cm
+  namespace: {{.Namespace}}
+---
+{{- end}}
 apiVersion: v1
 kind: Service
 metadata:

@@ -31,9 +31,10 @@ import (
 
 // templateValues are used for direct template substitution for manifest generation.
 type templateValues struct {
-	E2EFocus             string
-	E2ESkip              string
-	E2EParallel          string
+	E2EFocus    string
+	E2ESkip     string
+	E2EParallel string
+
 	SonobuoyConfig       string
 	SonobuoyImage        string
 	Version              string
@@ -43,6 +44,11 @@ type templateValues struct {
 	KubeConformanceImage string
 	SSHKey               string
 	SSHUser              string
+
+	// CustomRegistries should be a multiline yaml string which represents
+	// the file contents of KUBE_TEST_REPO_LIST, the overrides for k8s e2e
+	// registries.
+	CustomRegistries string
 }
 
 // GenerateManifest fills in a template with a Sonobuoy config
@@ -82,6 +88,9 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		KubeConformanceImage: cfg.KubeConformanceImage,
 		SSHKey:               base64.StdEncoding.EncodeToString(sshKeyData),
 		SSHUser:              cfg.SSHUser,
+
+		// Often created from reading a file, this value could have trailing newline.
+		CustomRegistries: strings.TrimSpace(cfg.E2EConfig.CustomRegistries),
 	}
 
 	var buf bytes.Buffer

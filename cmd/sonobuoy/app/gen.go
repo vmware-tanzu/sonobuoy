@@ -43,6 +43,7 @@ type genFlags struct {
 	sshUser                     string
 	kubeConformanceImageVersion ConformanceImageVersion
 	imagePullPolicy             ImagePullPolicy
+	e2eRepoList                 string
 
 	// These two fields are here since to properly squash settings down into nested
 	// configs we need to tell whether or not values are default values or the user
