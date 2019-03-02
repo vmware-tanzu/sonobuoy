@@ -96,14 +96,15 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		return nil, err
 	}
 
-	var discoveryClient discovery.ServerVersionInterface
 	var image string
 
 	// --kube-conformance-image overrides --kube-conformance-image-version
 	if g.kubeConformanceImage != "" {
 		image = g.kubeConformanceImage
 	} else {
-		// kubeclient can be null. Prevent a null-pointer exception by gating on that to retrieve the discovery client
+		// kubeclient can be null. Prevent a null-pointer exception by gating on
+		// that to retrieve the discovery client
+		var discoveryClient discovery.ServerVersionInterface
 		if kubeclient != nil {
 			discoveryClient = kubeclient.DiscoveryClient
 		}
@@ -118,7 +119,9 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 			return nil, err
 		}
 
-		image = config.DefaultKubeConformanceImageURL + ":" + imageVersion
+		image = fmt.Sprintf("%v:%v",
+			resolveConformanceImage(imageVersion),
+			imageVersion)
 	}
 
 	return &client.GenConfig{
@@ -132,6 +135,25 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		SSHKeyPath:           g.sshKeyPath,
 		SSHUser:              g.sshUser,
 	}, nil
+}
+
+// resolveConformanceImage maps versions before 1.13 to Heptio's image and otherwise
+// to the upstream cnoformance image. Latest is always mapped to the upstream
+// regardless. The comparison is just lexical, e.g. "foo" < "v1.13" and "zip" >
+// "v1.13". These are a-typical and not given more support at this time.
+func resolveConformanceImage(imageVersion string) string {
+	// TODO(johnschnake): This logic should be temporary and is only
+	// required as we phase in the use of the upstream k8s kube-conformance
+	// image instead of our own heptio/kube-conformance one. They started
+	// publishing it for v1.13.
+	switch {
+	case imageVersion == ConformanceImageVersionLatest:
+		return config.UpstreamKubeConformanceImageURL
+	case imageVersion < "v1.13":
+		return config.DefaultKubeConformanceImageURL
+	default:
+		return config.UpstreamKubeConformanceImageURL
+	}
 }
 
 func NewCmdGen() *cobra.Command {

@@ -23,7 +23,7 @@ import (
 	"github.com/c2h5oh/datasize"
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -32,6 +32,9 @@ const (
 
 	// DefaultKubeConformanceImageURL is the URL of the docker image to run for the kube conformance tests.
 	DefaultKubeConformanceImageURL = "gcr.io/heptio-images/kube-conformance"
+	// UpstreamKubeConformanceImageURL is the URL of the docker image to run for
+	// the kube conformance tests which is maintained by upstream Kubernetes.
+	UpstreamKubeConformanceImageURL = "gcr.io/google-containers/conformance"
 	// DefaultKubeConformanceImageTag is the default tag of the conformance image
 	DefaultKubeConformanceImageTag = "latest"
 	// DefaultAggregationServerBindPort is the default port for the aggregation server to bind to.
