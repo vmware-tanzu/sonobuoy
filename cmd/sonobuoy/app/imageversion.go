@@ -88,11 +88,20 @@ func (c *ConformanceImageVersion) Get(client discovery.ServerVersionInterface) (
 			return "", fmt.Errorf("version %q only has %d segments, need at least 2", version.GitVersion, len(segments))
 		}
 
-		// NOTE: Until the kube-conformance container is pushed upstream we can't
-		// guarantee alignment with exact versioning see https://github.com/heptio/kube-conformance/issues/25
-		// for more details
-		// Use the segments instead of .major and .minor because GKE's .minor is `10+` instead of `10`.
-		return fmt.Sprintf("v%d.%d", segments[0], segments[1]), nil
+		// Temporary logic in place to truncate auto-resolved versions while we
+		// transition to upstream. If < 1.13 return 2 segments due to lag behind
+		// releases. Otherwise return 3. Use the segments instead of .major and
+		// .minor because GKE's .minor is `10+` instead of `10`.
+		if segments[0] == 1 && segments[1] < 13 {
+			return fmt.Sprintf("v%d.%d", segments[0], segments[1]), nil
+		}
+
+		// Not sure that this would be hit but default to adding the last
+		// segment as 0 per convention (upstream + semver).
+		if len(segments) < 3 {
+			return fmt.Sprintf("v%d.%d.%d", segments[0], segments[1], 0), nil
+		}
+		return fmt.Sprintf("v%d.%d.%d", segments[0], segments[1], segments[2]), nil
 	}
 	return string(*c), nil
 }

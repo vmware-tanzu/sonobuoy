@@ -135,7 +135,7 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			name:          "auto retrieves server version",
 			version:       "auto",
 			serverVersion: workingServerVersion,
-			expected:      "v1.13",
+			expected:      "v1.13.0",
 		},
 		{
 			name:          "auto returns error if upstream fails",
@@ -148,7 +148,7 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			version:       "auto",
 			serverVersion: betaServerVersion,
 			warning:       true,
-			expected:      "v1.13",
+			expected:      "v1.13.0",
 		},
 		{
 			name:          "gke server strips plus sign",
@@ -161,6 +161,12 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			version:       "v1.11.2",
 			serverVersion: workingServerVersion,
 			expected:      "v1.11.2",
+		},
+		{
+			name:          "set version ignores server version and can be anything",
+			version:       "foo",
+			serverVersion: workingServerVersion,
+			expected:      "foo",
 		},
 		{
 			name:          "set version doesn't call server so ignores errors",
@@ -214,6 +220,8 @@ func TestGetConformanceImageVersion(t *testing.T) {
 	}
 }
 
+// fakeServerVersionInterface is used as a test implementation as
+// discovery.ServerVersionInterface.
 type fakeServerVersionInterface struct {
 	err     error
 	version version.Info
