@@ -73,25 +73,18 @@ func AddKubeConformanceImage(image *string, flags *pflag.FlagSet) {
 }
 
 // AddKubeConformanceImageVersion initialises an image version flag.
-func AddKubeConformanceImageVersion(imageVersion *ConformanceImageVersion, flags *pflag.FlagSet, defaultVersion ConformanceImageVersion) {
-	help := "Use Heptio's KubeConformance image, but override the version. "
-	switch defaultVersion {
-	case ConformanceImageVersionAuto:
-		help += "Default is 'auto', which will be set to your cluster's version."
-	case ConformanceImageVersionLatest:
-		help += "Default is 'latest', which will run the tests for the most recently released Sonobuoy conformance image."
-	default:
-		help += fmt.Sprintf("Default is '%s'", defaultVersion)
-	}
+func AddKubeConformanceImageVersion(imageVersion *ConformanceImageVersion, flags *pflag.FlagSet) {
+	help := "Use default Conformance image, but override the version. "
+	help += fmt.Sprintf("Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise.")
 
-	*imageVersion = defaultVersion // default
+	*imageVersion = ConformanceImageVersionAuto
 	flags.Var(imageVersion, "kube-conformance-image-version", help)
 }
 
 // AddKubeconfigFlag adds a kubeconfig flag to the provided command.
 func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	// The default is the empty string (look in the environment)
-	flags.Var(cfg, "kubeconfig", "Path to explict kubeconfig file.")
+	flags.Var(cfg, "kubeconfig", "Path to explicit kubeconfig file.")
 }
 
 // AddSonobuoyConfigFlag adds a SonobuoyConfig flag to the provided command.

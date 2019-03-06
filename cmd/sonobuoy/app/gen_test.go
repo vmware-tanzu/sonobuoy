@@ -208,7 +208,7 @@ func TestGetConfig(t *testing.T) {
 			// Simulate parsing of input via CLI. Making this optional to avoid complicating
 			// setup for other tests which just explicitly set the values.
 			if len(tc.cliInput) > 0 {
-				fs := GenFlagSet(tc.input, EnabledRBACMode, ConformanceImageVersionLatest)
+				fs := GenFlagSet(tc.input, EnabledRBACMode)
 				if err := fs.Parse(strings.Split(tc.cliInput, " ")); err != nil {
 					t.Fatalf("Failed to parse CLI input %q: %v", tc.cliInput, err)
 				}

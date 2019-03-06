@@ -54,7 +54,7 @@ type genFlags struct {
 
 var genflags genFlags
 
-func GenFlagSet(cfg *genFlags, rbac RBACMode, version ConformanceImageVersion) *pflag.FlagSet {
+func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	genset := pflag.NewFlagSet("generate", pflag.ExitOnError)
 	AddModeFlag(&cfg.mode, genset)
 	AddSonobuoyConfigFlag(&cfg.sonobuoyConfig, genset)
@@ -66,7 +66,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode, version ConformanceImageVersion) *
 	AddNamespaceFlag(&cfg.namespace, genset)
 	AddSonobuoyImage(&cfg.sonobuoyImage, genset)
 	AddKubeConformanceImage(&cfg.kubeConformanceImage, genset)
-	AddKubeConformanceImageVersion(&cfg.kubeConformanceImageVersion, genset, version)
+	AddKubeConformanceImageVersion(&cfg.kubeConformanceImageVersion, genset)
 	AddSSHKeyPathFlag(&cfg.sshKeyPath, genset)
 	AddSSHUserFlag(&cfg.sshUser, genset)
 
@@ -163,7 +163,7 @@ func NewCmdGen() *cobra.Command {
 		Run:   genManifest,
 		Args:  cobra.ExactArgs(0),
 	}
-	GenCommand.Flags().AddFlagSet(GenFlagSet(&genflags, EnabledRBACMode, ConformanceImageVersionLatest))
+	GenCommand.Flags().AddFlagSet(GenFlagSet(&genflags, EnabledRBACMode))
 	return GenCommand
 }
 
