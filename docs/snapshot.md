@@ -1,5 +1,6 @@
 # Sonobuoy Snapshot Layout
 
+- [Retrieving results](#retrieving-results)
 - [Filename](#filename)
 - [Contents](#contents)
 	- [/hosts](#hosts)
@@ -11,7 +12,30 @@
 	- [/serverversion.json](#serverversionjson)
 - [File formats](#file-formats)
 
-This document describes the standard layout of a Sonobuoy results tarball, how it is formatted, and how data is named and laid out.
+This document describes retrieving the Sonobuoy results tarball, its layout, how it is formatted, and how data is named and laid out.
+
+## Retrieving results
+
+To view the output, copy the output directory from the aggregator Sonobuoy pod to
+your local machine (and save the name of the file to a variable for reference):
+```
+output=$(sonobuoy retrieve)
+```
+
+The results can be inspected without being extracted. It will list the number of tests failed and their names:
+```
+sonobuoy e2e $output
+```
+
+You can also extract the output locally so that you can view the other
+information Sonobuoy gathered as well:
+ - detailed plugin results
+ - pod logs
+ - query results about the contents/state of your cluster
+
+```
+mkdir ./results; tar xzf $output -C ./results
+```
 
 ## Filename
 
