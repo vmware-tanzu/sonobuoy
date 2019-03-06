@@ -17,7 +17,7 @@ function gcr_push() {
     gcloud auth activate-service-account --key-file heptio-images-ee4b0474b93e.json
     # https://github.com/travis-ci/travis-ci/issues/9905
     unset GIT_HTTP_USER_AGENT
-    IMAGE_BRANCH="$TRAVIS_BRANCH" DOCKER="gcloud docker -- " make container push
+    DOCKER="gcloud docker -- " make container push
 }
 
 if [ ! -z "$TRAVIS_TAG" ]; then
@@ -29,11 +29,13 @@ if [ ! -z "$TRAVIS_TAG" ]; then
         exit 1
     fi
 
+    export IMAGE_VERSION="$TRAVIS_TAG"
     goreleaser
     gcr_push
 fi
 
 if [ "$TRAVIS_BRANCH" == "master" ]; then
+    export IMAGE_VERSION="$TRAVIS_BRANCH"
     gcr_push
 fi
 

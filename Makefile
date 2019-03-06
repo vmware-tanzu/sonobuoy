@@ -38,9 +38,7 @@ GO_SYSTEM_FLAGS ?= GOOS=$(HOST_GOOS) GOARCH=$(HOST_GOARCH)
 GIT_VERSION ?= $(shell git describe --always --dirty --tags)
 IMAGE_VERSION ?= $(shell git describe --always --dirty --tags)
 IMAGE_TAG := $(shell echo $(IMAGE_VERSION) | cut -d. -f1,2)
-IMAGE_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | sed 's/\///g')
-GIT_REF_SHORT = $(shell git rev-parse --short=8 --verify HEAD)
-GIT_REF_LONG = $(shell git rev-parse --verify HEAD)
+GIT_REF = $(shell git rev-parse --verify HEAD)
 
 ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
@@ -88,15 +86,12 @@ lint:
 vet:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(VET)'
 
-pre:
-	go get github.com/estesp/manifest-tool
+# pre:
+# 	go get github.com/estesp/manifest-tool
 
 build_container:
 	$(DOCKER) build \
        -t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \
-       -t $(REGISTRY)/$(TARGET):$(IMAGE_TAG) \
-       -t $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH) \
-       -t $(REGISTRY)/$(TARGET):$(GIT_REF_SHORT) \
        -f $(DOCKERFILE) \
 		.
 
@@ -119,7 +114,7 @@ container: sonobuoy
 	done
 
 build_sonobuoy:
-	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)'
+	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF)" $(GOTARGET)'
 
 sonobuoy:
 	for arch in $(LINUX_ARCH); do \
@@ -131,34 +126,17 @@ sonobuoy:
 	$(MAKE) build_sonobuoy
 
 push_images:
-	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH)
-	$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_REF_SHORT)
-	if git describe --tags --exact-match >/dev/null 2>&1; \
-	then \
-		$(DOCKER) tag $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) $(REGISTRY)/$(TARGET):$(IMAGE_TAG); \
-		$(DOCKER) tag $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) $(REGISTRY)/$(TARGET):latest; \
-		$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION); \
-		$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_TAG); \
-		$(DOCKER) push $(REGISTRY)/$(TARGET):latest; \
-	fi
+	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
-push_manifest:
-	$(GOPATH)/bin/manifest-tool -username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)
+# push_manifest:
+# 	$(GOPATH)/bin/manifest-tool -username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)
 
-push: pre container
+push: container
 	for arch in $(LINUX_ARCH); do \
 		$(MAKE) push_images TARGET="sonobuoy-$$arch"; \
 	done
 
-	$(MAKE) push_manifest VERSION=$(IMAGE_BRANCH) TARGET="sonobuoy"
-	$(MAKE) push_manifest VERSION=$(GIT_REF_SHORT) TARGET="sonobuoy"
-
-	if git describe --tags --exact-match >/dev/null 2>&1; \
-	then \
-		$(MAKE) push_manifest VERSION=$(IMAGE_VERSION) TARGET="sonobuoy"; \
-		$(MAKE) push_manifest VERSION=$(IMAGE_TAG) TARGET="sonobuoy"; \
-		$(MAKE) push_manifest VERSION=latest TARGET="sonobuoy"; \
-	fi
+	# $(MAKE) push_manifest VERSION=$(IMAGE_VERSION) TARGET="sonobuoy"
 
 clean_image:
 	$(DOCKER) rmi -f `$(DOCKER) images $(REGISTRY)/$(TARGET) -a -q` || true
