@@ -49,6 +49,8 @@ type Interface interface {
 	GetResultType() string
 	// GetName returns the name of this plugin
 	GetName() string
+	// GetOrder returns the order in which the plugin is run. Plugins will wait until all other plugins with lower order are done before being launched.
+	GetOrder() int
 }
 
 // Definition defines a plugin's features, method of launch, and other
@@ -56,6 +58,7 @@ type Interface interface {
 type Definition struct {
 	Name         string
 	ResultType   string
+	Order        int
 	Spec         manifest.Container
 	ExtraVolumes []manifest.Volume
 }
@@ -65,6 +68,7 @@ type Definition struct {
 type ExpectedResult struct {
 	NodeName   string
 	ResultType string
+	Order      int
 }
 
 // Result represents a result we got from a dispatched plugin, returned to the

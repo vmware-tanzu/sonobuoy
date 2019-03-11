@@ -27,6 +27,7 @@ type SonobuoyConfig struct {
 	Driver     string `json:"driver"`
 	PluginName string `json:"plugin-name"`
 	ResultType string `json:"result-type"`
+	Order      int    `json:"order"`
 	objectKind
 }
 
@@ -36,6 +37,7 @@ func (s *SonobuoyConfig) DeepCopy() *SonobuoyConfig {
 		Driver:     s.Driver,
 		PluginName: s.PluginName,
 		ResultType: s.ResultType,
+		Order:      s.Order,
 		objectKind: objectKind{s.objectKind.gvk},
 	}
 }

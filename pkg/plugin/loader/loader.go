@@ -122,6 +122,7 @@ func loadPlugin(def *manifest.Manifest, namespace, sonobuoyImage, imagePullPolic
 		ResultType:   def.SonobuoyConfig.ResultType,
 		ExtraVolumes: def.ExtraVolumes,
 		Spec:         def.Spec,
+		Order:        def.SonobuoyConfig.Order,
 	}
 
 	switch def.SonobuoyConfig.Driver {

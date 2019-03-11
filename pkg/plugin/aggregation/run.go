@@ -150,18 +150,46 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	}()
 
 	// 4. Launch each plugin, to dispatch workers which submit the results back
-	for _, p := range plugins {
-		cert, err := auth.ClientKeyPair(p.GetName())
-		if err != nil {
-			return errors.Wrapf(err, "couldn't make certificate for plugin %v", p.GetName())
+	go func() {
+		pluginsRun := map[int]bool{}
+		for {
+			for index, p := range plugins {
+				// Plugin already run.
+				if pluginsRun[index] {
+					continue
+				}
+
+				// If unable to run plugin, wait.
+				if !canStartPlugin(aggr, p) {
+					logrus.Info("schnake: cant start plugin, continue")
+					continue
+				}
+
+				cert, err := auth.ClientKeyPair(p.GetName())
+				if err != nil {
+					logrus.Errorf("Couldnt make certificate for plugin %v: %v", p.GetName(), err)
+					return
+				}
+				logrus.WithField("plugin", p.GetName()).Info("Running plugin")
+				if err = p.Run(client, cfg.AdvertiseAddress, cert); err != nil {
+					logrus.Errorf("Error running plugin %v: %v", p.GetName(), err)
+					return
+				}
+				pluginsRun[index] = true
+				// Have the plugin monitor for errors
+				go p.Monitor(client, nodes.Items, monitorCh)
+			}
+
+			// Break when all plugins have been run.
+			if len(pluginsRun) == len(plugins) {
+				break
+			}
+
+			// Sleep for a shorter period before rechecking plugins.
+			time.Sleep(10 * time.Second)
 		}
-		logrus.WithField("plugin", p.GetName()).Info("Running plugin")
-		if err = p.Run(client, cfg.AdvertiseAddress, cert); err != nil {
-			return errors.Wrapf(err, "error running plugin %v", p.GetName())
-		}
-		// Have the plugin monitor for errors
-		go p.Monitor(client, nodes.Items, monitorCh)
-	}
+	}()
+
 	// 5. Have the aggregator plumb results from each plugins' monitor function
 	go aggr.IngestResults(monitorCh)
 
@@ -187,6 +215,11 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 			return nil
 		}
 	}
+}
+
+func canStartPlugin(a *Aggregator, p plugin.Interface) bool {
+	logrus.Infof("schnake: p.order %v current order: %v", p.GetOrder(), a.currentOrder())
+	return p.GetOrder() <= a.currentOrder()
 }
 
 // Cleanup calls cleanup on all plugins

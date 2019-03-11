@@ -100,6 +100,22 @@ func (a *Aggregator) isComplete() bool {
 	return true
 }
 
+// currentOrder returns the order of lowest order plugin which doesn't have a result yet. If all have results then -1 is returned.
+func (a *Aggregator) currentOrder() int {
+	lowestWithoutResults := -1
+	set := false
+	for _, result := range a.ExpectedResults {
+		if _, ok := a.Results[result.ID()]; !ok {
+			if result.Order < lowestWithoutResults || !set {
+				lowestWithoutResults = result.Order
+				set = true
+			}
+		}
+	}
+
+	return lowestWithoutResults
+}
+
 func (a *Aggregator) isResultExpected(result *plugin.Result) bool {
 	_, ok := a.ExpectedResults[result.ExpectedResultID()]
 	return ok

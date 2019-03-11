@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -63,7 +63,10 @@ func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage, imagePullPolicy 
 // a Job only launches one pod, only one result type is expected.
 func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	return []plugin.ExpectedResult{
-		plugin.ExpectedResult{ResultType: p.GetResultType()},
+		plugin.ExpectedResult{
+			ResultType: p.GetResultType(),
+			Order:      p.Definition.Order,
+		},
 	}
 }
 

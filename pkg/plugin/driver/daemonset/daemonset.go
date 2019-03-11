@@ -68,6 +68,7 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 		ret = append(ret, plugin.ExpectedResult{
 			NodeName:   node.Name,
 			ResultType: p.GetResultType(),
+			Order:      p.Definition.Order,
 		})
 	}
 
