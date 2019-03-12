@@ -147,19 +147,14 @@ func updateStatus(client kubernetes.Interface, namespace string, status string) 
 	}
 
 	// Update status
-	logrus.Infof("podstatus at first schnake %v", podStatus)
-
 	podStatus.Status = status
 
 	// Marshal back into json, inject into the patch, then serialize again.
-
-	logrus.Infof("podstatus at myupdate schnake %v", podStatus)
 	statusBytes, err := json.Marshal(podStatus)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal the status")
 	}
 
-	logrus.Infof("podstatus at statusbytes schnake %v", string(statusBytes))
 	patch := pluginaggregation.GetPatch(string(statusBytes))
 	patchBytes, err := json.Marshal(patch)
 	if err != nil {
