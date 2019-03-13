@@ -20,6 +20,7 @@ categories and their values:
 dockerLibraryRegistry: docker.io/library
 e2eRegistry: gcr.io/kubernetes-e2e-test-images
 gcRegistry: k8s.gcr.io
+etcdRegistry: quay.io/coreos
 privateRegistry: gcr.io/k8s-authenticated-test
 sampleRegistry: gcr.io/google-samples
 ```
