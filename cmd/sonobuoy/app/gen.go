@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"os"
 
+	imagepkg "github.com/heptio/sonobuoy/pkg/image"
+
 	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/errlog"
@@ -41,7 +43,7 @@ type genFlags struct {
 	kubeConformanceImage        string
 	sshKeyPath                  string
 	sshUser                     string
-	kubeConformanceImageVersion ConformanceImageVersion
+	kubeConformanceImageVersion imagepkg.ConformanceImageVersion
 	imagePullPolicy             ImagePullPolicy
 	e2eRepoList                 string
 
@@ -113,7 +115,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		// if discoveryClient is needed, ErrImageVersionNoClient will be returned and that error can be reported back up
 		imageVersion, err := g.kubeConformanceImageVersion.Get(discoveryClient)
 		if err != nil {
-			if errors.Cause(err) == ErrImageVersionNoClient {
+			if errors.Cause(err) == imagepkg.ErrImageVersionNoClient {
 				return nil, errors.Wrap(err, kubeError.Error())
 			}
 			return nil, err
@@ -147,7 +149,7 @@ func resolveConformanceImage(imageVersion string) string {
 	// image instead of our own heptio/kube-conformance one. They started
 	// publishing it for v1.13.
 	switch {
-	case imageVersion == ConformanceImageVersionLatest:
+	case imageVersion == imagepkg.ConformanceImageVersionLatest:
 		return config.UpstreamKubeConformanceImageURL
 	case imageVersion < "v1.13":
 		return config.DefaultKubeConformanceImageURL

@@ -21,6 +21,8 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/heptio/sonobuoy/pkg/image"
+
 	"gopkg.in/yaml.v2"
 
 	ops "github.com/heptio/sonobuoy/pkg/client"
@@ -34,6 +36,7 @@ const (
 	namespaceFlag       = "namespace"
 	sonobuoyImageFlag   = "sonobuoy-image"
 	imagePullPolicyFlag = "image-pull-policy"
+	pluginFlag          = "plugin"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
@@ -73,11 +76,11 @@ func AddKubeConformanceImage(image *string, flags *pflag.FlagSet) {
 }
 
 // AddKubeConformanceImageVersion initialises an image version flag.
-func AddKubeConformanceImageVersion(imageVersion *ConformanceImageVersion, flags *pflag.FlagSet) {
+func AddKubeConformanceImageVersion(imageVersion *image.ConformanceImageVersion, flags *pflag.FlagSet) {
 	help := "Use default Conformance image, but override the version. "
 	help += fmt.Sprintf("Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise.")
 
-	*imageVersion = ConformanceImageVersionAuto
+	*imageVersion = image.ConformanceImageVersionAuto
 	flags.Var(imageVersion, "kube-conformance-image-version", help)
 }
 
@@ -85,6 +88,12 @@ func AddKubeConformanceImageVersion(imageVersion *ConformanceImageVersion, flags
 func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	// The default is the empty string (look in the environment)
 	flags.Var(cfg, "kubeconfig", "Path to explicit kubeconfig file.")
+}
+
+// AddPluginFlag describes which plugin's images to interact with
+func AddPluginFlag(cfg *string, flags *pflag.FlagSet) {
+	// The default is 'e2e' since it's the only plugin enabled at the moment
+	flags.StringVarP(cfg, pluginFlag, "p", "e2e", "Describe which plugin's images to interact (Valid plugins are 'e2e').")
 }
 
 // AddSonobuoyConfigFlag adds a SonobuoyConfig flag to the provided command.
