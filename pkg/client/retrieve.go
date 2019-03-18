@@ -20,6 +20,7 @@ import (
 	"archive/tar"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -81,16 +82,37 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 	return reader, ec
 }
 
-/** Most everything below this marker has been copy/pasta'd from k8s/k8s. The only modification is exporting UntarAll and returning the list of files created. **/
+/** Everything below this marker originally was copy/pasta'd from k8s/k8s. The modification are:
+  exporting UntarAll, returning the list of files created, and the fix for undrained readers  **/
 
 // UntarAll expects a reader that contains tar'd data. It will untar the contents of the reader and write
 // the output into destFile under the prefix, prefix. It returns a list of all the
 // files it created.
-func UntarAll(reader io.Reader, destFile, prefix string) ([]string, error) {
+func UntarAll(reader io.Reader, destFile, prefix string) (filenames []string, returnErr error) {
 	entrySeq := -1
-	filenames := []string{}
+	filenames = []string{}
 	// TODO: use compression here?
 	tarReader := tar.NewReader(reader)
+
+	// Ensure the reader gets drained. Tar on some platforms doesn't
+	// seem to consume the end-of-archive marker (long string of 0s).
+	// If we fail to read them all then any pipes we are connected to
+	// may hang.
+	defer func() {
+		b, err := ioutil.ReadAll(reader)
+		if err != nil {
+			returnErr = errors.Wrap(err, "failed to drain the tar reader")
+			return
+		}
+
+		for i := range b {
+			if b[i] != 0 {
+				returnErr = fmt.Errorf("non-zero data %v read after tar EOF", b[i])
+				return
+			}
+		}
+	}()
+
 	for {
 		header, err := tarReader.Next()
 		if err != nil {
