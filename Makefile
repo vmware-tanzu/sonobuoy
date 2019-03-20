@@ -46,7 +46,9 @@ ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
-BUILD_IMAGE ?= golang:1.12.0-alpine3.9
+BUILD_IMAGE ?= golang:1.12.1-stretch
+AMD_IMAGE ?= debian:stretch-slim
+ARM_IMAGE ?= arm64v8/ubuntu:16.04
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
@@ -101,13 +103,13 @@ build_container:
 container: sonobuoy
 	for arch in $(LINUX_ARCH); do \
 		if [ $$arch = amd64 ]; then \
-			sed -e 's|BASEIMAGE|alpine:3.7|g' \
-			-e 's|CMD1|RUN apk add --no-cache ca-certificates bash|g' \
+			sed -e 's|BASEIMAGE|$(AMD_IMAGE)|g' \
+			-e 's|CMD1||g' \
 			-e 's|BINARY|build/linux/amd64/sonobuoy|g' Dockerfile > Dockerfile-$$arch; \
 			$(MAKE) build_container DOCKERFILE=Dockerfile-$$arch; \
 			$(MAKE) build_container DOCKERFILE="Dockerfile-$$arch" TARGET="sonobuoy-$$arch"; \
 	elif [ $$arch = arm64 ]; then \
-			sed -e 's|BASEIMAGE|arm64v8/ubuntu:16.04|g' \
+			sed -e 's|BASEIMAGE|$(ARM_IMAGE)|g' \
 			-e 's|CMD1||g' \
 			-e 's|BINARY|build/linux/arm64/sonobuoy|g' Dockerfile > Dockerfile-$$arch; \
 			$(MAKE) build_container DOCKERFILE="Dockerfile-$$arch" TARGET="sonobuoy-$$arch"; \
