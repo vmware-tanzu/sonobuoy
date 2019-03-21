@@ -128,15 +128,15 @@ sonobuoy:
 push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
-# push_manifest:
-# 	$(GOPATH)/bin/manifest-tool -username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)
+push_manifest:
+	$(GOPATH)/bin/manifest-tool -username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)
 
 push: container
 	for arch in $(LINUX_ARCH); do \
 		$(MAKE) push_images TARGET="sonobuoy-$$arch"; \
 	done
 
-	# $(MAKE) push_manifest VERSION=$(IMAGE_VERSION) TARGET="sonobuoy"
+	$(MAKE) push_manifest VERSION=$(IMAGE_VERSION) TARGET="sonobuoy"
 
 clean_image:
 	$(DOCKER) rmi -f `$(DOCKER) images $(REGISTRY)/$(TARGET) -a -q` || true
