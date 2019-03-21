@@ -44,7 +44,7 @@ ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
-BUILD_IMAGE ?= golang:1.12.1-stretch
+BUILD_IMAGE ?= stevesloka/sonobuoy_builder  #golang:1.12.1-stretch
 AMD_IMAGE ?= debian:stretch-slim
 ARM_IMAGE ?= arm64v8/ubuntu:16.04
 

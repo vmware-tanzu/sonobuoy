@@ -1,0 +1,3 @@
+FROM golang:1.12.1-stretch
+
+RUN go get github.com/estesp/manifest-tool
