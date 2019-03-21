@@ -1,3 +1,4 @@
 FROM golang:1.12.1-stretch
 
 RUN go get github.com/estesp/manifest-tool
+RUN curl https://sdk.cloud.google.com | bash /dev/stdin --disable-prompts;
