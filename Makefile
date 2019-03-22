@@ -130,8 +130,7 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
-	printenv
-	$(DOCKER_BUILD_MANIFEST) 'manifest-tool --docker-cfg /tmp/docker-config/config.json push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)'
+	$(DOCKER_BUILD_MANIFEST) 'manifest-tool --docker-cfg /tmp/docker-config/ push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)'
 
 push: container
 	for arch in $(LINUX_ARCH); do \
