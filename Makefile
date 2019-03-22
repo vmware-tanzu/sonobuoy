@@ -129,7 +129,8 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
-	$(DOCKER_BUILD) 'manifest-tool  --docker-cfg $(HOME)/.docker/config.json push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)'
+    cat $(HOME)/.config/gcloud/application_default_credentials.json
+	$(DOCKER_BUILD) 'manifest-tool --docker-cfg $(HOME)/.config/gcloud/application_default_credentials.json push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)'
 
 push: container
 	for arch in $(LINUX_ARCH); do \
