@@ -65,6 +65,7 @@ LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 
 WORKDIR ?= /sonobuoy
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(BUILDMNT_DOCKER) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
+DOCKER_BUILD_MANIFEST ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(BUILDMNT_DOCKER) -v $(GOOGLE_APPLICATION_CREDENTIALS):/tmp/docker-config/config.json -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 
 .PHONY: all container push clean test local-test local generate plugins int
 
@@ -130,7 +131,7 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
-	BUILDMNT_DOCKER='-v $(GOOGLE_APPLICATION_CREDENTIALS):/tmp/docker-config/config.json' $(DOCKER_BUILD) 'manifest-tool --docker-cfg /tmp/docker-config/config.json push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)'
+	$(DOCKER_BUILD_MANIFEST) 'manifest-tool --docker-cfg /tmp/docker-config/config.json push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)'
 
 push: container
 	for arch in $(LINUX_ARCH); do \
