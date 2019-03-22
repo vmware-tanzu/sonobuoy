@@ -44,7 +44,6 @@ ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
-BUILDMNT_DOCKER = ''
 BUILD_IMAGE ?= stevesloka/sonobuoy_builder  #golang:1.12.1-stretch
 AMD_IMAGE ?= debian:stretch-slim
 ARM_IMAGE ?= arm64v8/ubuntu:16.04
@@ -64,7 +63,7 @@ GOLINT_FLAGS ?= -set_exit_status
 LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 
 WORKDIR ?= /sonobuoy
-DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(BUILDMNT_DOCKER) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
+DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 DOCKER_BUILD_MANIFEST ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(BUILDMNT_DOCKER) -v $(GOOGLE_APPLICATION_CREDENTIALS):/tmp/docker-config/config.json -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 
 .PHONY: all container push clean test local-test local generate plugins int
