@@ -129,7 +129,7 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
-	echo $GOOGLE_APPLICATION_CREDENTIALS
+	echo $(GOOGLE_APPLICATION_CREDENTIALS)
 	$(DOCKER_BUILD) 'manifest-tool -username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)'
 
 push: container
