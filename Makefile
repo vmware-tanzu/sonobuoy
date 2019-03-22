@@ -130,6 +130,7 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
+	echo $(GOOGLE_APPLICATION_CREDENTIALS) > tmp.json && cat tmp.json
 	$(DOCKER_BUILD_MANIFEST) 'manifest-tool --docker-cfg /tmp/docker-config/ push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)'
 
 push: container
