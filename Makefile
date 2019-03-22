@@ -24,7 +24,7 @@ REGISTRY ?= gcr.io/heptio-images
 IMAGE = $(REGISTRY)/$(TARGET)
 DIR := ${CURDIR}
 DOCKER ?= docker
-LINUX_ARCH := amd64 arm64
+LINUX_ARCH := amd64
 DOCKERFILE :=
 PLATFORMS := $(subst $(SPACE),$(COMMA),$(foreach arch,$(LINUX_ARCH),linux/$(arch)))
 
@@ -48,7 +48,6 @@ endif
 BUILDMNT = /go/src/$(GOTARGET)
 BUILD_IMAGE ?= golang:1.12.1-stretch
 AMD_IMAGE ?= debian:stretch-slim
-ARM_IMAGE ?= arm64v8/ubuntu:16.04
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
@@ -108,14 +107,9 @@ container: sonobuoy
 			-e 's|BINARY|build/linux/amd64/sonobuoy|g' Dockerfile > Dockerfile-$$arch; \
 			$(MAKE) build_container DOCKERFILE=Dockerfile-$$arch; \
 			$(MAKE) build_container DOCKERFILE="Dockerfile-$$arch" TARGET="sonobuoy-$$arch"; \
-	elif [ $$arch = arm64 ]; then \
-			sed -e 's|BASEIMAGE|$(ARM_IMAGE)|g' \
-			-e 's|CMD1||g' \
-			-e 's|BINARY|build/linux/arm64/sonobuoy|g' Dockerfile > Dockerfile-$$arch; \
-			$(MAKE) build_container DOCKERFILE="Dockerfile-$$arch" TARGET="sonobuoy-$$arch"; \
 		else \
 			echo "ARCH unknown"; \
-        fi \
+    fi \
 	done
 
 build_sonobuoy:
