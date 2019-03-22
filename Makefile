@@ -44,7 +44,8 @@ ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
-BUILD_IMAGE ?= stevesloka/sonobuoy_builder  #golang:1.12.1-stretch
+BUILD_IMAGE ?= golang:1.12.1-stretch
+BUILD_IMAGE_MANIFEST ?= local/sonobuoy_builder
 AMD_IMAGE ?= debian:stretch-slim
 ARM_IMAGE ?= arm64v8/ubuntu:16.04
 
@@ -64,7 +65,7 @@ LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 
 WORKDIR ?= /sonobuoy
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
-DOCKER_BUILD_MANIFEST ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(BUILDMNT_DOCKER) -v $(GOOGLE_APPLICATION_CREDENTIALS):/tmp/docker-config/config.json -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
+DOCKER_BUILD_MANIFEST ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(BUILDMNT_DOCKER) -v $(GOOGLE_APPLICATION_CREDENTIALS):/tmp/docker-config/config.json -w $(BUILDMNT) $(BUILD_IMAGE_MANIFEST) /bin/sh -c
 
 .PHONY: all container push clean test local-test local generate plugins int
 
@@ -87,8 +88,8 @@ lint:
 vet:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(VET)'
 
-# pre:
-# 	go get github.com/estesp/manifest-tool
+build_manifest_container:
+	$(DOCKER) build -t local/sonobuoy_builder -f Dockerfile_build .
 
 build_container:
 	$(DOCKER) build \
@@ -129,8 +130,7 @@ sonobuoy:
 push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
-push_manifest:
-	echo $(GOOGLE_APPLICATION_CREDENTIALS) > tmp.json && cat tmp.json
+push_manifest: build_manifest_container
 	$(DOCKER_BUILD_MANIFEST) 'manifest-tool --docker-cfg /tmp/docker-config/ push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)'
 
 push: container
