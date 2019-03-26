@@ -64,10 +64,10 @@ GOLINT_FLAGS ?= -set_exit_status
 LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 
 WORKDIR ?= /sonobuoy
-DOCKER_BUILD_PERMS ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 
+DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 DOCKER_USER=cat $(GOOGLE_APPLICATION_CREDENTIALS) | docker login -u _json_key --password-stdin https://gcr.io
-DOCKER_BUILD_MANIFEST ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(BUILDMNT_DOCKER) -v $(DOCKER_BUILD_PERMS):/tmp/docker-config/config.json -w $(BUILDMNT) $(BUILD_IMAGE_MANIFEST) /bin/sh -c
+DOCKER_BUILD_MANIFEST ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(BUILDMNT_DOCKER) -v $(DOCKER_USER):/tmp/docker-config/config.json -w $(BUILDMNT) $(BUILD_IMAGE_MANIFEST) /bin/sh -c
 
 .PHONY: all container push clean test local-test local generate plugins int
 
