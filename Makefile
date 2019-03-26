@@ -135,7 +135,7 @@ push_images:
 push_manifest: build_manifest_container
 	wget https://github.com/estesp/manifest-tool/releases/download/v1.0.0-rc2/manifest-tool-linux-amd64 -o manifest-tool 
 	chmod +x ./manifest-tool
-	./manifest-tool push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
+	/bin/sh -c './manifest-tool push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)'
 
 push: container
 	for arch in $(LINUX_ARCH); do \
