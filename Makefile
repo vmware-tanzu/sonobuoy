@@ -66,7 +66,7 @@ LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 WORKDIR ?= /sonobuoy
 
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
-DOCKER_USER=docker login -u _json_key -p "$(GOOGLE_APPLICATION_CREDENTIALS)" https://gcr.io
+# DOCKER_USER=docker login -u _json_key -p "$(GOOGLE_APPLICATION_CREDENTIALS)" https://gcr.io
 DOCKER_BUILD_MANIFEST ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(BUILDMNT_DOCKER) -v $(DOCKER_USER):/tmp/docker-config/config.json -w $(BUILDMNT) $(BUILD_IMAGE_MANIFEST) /bin/sh -c
 
 .PHONY: all container push clean test local-test local generate plugins int
@@ -134,7 +134,7 @@ push_images:
 
 push_manifest: build_manifest_container
 	wget https://github.com/estesp/manifest-tool/releases/download/v1.0.0-rc2/manifest-tool-linux-amd64 -o manifest-tool
-	$(DOCKER_BUILD_MANIFEST) './manifest-tool push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)'
+	$(DOCKER_BUILD) './manifest-tool push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)'
 
 push: container
 	for arch in $(LINUX_ARCH); do \
