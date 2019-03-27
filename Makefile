@@ -90,10 +90,6 @@ lint:
 vet:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(VET)'
 
-pre:
-	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
-	mv ./manifest-tool-linux-amd64 manifest-tool && chmod +x ./manifest-tool
-	
 build_manifest_container:
 	$(DOCKER) build -t local/sonobuoy_builder -f Dockerfile_build .
 
@@ -137,38 +133,9 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
-	./manifest-tool -username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)
-
-push: pre container
-	for arch in $(LINUX_ARCH); do \
-		$(MAKE) push_images TARGET="sonobuoy-$$arch"; \
-	done
-
-	$(MAKE) push_manifest VERSION=$(IMAGE_BRANCH) TARGET="sonobuoy"
-	$(MAKE) push_manifest VERSION=$(GIT_REF_SHORT) TARGET="sonobuoy"
-
-	if git describe --tags --exact-match >/dev/null 2>&1; \
-	then \
-		$(MAKE) push_manifest VERSION=$(IMAGE_VERSION) TARGET="sonobuoy"; \
-		$(MAKE) push_manifest VERSION=$(IMAGE_TAG) TARGET="sonobuoy"; \
-		$(MAKE) push_manifest VERSION=latest TARGET="sonobuoy"; \
-	fi
-
-clean_image:
-	$(DOCKER) rmi -f `$(DOCKER) images $(REGISTRY)/$(TARGET) -a -q` || true
-
-clean:
-	rm -f $(TARGET)
-	rm -f Dockerfile-*
-	rm -rf build
-
-	for arch in $(LINUX_ARCH); do \
-		$(MAKE) clean_image TARGET=$(TARGET)-$$arch; \
-	done
-
-deploy_kind:
-	kind load docker-image $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) || true
-
+	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
+	mv ./manifest-tool-linux-amd64 manifest-tool && chmod +x ./manifest-tool
+	./manifest-tool push from-args --docker-cfg '$(GOOGLE_APPLICATION_CREDENTIALS)' --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
 
 push: container
 	for arch in $(LINUX_ARCH); do \
