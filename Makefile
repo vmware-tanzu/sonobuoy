@@ -90,6 +90,10 @@ lint:
 vet:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(VET)'
 
+pre:
+	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
+	mv ./manifest-tool-linux-amd64 manifest-tool && chmod +x ./manifest-tool
+	
 build_manifest_container:
 	$(DOCKER) build -t local/sonobuoy_builder -f Dockerfile_build .
 
@@ -133,11 +137,9 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
-	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
-	mv ./manifest-tool-linux-amd64 manifest-tool && chmod +x ./manifest-tool
-	./manifest-tool push from-args --docker-cfg '$(GOOGLE_APPLICATION_CREDENTIALS)' --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
+	./manifest-tool -username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
 
-push: container
+push: pre container
 	for arch in $(LINUX_ARCH); do \
 		$(MAKE) push_images TARGET="sonobuoy-$$arch"; \
 	done
