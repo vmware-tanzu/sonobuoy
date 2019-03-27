@@ -132,9 +132,9 @@ sonobuoy:
 push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
-push_manifest: build_manifest_container
-	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64 -o manifest-tool 
-	chmod +x ./manifest-tool
+push_manifest:
+	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
+	mv ./manifest-tool-linux-amd64 manifest-tool && chmod +x ./manifest-tool
 	./manifest-tool push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
 
 push: container
