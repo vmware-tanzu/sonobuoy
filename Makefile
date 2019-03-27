@@ -138,8 +138,7 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
-	docker info
-	docker manifest
+	docker login
 	./manifest-tool -username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
 
 push: pre container
