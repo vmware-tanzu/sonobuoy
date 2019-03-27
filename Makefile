@@ -133,6 +133,8 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
+	gcloud auth $(GOOGLE_APPLICATION_CREDENTIALS) | docker login -u oauth2accesstoken --password-stdin https://gcr.io
+
 	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
 	mv ./manifest-tool-linux-amd64 manifest-tool && chmod +x ./manifest-tool
 	./manifest-tool push from-args --docker-cfg '$(GOOGLE_APPLICATION_CREDENTIALS)' --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
