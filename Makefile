@@ -67,7 +67,7 @@ WORKDIR ?= /sonobuoy
 
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 # DOCKER_USER=docker login -u _json_key -p "$(GOOGLE_APPLICATION_CREDENTIALS)" https://gcr.io
-DOCKER_BUILD_MANIFEST ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(BUILDMNT_DOCKER) -v $(DOCKER_USER):/tmp/docker-config/config.json -w $(BUILDMNT) $(BUILD_IMAGE_MANIFEST) /bin/sh -c
+DOCKER_BUILD_MANIFEST ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(BUILDMNT_DOCKER) -v $(GOOGLE_APPLICATION_CREDENTIALS):/tmp/docker-config/config.json -w $(BUILDMNT) $(BUILD_IMAGE_MANIFEST) /bin/sh -c
 
 .PHONY: all container push clean test local-test local generate plugins int
 
@@ -133,11 +133,9 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
-	ls -la $(HOME)/.docker
-
 	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
 	mv ./manifest-tool-linux-amd64 manifest-tool && chmod +x ./manifest-tool
-	./manifest-tool push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
+	./manifest-tool push from-args --docker-cfg '$(GOOGLE_APPLICATION_CREDENTIALS)' --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
 
 push: container
 	for arch in $(LINUX_ARCH); do \
