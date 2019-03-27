@@ -91,7 +91,7 @@ vet:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(VET)'
 
 pre:
-	curl https://sdk.cloud.google.com | bash /dev/stdin --disable-prompts;
+	# curl https://sdk.cloud.google.com | bash /dev/stdin --disable-prompts;
 	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
 	mv ./manifest-tool-linux-amd64 manifest-tool && chmod +x ./manifest-tool
 	
@@ -138,6 +138,8 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
+	docker info
+	docker manifest
 	./manifest-tool -username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
 
 push: pre container
