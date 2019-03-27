@@ -90,6 +90,10 @@ lint:
 vet:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(VET)'
 
+pre:
+	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
+	mv ./manifest-tool-linux-amd64 manifest-tool && chmod +x ./manifest-tool
+	
 build_manifest_container:
 	$(DOCKER) build -t local/sonobuoy_builder -f Dockerfile_build .
 
@@ -133,8 +137,6 @@ push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_VERSION)
 
 push_manifest:
-	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64
-	mv ./manifest-tool-linux-amd64 manifest-tool && chmod +x ./manifest-tool
 	./manifest-tool -username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)
 
 push: pre container
