@@ -28,6 +28,9 @@ LINUX_ARCH := amd64 arm64
 DOCKERFILE :=
 PLATFORMS := $(subst $(SPACE),$(COMMA),$(foreach arch,$(LINUX_ARCH),linux/$(arch)))
 
+# SECRET is used when pushing the manifest.
+SECRET := $(shell echo "https://gcr.io" | docker-credential-gcr get | jq '.Secret')
+
 # Not used for pushing images, just for local building on other GOOS. Defaults to
 # grabbing from the local go env but can be set manually to avoid that requirement.
 HOST_GOOS ?= $(shell go env GOOS)
@@ -89,7 +92,9 @@ vet:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(VET)'
 
 pre:
-	go get github.com/estesp/manifest-tool
+	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64 \
+	  -O manifest-tool && \
+	 chmod +x ./manifest-tool
 
 build_container:
 	$(DOCKER) build \
@@ -143,7 +148,7 @@ push_images:
 	fi
 
 push_manifest:
-	$(GOPATH)/bin/manifest-tool -username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target  $(REGISTRY)/$(TARGET):$(VERSION)
+	./manifest-tool --username oauth2accesstoken --password $(SECRET) push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
 
 push: pre container
 	for arch in $(LINUX_ARCH); do \
