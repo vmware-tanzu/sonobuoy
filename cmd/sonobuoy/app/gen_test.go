@@ -17,6 +17,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -89,8 +90,8 @@ func TestGetConfig(t *testing.T) {
 			},
 			expected: &config.Config{
 				Namespace:       "heptio-sonobuoy",
-				WorkerImage:     "gcr.io/heptio-images/sonobuoy:latest",
-				ImagePullPolicy: "Always", // default
+				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
 					plugin.Selection{Name: "e2e"},
 					plugin.Selection{Name: "systemd-logs"},
@@ -113,8 +114,8 @@ func TestGetConfig(t *testing.T) {
 			},
 			expected: &config.Config{
 				Namespace:       "heptio-sonobuoy",
-				WorkerImage:     "gcr.io/heptio-images/sonobuoy:latest",
-				ImagePullPolicy: "Always", // default
+				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
 					plugin.Selection{Name: "e2e"},
 				},
@@ -141,8 +142,8 @@ func TestGetConfig(t *testing.T) {
 			},
 			expected: &config.Config{
 				Namespace:       "heptio-sonobuoy",
-				WorkerImage:     "gcr.io/heptio-images/sonobuoy:latest",
-				ImagePullPolicy: "Always", // default
+				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
 					plugin.Selection{
 						Name: "systemd-logs",
@@ -161,11 +162,11 @@ func TestGetConfig(t *testing.T) {
 					Config: config.Config{Namespace: "configNS"},
 				},
 			},
-			cliInput: "--namespace=flagNS --sonobuoy-image=flagImage --image-pull-policy=IfNotPresent",
+			cliInput: "--namespace=flagNS --sonobuoy-image=flagImage --image-pull-policy=Always",
 			expected: &config.Config{
 				Namespace:       "flagNS",
 				WorkerImage:     "flagImage",
-				ImagePullPolicy: "IfNotPresent",
+				ImagePullPolicy: "Always",
 				PluginSelections: []plugin.Selection{
 					plugin.Selection{Name: "e2e"},
 					plugin.Selection{Name: "systemd-logs"},

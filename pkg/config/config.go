@@ -47,6 +47,8 @@ const (
 	MasterContainerName = "kube-sonobuoy"
 	// MasterResultsPath is the location in the main container of the master pod where results will be archived.
 	MasterResultsPath = "/tmp/sonobuoy"
+	// DefaultSonobuoyPullPolicy is the default pull policy used in the Sonobuoy config.
+	DefaultSonobuoyPullPolicy = "IfNotPresent"
 )
 
 var (
@@ -296,9 +298,8 @@ func New() *Config {
 		"~/sonobuoy/plugins.d",
 	}
 
-	// TODO (timothysc) reference the other consts
-	cfg.WorkerImage = "gcr.io/heptio-images/sonobuoy:latest"
-	cfg.ImagePullPolicy = "Always"
+	cfg.WorkerImage = DefaultImage
+	cfg.ImagePullPolicy = DefaultSonobuoyPullPolicy
 
 	return &cfg
 }
