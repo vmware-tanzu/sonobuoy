@@ -1,6 +1,7 @@
 # Build artifacts
 /sonobuoy
 build/
+.DS_Store
 
 # we output results to this directory by default
 /archive
@@ -14,3 +15,10 @@ heptio-images-ee4b0474b93e.json
 # Dynamic Dockerfiles
 Dockerfile-amd64
 Dockerfile-arm64
+
+# Images or results that may get downloaded
+*.tar.gz
+*.tar
+
+# kubectl which is downloaded for testing in CI
+kubectl
