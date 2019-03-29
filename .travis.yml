@@ -13,7 +13,7 @@ script:
   - ./travis-ci.sh 
 
 before_install:
-  # Download and install Kind
+  # Download and install Kind and kubectl
   - go get sigs.k8s.io/kind
   - kind create cluster --config kind-config.yaml
   - export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
