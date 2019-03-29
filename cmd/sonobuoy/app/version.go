@@ -18,6 +18,7 @@ package app
 
 import (
 	"fmt"
+
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
@@ -26,6 +27,7 @@ import (
 
 type versionFlags struct {
 	kubecfg Kubeconfig
+	short   bool
 }
 
 var versionflags versionFlags
@@ -39,11 +41,16 @@ func NewCmdVersion() *cobra.Command {
 	}
 
 	AddKubeconfigFlag(&versionflags.kubecfg, cmd.Flags())
+	AddShortFlag(&versionflags.short, cmd.Flags())
 
 	return cmd
 }
 
 func runVersion(cmd *cobra.Command, args []string) {
+	if versionflags.short {
+		fmt.Println(buildinfo.Version)
+		return
+	}
 
 	fmt.Println(fmt.Sprintf("Sonobuoy Version: %s", buildinfo.Version))
 	fmt.Println(fmt.Sprintf("MinimumKubeVersion: %s", buildinfo.MinimumKubeVersion))

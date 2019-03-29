@@ -272,3 +272,12 @@ func AddSSHUserFlag(user *string, flags *pflag.FlagSet) {
 		fmt.Sprintf("SSH user for ssh-key."),
 	)
 }
+
+// AddShortFlag adds a boolean flag to just print the Sonobuoy version and
+// nothing else. Useful in scripts.
+func AddShortFlag(flag *bool, flags *pflag.FlagSet) {
+	flags.BoolVar(
+		flag, "short", false,
+		"If true, prints just the sonobuoy version",
+	)
+}
