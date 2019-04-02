@@ -87,6 +87,24 @@ made available in the Sonobuoy results tarball in its original form.
 If you need additional mounts besides the default `results` mount that Sonobuoy
 always provides, you can define them in the `extra-volumes` field.
 
+#### Choosing which plugins to run
+
+All of the plugin definition files get mounted as files on the aggregator pod which runs them.
+
+The aggregator loads all the plugins it finds, but a separate list controls which plugins actually get run. There is a separate `config.json` which gets mounted on the aggregator which sets the configuration options for the aggregator. It has a field `Plugins` which is an array of plugin names. The default value includes both the e2e and systemd-logs plugin:
+
+```
+"Plugins":[{"name":"e2e"},{"name":"systemd-logs"}]
+```
+
+If you want to prevent one of those plugins from  being run, simply remove that item from the list. Likewise, if you'd like to run your own custom plugin, you need to add it to this list (in addition to adding its definition file to the plugin configmap):
+
+```
+"Plugins":[{"name":"custom-plugin"},{"name":"systemd-logs"}]
+```
+
+In either case, you use the sonobuoy [gen][gen] flow to edit the YAML and start the run with `kubectl`.
+
 ## Available Plugins
 
 The default Sonobuoy plugins are available in the `examples/plugins.d` directory in this repository.
@@ -100,6 +118,7 @@ Here's the current list:
 
 
 
+[gen]: gen.md
 [systemd]: /examples/plugins.d/systemd_logs.yaml
 [systemd-repo]: https://github.com/heptio/sonobuoy-plugin-systemd-logs
 [e2e]: /examples/plugins.d/heptio-e2e.yaml
@@ -107,4 +126,3 @@ Here's the current list:
 [guide]: conformance-testing.md#integration-with-sonobuoy 
 [bulkhead]: https://github.com/bgeesaman/sonobuoy-plugin-bulkhead/blob/master/examples/benchmark.yml
 [bench]: https://github.com/bgeesaman/sonobuoy-plugin-bulkhead
-
