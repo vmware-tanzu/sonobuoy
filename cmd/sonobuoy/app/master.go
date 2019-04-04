@@ -25,8 +25,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
-	"k8s.io/client-go/kubernetes"
 )
 
 var noExit bool
@@ -63,14 +61,8 @@ func runMaster(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	clientset, err := kubernetes.NewForConfig(kcfg)
-	if err != nil {
-		errlog.LogError(err)
-		os.Exit(1)
-	}
-
 	// Run Discovery (gather API data, run plugins)
-	errcount := discovery.Run(clientset, cfg)
+	errcount := discovery.Run(kcfg, cfg)
 
 	if noExit {
 		logrus.Info("no-exit was specified, sonobuoy is now blocking")
