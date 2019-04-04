@@ -19,6 +19,7 @@ package app
 import (
 	"fmt"
 	"io/ioutil"
+	"regexp"
 	"strings"
 
 	"github.com/heptio/sonobuoy/pkg/image"
@@ -160,6 +161,9 @@ func GetE2EConfig(mode ops.Mode, flags *pflag.FlagSet) (*ops.E2EConfig, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "couldn't retrieve focus flag")
 		}
+		if _, err := regexp.Compile(focus); err != nil {
+			return nil, errors.Wrap(err, "focus flag fails regexp validation")
+		}
 		cfg.Focus = focus
 	}
 
@@ -167,6 +171,9 @@ func GetE2EConfig(mode ops.Mode, flags *pflag.FlagSet) (*ops.E2EConfig, error) {
 		skip, err := flags.GetString(e2eSkipFlag)
 		if err != nil {
 			return nil, errors.Wrap(err, "couldn't retrieve skip flag")
+		}
+		if _, err := regexp.Compile(skip); err != nil {
+			return nil, errors.Wrap(err, "skip flag fails regexp validation")
 		}
 		cfg.Skip = skip
 	}
