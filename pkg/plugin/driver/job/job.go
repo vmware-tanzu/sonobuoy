@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -46,15 +46,16 @@ var _ plugin.Interface = &Plugin{}
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address.
-func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage, imagePullPolicy string) *Plugin {
+func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets string) *Plugin {
 	return &Plugin{
 		driver.Base{
-			Definition:      dfn,
-			SessionID:       utils.GetSessionID(),
-			Namespace:       namespace,
-			SonobuoyImage:   sonobuoyImage,
-			ImagePullPolicy: imagePullPolicy,
-			CleanedUp:       false, // be explicit
+			Definition:       dfn,
+			SessionID:        utils.GetSessionID(),
+			Namespace:        namespace,
+			SonobuoyImage:    sonobuoyImage,
+			ImagePullPolicy:  imagePullPolicy,
+			ImagePullSecrets: imagePullSecrets,
+			CleanedUp:        false, // be explicit
 		},
 	}
 }

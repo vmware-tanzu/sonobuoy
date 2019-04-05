@@ -127,6 +127,7 @@ func loadAllPlugins(cfg *Config) error {
 		cfg.Namespace,
 		cfg.WorkerImage,
 		cfg.ImagePullPolicy,
+		cfg.ImagePullSecrets,
 		cfg.PluginSearchPath,
 		cfg.PluginSelections,
 	)

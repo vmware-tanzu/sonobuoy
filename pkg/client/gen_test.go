@@ -278,6 +278,16 @@ func TestGenerateManifestGolden(t *testing.T) {
 				},
 			},
 			goldenFile: filepath.Join("testdata", "plugins-and-pluginSelection.golden"),
+		}, {
+			name: "ImagePullSecrets is set on plugins and aggregator",
+			inputcm: &client.GenConfig{
+				E2EConfig:      &client.E2EConfig{},
+				DynamicPlugins: []string{"e2e"},
+				Config: &config.Config{
+					ImagePullSecrets: "foo",
+				},
+			},
+			goldenFile: filepath.Join("testdata", "imagePullSecrets.golden"),
 		},
 	}
 

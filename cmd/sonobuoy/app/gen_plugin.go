@@ -40,8 +40,9 @@ const (
 
 // GenPluginConfig are the input options for running
 type GenPluginConfig struct {
-	Paths      []string
-	PluginName string
+	Paths            []string
+	PluginName       string
+	ImagePullSecrets string
 }
 
 var genPluginOpts GenPluginConfig
@@ -58,6 +59,10 @@ func NewCmdGenPlugin() *cobra.Command {
 	cmd.PersistentFlags().StringArrayVarP(
 		&genPluginOpts.Paths, "paths", "p", []string{".", "./examples/plugins.d/"},
 		"the paths to search for the plugins in. Defaults to . and ./plugins.d/",
+	)
+	cmd.Flags().StringVar(
+		&genPluginOpts.ImagePullSecrets, "image-pull-secrets", "",
+		"the value for imagePullSecrets on the worker containers",
 	)
 	return cmd
 }
@@ -80,6 +85,7 @@ func generatePluginManifest(cfg GenPluginConfig) ([]byte, error) {
 		config.DefaultNamespace,
 		config.DefaultImage,
 		"Always",
+		cfg.ImagePullSecrets,
 		cfg.Paths,
 		[]plugin.Selection{{Name: cfg.PluginName}},
 	)

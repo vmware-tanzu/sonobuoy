@@ -67,7 +67,7 @@ func TestFillTemplate(t *testing.T) {
 				},
 			},
 		},
-	}, expectedNamespace, expectedImageName, "Always")
+	}, expectedNamespace, expectedImageName, "Always", "image-pull-secret")
 
 	auth, err := ca.NewAuthority()
 	if err != nil {
@@ -145,4 +145,13 @@ func TestFillTemplate(t *testing.T) {
 	if len(pod.Spec.Volumes) != 3 {
 		t.Errorf("Expected 2 volumes on pod, got %d", len(pod.Spec.Volumes))
 	}
+
+	if len(pod.Spec.ImagePullSecrets) != 1 {
+		t.Errorf("Expected 1 imagePullSecrets but got %v", len(pod.Spec.ImagePullSecrets))
+	} else {
+		if pod.Spec.ImagePullSecrets[0].Name != "image-pull-secret" {
+			t.Errorf("Expected imagePullSecrets with name %v but got %v", "image-pull-secret", pod.Spec.ImagePullSecrets)
+		}
+	}
+
 }
