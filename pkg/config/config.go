@@ -193,8 +193,9 @@ type Config struct {
 	///////////////////////////////////////////////
 	// sonobuoy configuration
 	///////////////////////////////////////////////
-	WorkerImage     string `json:"WorkerImage" mapstructure:"WorkerImage"`
-	ImagePullPolicy string `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
+	WorkerImage      string `json:"WorkerImage" mapstructure:"WorkerImage"`
+	ImagePullPolicy  string `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
+	ImagePullSecrets string `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
 }
 
 // LimitConfig is a configuration on the limits of sizes of various responses.

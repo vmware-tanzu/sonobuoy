@@ -68,7 +68,7 @@ func TestFillTemplate(t *testing.T) {
 				},
 			},
 		},
-	}, expectedNamespace, expectedImageName, "Always")
+	}, expectedNamespace, expectedImageName, "Always", "image-pull-secret")
 
 	auth, err := ca.NewAuthority()
 	if err != nil {
@@ -148,4 +148,12 @@ func TestFillTemplate(t *testing.T) {
 		t.Errorf("Expected 2 volumes defined, got %d", len(daemonSet.Spec.Template.Spec.Volumes))
 	}
 
+	pullSecrets := daemonSet.Spec.Template.Spec.ImagePullSecrets
+	if len(pullSecrets) != 1 {
+		t.Errorf("Expected 1 imagePullSecrets but got %v", len(pullSecrets))
+	} else {
+		if pullSecrets[0].Name != "image-pull-secret" {
+			t.Errorf("Expected imagePullSecrets with name %v but got %v", "image-pull-secret", pullSecrets)
+		}
+	}
 }

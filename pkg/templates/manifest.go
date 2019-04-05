@@ -135,6 +135,10 @@ spec:
       name: sonobuoy-plugins-volume
     - mountPath: /tmp/sonobuoy
       name: output-volume
+  {{- if .ImagePullSecrets }}
+  imagePullSecrets:
+  - name: {{.ImagePullSecrets}}
+  {{- end }}
   restartPolicy: Never
   serviceAccountName: sonobuoy-serviceaccount
   volumes:

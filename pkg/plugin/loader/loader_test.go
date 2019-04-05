@@ -115,7 +115,7 @@ func TestLoadJobPlugin(t *testing.T) {
 		},
 	}
 
-	pluginIface, err := loadPlugin(jobDef, namespace, image, "Always")
+	pluginIface, err := loadPlugin(jobDef, namespace, image, "Always", "image-pull-secrets")
 	if err != nil {
 		t.Fatalf("unexpected error loading plugin: %v", err)
 	}
@@ -135,7 +135,9 @@ func TestLoadJobPlugin(t *testing.T) {
 	if jobPlugin.Namespace != namespace {
 		t.Errorf("expected plugin name '%q', got '%v'", namespace, jobPlugin.Namespace)
 	}
-
+	if jobPlugin.ImagePullSecrets != "image-pull-secrets" {
+		t.Errorf("Expected imagePullSecrets with name %v but got %v", "image-pull-secret", jobPlugin.ImagePullSecrets)
+	}
 }
 
 func TestLoadDaemonSet(t *testing.T) {
@@ -153,7 +155,7 @@ func TestLoadDaemonSet(t *testing.T) {
 		},
 	}
 
-	pluginIface, err := loadPlugin(daemonDef, namespace, image, "Always")
+	pluginIface, err := loadPlugin(daemonDef, namespace, image, "Always", "image-pull-secrets")
 	if err != nil {
 		t.Fatalf("unexpected error loading plugin: %v", err)
 	}
@@ -172,6 +174,9 @@ func TestLoadDaemonSet(t *testing.T) {
 	}
 	if daemonPlugin.Namespace != namespace {
 		t.Errorf("expected plugin name '%q', got '%v'", namespace, daemonPlugin.Namespace)
+	}
+	if daemonPlugin.ImagePullSecrets != "image-pull-secrets" {
+		t.Errorf("Expected imagePullSecrets with name %v but got %v", "image-pull-secret", daemonPlugin.ImagePullSecrets)
 	}
 }
 
@@ -199,6 +204,7 @@ func TestLoadAllPlugins(t *testing.T) {
 		namespace           string
 		sonobuoyImage       string
 		imagePullPolicy     string
+		imagePullSecrets    string
 		searchPath          []string
 		selections          []plugin.Selection
 		expectedPluginNames []string
@@ -226,7 +232,7 @@ func TestLoadAllPlugins(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			plugins, err := LoadAllPlugins(tc.namespace, tc.sonobuoyImage, tc.imagePullPolicy, tc.searchPath, tc.selections)
+			plugins, err := LoadAllPlugins(tc.namespace, tc.sonobuoyImage, tc.imagePullPolicy, tc.imagePullSecrets, tc.searchPath, tc.selections)
 			if err != nil {
 				t.Fatalf("error loading all plugins: %v", err)
 			}

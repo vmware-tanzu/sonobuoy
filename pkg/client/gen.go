@@ -27,6 +27,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/heptio/sonobuoy/pkg/templates"
@@ -45,13 +46,14 @@ const (
 type templateValues struct {
 	Plugins []string
 
-	SonobuoyConfig  string
-	SonobuoyImage   string
-	Namespace       string
-	EnableRBAC      bool
-	ImagePullPolicy string
-	SSHKey          string
-	SSHUser         string
+	SonobuoyConfig   string
+	SonobuoyImage    string
+	Namespace        string
+	EnableRBAC       bool
+	ImagePullPolicy  string
+	ImagePullSecrets string
+	SSHKey           string
+	SSHUser          string
 
 	// CustomRegistries should be a multiline yaml string which represents
 	// the file contents of KUBE_TEST_REPO_LIST, the overrides for k8s e2e
@@ -66,6 +68,12 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		return nil, errors.Wrap(err, "couldn't marshall selector")
 	}
 
+	// Allow nil cfg.Config but avoid dereference errors.
+	conf := &config.Config{}
+	if cfg.Config != nil {
+		conf = cfg.Config
+	}
+
 	sshKeyData := []byte{}
 	if len(cfg.SSHKeyPath) > 0 {
 		var err error
@@ -77,10 +85,10 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 
 	// Support legacy logic for the time being.
 	if len(cfg.DynamicPlugins) == 0 && len(cfg.StaticPlugins) == 0 {
-		if cfg.Config.PluginSelections != nil {
+		if conf.PluginSelections != nil {
 			// Empty (but non-nil) means run nothing. Setting any value means run
 			// those explicitly.
-			for _, v := range cfg.Config.PluginSelections {
+			for _, v := range conf.PluginSelections {
 				cfg.DynamicPlugins = append(cfg.DynamicPlugins, v.Name)
 			}
 		} else {
@@ -121,13 +129,14 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	}
 
 	tmplVals := &templateValues{
-		SonobuoyConfig:  string(marshalledConfig),
-		SonobuoyImage:   cfg.Image,
-		Namespace:       cfg.Namespace,
-		EnableRBAC:      cfg.EnableRBAC,
-		ImagePullPolicy: cfg.ImagePullPolicy,
-		SSHKey:          base64.StdEncoding.EncodeToString(sshKeyData),
-		SSHUser:         cfg.SSHUser,
+		SonobuoyConfig:   string(marshalledConfig),
+		SonobuoyImage:    cfg.Image,
+		Namespace:        cfg.Namespace,
+		EnableRBAC:       cfg.EnableRBAC,
+		ImagePullPolicy:  cfg.ImagePullPolicy,
+		ImagePullSecrets: conf.ImagePullSecrets,
+		SSHKey:           base64.StdEncoding.EncodeToString(sshKeyData),
+		SSHUser:          cfg.SSHUser,
 
 		Plugins: pluginYAML,
 

@@ -71,6 +71,10 @@ spec:
     - mountPath: /tmp/results
       name: results
       readOnly: false
+  {{- if .ImagePullSecrets }}
+  imagePullSecrets:
+  - name: {{.ImagePullSecrets}}
+  {{- end }}
   restartPolicy: Never
   serviceAccountName: sonobuoy-serviceaccount
   tolerations:

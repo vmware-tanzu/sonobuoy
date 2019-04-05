@@ -81,6 +81,10 @@ spec:
         - mountPath: /tmp/results
           name: results
           readOnly: false
+      {{- if .ImagePullSecrets }}
+      imagePullSecrets:
+      - name: {{.ImagePullSecrets}}
+      {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostIPC: true
       hostNetwork: true
