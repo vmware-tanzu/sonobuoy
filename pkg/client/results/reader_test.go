@@ -26,7 +26,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/heptio/sonobuoy/pkg/client/results"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

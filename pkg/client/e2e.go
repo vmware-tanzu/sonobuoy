@@ -17,8 +17,10 @@ limitations under the License.
 package client
 
 import (
+	"fmt"
 	"io"
 	"os"
+	"path"
 	"sort"
 	"strings"
 
@@ -32,18 +34,31 @@ import (
 func (*SonobuoyClient) GetTests(reader io.Reader, show string) ([]reporters.JUnitTestCase, error) {
 	read := results.NewReaderWithVersion(reader, "irrelevant")
 	junitResults := reporters.JUnitTestSuite{}
-	err := read.WalkFiles(func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// TODO(chuckha) consider reusing this function for any generic e2e-esque plugin results.
-		// TODO(chuckha) consider using path.Join()
-		return results.ExtractFileIntoStruct(results.PluginsDir+e2e.ResultsSubdirectory+e2e.JUnitResultsFile, path, info, &junitResults)
-	})
-	out := make([]reporters.JUnitTestCase, 0)
+	e2eJunitPath := path.Join(results.PluginsDir, e2e.ResultsSubdirectory, e2e.JUnitResultsFile)
+
+	found := false
+	err := read.WalkFiles(
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			// TODO(chuckha) consider reusing this function for any generic e2e-esque plugin results.
+			// TODO(chuckha) consider using path.Join()
+			if path == e2eJunitPath {
+				found = true
+				return results.ExtractFileIntoStruct(e2eJunitPath, path, info, &junitResults)
+			}
+			return nil
+		})
 	if err != nil {
-		return out, errors.Wrap(err, "failed to walk results archive")
+		return nil, errors.Wrap(err, "failed to walk results archive")
 	}
+
+	if !found {
+		return nil, fmt.Errorf("failed to find results file %q in archive", e2eJunitPath)
+	}
+
+	out := make([]reporters.JUnitTestCase, 0)
 	if show == "passed" || show == "all" {
 		out = append(out, results.Filter(results.Passed, junitResults)...)
 	}

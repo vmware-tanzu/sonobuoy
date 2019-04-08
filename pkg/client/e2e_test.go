@@ -1,11 +1,92 @@
 package client
 
 import (
+	"compress/gzip"
+	"fmt"
+	"io"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/onsi/ginkgo/reporters"
+	"k8s.io/client-go/rest"
 )
 
+func TestGetTests(t *testing.T) {
+	testCases := []struct {
+		desc      string
+		path      string
+		show      string
+		expect    int
+		expectErr string
+	}{
+		{
+			desc:   "Shows failed tests",
+			path:   "results/testdata/results-0.10.tar.gz",
+			show:   "failed",
+			expect: 0,
+		}, {
+			desc:   "Shows passed tests",
+			path:   "results/testdata/results-0.10.tar.gz",
+			show:   "passed",
+			expect: 1,
+		}, {
+			desc:      "Errs if missing results",
+			path:      "results/testdata/results-0.10-missing-e2e.tar.gz",
+			show:      "failed",
+			expect:    0,
+			expectErr: `failed to find results file "plugins/e2e/results/junit_01.xml" in archive`,
+		}, {
+			desc:      "Errs differently if not a tarfile",
+			path:      "testdata/test_ssh.key",
+			show:      "failed",
+			expect:    0,
+			expectErr: `failed to walk results archive: error getting next file in archive: archive/tar: invalid tar header`,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			// do gettests
+			sbc, err := NewSonobuoyClient(&rest.Config{}, nil)
+			if err != nil {
+				t.Fatalf("Failed to get Sonobuoy client")
+			}
+
+			f, err := os.Open(tC.path)
+			if err != nil {
+				panic(err)
+			}
+
+			var r io.Reader = f
+			if strings.HasSuffix(tC.path, "tar.gz") {
+				gzr, err := gzip.NewReader(f)
+				if err != nil {
+					t.Fatalf("Could not make a gzip reader: %v", err)
+				}
+				defer gzr.Close()
+				r = gzr
+			}
+
+			results, err := sbc.GetTests(r, tC.show)
+			switch {
+			case err != nil && len(tC.expectErr) == 0:
+				t.Fatalf("Expected nil error but got %v", err)
+			case err != nil && len(tC.expectErr) > 0:
+				if fmt.Sprint(err) != tC.expectErr {
+					t.Errorf("Expected error \n\t%q\nbut got\n\t%q", tC.expectErr, err)
+				}
+			case err == nil && len(tC.expectErr) > 0:
+				t.Fatalf("Expected error %v but got nil", tC.expectErr)
+			default:
+				// OK
+			}
+
+			if len(results) != tC.expect {
+				t.Errorf("Expected %v results but got %v: %v", tC.expect, len(results), results)
+			}
+		})
+	}
+}
 func TestString(t *testing.T) {
 	testCases := []struct {
 		desc   string
