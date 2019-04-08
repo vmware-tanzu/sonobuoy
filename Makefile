@@ -28,9 +28,6 @@ LINUX_ARCH := amd64 arm64
 DOCKERFILE :=
 PLATFORMS := $(subst $(SPACE),$(COMMA),$(foreach arch,$(LINUX_ARCH),linux/$(arch)))
 
-# SECRET is used when pushing the manifest.
-SECRET := $(shell echo "https://gcr.io" | docker-credential-gcr get | jq '.Secret')
-
 # Not used for pushing images, just for local building on other GOOS. Defaults to
 # grabbing from the local go env but can be set manually to avoid that requirement.
 HOST_GOOS ?= $(shell go env GOOS)
@@ -148,6 +145,8 @@ push_images:
 	fi
 
 push_manifest:
+	# SECRET is used when pushing the manifest.
+	SECRET := $(shell echo "https://gcr.io" | docker-credential-gcr get | jq '.Secret')
 	./manifest-tool --username oauth2accesstoken --password $(SECRET) push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
 
 push: pre container
