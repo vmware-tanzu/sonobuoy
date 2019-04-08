@@ -168,7 +168,7 @@ func queryNsResource(ns string, resourceKind string, opts metav1.ListOptions, ku
 }
 
 // queryNonNsResource performs the appropriate non-namespace-scoped query according to its input args
-func queryNonNsResource(resourceKind string, kubeClient kubernetes.Interface) (runtime.Object, error) {
+func queryNonNsResource(resourceKind string, kubeClient kubernetes.Interface, crdClient apiextensionsclient.Interface) (runtime.Object, error) {
 	switch resourceKind {
 	case "CertificateSigningRequests":
 		return kubeClient.CertificatesV1beta1().CertificateSigningRequests().List(metav1.ListOptions{})
@@ -179,12 +179,10 @@ func queryNonNsResource(resourceKind string, kubeClient kubernetes.Interface) (r
 	case "ComponentStatuses":
 		return kubeClient.CoreV1().ComponentStatuses().List(metav1.ListOptions{})
 	case "CustomResourceDefinitions":
-		// TODO : This should get cleaned up in future revisions.
-		apiextensionsclientset := apiextensionsclient.New(kubeClient.CoreV1().RESTClient())
-		if apiextensionsclientset != nil {
-			return apiextensionsclientset.ApiextensionsV1beta1().CustomResourceDefinitions().List(metav1.ListOptions{})
+		if crdClient == nil {
+			return nil, errors.New("unable to query for CRDs, no CRD-compatible client provided")
 		}
-		return nil, errors.Errorf("Failed to create extensions client for CRDs")
+		return crdClient.ApiextensionsV1beta1().CustomResourceDefinitions().List(metav1.ListOptions{})
 	case "Nodes":
 		return kubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
 	case "PersistentVolumes":
@@ -252,7 +250,7 @@ func QueryNSResources(kubeClient kubernetes.Interface, recorder *QueryRecorder, 
 // QueryClusterResources queries non-namespace resources in the cluster, writing
 // them out to <resultsdir>/resources/non-ns/*.json
 // TODO: Eliminate dependencies from config.Config and pass in data
-func QueryClusterResources(kubeClient kubernetes.Interface, recorder *QueryRecorder, cfg *config.Config) error {
+func QueryClusterResources(kubeClient kubernetes.Interface, crdClient apiextensionsclient.Interface, recorder *QueryRecorder, cfg *config.Config) error {
 	logrus.Infof("Running non-ns query")
 
 	resources := cfg.FilterResources(config.ClusterResources)
@@ -310,7 +308,7 @@ func QueryClusterResources(kubeClient kubernetes.Interface, recorder *QueryRecor
 			recorder.RecordQuery("Nodes", "", duration, err)
 			// do not continue because we want to now query nodes as resources
 		}
-		lister := func() (runtime.Object, error) { return queryNonNsResource(resourceKind, kubeClient) }
+		lister := func() (runtime.Object, error) { return queryNonNsResource(resourceKind, kubeClient, crdClient) }
 		query := func() (time.Duration, error) { return objListQuery(outdir+"/", resourceKind+".json", lister) }
 		timedQuery(recorder, resourceKind, "", query)
 	}

@@ -30,22 +30,36 @@ import (
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	"github.com/viniciuschiele/tarx"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	pluginaggregation "github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 )
 
-// Run is the main entrypoint for discovery
-func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount int) {
+// Run is the main entrypoint for discovery.
+func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	t := time.Now()
+
+	kubeClient, err := kubernetes.NewForConfig(restConf)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "could not create kubernetes client"))
+		return errCount + 1
+	}
+
+	crdClient, err := apiextensionsclient.NewForConfig(restConf)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "could not create apiextensions client"))
+		return errCount + 1
+	}
 
 	// 1. Create the directory which will store the results, including the
 	// `meta` directory inside it (which we always need regardless of
 	// config)
 	outpath := path.Join(cfg.ResultsDir, cfg.UUID)
 	metapath := path.Join(outpath, MetaLocation)
-	err := os.MkdirAll(metapath, 0755)
+	err = os.MkdirAll(metapath, 0755)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create directory to store results"))
 		return errCount + 1
@@ -102,7 +116,7 @@ func Run(kubeClient kubernetes.Interface, cfg *config.Config) (errCount int) {
 	// 5. Run the queries
 	recorder := NewQueryRecorder()
 	trackErrorsFor("querying cluster resources")(
-		QueryClusterResources(kubeClient, recorder, cfg),
+		QueryClusterResources(kubeClient, crdClient, recorder, cfg),
 	)
 
 	for _, ns := range nslist {
