@@ -37,15 +37,19 @@ func TestResolveConformanceImage(t *testing.T) {
 			requestedVersion: "foo",
 			expected:         "gcr.io/heptio-images/kube-conformance",
 		}, {
-			name:             "Prior to v1.13 uses heptio and major.minor",
-			requestedVersion: "v1.12.99",
+			name:             "Prior to v1.14.0 uses heptio and major.minor",
+			requestedVersion: "v1.13.99",
 			expected:         "gcr.io/heptio-images/kube-conformance",
 		}, {
-			name:             "v1.13 and after uses upstream and major.minor.patch",
-			requestedVersion: "v1.13.0",
+			name:             "v1.14.0 uses heptio and major.minor",
+			requestedVersion: "v1.14.0",
+			expected:         "gcr.io/heptio-images/kube-conformance",
+		}, {
+			name:             "v1.14.1 and after uses upstream and major.minor.patch",
+			requestedVersion: "v1.14.1",
 			expected:         "gcr.io/google-containers/conformance",
 		}, {
-			name:             "v1.13 and after uses upstream and major.minor.patch",
+			name:             "v1.14.0 and after uses upstream and major.minor.patch",
 			requestedVersion: "v1.15.1",
 			expected:         "gcr.io/google-containers/conformance",
 		}, {
@@ -53,12 +57,12 @@ func TestResolveConformanceImage(t *testing.T) {
 			requestedVersion: "latest",
 			expected:         "gcr.io/google-containers/conformance",
 		}, {
-			name:             "explicit version before v1.13 should use heptio image and given version",
+			name:             "explicit version before v1.14.0 should use heptio image and given version",
 			requestedVersion: "v1.12+.0.alpha+",
 			expected:         "gcr.io/heptio-images/kube-conformance",
 		}, {
-			name:             "explicit version after v1.13 should use upstream and use given version",
-			requestedVersion: "v1.13+.beta2",
+			name:             "explicit version after v1.14.0 should use upstream and use given version",
+			requestedVersion: "v1.14.1",
 			expected:         "gcr.io/google-containers/conformance",
 		},
 	}

@@ -98,16 +98,16 @@ func TestGetConformanceImageVersion(t *testing.T) {
 	workingServerVersion := &fakeServerVersionInterface{
 		version: version.Info{
 			Major:      "1",
-			Minor:      "13",
-			GitVersion: "v1.13.0",
+			Minor:      "14",
+			GitVersion: "v1.14.1",
 		},
 	}
 
 	betaServerVersion := &fakeServerVersionInterface{
 		version: version.Info{
 			Major:      "1",
-			Minor:      "13",
-			GitVersion: "v1.13.0-beta.2.78+e0b33dbc2bde88",
+			Minor:      "14",
+			GitVersion: "v1.14.1-beta.2.78+e0b33dbc2bde88",
 		},
 	}
 
@@ -135,7 +135,7 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			name:          "auto retrieves server version",
 			version:       "auto",
 			serverVersion: workingServerVersion,
-			expected:      "v1.13.0",
+			expected:      "v1.14.1",
 		},
 		{
 			name:          "auto returns error if upstream fails",
@@ -148,7 +148,7 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			version:       "auto",
 			serverVersion: betaServerVersion,
 			warning:       true,
-			expected:      "v1.13.0",
+			expected:      "v1.14.1",
 		},
 		{
 			name:          "gke server strips plus sign",
