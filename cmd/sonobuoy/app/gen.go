@@ -139,19 +139,19 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 	}, nil
 }
 
-// resolveConformanceImage maps versions before 1.13 to Heptio's image and otherwise
+// resolveConformanceImage maps versions before 1.14.0 to Heptio's image and otherwise
 // to the upstream cnoformance image. Latest is always mapped to the upstream
-// regardless. The comparison is just lexical, e.g. "foo" < "v1.13" and "zip" >
-// "v1.13". These are a-typical and not given more support at this time.
+// regardless. The comparison is just lexical, e.g. "foo" <= "v1.14.0" and "zip" >
+// "v1.14.0". These are a-typical and not given more support at this time.
 func resolveConformanceImage(imageVersion string) string {
 	// TODO(johnschnake): This logic should be temporary and is only
 	// required as we phase in the use of the upstream k8s kube-conformance
 	// image instead of our own heptio/kube-conformance one. They started
-	// publishing it for v1.13.
+	// publishing it for v1.14.1. (https://github.com/kubernetes/kubernetes/pull/76101)
 	switch {
 	case imageVersion == imagepkg.ConformanceImageVersionLatest:
 		return config.UpstreamKubeConformanceImageURL
-	case imageVersion < "v1.13":
+	case imageVersion < "v1.14.1":
 		return config.DefaultKubeConformanceImageURL
 	default:
 		return config.UpstreamKubeConformanceImageURL

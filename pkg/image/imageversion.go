@@ -89,10 +89,10 @@ func (c *ConformanceImageVersion) Get(client discovery.ServerVersionInterface) (
 		}
 
 		// Temporary logic in place to truncate auto-resolved versions while we
-		// transition to upstream. If < 1.13 return 2 segments due to lag behind
+		// transition to upstream. If < 1.14 return 2 segments due to lag behind
 		// releases. Otherwise return 3. Use the segments instead of .major and
 		// .minor because GKE's .minor is `10+` instead of `10`.
-		if segments[0] == 1 && segments[1] < 13 {
+		if segments[0] == 1 && segments[1] < 14 {
 			return fmt.Sprintf("v%d.%d", segments[0], segments[1]), nil
 		}
 
