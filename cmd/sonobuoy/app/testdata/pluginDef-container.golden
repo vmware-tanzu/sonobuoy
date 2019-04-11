@@ -1,0 +1,12 @@
+sonobuoy-config:
+  driver: ""
+  plugin-name: ""
+  result-type: ""
+spec:
+  command:
+  - /bin/sh
+  - -c
+  - ./run.sh
+  image: img
+  name: "n"
+  resources: {}

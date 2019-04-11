@@ -1,0 +1,17 @@
+sonobuoy-config:
+  driver: ""
+  plugin-name: "n"
+  result-type: "n"
+spec:
+  command:
+  - /bin/sh
+  - '- c'
+  - ./run.sh
+  env:
+  - name: FOO
+    value: '- bar'
+  - name: FIZZ
+    value: buzz
+  image: img:v1
+  name: n - foo
+  resources: {}
