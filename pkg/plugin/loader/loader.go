@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/daemonset"
@@ -124,10 +125,10 @@ func loadPlugin(def *manifest.Manifest, namespace, sonobuoyImage, imagePullPolic
 		Spec:         def.Spec,
 	}
 
-	switch def.SonobuoyConfig.Driver {
-	case "Job":
+	switch strings.ToLower(def.SonobuoyConfig.Driver) {
+	case "job":
 		return job.NewPlugin(pluginDef, namespace, sonobuoyImage, imagePullPolicy), nil
-	case "DaemonSet":
+	case "daemonset":
 		return daemonset.NewPlugin(pluginDef, namespace, sonobuoyImage, imagePullPolicy), nil
 	default:
 		return nil, fmt.Errorf("unknown driver %q for plugin %v",

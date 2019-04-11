@@ -1,0 +1,12 @@
+sonobuoy-config:
+  driver: ""
+  plugin-name: ""
+  result-type: ""
+spec:
+  env:
+  - name: FOO
+    value: bar
+  - name: FIZZ
+    value: buzz
+  name: ""
+  resources: {}
