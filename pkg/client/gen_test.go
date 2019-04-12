@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
@@ -12,6 +13,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -129,7 +131,7 @@ func TestGenerateManifest(t *testing.T) {
 	}
 }
 
-func TestGenerateManifestSSH(t *testing.T) {
+func TestGenerateManifestGolden(t *testing.T) {
 	newConfigWithoutUUID := func() *config.Config {
 		c := config.New()
 		c.UUID = ""
@@ -145,6 +147,7 @@ func TestGenerateManifestSSH(t *testing.T) {
 		name       string
 		inputcm    *client.GenConfig
 		goldenFile string
+		expectErr  string
 	}{
 		{
 			name: "Default",
@@ -154,7 +157,7 @@ func TestGenerateManifestSSH(t *testing.T) {
 			},
 			goldenFile: filepath.Join("testdata", "default.golden"),
 		}, {
-			name: "Only e2e",
+			name: "Only e2e (legacy plugin choice)",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				Config: fromConfig(func(c *config.Config) *config.Config {
@@ -164,7 +167,7 @@ func TestGenerateManifestSSH(t *testing.T) {
 			},
 			goldenFile: filepath.Join("testdata", "e2e-default.golden"),
 		}, {
-			name: "Only systemd_logs",
+			name: "Only systemd_logs (legacy plugin choice)",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				Config: fromConfig(func(c *config.Config) *config.Config {
@@ -174,7 +177,7 @@ func TestGenerateManifestSSH(t *testing.T) {
 			},
 			goldenFile: filepath.Join("testdata", "systemd-logs-default.golden"),
 		}, {
-			name: "Enabling SSH",
+			name: "Enabling SSH (legacy plugin choice)",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				Config: &config.Config{
@@ -184,6 +187,97 @@ func TestGenerateManifestSSH(t *testing.T) {
 				SSHUser:    "ssh-user",
 			},
 			goldenFile: filepath.Join("testdata", "ssh.golden"),
+		}, {
+			name: "Empty array leads to 0 plugins (legacy plugin choice)",
+			inputcm: &client.GenConfig{
+				E2EConfig: &client.E2EConfig{},
+				Config: fromConfig(func(c *config.Config) *config.Config {
+					c.PluginSelections = []plugin.Selection{}
+					return c
+				}),
+			},
+			goldenFile: filepath.Join("testdata", "no-plugins-via-selection.golden"),
+		}, {
+			// For backwards compatibility.
+			name: "Nil plugin selection and no manual choice leads to e2e/systemd",
+			inputcm: &client.GenConfig{
+				E2EConfig: &client.E2EConfig{},
+				Config: fromConfig(func(c *config.Config) *config.Config {
+					c.PluginSelections = nil
+					return c
+				}),
+			},
+			goldenFile: filepath.Join("testdata", "default-plugins-via-nil-selection.golden"),
+		}, {
+			name: "Manually specify e2e",
+			inputcm: &client.GenConfig{
+				E2EConfig:      &client.E2EConfig{},
+				DynamicPlugins: []string{"e2e"},
+			},
+			goldenFile: filepath.Join("testdata", "manual-e2e.golden"),
+		}, {
+			name: "Manually specify custom plugin",
+			inputcm: &client.GenConfig{
+				E2EConfig: &client.E2EConfig{},
+				StaticPlugins: []*manifest.Manifest{
+					&manifest.Manifest{
+						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "foo"},
+					},
+				},
+			},
+			goldenFile: filepath.Join("testdata", "manual-custom-plugin.golden"),
+		}, {
+			name: "Manually custom plugin and e2e plugins",
+			inputcm: &client.GenConfig{
+				E2EConfig:      &client.E2EConfig{},
+				DynamicPlugins: []string{"e2e"},
+				StaticPlugins: []*manifest.Manifest{
+					&manifest.Manifest{
+						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "foo"},
+					},
+				},
+			},
+			goldenFile: filepath.Join("testdata", "manual-custom-plugin-plus-e2e.golden"),
+		}, {
+			name: "Manually custom plugin and systemd-logs plugins",
+			inputcm: &client.GenConfig{
+				E2EConfig:      &client.E2EConfig{},
+				DynamicPlugins: []string{"systemd-logs"},
+				StaticPlugins: []*manifest.Manifest{
+					&manifest.Manifest{
+						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "foo"},
+					},
+				},
+			},
+			goldenFile: filepath.Join("testdata", "manual-custom-plugin-plus-systemd.golden"),
+		}, {
+			name: "Duplicates plugin names fail",
+			inputcm: &client.GenConfig{
+				StaticPlugins: []*manifest.Manifest{
+					&manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
+					&manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
+				},
+			},
+			expectErr: "plugin YAML generation: plugin names must be unique, got duplicated plugin name 'a'",
+		}, {
+			// In this case the server will just load both and filter like it does currently.
+			name: "Plugin selection and custom plugins both specified allowed",
+			inputcm: &client.GenConfig{
+				E2EConfig: &client.E2EConfig{},
+				Config: fromConfig(func(c *config.Config) *config.Config {
+					c.PluginSelections = []plugin.Selection{
+						plugin.Selection{
+							Name: "a",
+						},
+					}
+					return c
+				}),
+				StaticPlugins: []*manifest.Manifest{
+					&manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
+					&manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "b"}},
+				},
+			},
+			goldenFile: filepath.Join("testdata", "plugins-and-pluginSelection.golden"),
 		},
 	}
 
@@ -194,8 +288,18 @@ func TestGenerateManifestSSH(t *testing.T) {
 				t.Fatal(err)
 			}
 			manifest, err := sbc.GenerateManifest(tc.inputcm)
-			if err != nil {
-				t.Fatal(err)
+			switch {
+			case err != nil && len(tc.expectErr) == 0:
+				t.Fatalf("Expected nil error but got %q", err)
+			case err != nil && len(tc.expectErr) > 0:
+				if fmt.Sprint(err) != tc.expectErr {
+					t.Errorf("Expected error \n\t%q\nbut got\n\t%q", tc.expectErr, err)
+				}
+				return
+			case err == nil && len(tc.expectErr) > 0:
+				t.Fatalf("Expected error %q but got nil", tc.expectErr)
+			default:
+				// No error
 			}
 
 			if *update {

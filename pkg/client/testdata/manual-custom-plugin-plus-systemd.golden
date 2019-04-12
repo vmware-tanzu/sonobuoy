@@ -16,7 +16,7 @@ metadata:
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"DEFAULT","UUID":"","Version":"v0.14.1","ResultsDir":"/tmp/sonobuoy","Resources":["CertificateSigningRequests","ClusterRoleBindings","ClusterRoles","ComponentStatuses","CustomResourceDefinitions","Nodes","PersistentVolumes","PodSecurityPolicies","ServerGroups","ServerVersion","StorageClasses","ConfigMaps","ControllerRevisions","CronJobs","DaemonSets","Deployments","Endpoints","Ingresses","Jobs","LimitRanges","NetworkPolicies","PersistentVolumeClaims","PodDisruptionBudgets","PodTemplates","Pods","ReplicaSets","ReplicationControllers","ResourceQuotas","RoleBindings","Roles","ServiceAccounts","Services","StatefulSets"],"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"LimitSize":"","LimitTime":""}},"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":10800},"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"heptio-sonobuoy","WorkerImage":"gcr.io/heptio-images/sonobuoy:v0.14.1","ImagePullPolicy":"IfNotPresent"}
+    null
 kind: ConfigMap
 metadata:
   labels:
@@ -28,21 +28,12 @@ apiVersion: v1
 data:
   plugin-0.yaml: |
     sonobuoy-config:
-      driver: Job
-      plugin-name: e2e
-      result-type: e2e
+      driver: ""
+      plugin-name: foo
+      result-type: ""
     spec:
-      command:
-      - /run_e2e.sh
-      env:
-      - name: E2E_FOCUS
-      - name: E2E_SKIP
-      - name: E2E_PARALLEL
-      name: e2e
+      name: ""
       resources: {}
-      volumeMounts:
-      - mountPath: /tmp/results
-        name: results
   plugin-1.yaml: |
     sonobuoy-config:
       driver: DaemonSet

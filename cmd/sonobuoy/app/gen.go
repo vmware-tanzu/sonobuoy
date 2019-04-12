@@ -47,6 +47,10 @@ type genFlags struct {
 	imagePullPolicy             ImagePullPolicy
 	e2eRepoList                 string
 
+	// plugins will keep a list of the plugins we want. Custom type for
+	// flag support.
+	plugins pluginList
+
 	// These two fields are here since to properly squash settings down into nested
 	// configs we need to tell whether or not values are default values or the user
 	// provided them on the command line/config file.
@@ -72,6 +76,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddSSHKeyPathFlag(&cfg.sshKeyPath, genset)
 	AddSSHUserFlag(&cfg.sshUser, genset)
 
+	AddPluginSetFlag(&cfg.plugins, genset)
 	cfg.genflags = genset
 	return genset
 }
@@ -128,7 +133,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 
 	return &client.GenConfig{
 		E2EConfig:            e2ecfg,
-		Config:               g.getConfig(),
+		Config:               g.resolveConfig(),
 		Image:                g.sonobuoyImage,
 		Namespace:            g.namespace,
 		EnableRBAC:           rbacEnabled,
@@ -136,6 +141,8 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		KubeConformanceImage: image,
 		SSHKeyPath:           g.sshKeyPath,
 		SSHUser:              g.sshUser,
+		DynamicPlugins:       g.plugins.DynamicPlugins,
+		StaticPlugins:        g.plugins.StaticPlugins,
 	}, nil
 }
 
@@ -209,19 +216,17 @@ func getClient(kubeconfig *Kubeconfig) (*kubernetes.Clientset, error) {
 	return client, kubeError
 }
 
-// getConfig creates a config with the following algorithm:
-// If no config is supplied defaults will be returned.
-// If a config is supplied then the default values will be merged into the supplied config
-//   in order to allow users to supply a minimal config that will still work.
-// Lastly, options provided on the command line will override
-//   any values in the config.
-func (g *genFlags) getConfig() *config.Config {
+// getConfig generates a config which has the the following rules:
+//  - command line options override config values
+//  - plugins specified manually via flags specifically override plugins implied by mode flag
+//  - config values override default values
+// NOTE: Since it mutates plugin values, it should be called before using them.
+func (g *genFlags) resolveConfig() *config.Config {
 	if g == nil {
 		return config.New()
 	}
 
 	conf := config.New()
-
 	suppliedConfig := g.sonobuoyConfig.Get()
 	if suppliedConfig != nil {
 		// Provide defaults but don't overwrite any customized configuration.
@@ -229,11 +234,26 @@ func (g *genFlags) getConfig() *config.Config {
 		conf = suppliedConfig
 	}
 
-	// if there are no plugins yet, set some based on the mode, otherwise use whatever was supplied.
-	if len(conf.PluginSelections) == 0 {
-		modeConfig := g.mode.Get()
-		if modeConfig != nil {
-			conf.PluginSelections = modeConfig.Selectors
+	// Resolve plugins.
+	//  - If using the plugin flags, no actions needed.
+	//  - Otherwise use the supplied config and mode to figure out the plugins to run.
+	//    This only works for e2e/systemd-logs which are internal plugins so then "Set" them
+	//    as if they were provided on the cmdline.
+	// Gate the logic with a nil check because tests may not specify flags and intend the legacy logic.
+	if g.genflags == nil || !g.genflags.Changed("plugin") {
+		// Use legacy logic; conf.SelectedPlugins or mode if not set
+		if len(conf.PluginSelections) == 0 {
+			modeConfig := g.mode.Get()
+			if modeConfig != nil {
+				conf.PluginSelections = modeConfig.Selectors
+			}
+		}
+
+		// Set these values as if the user had requested the defaults.
+		if g.genflags != nil {
+			for _, v := range conf.PluginSelections {
+				g.genflags.Lookup("plugin").Value.Set(v.Name)
+			}
 		}
 	}
 

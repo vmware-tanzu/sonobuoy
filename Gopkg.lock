@@ -246,6 +246,17 @@
   version = "v1.0.2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:7ccfdc2140e46a65dfac8a7104c4f64419317f310e08cdf31f05209c5ad77a22"
+  name = "github.com/kylelemons/godebug"
+  packages = [
+    "diff",
+    "pretty",
+  ]
+  pruneopts = "UT"
+  revision = "d65d576e9348f5982d7f6d83682b694e731a45c6"
+
+[[projects]]
   digest = "1:c568d7727aa262c32bdf8a3f7db83614f7af0ed661474b24588de635c20024c7"
   name = "github.com/magiconair/properties"
   packages = ["."]
@@ -835,6 +846,7 @@
     "github.com/gorilla/mux",
     "github.com/hashicorp/go-version",
     "github.com/imdario/mergo",
+    "github.com/kylelemons/godebug/pretty",
     "github.com/onsi/ginkgo/reporters",
     "github.com/pkg/errors",
     "github.com/rifflock/lfshook",

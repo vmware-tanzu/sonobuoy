@@ -22,6 +22,7 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/kubernetes"
@@ -49,6 +50,15 @@ type GenConfig struct {
 	KubeConformanceImage string
 	SSHKeyPath           string
 	SSHUser              string
+
+	// DynamicPlugins are plugins which we know by name and whose manifest
+	// YAML are generated dynamically using the GenConfig settings.
+	DynamicPlugins []string
+
+	// StaticPlugins are plugins whose manifest YAML has been provided
+	// explicitly and will be written without further consideration of other
+	// GenConfig settings.
+	StaticPlugins []*manifest.Manifest
 }
 
 // E2EConfig is the configuration of the E2E tests.

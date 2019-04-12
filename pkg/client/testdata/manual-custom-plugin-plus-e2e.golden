@@ -16,7 +16,7 @@ metadata:
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"DEFAULT","UUID":"","Version":"v0.14.1","ResultsDir":"/tmp/sonobuoy","Resources":["CertificateSigningRequests","ClusterRoleBindings","ClusterRoles","ComponentStatuses","CustomResourceDefinitions","Nodes","PersistentVolumes","PodSecurityPolicies","ServerGroups","ServerVersion","StorageClasses","ConfigMaps","ControllerRevisions","CronJobs","DaemonSets","Deployments","Endpoints","Ingresses","Jobs","LimitRanges","NetworkPolicies","PersistentVolumeClaims","PodDisruptionBudgets","PodTemplates","Pods","ReplicaSets","ReplicationControllers","ResourceQuotas","RoleBindings","Roles","ServiceAccounts","Services","StatefulSets"],"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"LimitSize":"","LimitTime":""}},"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":10800},"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"heptio-sonobuoy","WorkerImage":"gcr.io/heptio-images/sonobuoy:v0.14.1","ImagePullPolicy":"IfNotPresent"}
+    null
 kind: ConfigMap
 metadata:
   labels:
@@ -45,33 +45,12 @@ data:
         name: results
   plugin-1.yaml: |
     sonobuoy-config:
-      driver: DaemonSet
-      plugin-name: systemd-logs
-      result-type: systemd-logs
+      driver: ""
+      plugin-name: foo
+      result-type: ""
     spec:
-      command:
-      - /bin/sh
-      - -c
-      - /get_systemd_logs.sh && sleep 3600
-      env:
-      - name: CHROOT_DIR
-        value: /node
-      - name: RESULTS_DIR
-        value: /tmp/results
-      - name: NODE_NAME
-        valueFrom:
-          fieldRef:
-            fieldPath: spec.nodeName
-      image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
-      name: systemd-logs
+      name: ""
       resources: {}
-      securityContext:
-        privileged: true
-      volumeMounts:
-      - mountPath: /tmp/results
-        name: results
-      - mountPath: /node
-        name: root
 kind: ConfigMap
 metadata:
   labels:
