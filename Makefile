@@ -54,9 +54,10 @@ AMD_IMAGE ?= debian:stretch-slim
 ARM_IMAGE ?= arm64v8/ubuntu:16.04
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
+COVERARGS ?= -coverprofile=coverage.txt -covermode=atomic
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
 TEST_CMD = go test $(TESTARGS)
-TEST = $(TEST_CMD) $(TEST_PKGS)
+TEST = $(TEST_CMD) $(COVERARGS) $(TEST_PKGS)
 
 INT_TEST_PKGS ?= $(GOTARGET)/test/...
 INT_TEST= $(TEST_CMD) $(INT_TEST_PKGS)
