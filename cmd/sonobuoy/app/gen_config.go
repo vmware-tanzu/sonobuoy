@@ -41,7 +41,7 @@ func genConfig() ([]byte, error) {
 	// as default plugin selection. We didn't want to wire this into
 	// the `config` package, but it will be a default value the CLI
 	// users expect.
-	c := genflags.getConfig()
+	c := genflags.resolveConfig()
 	b, err := json.Marshal(c)
 	return b, errors.Wrap(err, "unable to marshal configuration")
 }

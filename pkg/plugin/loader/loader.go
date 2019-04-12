@@ -54,6 +54,7 @@ func LoadAllPlugins(namespace, sonobuoyImage, imagePullPolicy string, searchPath
 		if err != nil {
 			return []plugin.Interface{}, errors.Wrapf(err, "couldn't scan %v for plugins", dir)
 		}
+
 		for _, file := range files {
 			pluginDefinitionFiles[file] = struct{}{}
 		}
@@ -65,6 +66,7 @@ func LoadAllPlugins(namespace, sonobuoyImage, imagePullPolicy string, searchPath
 		if err != nil {
 			return []plugin.Interface{}, errors.Wrapf(err, "couldn't load plugin definition file %v", file)
 		}
+
 		pluginDefinition, err := loadDefinition(definitionFile)
 		if err != nil {
 			return []plugin.Interface{}, errors.Wrapf(err, "couldn't load plugin definition for file %v", file)

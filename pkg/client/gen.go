@@ -20,12 +20,13 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
 
-	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/heptio/sonobuoy/pkg/templates"
@@ -42,21 +43,15 @@ const (
 
 // templateValues are used for direct template substitution for manifest generation.
 type templateValues struct {
-	E2EFocus    string
-	E2ESkip     string
-	E2EParallel string
-
 	Plugins []string
 
-	SonobuoyConfig       string
-	SonobuoyImage        string
-	Version              string
-	Namespace            string
-	EnableRBAC           bool
-	ImagePullPolicy      string
-	KubeConformanceImage string
-	SSHKey               string
-	SSHUser              string
+	SonobuoyConfig  string
+	SonobuoyImage   string
+	Namespace       string
+	EnableRBAC      bool
+	ImagePullPolicy string
+	SSHKey          string
+	SSHUser         string
 
 	// CustomRegistries should be a multiline yaml string which represents
 	// the file contents of KUBE_TEST_REPO_LIST, the overrides for k8s e2e
@@ -80,12 +75,40 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		}
 	}
 
-	plugins := []*manifest.Manifest{}
-	if includes(cfg.Config.PluginSelections, e2ePluginName) {
-		plugins = append(plugins, e2eManifest(cfg))
+	// Support legacy logic for the time being.
+	if len(cfg.DynamicPlugins) == 0 && len(cfg.StaticPlugins) == 0 {
+		if cfg.Config.PluginSelections != nil {
+			// Empty (but non-nil) means run nothing. Setting any value means run
+			// those explicitly.
+			for _, v := range cfg.Config.PluginSelections {
+				cfg.DynamicPlugins = append(cfg.DynamicPlugins, v.Name)
+			}
+		} else {
+			// Nil plugin selection now means to run all plugins that are loaded.
+			// If the user didnt provide plugins at all fallback to our original
+			// defaults.
+			cfg.DynamicPlugins = []string{e2ePluginName, systemdLogsName}
+		}
 	}
-	if includes(cfg.Config.PluginSelections, systemdLogsName) {
-		plugins = append(plugins, systemdLogsManifest(cfg))
+
+	plugins := []*manifest.Manifest{}
+	for _, v := range cfg.DynamicPlugins {
+		switch v {
+		case e2ePluginName:
+			plugins = append(plugins, e2eManifest(cfg))
+		case systemdLogsName:
+			plugins = append(plugins, systemdLogsManifest(cfg))
+		}
+	}
+	plugins = append(plugins, cfg.StaticPlugins...)
+
+	sort.Slice(plugins, func(i, j int) bool {
+		return strings.ToLower(plugins[i].SonobuoyConfig.PluginName) < strings.ToLower(plugins[j].SonobuoyConfig.PluginName)
+	})
+
+	err = checkPluginsUnique(plugins)
+	if err != nil {
+		return nil, errors.Wrap(err, "plugin YAML generation")
 	}
 
 	pluginYAML := []string{}
@@ -97,27 +120,14 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		pluginYAML = append(pluginYAML, strings.TrimSpace(string(yaml)))
 	}
 
-	// Template values that are regexps (`E2EFocus` and `E2ESkip`) are
-	// embedded in YAML files using single quotes to remove the need to
-	// escape characters e.g. `\` as they would be if using double quotes.
-	// As these strings are regexps, it is expected that they will contain,
-	// among other characters, backslashes. Only single quotes need to be
-	// escaped in single quote YAML strings, hence the substitions below.
-	// See http://www.yaml.org/spec/1.2/spec.html#id2788097 for more details
-	// on YAML escaping.
 	tmplVals := &templateValues{
-		E2EFocus:             strings.Replace(cfg.E2EConfig.Focus, "'", "''", -1),
-		E2ESkip:              strings.Replace(cfg.E2EConfig.Skip, "'", "''", -1),
-		E2EParallel:          strings.Replace(cfg.E2EConfig.Parallel, "'", "''", -1),
-		SonobuoyConfig:       string(marshalledConfig),
-		SonobuoyImage:        cfg.Image,
-		Version:              buildinfo.Version,
-		Namespace:            cfg.Namespace,
-		EnableRBAC:           cfg.EnableRBAC,
-		ImagePullPolicy:      cfg.ImagePullPolicy,
-		KubeConformanceImage: cfg.KubeConformanceImage,
-		SSHKey:               base64.StdEncoding.EncodeToString(sshKeyData),
-		SSHUser:              cfg.SSHUser,
+		SonobuoyConfig:  string(marshalledConfig),
+		SonobuoyImage:   cfg.Image,
+		Namespace:       cfg.Namespace,
+		EnableRBAC:      cfg.EnableRBAC,
+		ImagePullPolicy: cfg.ImagePullPolicy,
+		SSHKey:          base64.StdEncoding.EncodeToString(sshKeyData),
+		SSHUser:         cfg.SSHUser,
 
 		Plugins: pluginYAML,
 
@@ -132,6 +142,17 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func checkPluginsUnique(plugins []*manifest.Manifest) error {
+	names := map[string]struct{}{}
+	for _, v := range plugins {
+		if _, exists := names[v.SonobuoyConfig.PluginName]; exists {
+			return fmt.Errorf("plugin names must be unique, got duplicated plugin name '%v'", v.SonobuoyConfig.PluginName)
+		}
+		names[v.SonobuoyConfig.PluginName] = struct{}{}
+	}
+	return nil
 }
 
 func includes(set []plugin.Selection, s string) bool {

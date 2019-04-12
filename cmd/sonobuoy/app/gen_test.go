@@ -77,7 +77,7 @@ func TestResolveConformanceImage(t *testing.T) {
 	}
 }
 
-func TestGetConfig(t *testing.T) {
+func TestResolveConfig(t *testing.T) {
 	defaultPluginSearchPath := config.New().PluginSearchPath
 
 	tcs := []struct {
@@ -205,6 +205,17 @@ func TestGetConfig(t *testing.T) {
 				},
 				PluginSearchPath: defaultPluginSearchPath,
 			},
+		}, {
+			name:     "Manually specified plugins should result in empty selection",
+			input:    &genFlags{},
+			cliInput: "--plugin e2e",
+			expected: &config.Config{
+				Namespace:        "heptio-sonobuoy",
+				WorkerImage:      "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				ImagePullPolicy:  "IfNotPresent",
+				PluginSelections: nil,
+				PluginSearchPath: defaultPluginSearchPath,
+			},
 		},
 	}
 
@@ -219,7 +230,7 @@ func TestGetConfig(t *testing.T) {
 				}
 			}
 
-			conf := tc.input.getConfig()
+			conf := tc.input.resolveConfig()
 
 			if conf.Namespace != tc.expected.Namespace {
 				t.Errorf("Expected namespace %v but got %v", tc.expected.Namespace, conf.Namespace)
