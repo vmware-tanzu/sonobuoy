@@ -25,7 +25,7 @@ data:
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"","UUID":"","Version":"","ResultsDir":"","Resources":null,"Filters":{"Namespaces":"","LabelSelector":""},"Limits":{"PodLogs":{"LimitSize":"","LimitTime":""}},"Server":{"bindaddress":"","bindport":0,"advertiseaddress":"","timeoutseconds":0},"Plugins":null,"PluginSearchPath":null,"Namespace":"","LoadedPlugins":null,"WorkerImage":"","ImagePullPolicy":""}
+    {"Description":"","UUID":"","Version":"","ResultsDir":"","Resources":null,"Filters":{"Namespaces":"","LabelSelector":""},"Limits":{"PodLogs":{"LimitSize":"","LimitTime":""}},"Server":{"bindaddress":"","bindport":0,"advertiseaddress":"","timeoutseconds":0},"Plugins":[{"name":"e2e"}],"PluginSearchPath":null,"Namespace":"","LoadedPlugins":null,"WorkerImage":"","ImagePullPolicy":""}
 kind: ConfigMap
 metadata:
   labels:
@@ -35,72 +35,38 @@ metadata:
 ---
 apiVersion: v1
 data:
-  e2e.yaml: |
+  plugin-0.yaml: |
+    extra-volumes:
+    - name: sshkey-vol
+      secret:
+        defaultMode: 256
+        secretName: ssh-key
     sonobuoy-config:
       driver: Job
       plugin-name: e2e
       result-type: e2e
     spec:
+      command:
+      - /run_e2e.sh
       env:
       - name: E2E_FOCUS
-        value: ''
       - name: E2E_SKIP
-        value: ''
       - name: E2E_PARALLEL
-        value: ''
       - name: LOCAL_SSH_KEY
-        value: 'id_rsa'
+        value: id_rsa
       - name: AWS_SSH_KEY
-        value: '/root/.ssh/id_rsa'
+        value: /root/.ssh/id_rsa
       - name: KUBE_SSH_KEY
-        value: 'id_rsa'
+        value: id_rsa
       - name: KUBE_SSH_USER
         value: ssh-user
-      command: ["/run_e2e.sh"]
-      image: 
-      imagePullPolicy: 
       name: e2e
+      resources: {}
       volumeMounts:
       - mountPath: /tmp/results
         name: results
-        readOnly: false
       - mountPath: /root/.ssh
         name: sshkey-vol
-      tolerations:
-        - operator: "Exists"
-    extra-volumes:
-    - name: sshkey-vol
-      secret:
-        secretName: ssh-key
-        defaultMode: 256
-  systemd-logs.yaml: |
-    sonobuoy-config:
-      driver: DaemonSet
-      plugin-name: systemd-logs
-      result-type: systemd_logs
-    spec:
-      command: ["/bin/sh", "-c", "/get_systemd_logs.sh && sleep 3600"]
-      env:
-      - name: NODE_NAME
-        valueFrom:
-          fieldRef:
-            fieldPath: spec.nodeName
-      - name: RESULTS_DIR
-        value: /tmp/results
-      - name: CHROOT_DIR
-        value: /node
-      image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
-      imagePullPolicy: 
-      name: sonobuoy-systemd-logs-config
-      securityContext:
-        privileged: true
-      volumeMounts:
-      - mountPath: /tmp/results
-        name: results
-        readOnly: false
-      - mountPath: /node
-        name: root
-        readOnly: false
 kind: ConfigMap
 metadata:
   labels:

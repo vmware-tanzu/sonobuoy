@@ -17,7 +17,7 @@ limitations under the License.
 package manifest
 
 import (
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -62,7 +62,7 @@ func (m *Manifest) GetObjectKind() schema.ObjectKind { return m }
 
 // Container is a thin wrapper around coreV1.Container that supplies DeepCopyObject and GetObjectKind
 type Container struct {
-	v1.Container
+	corev1.Container
 	objectKind
 }
 
@@ -82,7 +82,7 @@ func (c *Container) GetObjectKind() schema.ObjectKind { return c }
 
 // Volume is a thin wrapper around coreV1.Volume that supplies DeepCopyObject and GetObjectKind
 type Volume struct {
-	v1.Volume
+	corev1.Volume
 	objectKind
 }
 
