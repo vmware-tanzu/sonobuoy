@@ -85,10 +85,11 @@ func AddKubeConformanceImageVersion(imageVersion *image.ConformanceImageVersion,
 	flags.Var(imageVersion, "kube-conformance-image-version", help)
 }
 
-// AddKubeconfigFlag adds a kubeconfig flag to the provided command.
+// AddKubeconfigFlag adds a kubeconfig and context flags to the provided command.
 func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	// The default is the empty string (look in the environment)
 	flags.Var(cfg, "kubeconfig", "Path to explicit kubeconfig file.")
+	flags.StringVar(&cfg.Context, "context", "", "Context in the kubeconfig to use.")
 }
 
 // AddPluginFlag describes which plugin's images to interact with

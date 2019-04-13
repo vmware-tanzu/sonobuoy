@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/pflag"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
 	// Add auth providers
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
@@ -27,6 +28,7 @@ import (
 // Kubeconfig represents an explict or implict kubeconfig
 type Kubeconfig struct {
 	*clientcmd.ClientConfigLoadingRules
+	Context string
 }
 
 // Make sure Kubeconfig implements Value properly
@@ -55,12 +57,15 @@ func (c *Kubeconfig) Set(str string) error {
 
 // Get returns a rest Config, possibly based on a provided config
 func (c *Kubeconfig) Get() (*rest.Config, error) {
-
 	if c.ClientConfigLoadingRules == nil {
 		c.ClientConfigLoadingRules = clientcmd.NewDefaultClientConfigLoadingRules()
 	}
 
 	configOverrides := &clientcmd.ConfigOverrides{}
+	if len(c.Context) > 0 {
+		configOverrides.CurrentContext = c.Context
+	}
+
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(c, configOverrides)
 	return kubeConfig.ClientConfig()
 }
