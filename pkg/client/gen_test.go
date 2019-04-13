@@ -13,7 +13,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
@@ -130,16 +130,56 @@ func TestGenerateManifest(t *testing.T) {
 }
 
 func TestGenerateManifestSSH(t *testing.T) {
+	newConfigWithoutUUID := func() *config.Config {
+		c := config.New()
+		c.UUID = ""
+		return c
+	}
+
+	fromConfig := func(f func(*config.Config) *config.Config) *config.Config {
+		c := newConfigWithoutUUID()
+		return f(c)
+	}
+
 	tcs := []struct {
 		name       string
 		inputcm    *client.GenConfig
 		goldenFile string
 	}{
 		{
+			name: "Default",
+			inputcm: &client.GenConfig{
+				E2EConfig: &client.E2EConfig{},
+				Config:    newConfigWithoutUUID(),
+			},
+			goldenFile: filepath.Join("testdata", "default.golden"),
+		}, {
+			name: "Only e2e",
+			inputcm: &client.GenConfig{
+				E2EConfig: &client.E2EConfig{},
+				Config: fromConfig(func(c *config.Config) *config.Config {
+					c.PluginSelections = []plugin.Selection{plugin.Selection{Name: "e2e"}}
+					return c
+				}),
+			},
+			goldenFile: filepath.Join("testdata", "e2e-default.golden"),
+		}, {
+			name: "Only systemd_logs",
+			inputcm: &client.GenConfig{
+				E2EConfig: &client.E2EConfig{},
+				Config: fromConfig(func(c *config.Config) *config.Config {
+					c.PluginSelections = []plugin.Selection{plugin.Selection{Name: "systemd-logs"}}
+					return c
+				}),
+			},
+			goldenFile: filepath.Join("testdata", "systemd-logs-default.golden"),
+		}, {
 			name: "Enabling SSH",
 			inputcm: &client.GenConfig{
-				E2EConfig:  &client.E2EConfig{},
-				Config:     &config.Config{},
+				E2EConfig: &client.E2EConfig{},
+				Config: &config.Config{
+					PluginSelections: []plugin.Selection{plugin.Selection{Name: "e2e"}},
+				},
 				SSHKeyPath: filepath.Join("testdata", "test_ssh.key"),
 				SSHUser:    "ssh-user",
 			},

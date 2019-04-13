@@ -91,103 +91,19 @@ metadata:
   name: sonobuoy-config-cm
   namespace: {{.Namespace}}
 ---
+{{- if .Plugins }}
 apiVersion: v1
-data:
-  e2e.yaml: |
-    sonobuoy-config:
-      driver: Job
-      plugin-name: e2e
-      result-type: e2e
-    spec:
-      env:
-      - name: E2E_FOCUS
-        value: '{{.E2EFocus}}'
-      - name: E2E_SKIP
-        value: '{{.E2ESkip}}'
-      - name: E2E_PARALLEL
-        value: '{{.E2EParallel}}'
-{{- if .CustomRegistries }}
-      - name: KUBE_TEST_REPO_LIST
-        value: /tmp/sonobuoy/repo-list.yaml
-{{- end}}
-{{- if .SSHKey }}
-      - name: LOCAL_SSH_KEY
-        value: 'id_rsa'
-      - name: AWS_SSH_KEY
-        value: '/root/.ssh/id_rsa'
-      - name: KUBE_SSH_KEY
-        value: 'id_rsa'
-{{- end}}
-{{- if .SSHUser }}
-      - name: KUBE_SSH_USER
-        value: {{.SSHUser}}
-{{- end}}
-      command: ["/run_e2e.sh"]
-      image: {{.KubeConformanceImage}}
-      imagePullPolicy: {{.ImagePullPolicy}}
-      name: e2e
-      volumeMounts:
-      - mountPath: /tmp/results
-        name: results
-        readOnly: false
-{{- if .SSHKey }}
-      - mountPath: /root/.ssh
-        name: sshkey-vol
-{{- end}}
-{{- if .CustomRegistries }}
-      - mountPath: /tmp/sonobuoy
-        name: repolist-vol
-{{- end}}
-      tolerations:
-        - operator: "Exists"
-{{- if or .SSHKey .CustomRegistries }}
-    extra-volumes:
-{{- end}}
-{{- if .SSHKey }}
-    - name: sshkey-vol
-      secret:
-        secretName: ssh-key
-        defaultMode: 256
-{{- end}}
-{{- if .CustomRegistries }}
-    - name: repolist-vol
-      configMap:
-        name: repolist-cm
-{{- end}}
-  systemd-logs.yaml: |
-    sonobuoy-config:
-      driver: DaemonSet
-      plugin-name: systemd-logs
-      result-type: systemd_logs
-    spec:
-      command: ["/bin/sh", "-c", "/get_systemd_logs.sh && sleep 3600"]
-      env:
-      - name: NODE_NAME
-        valueFrom:
-          fieldRef:
-            fieldPath: spec.nodeName
-      - name: RESULTS_DIR
-        value: /tmp/results
-      - name: CHROOT_DIR
-        value: /node
-      image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
-      imagePullPolicy: {{.ImagePullPolicy}}
-      name: sonobuoy-systemd-logs-config
-      securityContext:
-        privileged: true
-      volumeMounts:
-      - mountPath: /tmp/results
-        name: results
-        readOnly: false
-      - mountPath: /node
-        name: root
-        readOnly: false
+data:{{- range $i, $v := .Plugins }}
+  plugin-{{- $i -}}.yaml: |
+    {{ indent 4 $v }}
+{{- end }}
 kind: ConfigMap
 metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-plugins-cm
   namespace: {{.Namespace}}
+{{- end }}
 ---
 apiVersion: v1
 kind: Pod

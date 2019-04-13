@@ -1,0 +1,85 @@
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: 
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-serviceaccount
+  namespace: 
+---
+apiVersion: v1
+data:
+  config.json: |
+    {"Description":"DEFAULT","UUID":"","Version":"v0.14.1","ResultsDir":"/tmp/sonobuoy","Resources":["CertificateSigningRequests","ClusterRoleBindings","ClusterRoles","ComponentStatuses","CustomResourceDefinitions","Nodes","PersistentVolumes","PodSecurityPolicies","ServerGroups","ServerVersion","StorageClasses","ConfigMaps","ControllerRevisions","CronJobs","DaemonSets","Deployments","Endpoints","Ingresses","Jobs","LimitRanges","NetworkPolicies","PersistentVolumeClaims","PodDisruptionBudgets","PodTemplates","Pods","ReplicaSets","ReplicationControllers","ResourceQuotas","RoleBindings","Roles","ServiceAccounts","Services","StatefulSets"],"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"LimitSize":"","LimitTime":""}},"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":10800},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"heptio-sonobuoy","LoadedPlugins":null,"WorkerImage":"gcr.io/heptio-images/sonobuoy:v0.14.1","ImagePullPolicy":"IfNotPresent"}
+kind: ConfigMap
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-config-cm
+  namespace: 
+---
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    component: sonobuoy
+    run: sonobuoy-master
+    tier: analysis
+  name: sonobuoy
+  namespace: 
+spec:
+  containers:
+  - command:
+    - /bin/bash
+    - -c
+    - /sonobuoy master --no-exit=true -v 3 --logtostderr
+    env:
+    - name: SONOBUOY_ADVERTISE_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    image: 
+    imagePullPolicy: 
+    name: kube-sonobuoy
+    volumeMounts:
+    - mountPath: /etc/sonobuoy
+      name: sonobuoy-config-volume
+    - mountPath: /plugins.d
+      name: sonobuoy-plugins-volume
+    - mountPath: /tmp/sonobuoy
+      name: output-volume
+  restartPolicy: Never
+  serviceAccountName: sonobuoy-serviceaccount
+  volumes:
+  - configMap:
+      name: sonobuoy-config-cm
+    name: sonobuoy-config-volume
+  - configMap:
+      name: sonobuoy-plugins-cm
+    name: sonobuoy-plugins-volume
+  - emptyDir: {}
+    name: output-volume
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    component: sonobuoy
+    run: sonobuoy-master
+  name: sonobuoy-master
+  namespace: 
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    run: sonobuoy-master
+  type: ClusterIP
