@@ -28,8 +28,10 @@ LINUX_ARCH := amd64 arm64
 DOCKERFILE :=
 PLATFORMS := $(subst $(SPACE),$(COMMA),$(foreach arch,$(LINUX_ARCH),linux/$(arch)))
 
-# SECRET is used when pushing the manifest.
-SECRET := $(shell echo "https://gcr.io" | docker-credential-gcr get | jq '.Secret')
+# SECRET is used when pushing the manifest. docker-credential-gcr may not be
+# available locally (except in Jenkins) so delay the evaluation unless the secret
+# is needed.
+SECRET = $(shell echo "https://gcr.io" | docker-credential-gcr get | jq '.Secret')
 
 # Not used for pushing images, just for local building on other GOOS. Defaults to
 # grabbing from the local go env but can be set manually to avoid that requirement.
