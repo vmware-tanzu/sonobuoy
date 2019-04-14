@@ -54,12 +54,7 @@ func NewCmdLogs() *cobra.Command {
 }
 
 func getLogs(cmd *cobra.Command, args []string) {
-	cfg, err := logsKubecfg.Get()
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "failed to get rest config"))
-		os.Exit(1)
-	}
-	sbc, err := getSonobuoyClient(cfg)
+	sbc, err := getSonobuoyClientFromKubecfg(logsKubecfg)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)

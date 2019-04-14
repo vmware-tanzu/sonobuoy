@@ -70,13 +70,7 @@ func runVersion(cmd *cobra.Command, args []string) {
 func getK8Sversion() (string, bool) {
 
 	if versionflags.kubecfg.String() != "" {
-		cfg, err := versionflags.kubecfg.Get()
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get kubernetes config"))
-			return "", true
-		}
-
-		sbc, err := getSonobuoyClient(cfg)
+		sbc, err := getSonobuoyClientFromKubecfg(versionflags.kubecfg)
 		if err != nil {
 			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 			return "", true

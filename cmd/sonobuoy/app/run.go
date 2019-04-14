@@ -71,20 +71,15 @@ func NewCmdRun() *cobra.Command {
 }
 
 func submitSonobuoyRun(cmd *cobra.Command, args []string) {
-	cfg, err := runflags.kubecfg.Get()
+	sbc, err := getSonobuoyClientFromKubecfg(runflags.kubecfg)
 	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
+		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
 	}
 
 	runCfg, err := runflags.Config()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not retrieve E2E config"))
-		os.Exit(1)
-	}
-	sbc, err := getSonobuoyClient(cfg)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
 	}
 

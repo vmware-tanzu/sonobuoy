@@ -61,12 +61,7 @@ func retrieveResults(cmd *cobra.Command, args []string) {
 		outDir = args[0]
 	}
 
-	cfg, err := rcvFlags.kubecfg.Get()
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "failed to get kubernetes client"))
-		os.Exit(1)
-	}
-	sbc, err := getSonobuoyClient(cfg)
+	sbc, err := getSonobuoyClientFromKubecfg(rcvFlags.kubecfg)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)

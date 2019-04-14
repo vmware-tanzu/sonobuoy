@@ -52,13 +52,7 @@ func NewCmdDelete() *cobra.Command {
 }
 
 func deleteSonobuoyRun(cmd *cobra.Command, args []string) {
-	cfg, err := deleteFlags.kubeconfig.Get()
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't get kubernetes config"))
-		os.Exit(1)
-	}
-
-	sbc, err := getSonobuoyClient(cfg)
+	sbc, err := getSonobuoyClientFromKubecfg(deleteFlags.kubeconfig)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
