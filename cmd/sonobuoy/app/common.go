@@ -19,3 +19,11 @@ func getSonobuoyClient(cfg *rest.Config) (*client.SonobuoyClient, error) {
 	}
 	return client.NewSonobuoyClient(cfg, skc)
 }
+
+func getSonobuoyClientFromKubecfg(kubecfg Kubeconfig) (*client.SonobuoyClient, error) {
+	cfg, err := kubecfg.Get()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get rest config")
+	}
+	return getSonobuoyClient(cfg)
+}

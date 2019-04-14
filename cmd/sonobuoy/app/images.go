@@ -116,13 +116,7 @@ func listImages(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		cfg, err := imagesflags.kubeconfig.Get()
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
-			os.Exit(1)
-		}
-
-		sbc, err := getSonobuoyClient(cfg)
+		sbc, err := getSonobuoyClientFromKubecfg(imagesflags.kubeconfig)
 		if err != nil {
 			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 			os.Exit(1)
@@ -160,13 +154,7 @@ func pullImages(cmd *cobra.Command, args []string) {
 	switch imagesflags.plugin {
 	case "e2e":
 
-		cfg, err := imagesflags.kubeconfig.Get()
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
-			os.Exit(1)
-		}
-
-		sbc, err := getSonobuoyClient(cfg)
+		sbc, err := getSonobuoyClientFromKubecfg(imagesflags.kubeconfig)
 		if err != nil {
 			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 			os.Exit(1)
@@ -203,13 +191,7 @@ func downloadImages(cmd *cobra.Command, args []string) {
 	switch imagesflags.plugin {
 	case "e2e":
 
-		cfg, err := imagesflags.kubeconfig.Get()
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
-			os.Exit(1)
-		}
-
-		sbc, err := getSonobuoyClient(cfg)
+		sbc, err := getSonobuoyClientFromKubecfg(imagesflags.kubeconfig)
 		if err != nil {
 			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 			os.Exit(1)
@@ -268,13 +250,7 @@ func pushImages(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 
-		cfg, err := imagesflags.kubeconfig.Get()
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
-			os.Exit(1)
-		}
-
-		sbc, err := getSonobuoyClient(cfg)
+		sbc, err := getSonobuoyClientFromKubecfg(imagesflags.kubeconfig)
 		if err != nil {
 			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 			os.Exit(1)
@@ -317,14 +293,7 @@ func pushImages(cmd *cobra.Command, args []string) {
 func deleteImages(cmd *cobra.Command, args []string) {
 	switch imagesflags.plugin {
 	case "e2e":
-
-		cfg, err := imagesflags.kubeconfig.Get()
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
-			os.Exit(1)
-		}
-
-		sbc, err := getSonobuoyClient(cfg)
+		sbc, err := getSonobuoyClientFromKubecfg(imagesflags.kubeconfig)
 		if err != nil {
 			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 			os.Exit(1)

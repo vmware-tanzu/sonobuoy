@@ -58,12 +58,7 @@ func NewCmdStatus() *cobra.Command {
 // TODO (timothysc) summarize and aggregate daemonset-plugins by status done (24) running (24)
 // also --show-all
 func getStatus(cmd *cobra.Command, args []string) {
-	cfg, err := statusFlags.kubecfg.Get()
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't get kubernetes config"))
-		os.Exit(1)
-	}
-	sbc, err := getSonobuoyClient(cfg)
+	sbc, err := getSonobuoyClientFromKubecfg(statusFlags.kubecfg)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
