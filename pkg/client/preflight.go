@@ -22,16 +22,38 @@ import (
 	version "github.com/hashicorp/go-version"
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/pkg/errors"
+	apicorev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/kubernetes"
 )
 
-var preflightChecks = []func(kubernetes.Interface, *PreflightConfig) error{
-	preflightDNSCheck,
-	preflightVersionCheck,
-	preflightExistingSonobuoy,
-}
+const (
+	kubeSystemNamespace = "kube-system"
+	kubeDNSLabelKey     = "k8s-app"
+	kubeDNSLabelValue   = "kube-dns"
+	coreDNSLabelValue   = "coredns"
+)
+
+var (
+	minimumKubeVersion = version.Must(version.NewVersion(buildinfo.MinimumKubeVersion))
+	maximumKubeVersion = version.Must(version.NewVersion(buildinfo.MaximumKubeVersion))
+
+	expectedDNSLabels = []string{
+		kubeDNSLabelValue,
+		coreDNSLabelValue,
+	}
+
+	preflightChecks = []func(kubernetes.Interface, *PreflightConfig) error{
+		preflightDNSCheck,
+		preflightVersionCheck,
+		preflightExistingNamespace,
+	}
+)
+
+type listFunc func(metav1.ListOptions) (*apicorev1.PodList, error)
+type nsGetFunc func(string, metav1.GetOptions) (*apicorev1.Namespace, error)
 
 // PreflightChecks runs all preflight checks in order, returning the first error encountered.
 func (c *SonobuoyClient) PreflightChecks(cfg *PreflightConfig) []error {
@@ -41,40 +63,42 @@ func (c *SonobuoyClient) PreflightChecks(cfg *PreflightConfig) []error {
 	}
 
 	errors := []error{}
-
 	for _, check := range preflightChecks {
 		if err := check(client, cfg); err != nil {
 			errors = append(errors, err)
 		}
 	}
+
 	return errors
 }
 
-const (
-	kubeSystemNamespace = "kube-system"
-	kubeDNSLabelKey     = "k8s-app"
-	kubeDNSLabelValue   = "kube-dns"
-	coreDNSLabelValue   = "coredns"
-)
-
 func preflightDNSCheck(client kubernetes.Interface, cfg *PreflightConfig) error {
-	var dnsLabels = []string{
-		kubeDNSLabelValue,
-		coreDNSLabelValue,
+	return dnsCheck(
+		client.CoreV1().Pods(kubeSystemNamespace).List,
+		expectedDNSLabels...,
+	)
+}
+
+func dnsCheck(listPods listFunc, dnsLabels ...string) error {
+	if len(dnsLabels) == 0 {
+		return nil
 	}
 
 	var nPods = 0
 	for _, labelValue := range dnsLabels {
 		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, kubeDNSLabelKey, labelValue)
 
-		obj, err := client.CoreV1().Pods(kubeSystemNamespace).List(
+		obj, err := listPods(
 			metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)},
 		)
 		if err != nil {
 			return errors.Wrap(err, "could not retrieve list of pods")
 		}
 
-		nPods += len(obj.Items)
+		if len(obj.Items) > 0 {
+			nPods += len(obj.Items)
+			break
+		}
 	}
 
 	if nPods == 0 {
@@ -84,44 +108,51 @@ func preflightDNSCheck(client kubernetes.Interface, cfg *PreflightConfig) error 
 	return nil
 }
 
-var (
-	minimumKubeVersion = version.Must(version.NewVersion(buildinfo.MinimumKubeVersion))
-	maximumKubeVersion = version.Must(version.NewVersion(buildinfo.MaximumKubeVersion))
-)
-
 func preflightVersionCheck(client kubernetes.Interface, cfg *PreflightConfig) error {
-	versionInfo, err := client.Discovery().ServerVersion()
+	return versionCheck(
+		client.Discovery(),
+		minimumKubeVersion,
+		maximumKubeVersion,
+	)
+}
+
+func versionCheck(versionClient discovery.ServerVersionInterface, min, max *version.Version) error {
+	versionInfo, err := versionClient.ServerVersion()
 	if err != nil {
 		return errors.Wrap(err, "failed to retrieve server version")
 	}
-
 	serverVersion, err := version.NewVersion(versionInfo.String())
 	if err != nil {
 		return errors.Wrap(err, "couldn't parse version string")
 	}
 
-	if serverVersion.LessThan(minimumKubeVersion) {
-		return fmt.Errorf("Minimum kubernetes version is %s, got %s", minimumKubeVersion.String(), versionInfo.String())
+	if serverVersion.LessThan(min) {
+		return fmt.Errorf("minimum kubernetes version is %s, got %s", min.String(), versionInfo.String())
 	}
 
-	if serverVersion.GreaterThan(maximumKubeVersion) {
-		return fmt.Errorf("Maximum kubernetes version is %s, got %s", maximumKubeVersion.String(), versionInfo.String())
+	if serverVersion.GreaterThan(max) {
+		return fmt.Errorf("maximum kubernetes version is %s, got %s", max.String(), versionInfo.String())
 	}
 
 	return nil
 }
 
-func preflightExistingSonobuoy(client kubernetes.Interface, cfg *PreflightConfig) error {
-	_, err := client.CoreV1().Pods(cfg.Namespace).Get("sonobuoy", metav1.GetOptions{})
+func preflightExistingNamespace(client kubernetes.Interface, cfg *PreflightConfig) error {
+	return nsCheck(
+		client.CoreV1().Namespaces().Get,
+		cfg.Namespace,
+	)
+}
+
+func nsCheck(getter nsGetFunc, ns string) error {
+	_, err := getter(ns, metav1.GetOptions{})
 	switch {
-	// Pod doesn't exist: great!
 	case apierrors.IsNotFound(err):
 		return nil
 	case err != nil:
-		return errors.Wrap(err, "error checking for Sonobuoy pod")
-	// No error: pod exists
+		return errors.Wrap(err, "error checking for namespace")
 	case err == nil:
-		return errors.New("sonobuoy run already exists in this namespace")
+		return errors.New("namespace already exists")
 	}
 	return nil
 }
