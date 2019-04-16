@@ -38,6 +38,7 @@ func NewSonobuoyCommand() *cobra.Command {
 
 	gen := NewCmdGen()
 	gen.AddCommand(NewCmdGenPluginDef())
+	gen.AddCommand(NewCmdGenConfig())
 	cmds.AddCommand(gen)
 
 	cmds.AddCommand(NewCmdLogs())

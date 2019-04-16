@@ -90,6 +90,7 @@ sonobuoy logs
  * [plugins][plugins]
  * Testing of [air gapped clusters][airgap].
  * [Customization][gen] of YAML prior to running.
+ * The [Sonobuoy config file][sonobuoyconfig] file and how to edit it.
 
 ## Troubleshooting
 
@@ -151,6 +152,7 @@ See [the list of releases][releases] to find out about feature changes.
 [releases]: https://github.com/heptio/sonobuoy/releases
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 [snapshot]: docs/snapshot.md
+[sonobuoyconfig]: docs/sonobuoy-config.md
 [status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
 [travis]: https://travis-ci.org/heptio/sonobuoy/#
 [wait]: docs/wait.md
