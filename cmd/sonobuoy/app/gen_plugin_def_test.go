@@ -52,7 +52,7 @@ func TestPluginGenDef(t *testing.T) {
 			desc: "Env vars",
 			cfg: GenPluginDefConfig{
 				def: manifest.Manifest{},
-				env: map[string]string{"FOO": "bar", "FIZZ": "buzz"},
+				env: map[string]string{"FOO": "bar"},
 			},
 			expectFile: "testdata/pluginDef-env.golden",
 		}, {
@@ -86,7 +86,7 @@ func TestPluginGenDef(t *testing.T) {
 						},
 					},
 				},
-				env: map[string]string{"FOO": "- bar", "FIZZ": "buzz"},
+				env: map[string]string{"FOO": "- bar"},
 			},
 			expectFile: "testdata/pluginDef-quotes.golden",
 		},
