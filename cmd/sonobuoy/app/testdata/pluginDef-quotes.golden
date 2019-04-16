@@ -10,8 +10,6 @@ spec:
   env:
   - name: FOO
     value: '- bar'
-  - name: FIZZ
-    value: buzz
   image: img:v1
   name: n - foo
   resources: {}

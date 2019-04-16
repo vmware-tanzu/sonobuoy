@@ -6,7 +6,5 @@ spec:
   env:
   - name: FOO
     value: bar
-  - name: FIZZ
-    value: buzz
   name: ""
   resources: {}
