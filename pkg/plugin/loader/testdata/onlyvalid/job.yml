@@ -1,0 +1,12 @@
+sonobuoy-config:
+  driver: Job
+  plugin-name: test-job-plugin
+  result-type: test-job-plugin
+spec:
+  image: gcr.io/heptio-images/heptio-e2e:master
+  imagePullPolicy: Always
+  name: heptio-e2e
+  volumeMounts:
+    - mountPath: /tmp/results
+      name: results
+      readOnly: false

@@ -211,6 +211,16 @@ func TestLoadAllPlugins(t *testing.T) {
 				plugin.Selection{Name: "test-daemon-set-plugin"},
 			},
 			expectedPluginNames: []string{"test-job-plugin", "test-daemon-set-plugin"},
+		}, {
+			testname:            "nil selections defaults to run all",
+			searchPath:          []string{path.Join("testdata", "onlyvalid")},
+			selections:          nil,
+			expectedPluginNames: []string{"test-job-plugin", "test-daemon-set-plugin"},
+		}, {
+			testname:            "empty (non-nil) selection runs none",
+			searchPath:          []string{path.Join("testdata", "plugin.d")},
+			selections:          []plugin.Selection{},
+			expectedPluginNames: []string{},
 		},
 	}
 
