@@ -73,7 +73,11 @@ func LoadAllPlugins(namespace, sonobuoyImage, imagePullPolicy string, searchPath
 		pluginDefinitions = append(pluginDefinitions, pluginDefinition)
 	}
 
-	pluginDefinitions = filterPluginDef(pluginDefinitions, selections)
+	// The zero value for the slice, nil, indicates that all plugins should be run.
+	// If the user wants to run 0 plugins, they should explicitly pass an empty array.
+	if selections != nil {
+		pluginDefinitions = filterPluginDef(pluginDefinitions, selections)
+	}
 
 	plugins := []plugin.Interface{}
 	for _, def := range pluginDefinitions {
