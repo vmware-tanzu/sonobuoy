@@ -46,6 +46,7 @@ type genFlags struct {
 	kubeConformanceImageVersion imagepkg.ConformanceImageVersion
 	imagePullPolicy             ImagePullPolicy
 	e2eRepoList                 string
+	timeoutSeconds              int
 
 	// plugins will keep a list of the plugins we want. Custom type for
 	// flag support.
@@ -68,6 +69,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	cfg.e2eflags = AddE2EConfigFlags(genset)
 	AddRBACModeFlags(&cfg.rbacMode, genset, rbac)
 	AddImagePullPolicyFlag(&cfg.imagePullPolicy, genset)
+	AddTimeoutFlag(&cfg.timeoutSeconds, genset)
 
 	AddNamespaceFlag(&cfg.namespace, genset)
 	AddSonobuoyImage(&cfg.sonobuoyImage, genset)
@@ -274,6 +276,10 @@ func (g *genFlags) resolveConfig() *config.Config {
 
 	if g.genflags.Changed(imagePullPolicyFlag) {
 		conf.ImagePullPolicy = g.imagePullPolicy.String()
+	}
+
+	if g.genflags.Changed(timeoutFlag) {
+		conf.Aggregation.TimeoutSeconds = g.timeoutSeconds
 	}
 
 	return conf

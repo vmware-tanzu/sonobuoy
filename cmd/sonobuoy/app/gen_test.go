@@ -79,6 +79,7 @@ func TestResolveConformanceImage(t *testing.T) {
 
 func TestResolveConfig(t *testing.T) {
 	defaultPluginSearchPath := config.New().PluginSearchPath
+	defaultAggr := plugin.AggregationConfig{TimeoutSeconds: 10800}
 
 	tcs := []struct {
 		name     string
@@ -101,6 +102,7 @@ func TestResolveConfig(t *testing.T) {
 					plugin.Selection{Name: "systemd-logs"},
 				},
 				PluginSearchPath: defaultPluginSearchPath,
+				Aggregation:      defaultAggr,
 			},
 		}, {
 			name: "Quick mode and a non-nil supplied config",
@@ -124,8 +126,9 @@ func TestResolveConfig(t *testing.T) {
 					plugin.Selection{Name: "e2e"},
 				},
 				Aggregation: plugin.AggregationConfig{
-					BindAddress: "10.0.0.1",
-					BindPort:    config.DefaultAggregationServerBindPort,
+					BindAddress:    "10.0.0.1",
+					BindPort:       config.DefaultAggregationServerBindPort,
+					TimeoutSeconds: 10800,
 				},
 				PluginSearchPath: defaultPluginSearchPath,
 			},
@@ -155,8 +158,9 @@ func TestResolveConfig(t *testing.T) {
 				},
 				PluginSearchPath: defaultPluginSearchPath,
 				Aggregation: plugin.AggregationConfig{
-					BindAddress: config.DefaultAggregationServerBindAddress,
-					BindPort:    config.DefaultAggregationServerBindPort,
+					BindAddress:    config.DefaultAggregationServerBindAddress,
+					BindPort:       config.DefaultAggregationServerBindPort,
+					TimeoutSeconds: config.DefaultAggregationServerTimeoutSeconds,
 				},
 			},
 		}, {
@@ -166,7 +170,7 @@ func TestResolveConfig(t *testing.T) {
 					Config: config.Config{Namespace: "configNS"},
 				},
 			},
-			cliInput: "--namespace=flagNS --sonobuoy-image=flagImage --image-pull-policy=Always",
+			cliInput: "--namespace=flagNS --sonobuoy-image=flagImage --image-pull-policy=Always --timeout 100",
 			expected: &config.Config{
 				Namespace:       "flagNS",
 				WorkerImage:     "flagImage",
@@ -176,6 +180,7 @@ func TestResolveConfig(t *testing.T) {
 					plugin.Selection{Name: "systemd-logs"},
 				},
 				PluginSearchPath: defaultPluginSearchPath,
+				Aggregation:      plugin.AggregationConfig{TimeoutSeconds: 100},
 			},
 		}, {
 			name:     "Flags shouldn't override the config settings unless set",
@@ -190,6 +195,7 @@ func TestResolveConfig(t *testing.T) {
 					plugin.Selection{Name: "systemd-logs"},
 				},
 				PluginSearchPath: defaultPluginSearchPath,
+				Aggregation:      plugin.AggregationConfig{TimeoutSeconds: 500},
 			},
 		}, {
 			name:     "Flags shouldn't override the config settings unless set",
@@ -204,6 +210,7 @@ func TestResolveConfig(t *testing.T) {
 					plugin.Selection{Name: "systemd-logs"},
 				},
 				PluginSearchPath: defaultPluginSearchPath,
+				Aggregation:      plugin.AggregationConfig{TimeoutSeconds: 500},
 			},
 		}, {
 			name:     "Manually specified plugins should result in empty selection",
@@ -215,6 +222,7 @@ func TestResolveConfig(t *testing.T) {
 				ImagePullPolicy:  "IfNotPresent",
 				PluginSelections: nil,
 				PluginSearchPath: defaultPluginSearchPath,
+				Aggregation:      defaultAggr,
 			},
 		},
 	}
@@ -242,6 +250,10 @@ func TestResolveConfig(t *testing.T) {
 
 			if conf.ImagePullPolicy != tc.expected.ImagePullPolicy {
 				t.Errorf("Expected image pull policy %v but got %v", tc.expected.ImagePullPolicy, conf.ImagePullPolicy)
+			}
+
+			if conf.Aggregation.TimeoutSeconds != tc.expected.Aggregation.TimeoutSeconds {
+				t.Errorf("Expected timeout %v but got %v", tc.expected.Aggregation.TimeoutSeconds, conf.Aggregation.TimeoutSeconds)
 			}
 
 			if len(conf.PluginSelections) != len(tc.expected.PluginSelections) {
