@@ -38,6 +38,7 @@ const (
 	sonobuoyImageFlag   = "sonobuoy-image"
 	imagePullPolicyFlag = "image-pull-policy"
 	pluginFlag          = "plugin"
+	timeoutFlag         = "timeout"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
@@ -251,6 +252,14 @@ func AddRunWaitFlag(flag *int, flags *pflag.FlagSet) {
 		"Wait for sonobuoy run to be completed (or fail). 0 indicates do not wait. By providing --wait the default is to wait for 1 day.",
 	)
 	flags.Lookup("wait").NoOptDefVal = "1440"
+}
+
+// AddTimeoutFlag adds an int flag for waiting for the entire run to finish.
+func AddTimeoutFlag(flag *int, flags *pflag.FlagSet) {
+	flags.IntVar(
+		flag, timeoutFlag, config.DefaultAggregationServerTimeoutSeconds,
+		"How long (in seconds) Sonobuoy will wait for plugins to complete before exiting. 0 indicates no timeout.",
+	)
 }
 
 // AddImagePullPolicyFlag adds a boolean flag for deleting everything (including E2E tests).

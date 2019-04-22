@@ -41,6 +41,8 @@ const (
 	DefaultAggregationServerBindPort = 8080
 	// DefaultAggregationServerBindAddress is the default address for the aggregation server to bind to.
 	DefaultAggregationServerBindAddress = "0.0.0.0"
+	// DefaultAggregationServerTimeoutSeconds is the default amount of time the aggregation server will wait for all plugins to complete.
+	DefaultAggregationServerTimeoutSeconds = 10800 // 180 min
 	// MasterPodName is the name of the main pod that runs plugins and collects results.
 	MasterPodName = "sonobuoy"
 	// MasterContainerName is the name of the main container in the master pod.
@@ -290,7 +292,7 @@ func New() *Config {
 
 	cfg.Aggregation.BindAddress = DefaultAggregationServerBindAddress
 	cfg.Aggregation.BindPort = DefaultAggregationServerBindPort
-	cfg.Aggregation.TimeoutSeconds = 10800 // 180 minutes
+	cfg.Aggregation.TimeoutSeconds = DefaultAggregationServerTimeoutSeconds
 
 	cfg.PluginSearchPath = []string{
 		"./plugins.d",

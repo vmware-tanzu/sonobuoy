@@ -168,7 +168,10 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// Give the plugins a chance to cleanup before a hard timeout occurs
 	shutdownPlugins := time.After(time.Duration(cfg.TimeoutSeconds-plugin.GracefulShutdownPeriod) * time.Second)
 	// Ensure we only wait for results for a certain time
-	timeout := time.After(time.Duration(cfg.TimeoutSeconds) * time.Second)
+	var timeout <-chan time.Time
+	if cfg.TimeoutSeconds > 0 {
+		timeout = time.After(time.Duration(cfg.TimeoutSeconds) * time.Second)
+	}
 
 	// 6. Wait for aggr to show that all results are accounted for
 	for {
