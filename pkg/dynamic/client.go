@@ -3,6 +3,7 @@ package dynamic
 import (
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -79,7 +80,7 @@ func (a *APIHelper) CreateObject(obj *unstructured.Unstructured) (*unstructured.
 		return nil, errors.New("failed to get a resource interface")
 	}
 	ri := rsc.Namespace(namespace)
-	return ri.Create(obj)
+	return ri.Create(obj, metav1.CreateOptions{})
 }
 
 // Name returns the name of the kubernetes object.
