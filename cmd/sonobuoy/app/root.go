@@ -21,6 +21,8 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/spf13/cobra"
+
+	"k8s.io/klog"
 )
 
 func NewSonobuoyCommand() *cobra.Command {
@@ -32,6 +34,7 @@ func NewSonobuoyCommand() *cobra.Command {
 	}
 
 	cmds.ResetFlags()
+
 	cmds.AddCommand(NewCmdMaster())
 	cmds.AddCommand(NewCmdDelete())
 	cmds.AddCommand(NewCmdE2E())
@@ -50,6 +53,7 @@ func NewSonobuoyCommand() *cobra.Command {
 	cmds.AddCommand(NewCmdGenPlugin())
 	cmds.AddCommand(NewCmdImages())
 
+	klog.InitFlags(nil)
 	cmds.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 	cmds.PersistentFlags().BoolVarP(&errlog.DebugOutput, "debug", "d", false, "Enable debug output (includes stack traces)")
 	return cmds

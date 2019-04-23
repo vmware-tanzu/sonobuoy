@@ -66,13 +66,13 @@ type testNamespaceableResourceInterface struct {
 func (t *testNamespaceableResourceInterface) Namespace(string) dynamic.ResourceInterface {
 	return &testResourceInterface{}
 }
-func (t *testResourceInterface) Create(obj *unstructured.Unstructured, subresources ...string) (*unstructured.Unstructured, error) {
+func (t *testResourceInterface) Create(obj *unstructured.Unstructured, opts metav1.CreateOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return obj, nil
 }
-func (t *testResourceInterface) Update(obj *unstructured.Unstructured, subresources ...string) (*unstructured.Unstructured, error) {
+func (t *testResourceInterface) Update(obj *unstructured.Unstructured, opts metav1.UpdateOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
-func (t *testResourceInterface) UpdateStatus(obj *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+func (t *testResourceInterface) UpdateStatus(obj *unstructured.Unstructured, opts metav1.UpdateOptions) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
 func (t *testResourceInterface) Delete(name string, options *metav1.DeleteOptions, subresources ...string) error {
@@ -90,7 +90,7 @@ func (t *testResourceInterface) List(opts metav1.ListOptions) (*unstructured.Uns
 func (t *testResourceInterface) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	return nil, nil
 }
-func (t *testResourceInterface) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (*unstructured.Unstructured, error) {
+func (t *testResourceInterface) Patch(name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
 
