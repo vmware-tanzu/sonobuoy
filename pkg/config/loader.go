@@ -75,14 +75,10 @@ func LoadConfig() (*Config, error) {
 		cfg.ResultsDir = resultsDir
 	}
 
-	// Use the exact user config for resources, if set. Viper merges in
-	// arrays, making this part necessary.  This way, if they leave out the
-	// Resources section altogether they get the default set, but if they
-	// set it at all (including to an empty array), we use exactly what
-	// they specify.
-	if viper.IsSet("Resources") {
-		cfg.Resources = viper.GetStringSlice("Resources")
-	}
+	// Always take what the user set for Resources, even if it is empty. Do not
+	// merge with the defaults. Sending the empty slice queries everything using
+	// the dynamic client.
+	cfg.Resources = viper.GetStringSlice("Resources")
 
 	// 5 - Load any plugins we have
 	err = loadAllPlugins(cfg)

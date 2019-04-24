@@ -58,7 +58,7 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 		return errors.WithStack(err)
 	}
 
-	logrus.Info("Collecting Pod Logs...")
+	logrus.Infof("Collecting Pod Logs (%v)", ns)
 	limitBytes := cfg.Limits.PodLogs.SizeLimitBytes(0)
 	limitTime := int64(cfg.Limits.PodLogs.TimeLimitDuration(0) / time.Second)
 

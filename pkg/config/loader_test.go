@@ -81,8 +81,8 @@ func TestDefaultResources(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(cfg.Resources) == 0 {
-		t.Error("Default resources should be applied if not in config")
+	if cfg.Resources != nil {
+		t.Error("Nil resources should stay nil when loaded to imply query all resources.")
 	}
 
 	// Check that specifying one resource results in one resource

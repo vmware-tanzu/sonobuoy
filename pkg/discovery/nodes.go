@@ -69,7 +69,7 @@ func gatherNodeData(nodeNames []string, restclient rest.Interface, cfg *config.C
 			return err
 		}
 
-		_, err := untypedQuery(out, "configz.json", func() (interface{}, error) {
+		_, err := timedObjectQuery(out, "configz.json", func() (interface{}, error) {
 			data := make(map[string]interface{})
 			result, err := getNodeEndpoint(restclient, name, "configz")
 			if err != nil {
@@ -87,7 +87,7 @@ func gatherNodeData(nodeNames []string, restclient rest.Interface, cfg *config.C
 			return err
 		}
 
-		_, err = untypedQuery(out, "healthz.json", func() (interface{}, error) {
+		_, err = timedObjectQuery(out, "healthz.json", func() (interface{}, error) {
 			data := make(map[string]interface{})
 			result, err := getNodeEndpoint(restclient, name, "healthz")
 			if err != nil {

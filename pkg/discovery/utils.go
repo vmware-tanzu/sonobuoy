@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -49,31 +50,14 @@ func FilterNamespaces(kubeClient kubernetes.Interface, filter string) ([]string,
 // SerializeObj will write out an object
 func SerializeObj(obj interface{}, outpath string, file string) error {
 	var err error
-	if err = os.MkdirAll(outpath, 0755); err == nil {
-		if eJSONBytes, err := json.Marshal(obj); err == nil {
-			err = ioutil.WriteFile(outpath+"/"+file, eJSONBytes, 0644)
-		}
+	if err = os.MkdirAll(outpath, 0755); err != nil {
+		return errors.WithStack(err)
 	}
-	return errors.WithStack(err)
-}
 
-// SerializeArrayObj will write out an array of object
-func SerializeArrayObj(objs []interface{}, outpath string, file string) error {
-	var err error
-	if err = os.MkdirAll(outpath, 0755); err == nil {
-		if eJSONBytes, err := json.Marshal(objs); err == nil {
-			err = ioutil.WriteFile(outpath+"/"+file, eJSONBytes, 0644)
-		}
+	eJSONBytes, err := json.Marshal(obj)
+	if err != nil {
+		return errors.WithStack(err)
 	}
-	return errors.WithStack(err)
-}
 
-// SerializeObjAppend will serialize an object and append to the end of file
-func SerializeObjAppend(f *os.File, obj interface{}) error {
-	var err error
-	if blob, err := json.Marshal(obj); err == nil {
-		_, err = f.Write(blob)
-		_, err = f.WriteString(",")
-	}
-	return errors.WithStack(err)
+	return errors.WithStack(ioutil.WriteFile(filepath.Join(outpath, file), eJSONBytes, 0644))
 }
