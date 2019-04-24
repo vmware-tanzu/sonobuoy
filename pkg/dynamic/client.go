@@ -27,7 +27,9 @@ type mapper interface {
 
 // APIHelper wraps the client-go dynamic client and exposes a simple interface.
 type APIHelper struct {
-	Client   dynamic.Interface
+	Client          dynamic.Interface
+	DiscoveryClient discovery.DiscoveryInterface
+
 	Mapper   mapper
 	Accessor MetadataAccessor
 }
@@ -48,7 +50,12 @@ func NewAPIHelperFromRESTConfig(cfg *rest.Config) (*APIHelper, error) {
 		return nil, errors.Wrap(err, "could not get api group resources")
 	}
 	mapper := restmapper.NewDiscoveryRESTMapper(groupResources)
-	return NewAPIHelper(dynClient, mapper, meta.NewAccessor())
+	return &APIHelper{
+		Client:          dynClient,
+		Mapper:          mapper,
+		Accessor:        meta.NewAccessor(),
+		DiscoveryClient: discover,
+	}, nil
 }
 
 // NewAPIHelper returns an APIHelper with the internals instantiated.
@@ -81,6 +88,15 @@ func (a *APIHelper) CreateObject(obj *unstructured.Unstructured) (*unstructured.
 	}
 	ri := rsc.Namespace(namespace)
 	return ri.Create(obj, metav1.CreateOptions{})
+}
+
+func sliceContains(set []string, val string) bool {
+	for _, v := range set {
+		if v == val {
+			return true
+		}
+	}
+	return false
 }
 
 // Name returns the name of the kubernetes object.

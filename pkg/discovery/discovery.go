@@ -25,12 +25,13 @@ import (
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/heptio/sonobuoy/pkg/dynamic"
 	"github.com/heptio/sonobuoy/pkg/errlog"
+
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	"github.com/viniciuschiele/tarx"
-	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -40,7 +41,15 @@ import (
 
 // Run is the main entrypoint for discovery.
 func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
-	t := time.Now()
+	// Adjust QPS/Burst so that the queries execute as quickly as possible.
+	restConf.QPS = float32(cfg.QPS)
+	restConf.Burst = cfg.Burst
+
+	apiHelper, err := dynamic.NewAPIHelperFromRESTConfig(restConf)
+	if err != nil {
+		errlog.LogError(err)
+		return errCount + 1
+	}
 
 	kubeClient, err := kubernetes.NewForConfig(restConf)
 	if err != nil {
@@ -48,11 +57,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		return errCount + 1
 	}
 
-	crdClient, err := apiextensionsclient.NewForConfig(restConf)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "could not create apiextensions client"))
-		return errCount + 1
-	}
+	t := time.Now()
 
 	// 1. Create the directory which will store the results, including the
 	// `meta` directory inside it (which we always need regardless of
@@ -115,13 +120,27 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 
 	// 5. Run the queries
 	recorder := NewQueryRecorder()
+	clusterResources, nsResources, err := getAllFilteredResources(apiHelper, cfg.Resources)
+
 	trackErrorsFor("querying cluster resources")(
-		QueryClusterResources(kubeClient, crdClient, recorder, cfg),
+		QueryHostData(kubeClient, recorder, cfg),
+	)
+
+	trackErrorsFor("querying cluster resources")(
+		QueryResources(apiHelper, recorder, clusterResources, nil, cfg),
+	)
+
+	trackErrorsFor("querying server info")(
+		QueryServerData(kubeClient, recorder, cfg),
 	)
 
 	for _, ns := range nslist {
 		trackErrorsFor("querying resources under namespace " + ns)(
-			QueryNSResources(kubeClient, recorder, ns, cfg),
+			QueryResources(apiHelper, recorder, nsResources, &ns, cfg),
+		)
+
+		trackErrorsFor("querying pod logs under namespace " + ns)(
+			QueryPodLogs(kubeClient, recorder, ns, cfg),
 		)
 	}
 

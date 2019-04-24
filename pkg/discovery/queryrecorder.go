@@ -18,6 +18,7 @@ package discovery
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"os"
 	"path"
 	"time"
@@ -63,26 +64,16 @@ func (q *QueryRecorder) RecordQuery(name string, namespace string, duration time
 
 // DumpQueryData writes query information out to a file at the give filepath
 func (q *QueryRecorder) DumpQueryData(filepath string) error {
-	// Ensure the leading path is created
-	err := os.MkdirAll(path.Dir(filepath), 0755)
-	if err != nil {
-		return err
-	}
-
 	// Format the query data as JSON
 	data, err := json.Marshal(q.queries)
 	if err != nil {
 		return err
 	}
 
-	// Create the file
-	f, err := os.Create(filepath)
-	if err != nil {
+	// Ensure the leading path is created
+	if err := os.MkdirAll(path.Dir(filepath), 0755); err != nil {
 		return err
 	}
-	defer f.Close()
 
-	// Write the data
-	_, err = f.Write(data)
-	return err
+	return ioutil.WriteFile(filepath, data, 0755)
 }

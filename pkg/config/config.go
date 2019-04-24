@@ -51,6 +51,10 @@ const (
 	MasterResultsPath = "/tmp/sonobuoy"
 	// DefaultSonobuoyPullPolicy is the default pull policy used in the Sonobuoy config.
 	DefaultSonobuoyPullPolicy = "IfNotPresent"
+	// DefaultQueryQPS is the number of queries per second Sonobuoy will make when gathering data.
+	DefaultQueryQPS = 30
+	// DefaultQueryBurst is the peak number of queries per second Sonobuoy will make when gathering data.
+	DefaultQueryBurst = 50
 )
 
 var (
@@ -58,89 +62,53 @@ var (
 	DefaultKubeConformanceImage = DefaultKubeConformanceImageURL + ":" + DefaultKubeConformanceImageTag
 	// DefaultImage is the URL of the docker image to run for the aggregator and workers
 	DefaultImage = "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version
+	// DefaultResources is the default set of resources which are queried for after plugins run. The strings
+	// are compared against the resource.Name given by the client-go discovery client. The non-standard values
+	// that are included here are: podlogs, servergroups, serverversion. The value 'nodes', although a crawlable
+	// API value, also is used to query against the healthz and configz endpoints on the node.
+	DefaultResources = []string{
+		"apiservices",
+		"certificatesigningrequests",
+		"clusterrolebindings",
+		"clusterroles",
+		"componentstatuses",
+		"configmaps",
+		"controllerrevisions",
+		"cronjobs",
+		"customresourcedefinitions",
+		"daemonsets",
+		"deployments",
+		"endpoints",
+		"ingresses",
+		"jobs",
+		"leases",
+		"limitranges",
+		"mutatingwebhookconfigurations",
+		"namespaces",
+		"networkpolicies",
+		"nodes",
+		"persistentvolumeclaims",
+		"persistentvolumes",
+		"poddisruptionbudgets",
+		"pods",
+		"podsecuritypolicies",
+		"podtemplates",
+		"priorityclasses",
+		"replicasets",
+		"replicationcontrollers",
+		"resourcequotas",
+		"rolebindings",
+		"roles",
+		"servergroups",
+		"serverversion",
+		"serviceaccounts",
+		"services",
+		"statefulsets",
+		"storageclasses",
+		"validatingwebhookconfigurations",
+		"volumeattachments",
+	}
 )
-
-///////////////////////////////////////////////////////
-// Note: The described resources are a 1:1 match
-// with kubectl UX for consistent user experience.
-// xref: https://kubernetes.io/docs/api-reference/v1.11/
-///////////////////////////////////////////////////////
-
-// ClusterResources is the list of API resources that are scoped to the entire
-// cluster (ie. not to any particular namespace)
-var ClusterResources = []string{
-	"CertificateSigningRequests",
-	"ClusterRoleBindings",
-	"ClusterRoles",
-	"ComponentStatuses",
-	"CustomResourceDefinitions",
-	"Nodes",
-	"PersistentVolumes",
-	"PodSecurityPolicies",
-	"ServerGroups",
-	"ServerVersion",
-	"StorageClasses",
-}
-
-// NamespacedResources is the list of API resources that are scoped to a
-// kubernetes namespace.
-var NamespacedResources = []string{
-	"ConfigMaps",
-	"ControllerRevisions",
-	"CronJobs",
-	"DaemonSets",
-	"Deployments",
-	"Endpoints",
-	"Events",
-	"HorizontalPodAutoscalers",
-	"Ingresses",
-	"Jobs",
-	"LimitRanges",
-	"NetworkPolicies",
-	"PersistentVolumeClaims",
-	"PodDisruptionBudgets",
-	"PodLogs",
-	"PodTemplates",
-	"Pods",
-	"ReplicaSets",
-	"ReplicationControllers",
-	"ResourceQuotas",
-	"RoleBindings",
-	"Roles",
-	"ServiceAccounts",
-	"Services",
-	"StatefulSets",
-}
-
-// NamespacedDefaults is the default-list of API resources to gather
-// TODO (tstclair): Clean up defaulting, this is temporary
-var NamespacedDefaults = []string{
-	"ConfigMaps",
-	"ControllerRevisions",
-	"CronJobs",
-	"DaemonSets",
-	"Deployments",
-	"Endpoints",
-	//"Events",
-	//"HorizontalPodAutoscalers",
-	"Ingresses",
-	"Jobs",
-	"LimitRanges",
-	"NetworkPolicies",
-	"PersistentVolumeClaims",
-	"PodDisruptionBudgets",
-	//"PodLogs",
-	"PodTemplates",
-	"Pods",
-	"ReplicaSets",
-	"ReplicationControllers",
-	"ResourceQuotas",
-	"RoleBindings",
-	"Roles",
-	"ServiceAccounts",
-	"Services",
-	"StatefulSets",
-}
 
 // FilterOptions allow operators to select sets to include in a report
 type FilterOptions struct {
@@ -167,22 +135,16 @@ type Config struct {
 	ResultsDir  string `json:"ResultsDir" mapstructure:"ResultsDir"`
 
 	///////////////////////////////////////////////
-	// Data collection options
+	// Query options
 	///////////////////////////////////////////////
-	Resources []string `json:"Resources" mapstructure:"Resources"`
+	Resources []string      `json:"Resources" mapstructure:"Resources"`
+	Filters   FilterOptions `json:"Filters" mapstructure:"Filters"`
+	Limits    LimitConfig   `json:"Limits" mapstructure:"Limits"`
+	QPS       float32       `json:"QPS,omitempty" mapstructure:"QPS"`
+	Burst     int           `json:"Burst,omitempty" mapstructure:"Burst"`
 
 	///////////////////////////////////////////////
-	// Filtering options
-	///////////////////////////////////////////////
-	Filters FilterOptions `json:"Filters" mapstructure:"Filters"`
-
-	///////////////////////////////////////////////
-	// Limit options
-	///////////////////////////////////////////////
-	Limits LimitConfig `json:"Limits" mapstructure:"Limits"`
-
-	///////////////////////////////////////////////
-	// plugin configurations settings
+	// Plugin configurations settings
 	///////////////////////////////////////////////
 	Aggregation      plugin.AggregationConfig `json:"Server" mapstructure:"Server"`
 	PluginSelections []plugin.Selection       `json:"Plugins,omitempty" mapstructure:"Plugins"`
@@ -191,7 +153,7 @@ type Config struct {
 	LoadedPlugins    []plugin.Interface       `json:"-"` // this is assigned when plugins are loaded.
 
 	///////////////////////////////////////////////
-	// sonobuoy configuration
+	// Sonobuoy configuration
 	///////////////////////////////////////////////
 	WorkerImage      string `json:"WorkerImage" mapstructure:"WorkerImage"`
 	ImagePullPolicy  string `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
@@ -286,8 +248,9 @@ func New() *Config {
 
 	cfg.Filters.Namespaces = ".*"
 
-	cfg.Resources = ClusterResources
-	cfg.Resources = append(cfg.Resources, NamespacedDefaults...)
+	cfg.QPS = DefaultQueryQPS
+	cfg.Burst = DefaultQueryBurst
+	cfg.Resources = DefaultResources
 
 	cfg.Namespace = DefaultNamespace
 
