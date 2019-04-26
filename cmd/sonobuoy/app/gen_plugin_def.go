@@ -82,12 +82,17 @@ func NewCmdGenPluginDef() *cobra.Command {
 
 	cmd.Flags().StringArrayVarP(
 		&genPluginOpts.def.Spec.Command, "cmd", "c", []string{"./run.sh"},
-		"Command to run when starting the plugin's container",
+		`Command to run when starting the plugin's container. Can be set multiple times (e.g. --cmd /bin/sh -c "-c")`,
 	)
 
 	cmd.Flags().VarP(
 		&genPluginOpts.env, "env", "e",
-		"Env var values to set on the image (e.g. --env FOO=bar)",
+		"Env var values to set on the plugin (e.g. --env FOO=bar)",
+	)
+
+	cmd.Flags().StringArrayVarP(
+		&genPluginOpts.def.Spec.Args, "arg", "a", []string{},
+		"Arg values to set on the plugin. Can be set multiple times (e.g. --arg 'arg 1' --arg arg2)",
 	)
 
 	return cmd
