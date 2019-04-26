@@ -52,8 +52,9 @@ type GenPluginDefConfig struct {
 // NewCmdGenPluginDef ...
 func NewCmdGenPluginDef() *cobra.Command {
 	genPluginOpts := GenPluginDefConfig{
-		def: defaultManifest(),
-		env: map[string]string{},
+		def:    defaultManifest(),
+		env:    map[string]string{},
+		driver: defaultPluginDriver,
 	}
 
 	cmd := &cobra.Command{
