@@ -22,3 +22,6 @@ Dockerfile-arm64
 
 # kubectl which is downloaded for testing in CI
 kubectl
+
+# coverage profile
+coverage.txt
