@@ -343,11 +343,11 @@ func queryServerGroups(kubeClient kubernetes.Interface, recorder *QueryRecorder,
 		logrus.Info("servergroups not specified in non-nil Resources. Skipping servergroups query.")
 		return nil
 	}
-	objqry := func() (interface{}, error) { return kubeClient.Discovery().ServerVersion() }
+	objqry := func() (interface{}, error) { return kubeClient.Discovery().ServerGroups() }
 	query := func() (time.Duration, error) {
-		return timedObjectQuery(cfg.OutputDir(), "serverversion.json", objqry)
+		return timedObjectQuery(cfg.OutputDir(), "servergroups.json", objqry)
 	}
-	timedQuery(recorder, "serverversion", "", query)
+	timedQuery(recorder, "servergroups", "", query)
 
 	return nil
 }
