@@ -28,6 +28,14 @@ func TestGenerateManifest(t *testing.T) {
 		expected *config.Config
 	}{
 		{
+			name: "nil config",
+			inputcm: &client.GenConfig{
+				E2EConfig: &client.E2EConfig{},
+				Config:    nil,
+			},
+			expected: &config.Config{},
+		},
+		{
 			name: "Defaults in yield a default manifest.",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},

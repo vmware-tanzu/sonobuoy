@@ -136,11 +136,9 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 	return &client.GenConfig{
 		E2EConfig:            e2ecfg,
 		Config:               g.resolveConfig(),
-		Image:                g.sonobuoyImage,
-		Namespace:            g.namespace,
 		EnableRBAC:           rbacEnabled,
-		ImagePullPolicy:      g.imagePullPolicy.String(),
 		KubeConformanceImage: image,
+		ImagePullPolicy:      g.imagePullPolicy.String(),
 		SSHKeyPath:           g.sshKeyPath,
 		SSHUser:              g.sshUser,
 		DynamicPlugins:       g.plugins.DynamicPlugins,

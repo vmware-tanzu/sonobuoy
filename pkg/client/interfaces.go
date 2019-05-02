@@ -43,8 +43,6 @@ type LogConfig struct {
 type GenConfig struct {
 	E2EConfig            *E2EConfig
 	Config               *config.Config
-	Image                string
-	Namespace            string
 	EnableRBAC           bool
 	ImagePullPolicy      string
 	KubeConformanceImage string

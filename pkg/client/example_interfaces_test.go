@@ -51,8 +51,6 @@ func Example() {
 				Skip:  "",
 			},
 			Config:          config.New(),
-			Image:           config.DefaultImage,
-			Namespace:       config.DefaultNamespace,
 			EnableRBAC:      true,
 			ImagePullPolicy: "Always",
 		},

@@ -92,7 +92,7 @@ func (c *SonobuoyClient) Run(cfg *RunConfig) error {
 		seenStatus := false
 		runCondition := func() (bool, error) {
 			// Get the heptio pod and check if its status is completed or terminated.
-			status, err := c.GetStatus(cfg.Namespace)
+			status, err := c.GetStatus(cfg.Config.Namespace)
 			switch {
 			case err != nil && seenStatus:
 				return false, errors.Wrap(err, "failed to get status")
