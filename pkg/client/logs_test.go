@@ -22,6 +22,7 @@ import (
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
@@ -349,6 +350,75 @@ func TestPodsForLogs(t *testing.T) {
 				}
 			}
 
+		})
+	}
+}
+
+func getTestContainerStatus() *[]v1.ContainerStatus {
+	return &[]v1.ContainerStatus{
+		{
+			Name: "foo",
+			State: v1.ContainerState{
+				Waiting: &v1.ContainerStateWaiting{
+					Reason:  "foo container is waiting",
+					Message: "foo container is waiting",
+				},
+			},
+		},
+		{
+			Name: "bar",
+			State: v1.ContainerState{
+				Terminated: &v1.ContainerStateTerminated{
+					ExitCode: 143,
+					Reason:   "sigterm",
+					Message:  "container bar was terminated",
+				},
+			},
+		},
+		{
+			Name: "baz",
+			State: v1.ContainerState{
+				Running: &v1.ContainerStateRunning{
+					StartedAt: metav1.Now(),
+				},
+			},
+		},
+	}
+}
+
+func TestIsContainerRunning(t *testing.T) {
+	testCases := []struct {
+		name                       string
+		inputContainerStatuses     *[]v1.ContainerStatus
+		inputContainerName         string
+		expectedIsContainerRunning bool
+	}{
+		{
+			name:                       "should report container as running",
+			inputContainerStatuses:     getTestContainerStatus(),
+			inputContainerName:         "baz",
+			expectedIsContainerRunning: true,
+		},
+		{
+			name:                       "should report waiting container as not running",
+			inputContainerStatuses:     getTestContainerStatus(),
+			inputContainerName:         "foo",
+			expectedIsContainerRunning: false,
+		},
+		{
+			name:                       "should report terminated container as not running",
+			inputContainerStatuses:     getTestContainerStatus(),
+			inputContainerName:         "foo",
+			expectedIsContainerRunning: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actualIsContianerRunning := isContainerRunning(tc.inputContainerStatuses, tc.inputContainerName)
+			if tc.expectedIsContainerRunning != actualIsContianerRunning {
+				t.Fatalf("isContainerRunning failed, Want %t; Got %t", tc.expectedIsContainerRunning, actualIsContianerRunning)
+			}
 		})
 	}
 }

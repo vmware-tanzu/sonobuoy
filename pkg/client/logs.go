@@ -20,10 +20,11 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -228,8 +229,46 @@ type logStreamer struct {
 	client             kubernetes.Interface
 }
 
+func (l *logStreamer) podName() string {
+	return fmt.Sprintf("%s/%s/%s", l.ns, l.pod, l.container)
+}
+
+func isContainerRunning(statuses *[]v1.ContainerStatus, containerName string) bool {
+	for _, cs := range *statuses {
+		if cs.Name == containerName && cs.State.Running != nil {
+			return true
+		}
+	}
+	return false
+}
+
+func (l *logStreamer) waitForContainerRunning() error {
+	backoffSeconds := 1 * time.Second
+	for {
+		pod, err := l.client.CoreV1().Pods(l.ns).Get(l.pod, metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to get pod [%s/%s]", l.ns, l.pod)
+		}
+
+		if isContainerRunning(&pod.Status.ContainerStatuses, l.container) {
+			return nil
+		}
+
+		fmt.Printf("container %v, is not running, will retry streaming logs in %v seconds\n", l.podName(), backoffSeconds)
+		time.Sleep(backoffSeconds)
+		backoffSeconds *= 2
+	}
+}
+
 // stream will open a connection to the pod's logs and push messages onto a fan-in channel.
 func (l *logStreamer) stream() {
+	if l.logOpts.Follow {
+		err := l.waitForContainerRunning()
+		if err != nil {
+			l.errc <- errors.Wrapf(err, "failed to waiting for container [%v] in pod [%s/%s] to start running", l.container, l.ns, l.pod)
+			return
+		}
+	}
 	req := l.client.CoreV1().Pods(l.ns).GetLogs(l.pod, l.logOpts)
 	readCloser, err := req.Stream()
 	if err != nil {
