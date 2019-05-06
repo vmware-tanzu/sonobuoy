@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -110,6 +111,7 @@ func (r *Reader) Read(p []byte) (int, error) {
 	return len(data), nil
 }
 
+<<<<<<< HEAD
 // getPodsForLogs retrieves the pods to stream logs from. If a plugin name has been provided, retrieve the pods with
 // only the plugin label matching that plugin name. If no pods are found, or no plugin has been specified, retrieve
 // all pods within the namespace.
@@ -134,6 +136,26 @@ func getPodsForLogs(client kubernetes.Interface, cfg *LogConfig) (*v1.PodList, e
 		return nil, errors.Wrap(err, "failed to list pods")
 	}
 	return pods, nil
+=======
+func getPodsInNamespace(client kubernetes.Interface, ns string, stop chan bool, podListChan chan v1.PodList, errc chan error) {
+	for {
+		select {
+		default:
+			pods, err := client.CoreV1().Pods(ns).List(metav1.ListOptions{})
+			if err != nil {
+				errc <- errors.Wrapf(err, "failed to list pods in namespace %q", ns)
+				podListChan <- v1.PodList{
+					Items: nil,
+				}
+			}
+			podListChan <- *pods
+			time.Sleep(1 * time.Second)
+		case <-stop:
+			close(podListChan)
+			return
+		}
+	}
+>>>>>>> fetch logs from new pods in the log streaming namespace.
 }
 
 // LogReader configures a Reader that provides an io.Reader interface to a merged stream of logs from various containers.
@@ -150,6 +172,7 @@ func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
 	if err != nil {
 		return nil, err
 	}
+<<<<<<< HEAD
 
 	pods, err := getPodsForLogs(client, cfg)
 	if err != nil {
@@ -162,38 +185,83 @@ func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
 	for _, pod := range pods.Items {
 		numContainers += len(pod.Spec.Containers)
 	}
+=======
+	stopPodFetch := make(chan bool)
+	podListChan := make(chan v1.PodList)
+	podsFetchError := make(chan error)
+	go getPodsInNamespace(client, cfg.Namespace, stopPodFetch, podListChan, podsFetchError)
+>>>>>>> fetch logs from new pods in the log streaming namespace.
 
 	errc := make(chan error, numContainers)
 	agg := make(chan *message)
 	var wg sync.WaitGroup
+	streamingContainers := make(map[string]bool)
 
-	// TODO(chuckha) if we get an error back that the container is still creating maybe we could retry?
-	for _, pod := range pods.Items {
-		for _, container := range pod.Spec.Containers {
-			wg.Add(1)
-			ls := &logStreamer{
-				ns:        pod.Namespace,
-				pod:       pod.Name,
-				container: container.Name,
-				errc:      errc,
-				logc:      agg,
-				logOpts: &v1.PodLogOptions{
-					Container: container.Name,
-					Follow:    cfg.Follow,
-				},
-				client: client,
-			}
-
-			go func(w *sync.WaitGroup, ls *logStreamer) {
-				defer w.Done()
-				ls.stream()
-			}(&wg, ls)
+	// Avoid chan leak, should getPodsInNamespace fail.
+	// TODO(ashish-amarnath) Find a less ugly way to do this.
+	defer func() {
+		_, open := <-stopPodFetch
+		if open {
+			close(stopPodFetch)
 		}
-	}
+		_, open = <-podListChan
+		if open {
+			close(podListChan)
+		}
+		_, open = <-errc
+		if open {
+			close(errc)
+		}
+		_, open = <-agg
+		if open {
+			close(agg)
+		}
+	}()
+
+	go func() {
+		for pods := range podListChan {
+			if pods.Items == nil {
+				// TODO(ashish-amarnath): this error has to be returned or logged
+				err = <-podsFetchError
+				return
+			}
+			// TODO(chuckha) if we get an error back that the container is still creating maybe we could retry?
+			for _, pod := range pods.Items {
+				for _, container := range pod.Spec.Containers {
+					key := fmt.Sprintf("%s/%s", pod.Name, container.Name)
+					if _, exists := streamingContainers[key]; exists {
+						// already streaming
+						continue
+					}
+					streamingContainers[key] = true
+					wg.Add(1)
+					ls := &logStreamer{
+						ns:        pod.Namespace,
+						pod:       pod.Name,
+						container: container.Name,
+						errc:      errc,
+						logc:      agg,
+						logOpts: &v1.PodLogOptions{
+							Container: container.Name,
+							Follow:    cfg.Follow,
+						},
+						client: client,
+					}
+
+					go func(w *sync.WaitGroup, ls *logStreamer) {
+						defer w.Done()
+						ls.stream()
+					}(&wg, ls)
+				}
+			}
+		}
+	}()
 
 	// Cleanup when finished.
 	go func(wg *sync.WaitGroup, agg chan *message, errc chan error) {
 		wg.Wait()
+		stopPodFetch <- true
+		close(stopPodFetch)
 		close(agg)
 		close(errc)
 	}(&wg, agg, errc)
