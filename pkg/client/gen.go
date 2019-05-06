@@ -63,15 +63,15 @@ type templateValues struct {
 
 // GenerateManifest fills in a template with a Sonobuoy config
 func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
-	marshalledConfig, err := json.Marshal(cfg.Config)
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't marshall selector")
-	}
-
 	// Allow nil cfg.Config but avoid dereference errors.
 	conf := &config.Config{}
 	if cfg.Config != nil {
 		conf = cfg.Config
+	}
+
+	marshalledConfig, err := json.Marshal(conf)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't marshall selector")
 	}
 
 	sshKeyData := []byte{}
@@ -130,10 +130,10 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 
 	tmplVals := &templateValues{
 		SonobuoyConfig:   string(marshalledConfig),
-		SonobuoyImage:    cfg.Image,
-		Namespace:        cfg.Namespace,
+		SonobuoyImage:    conf.WorkerImage,
+		Namespace:        conf.Namespace,
 		EnableRBAC:       cfg.EnableRBAC,
-		ImagePullPolicy:  cfg.ImagePullPolicy,
+		ImagePullPolicy:  conf.ImagePullPolicy,
 		ImagePullSecrets: conf.ImagePullSecrets,
 		SSHKey:           base64.StdEncoding.EncodeToString(sshKeyData),
 		SSHUser:          cfg.SSHUser,

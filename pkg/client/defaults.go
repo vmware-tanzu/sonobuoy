@@ -28,8 +28,6 @@ func NewGenConfig() *GenConfig {
 	return &GenConfig{
 		E2EConfig:  &defaultE2E,
 		Config:     config.New(),
-		Image:      config.DefaultImage,
-		Namespace:  config.DefaultNamespace,
 		EnableRBAC: true,
 	}
 }

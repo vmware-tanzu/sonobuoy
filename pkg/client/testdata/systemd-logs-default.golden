@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: 
+  name: heptio-sonobuoy
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -11,7 +11,7 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-serviceaccount
-  namespace: 
+  namespace: heptio-sonobuoy
 ---
 apiVersion: v1
 data:
@@ -22,7 +22,7 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-config-cm
-  namespace: 
+  namespace: heptio-sonobuoy
 ---
 apiVersion: v1
 data:
@@ -60,7 +60,7 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-plugins-cm
-  namespace: 
+  namespace: heptio-sonobuoy
 ---
 apiVersion: v1
 kind: Pod
@@ -70,7 +70,7 @@ metadata:
     run: sonobuoy-master
     tier: analysis
   name: sonobuoy
-  namespace: 
+  namespace: heptio-sonobuoy
 spec:
   containers:
   - command:
@@ -82,8 +82,8 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: 
-    imagePullPolicy: 
+    image: gcr.io/heptio-images/sonobuoy:v0.14.2
+    imagePullPolicy: IfNotPresent
     name: kube-sonobuoy
     volumeMounts:
     - mountPath: /etc/sonobuoy
@@ -111,7 +111,7 @@ metadata:
     component: sonobuoy
     run: sonobuoy-master
   name: sonobuoy-master
-  namespace: 
+  namespace: heptio-sonobuoy
 spec:
   ports:
   - port: 8080
