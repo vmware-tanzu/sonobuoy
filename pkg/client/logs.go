@@ -85,8 +85,14 @@ func (r *Reader) Read(p []byte) (int, error) {
 	data, ok := <-r.bytestream
 	// If the bytestream is done then save the error for future calls to Read.
 	if !ok {
-		r.err = <-r.errc
-		return 0, r.err
+		r.err, ok = <-r.errc
+		// Assume EOF if error channel is closed.
+		if r.err == nil && !ok {
+			r.err = io.EOF
+		}
+		if r.err != nil {
+			return 0, r.err
+		}
 	}
 
 	// TODO(chuckha) this code and the code above in the overflow buffer is identical. Might be an indication of a cleaner way to do this.
@@ -114,7 +120,14 @@ func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
 		return nil, errors.Wrap(err, "failed to list pods")
 	}
 
-	errc := make(chan error)
+	// We must make sure the error channel has capacity enough so that it never blocks
+	// in case of early exits.
+	numContainers := 0
+	for _, pod := range pods.Items {
+		numContainers += len(pod.Spec.Containers)
+	}
+
+	errc := make(chan error, numContainers)
 	agg := make(chan *message)
 	var wg sync.WaitGroup
 
@@ -146,7 +159,6 @@ func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
 	go func(wg *sync.WaitGroup, agg chan *message, errc chan error) {
 		wg.Wait()
 		close(agg)
-		errc <- io.EOF
 		close(errc)
 	}(&wg, agg, errc)
 
