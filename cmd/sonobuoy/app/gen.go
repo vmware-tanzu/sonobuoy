@@ -52,6 +52,11 @@ type genFlags struct {
 	// flag support.
 	plugins pluginList
 
+	// pluginEnvs is a set of overrides for plugin env vars. Provided out of band
+	// from the list of plugins because the e2e/systemd plugins are dynamically
+	// generated at the current time and so we can't manipulate those objects.
+	pluginEnvs PluginEnvVars
+
 	// These two fields are here since to properly squash settings down into nested
 	// configs we need to tell whether or not values are default values or the user
 	// provided them on the command line/config file.
@@ -79,6 +84,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddSSHUserFlag(&cfg.sshUser, genset)
 
 	AddPluginSetFlag(&cfg.plugins, genset)
+	AddPluginEnvFlag(&cfg.pluginEnvs, genset)
 	cfg.genflags = genset
 	return genset
 }
@@ -143,6 +149,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		SSHUser:              g.sshUser,
 		DynamicPlugins:       g.plugins.DynamicPlugins,
 		StaticPlugins:        g.plugins.StaticPlugins,
+		PluginEnvOverrides:   g.pluginEnvs,
 	}, nil
 }
 

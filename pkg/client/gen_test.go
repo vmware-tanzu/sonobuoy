@@ -296,6 +296,26 @@ func TestGenerateManifestGolden(t *testing.T) {
 				},
 			},
 			goldenFile: filepath.Join("testdata", "imagePullSecrets.golden"),
+		}, {
+			name: "Env overrides",
+			inputcm: &client.GenConfig{
+				E2EConfig:      &client.E2EConfig{},
+				DynamicPlugins: []string{"e2e"},
+				PluginEnvOverrides: map[string]map[string]string{
+					"e2e": map[string]string{"E2E_SKIP": "override", "E2E_DRYRUN": "true"},
+				},
+			},
+			goldenFile: filepath.Join("testdata", "envoverrides.golden"),
+		}, {
+			name: "Env overrides must match plugin names",
+			inputcm: &client.GenConfig{
+				E2EConfig:      &client.E2EConfig{},
+				DynamicPlugins: []string{"e2e"},
+				PluginEnvOverrides: map[string]map[string]string{
+					"e2e2": map[string]string{"E2E_SKIP": "override", "E2E_DRYRUN": "true"},
+				},
+			},
+			expectErr: "failed to override env vars for plugin e2e2, no plugin with that name found; have plugins: [e2e]",
 		},
 	}
 
