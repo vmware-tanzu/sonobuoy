@@ -1,0 +1,19 @@
+toc:
+  - title: Setting up
+    subfolderitems:
+      - page: Getting started
+        url: /index.html
+      - page: Snapshot layout
+        url: /snapshot
+  - title: Use cases
+    subfolderitems:
+      - page: Conformance testing
+        url: /conformance-testing
+      - page: Plugins
+        url: /plugins
+  - title: Next steps
+    subfolderitems:
+      - page: Make your own manifests
+        url: /examples
+        github: true
+
