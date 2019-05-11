@@ -14,7 +14,7 @@ script:
 
 before_install:
   # Download and install Kind and kubectl
-  - go get sigs.k8s.io/kind
+  - GO111MODULE=on go get sigs.k8s.io/kind
   - kind create cluster --config kind-config.yaml
   - export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
   - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
