@@ -22,13 +22,14 @@ See the [official documentation][4] for Kubernetes's existing conformance tests.
 
 Sonobuoy's [plugin architecture][5] enables you to integrate conformance test results into your reporting.  The e2e tests can be configured with the plugin. The default configuration runs the basic set of conformance tests against a local provider.
 
-To customize the set of tests that are run as part of the report, the following environmental variables can be set in the [plugin-specific YAML config][7]:
+To customize the set of tests that are run as part of the report, the following environmental variables can be set in the [plugin-specific YAML config][7]. Typically you set this via a flow that involves the [gen command][8]:
 
 | Variable | Default Value | Description |
 |---|---|---|
-| `E2E_FOCUS` | "Conformance" | The test suite to run.<br><br>*NOTE*: Because the real conformance suite can take up to an hour to run, the quickstart example's [e2e config][8] specifies just a single test, "Pods should be submitted and removed". |
+| `E2E_FOCUS` | "Conformance" | The test suite to run.<br><br>*NOTE*: Because the real conformance suite can take up to an hour to run, the quickstart example's [e2e config][7] specifies just a single test, "Pods should be submitted and removed". |
 | `E2E_SKIP` | "Alpha&#124;Disruptive&#124;Feature&#124;Flaky" | Which subset of tests to skip |
 | `E2E_PROVIDER` | "local" | The platform that the cluster is running on |
+| `E2E_DRYRUN` | "" | Setting any non-empty value results in skipping the actual test execution but reporting the tests as successful. This is helpful when fine tuning your focus/skip regular expressions to target the desired tests. |
 
 *NOTE: The length of time it takes to run conformance can vary based on the size of your cluster---the timeout can be adjusted in the Server.timeoutseconds field of the Sonobuoy `config.json`.*
 
@@ -39,5 +40,5 @@ To customize the set of tests that are run as part of the report, the following 
 [4]: https://github.com/kubernetes/community/blob/master/contributors/devel/e2e-tests.md#conformance-tests
 [5]: plugins.md
 [6]: https://github.com/kubernetes/kubernetes/issues/49313
-[7]: ../plugins.d/e2e.tmpl
-[8]: ../examples/quickstart.yaml#L133
+[7]: ../examples/plugins.d/e2e.yaml#L9
+[8]: gen.md
