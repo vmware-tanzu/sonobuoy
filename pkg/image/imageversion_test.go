@@ -33,16 +33,19 @@ func TestSetConformanceImageVersion(t *testing.T) {
 	tests := []struct {
 		name    string
 		version string
+		expect  string
 		error   bool
 	}{
 		{
 			name:    "version detect",
 			version: "auto",
+			expect:  "auto",
 			error:   false,
 		},
 		{
 			name:    "use latest",
 			version: "latest",
+			expect:  "latest",
 			error:   false,
 		},
 		{
@@ -53,12 +56,25 @@ func TestSetConformanceImageVersion(t *testing.T) {
 		{
 			name:    "stable version",
 			version: "v1.13.0",
+			expect:  "v1.13.0",
 			error:   false,
 		},
 		{
 			name:    "version without v",
 			version: "1.13.0",
 			error:   true,
+		},
+		{
+			name:    "version without patch",
+			version: "v1.13",
+			expect:  "v1.13.0",
+			error:   false,
+		},
+		{
+			name:    "version without minor/patch",
+			version: "v1",
+			expect:  "v1.0.0",
+			error:   false,
 		},
 		{
 			name:    "empty string",
@@ -68,6 +84,7 @@ func TestSetConformanceImageVersion(t *testing.T) {
 		{
 			name:    "version with addendum",
 			version: "v1.13.0-beta.2.78+e0b33dbc2bde88",
+			expect:  "v1.13.0-beta.2.78+e0b33dbc2bde88",
 			error:   false,
 		},
 		{
@@ -77,14 +94,17 @@ func TestSetConformanceImageVersion(t *testing.T) {
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			var v ConformanceImageVersion
-			err := v.Set(test.version)
-			if test.error && err == nil {
-				t.Error("expected error, got nil")
-			} else if !test.error && err != nil {
-				t.Errorf("expected no error, got %v", err)
+			err := v.Set(tc.version)
+			if tc.error && err == nil {
+				t.Fatal("expected error, got nil")
+			} else if !tc.error && err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+			if v.String() != tc.expect {
+				t.Errorf("Expected %q but got %q", tc.expect, v.String())
 			}
 		})
 	}

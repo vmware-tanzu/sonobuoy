@@ -59,7 +59,10 @@ func (c *ConformanceImageVersion) Set(str string) error {
 		if err != nil {
 			return err
 		}
-		*c = ConformanceImageVersion(version.String())
+
+		// It is important to set the string with the `v` prefix in order
+		// to be consistent with server version reporting and image tagging norms.
+		*c = ConformanceImageVersion(fmt.Sprintf("v%v", version.String()))
 	}
 
 	return nil
