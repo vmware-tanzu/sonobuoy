@@ -64,7 +64,7 @@ func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage, imagePullPolicy,
 // a Job only launches one pod, only one result type is expected.
 func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	return []plugin.ExpectedResult{
-		plugin.ExpectedResult{ResultType: p.GetResultType()},
+		{ResultType: p.GetResultType()},
 	}
 }
 
