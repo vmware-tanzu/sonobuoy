@@ -296,6 +296,12 @@ func AddPluginSetFlag(p *pluginList, flags *pflag.FlagSet) {
 	flags.VarP(p, "plugin", "p", "Which plugins to run. Can either point to a local file or be one of the known plugins (e2e or systemd-logs). Can be specified multiple times to run multiple plugins.")
 }
 
+// AddPluginEnvFlag adds the flag for gen/run which keeps track of which plugins
+// to run and loads them from local files if necessary.
+func AddPluginEnvFlag(p *PluginEnvVars, flags *pflag.FlagSet) {
+	flags.Var(p, "plugin-env", "Set env vars on plugins. Values can be given multiple times and are in the form plugin.env=value")
+}
+
 // AddShortFlag adds a boolean flag to just print the Sonobuoy version and
 // nothing else. Useful in scripts.
 func AddShortFlag(flag *bool, flags *pflag.FlagSet) {

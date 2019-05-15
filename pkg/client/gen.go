@@ -119,6 +119,36 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		return nil, errors.Wrap(err, "plugin YAML generation")
 	}
 
+	if cfg.PluginEnvOverrides != nil {
+		for pluginName, envVars := range cfg.PluginEnvOverrides {
+			found := false
+			for _, p := range plugins {
+				if p.SonobuoyConfig.PluginName == pluginName {
+					found = true
+					newEnv := []corev1.EnvVar{}
+					removeVals := map[string]struct{}{}
+					for k, v := range envVars {
+						if v != "" {
+							newEnv = append(newEnv, corev1.EnvVar{Name: k, Value: v})
+						} else {
+							removeVals[k] = struct{}{}
+						}
+					}
+					p.Spec.Env = mergeEnv(newEnv, p.Spec.Env, removeVals)
+				}
+			}
+
+			// Require overrides to target existing plugins and provide a helpful message if there is a mismatch.
+			if !found {
+				pluginNames := []string{}
+				for _, p := range plugins {
+					pluginNames = append(pluginNames, p.SonobuoyConfig.PluginName)
+				}
+				return nil, fmt.Errorf("failed to override env vars for plugin %v, no plugin with that name found; have plugins: %v", pluginName, pluginNames)
+			}
+		}
+	}
+
 	pluginYAML := []string{}
 	for _, v := range plugins {
 		yaml, err := kuberuntime.Encode(manifest.Encoder, v)
@@ -171,6 +201,33 @@ func includes(set []plugin.Selection, s string) bool {
 		}
 	}
 	return false
+}
+
+// mergeEnv will combine the values from two env var sets with priority being
+// given to values in the first set in case of collision. Afterwards, any env
+// var with a name in the removal set will be removed.
+func mergeEnv(e1, e2 []corev1.EnvVar, removeKeys map[string]struct{}) []corev1.EnvVar {
+	envSet := map[string]corev1.EnvVar{}
+	returnEnv := []corev1.EnvVar{}
+	for _, e := range e1 {
+		envSet[e.Name] = e
+	}
+	for _, e := range e2 {
+		if _, seen := envSet[e.Name]; !seen {
+			envSet[e.Name] = e
+		}
+	}
+	for name, v := range envSet {
+		if _, remove := removeKeys[name]; !remove {
+			returnEnv = append(returnEnv, v)
+		}
+	}
+
+	sort.Slice(returnEnv, func(i, j int) bool {
+		return strings.ToLower(returnEnv[i].Name) < strings.ToLower(returnEnv[j].Name)
+	})
+
+	return returnEnv
 }
 
 func systemdLogsManifest(cfg *GenConfig) *manifest.Manifest {

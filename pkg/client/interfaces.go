@@ -57,6 +57,13 @@ type GenConfig struct {
 	// explicitly and will be written without further consideration of other
 	// GenConfig settings.
 	StaticPlugins []*manifest.Manifest
+
+	// PluginEnvOverrides are mappings between plugin name and k-v pairs to be
+	// set as env vars on the given plugin. If a plugin has overrides set, it
+	// will completely override all other env vars set on the plugin. Provided
+	// out of band from the plugins because of how the dynamic plugins are not
+	// yet able to be manipulated in this way.
+	PluginEnvOverrides map[string]map[string]string
 }
 
 // E2EConfig is the configuration of the E2E tests.
