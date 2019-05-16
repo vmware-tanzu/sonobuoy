@@ -17,10 +17,12 @@ limitations under the License.
 package config_test
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/heptio/sonobuoy/pkg/plugin"
 )
 
 func TestDefaults(t *testing.T) {
@@ -37,5 +39,43 @@ func TestDefaults(t *testing.T) {
 
 	if !reflect.DeepEqual(&cfg2, &cfg1) {
 		t.Fatalf("Defaults should match but didn't")
+	}
+}
+
+func TestEmptySlicePreservation(t *testing.T) {
+	for _, tc := range []struct {
+		desc    string
+		cfgfunc func() *config.Config
+	}{
+		{
+			desc:    "Default config",
+			cfgfunc: config.New,
+		}, {
+			desc: "Empty resources and plugin selection",
+			cfgfunc: func() *config.Config {
+				cfg := config.New()
+				cfg.Resources = []string{}
+				cfg.PluginSelections = []plugin.Selection{}
+				return cfg
+			},
+		},
+	} {
+		t.Run(tc.desc, func(t *testing.T) {
+			cfg1 := tc.cfgfunc()
+			b, err := json.Marshal(cfg1)
+			if err != nil {
+				t.Fatalf("Unable to marshal config: %v", err)
+			}
+
+			var cfg2 *config.Config
+			err = json.Unmarshal(b, &cfg2)
+			if err != nil {
+				t.Fatalf("Unable to unmarshal config: %v", err)
+			}
+
+			if !reflect.DeepEqual(cfg1, cfg2) {
+				t.Fatalf("Values did not match after serialization/deserialization: \nGot: %#v\n\nWant: %#v\n", cfg2, cfg1)
+			}
+		})
 	}
 }

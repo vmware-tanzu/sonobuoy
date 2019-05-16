@@ -147,7 +147,7 @@ type Config struct {
 	// Plugin configurations settings
 	///////////////////////////////////////////////
 	Aggregation      plugin.AggregationConfig `json:"Server" mapstructure:"Server"`
-	PluginSelections []plugin.Selection       `json:"Plugins,omitempty" mapstructure:"Plugins"`
+	PluginSelections []plugin.Selection       `json:"Plugins" mapstructure:"Plugins"`
 	PluginSearchPath []string                 `json:"PluginSearchPath" mapstructure:"PluginSearchPath"`
 	Namespace        string                   `json:"Namespace" mapstructure:"Namespace"`
 	LoadedPlugins    []plugin.Interface       `json:"-"` // this is assigned when plugins are loaded.

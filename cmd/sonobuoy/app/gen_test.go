@@ -14,6 +14,7 @@ limitations under the License.
 package app
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -98,11 +99,12 @@ func TestResolveConfig(t *testing.T) {
 				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
-					plugin.Selection{Name: "e2e"},
-					plugin.Selection{Name: "systemd-logs"},
+					{Name: "e2e"},
+					{Name: "systemd-logs"},
 				},
 				PluginSearchPath: defaultPluginSearchPath,
 				Aggregation:      defaultAggr,
+				Resources:        config.DefaultResources,
 			},
 		}, {
 			name: "Quick mode and a non-nil supplied config",
@@ -123,7 +125,7 @@ func TestResolveConfig(t *testing.T) {
 				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
-					plugin.Selection{Name: "e2e"},
+					{Name: "e2e"},
 				},
 				Aggregation: plugin.AggregationConfig{
 					BindAddress:    "10.0.0.1",
@@ -131,6 +133,7 @@ func TestResolveConfig(t *testing.T) {
 					TimeoutSeconds: 10800,
 				},
 				PluginSearchPath: defaultPluginSearchPath,
+				Resources:        config.DefaultResources,
 			},
 		}, {
 			name: "Conformance mode with plugin selection specified",
@@ -139,9 +142,7 @@ func TestResolveConfig(t *testing.T) {
 				sonobuoyConfig: SonobuoyConfig{
 					Config: config.Config{
 						PluginSelections: []plugin.Selection{
-							plugin.Selection{
-								Name: "systemd-logs",
-							},
+							{Name: "systemd-logs"},
 						},
 					},
 					raw: "not empty",
@@ -152,9 +153,7 @@ func TestResolveConfig(t *testing.T) {
 				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
-					plugin.Selection{
-						Name: "systemd-logs",
-					},
+					{Name: "systemd-logs"},
 				},
 				PluginSearchPath: defaultPluginSearchPath,
 				Aggregation: plugin.AggregationConfig{
@@ -162,6 +161,7 @@ func TestResolveConfig(t *testing.T) {
 					BindPort:       config.DefaultAggregationServerBindPort,
 					TimeoutSeconds: config.DefaultAggregationServerTimeoutSeconds,
 				},
+				Resources: config.DefaultResources,
 			},
 		}, {
 			name: "Flags should override the config settings when set",
@@ -176,11 +176,12 @@ func TestResolveConfig(t *testing.T) {
 				WorkerImage:     "flagImage",
 				ImagePullPolicy: "Always",
 				PluginSelections: []plugin.Selection{
-					plugin.Selection{Name: "e2e"},
-					plugin.Selection{Name: "systemd-logs"},
+					{Name: "e2e"},
+					{Name: "systemd-logs"},
 				},
 				PluginSearchPath: defaultPluginSearchPath,
 				Aggregation:      plugin.AggregationConfig{TimeoutSeconds: 100},
+				Resources:        config.DefaultResources,
 			},
 		}, {
 			name:     "Flags shouldn't override the config settings unless set",
@@ -191,11 +192,12 @@ func TestResolveConfig(t *testing.T) {
 				WorkerImage:     "flagImage",
 				ImagePullPolicy: "Never",
 				PluginSelections: []plugin.Selection{
-					plugin.Selection{Name: "e2e"},
-					plugin.Selection{Name: "systemd-logs"},
+					{Name: "e2e"},
+					{Name: "systemd-logs"},
 				},
 				PluginSearchPath: defaultPluginSearchPath,
 				Aggregation:      plugin.AggregationConfig{TimeoutSeconds: 500},
+				Resources:        config.DefaultResources,
 			},
 		}, {
 			name:     "Flags shouldn't override the config settings unless set",
@@ -206,11 +208,12 @@ func TestResolveConfig(t *testing.T) {
 				WorkerImage:     "configImage",
 				ImagePullPolicy: "Never",
 				PluginSelections: []plugin.Selection{
-					plugin.Selection{Name: "e2e"},
-					plugin.Selection{Name: "systemd-logs"},
+					{Name: "e2e"},
+					{Name: "systemd-logs"},
 				},
 				PluginSearchPath: defaultPluginSearchPath,
 				Aggregation:      plugin.AggregationConfig{TimeoutSeconds: 500},
+				Resources:        config.DefaultResources,
 			},
 		}, {
 			name:     "Manually specified plugins should result in empty selection",
@@ -223,6 +226,20 @@ func TestResolveConfig(t *testing.T) {
 				PluginSelections: nil,
 				PluginSearchPath: defaultPluginSearchPath,
 				Aggregation:      defaultAggr,
+				Resources:        config.DefaultResources,
+			},
+		}, {
+			name:     "Empty, non-nil resources and plugins should be preserved",
+			input:    &genFlags{},
+			cliInput: "--config testdata/emptyQueryAndPlugins.conf",
+			expected: &config.Config{
+				Namespace:        "heptio-sonobuoy",
+				WorkerImage:      "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				ImagePullPolicy:  "IfNotPresent",
+				PluginSearchPath: defaultPluginSearchPath,
+				Aggregation:      defaultAggr,
+				PluginSelections: []plugin.Selection{},
+				Resources:        []string{},
 			},
 		},
 	}
@@ -256,19 +273,11 @@ func TestResolveConfig(t *testing.T) {
 				t.Errorf("Expected timeout %v but got %v", tc.expected.Aggregation.TimeoutSeconds, conf.Aggregation.TimeoutSeconds)
 			}
 
-			if len(conf.PluginSelections) != len(tc.expected.PluginSelections) {
-				t.Fatalf("expected %v plugin selections but found %v", tc.expected.PluginSelections, conf.PluginSelections)
+			if !reflect.DeepEqual(conf.PluginSelections, tc.expected.PluginSelections) {
+				t.Errorf("expected PluginSelections %v but got %v", tc.expected.PluginSelections, conf.PluginSelections)
 			}
-			for _, ps := range conf.PluginSelections {
-				found := false
-				for _, expectedPs := range tc.expected.PluginSelections {
-					if ps.Name == expectedPs.Name {
-						found = true
-					}
-				}
-				if !found {
-					t.Errorf("looking for plugin selection %v but did not find it", ps)
-				}
+			if !reflect.DeepEqual(conf.Resources, tc.expected.Resources) {
+				t.Errorf("expected resources %v but got %v", tc.expected.Resources, conf.Resources)
 			}
 		})
 	}
