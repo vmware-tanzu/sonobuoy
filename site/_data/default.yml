@@ -3,17 +3,39 @@ toc:
     subfolderitems:
       - page: Getting started
         url: /index.html
+      - page: Config
+        url: /sonobuoy-config
       - page: Snapshot layout
         url: /snapshot
+      - page: ImagePullSecrects
+        url: /pullsecrets
   - title: Use cases
     subfolderitems:
       - page: Conformance testing
         url: /conformance-testing
+      - page: Custom Registries & Airgap Testing
+        url: /airgap
       - page: Plugins
         url: /plugins
   - title: Next steps
     subfolderitems:
+      - page: Customization
+        url: /gen
       - page: Make your own manifests
         url: /examples
         github: true
+      - page: Cut a Release
+        url: /release
+  - title: Enhancements
+    subfolderitems:
+      - page: E2E Results Viewing
+        url: /enhancements/e2e-command-line
+      - page: Sonobuoy Results Client
+        url: /enhancements/sep-results-client
+      - page: Status Reporting
+        url: /enhancements/status-reporting
+      - page: Streamlined Templates
+        url: /enhancements/streamlined-templates
+      - page: v2 Worker-Master Communications
+        url: /enhancements/v2-worker-master
 
