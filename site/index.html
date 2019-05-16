@@ -16,17 +16,17 @@ hero:
     url: https://github.com/heptio/sonobuoy/releases/latest
   promo1:
     icon: /img/testing-icon.svg
-    url: http://www.example.com?box1
+    #url: http://www.example.com?box1
     title:  Conformance Testing
     content: Ensure that a cluster is properly configured and that its behavior conforms to official Kubernetes specifications.
   promo2:
     icon: /img/debug-icon.svg
-    url: http://www.example.com?box2
+    #url: http://www.example.com?box2
     title: Workload Debugging
     content: Easily generate diagnostics for troublesome workloads that are difficult to debug.
   promo3:
     icon: /img/test-icon.svg
-    url: http://www.example.com?box3
+    #url: http://www.example.com?box3
     title: Custom Tests and Data Collection
     content: Create plug-ins to test any custom configuration or use a variety of community plug-ins.
 secondary_ctas:
@@ -69,9 +69,13 @@ secondary_ctas:
         <div class="card card-light mb-3 mb-md-0 shadow-sm">
           <div class="card-body match-height">
             <figure>
-              <img class="mb-4" src="{{ page.hero.promo1.icon }}" alt="{{ page.hero.promo1.title }}" />
+              <img src="{{ page.hero.promo1.icon }}" alt="{{ page.hero.promo1.title }}" />
             </figure>
+            {% if page.hero.promo1.url | size > 0 %}
             <h5><a href="{{ page.hero.promo1.url }}" class="dark">{{ page.hero.promo1.title }}</a></h5>
+            {% else %}
+            <h5>{{ page.hero.promo1.title }}</h5>
+            {% endif %}
             <p>{{ page.hero.promo1.content }}</p>
           </div>
         </div>
@@ -80,9 +84,13 @@ secondary_ctas:
         <div class="card card-light mb-3 mb-md-0 shadow-sm">
           <div class="card-body match-height">
             <figure>
-              <img class="mb-4" src="{{ page.hero.promo2.icon }}" alt="{{ page.hero.promo2.title }}" />
+              <img src="{{ page.hero.promo2.icon }}" alt="{{ page.hero.promo2.title }}" />
             </figure>
+            {% if page.hero.promo2.url | size > 0 %}
             <h5><a href="{{ page.hero.promo2.url }}" class="dark">{{ page.hero.promo2.title }}</a></h5>
+            {% else %}
+            <h5>{{ page.hero.promo2.title }}</h5>
+            {% endif %}
             <p>{{ page.hero.promo2.content }}</p>
           </div>
         </div>
@@ -91,9 +99,13 @@ secondary_ctas:
         <div class="card card-light mb-3 mb-md-0 shadow-sm">
           <div class="card-body match-height">
             <figure>
-              <img class="mb-4" src="{{ page.hero.promo3.icon }}" alt="{{ page.hero.promo3.title }}" />
+              <img src="{{ page.hero.promo3.icon }}" alt="{{ page.hero.promo3.title }}" />
             </figure>
+            {% if page.hero.promo3.url  | size > 0 %}
             <h5><a href="{{ page.hero.promo3.url }}" class="dark">{{ page.hero.promo3.title }}</a></h5>
+            {% else %}
+            <h5>{{ page.hero.promo3.title }}</h5>
+            {% endif %}
             <p>{{ page.hero.promo3.content }}</p>
           </div>
         </div>
