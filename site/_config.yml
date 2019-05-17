@@ -51,9 +51,9 @@ collections:
   - casestudies
 
 versioning: false
-latest: v0.11.1
+latest: v0.14.2
 versions:
-- v0.11.1
+- v0.14.2
 
 # Build settings
 permalink: :title/
