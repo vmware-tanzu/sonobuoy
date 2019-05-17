@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="73px" height="74px" viewBox="0 0 73 74" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 53.2 (72643) - https://sketchapp.com -->
+    <title>icon</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <polygon id="path-1" points="0 0.000157125357 51.0657411 0.000157125357 51.0657411 70.7064108 0 70.7064108"></polygon>
+        <polygon id="path-3" points="0.733853981 0.145340955 28.2307129 0.145340955 28.2307129 27.6419642 0.733853981 27.6419642"></polygon>
+    </defs>
+    <g id="Designs" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Home-Page-Sonobuoy-Rd2" transform="translate(-1003.000000, -548.000000)">
+            <g id="Callout-3" transform="translate(890.000000, 512.000000)">
+                <g id="icon" transform="translate(113.000000, 36.000000)">
+                    <polygon id="Fill-1" fill="#0091DA" points="9 39 41 39 41 37 9 37"></polygon>
+                    <polygon id="Fill-2" fill="#0091DA" points="9 48 41 48 41 46 9 46"></polygon>
+                    <polygon id="Fill-3" fill="#0091DA" points="9 55 41 55 41 53 9 53"></polygon>
+                    <polygon id="Fill-4" fill="#0091DA" points="9 63 41 63 41 61 9 61"></polygon>
+                    <polygon id="Fill-5" fill="#0091DA" points="9 32 41 32 41 30 9 30"></polygon>
+                    <polygon id="Fill-6" fill="#0091DA" points="9 24 41 24 41 22 9 22"></polygon>
+                    <polygon id="Fill-7" fill="#0091DA" points="9 16 41 16 41 14 9 14"></polygon>
+                    <g id="Group-16">
+                        <g id="Group-10" transform="translate(0.000000, 2.356880)">
+                            <mask id="mask-2" fill="white">
+                                <use xlink:href="#path-1"></use>
+                            </mask>
+                            <g id="Clip-9"></g>
+                            <path d="M49.1016742,25.3939717 L49.1016742,68.7425009 L1.96406697,68.7425009 L1.96406697,1.96422409 L44.9897036,1.96422409 C45.454009,1.27208689 45.9678089,0.616088526 46.5256039,0.000157125357 L0,0.000157125357 L0,70.7065679 L51.0657411,70.7065679 L51.0657411,26.6446896 C50.3806746,26.2715169 49.7262474,25.8519922 49.1016742,25.3939717" id="Fill-8" fill="#0091DA" mask="url(#mask-2)"></path>
+                        </g>
+                        <g id="Group-13" transform="translate(44.780727, 0.000000)">
+                            <mask id="mask-4" fill="white">
+                                <use xlink:href="#path-3"></use>
+                            </mask>
+                            <g id="Clip-12"></g>
+                            <path d="M14.4823227,2.10909367 C7.98440359,2.10909367 2.69792095,7.39557632 2.69792095,13.8934955 C2.69792095,20.3914146 7.98440359,25.6778973 14.4823227,25.6778973 C20.9802419,25.6778973 26.2667245,20.3914146 26.2667245,13.8934955 C26.2667245,7.39557632 20.9802419,2.10909367 14.4823227,2.10909367 M14.4823227,27.6419642 C6.90180988,27.6419642 0.733853981,21.4740083 0.733853981,13.8934955 C0.733853981,6.31298261 6.90180988,0.145026705 14.4823227,0.145026705 C22.0628356,0.145026705 28.2307915,6.31298261 28.2307915,13.8934955 C28.2307915,21.4740083 22.0628356,27.6419642 14.4823227,27.6419642" id="Fill-11" fill="#0091DA" mask="url(#mask-4)"></path>
+                        </g>
+                        <polygon id="Fill-14" fill="#0091DA" points="57.5510117 18.506696 52.0319835 12.9884534 53.4209717 11.5994653 57.5510117 15.7295053 64.6585772 8.62193973 66.0475654 10.0109279"></polygon>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

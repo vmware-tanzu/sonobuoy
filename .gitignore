@@ -25,3 +25,10 @@ kubectl
 
 # coverage profile
 coverage.txt
+
+# Jekyll compiled data
+site/_site
+site/.sass-cache
+site/.jekyll
+site/.jekyll-metadata
+site/.bundle
