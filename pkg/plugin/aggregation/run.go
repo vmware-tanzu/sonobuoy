@@ -18,6 +18,7 @@ package aggregation
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -150,14 +152,22 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	}()
 
 	// 4. Launch each plugin, to dispatch workers which submit the results back
+	certs := map[string]*tls.Certificate{}
 	for _, p := range plugins {
 		cert, err := auth.ClientKeyPair(p.GetName())
 		if err != nil {
 			return errors.Wrapf(err, "couldn't make certificate for plugin %v", p.GetName())
 		}
+		certs[p.GetName()] = cert
+	}
+
+	for _, p := range plugins {
 		logrus.WithField("plugin", p.GetName()).Info("Running plugin")
-		if err = p.Run(client, cfg.AdvertiseAddress, cert); err != nil {
-			return errors.Wrapf(err, "error running plugin %v", p.GetName())
+		if err = p.Run(client, cfg.AdvertiseAddress, certs[p.GetName()]); err != nil {
+			err = errors.Wrapf(err, "error running plugin %v", p.GetName())
+			logrus.Error(err)
+			monitorCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{"error": err.Error()}, "")
+			continue
 		}
 		// Have the plugin monitor for errors
 		go p.Monitor(client, nodes.Items, monitorCh)
