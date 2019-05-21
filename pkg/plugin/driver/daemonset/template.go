@@ -29,6 +29,9 @@ metadata:
     sonobuoy-driver: DaemonSet
     sonobuoy-plugin: {{.PluginName}}
     sonobuoy-result-type: {{.ResultType}}
+    {{- if .CustomAnnotations }}{{- range $k, $v := .CustomAnnotations }}
+    {{ indent 4 $k}}: {{$v}}
+    {{- end }}{{- end }}
   labels:
     component: sonobuoy
     sonobuoy-run: '{{.SessionID}}'
@@ -45,6 +48,10 @@ spec:
         component: sonobuoy
         sonobuoy-run: '{{.SessionID}}'
         tier: analysis
+      {{- if .CustomAnnotations }}
+      annotations:{{- range $k, $v := .CustomAnnotations }}
+        {{ indent 8 $k}}: {{$v}}
+      {{- end }}{{- end }}
     spec:
       containers:
       - {{.ProducerContainer | indent 8}}

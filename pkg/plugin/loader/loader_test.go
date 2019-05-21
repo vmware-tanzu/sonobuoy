@@ -115,7 +115,7 @@ func TestLoadJobPlugin(t *testing.T) {
 		},
 	}
 
-	pluginIface, err := loadPlugin(jobDef, namespace, image, "Always", "image-pull-secrets")
+	pluginIface, err := loadPlugin(jobDef, namespace, image, "Always", "image-pull-secrets", nil)
 	if err != nil {
 		t.Fatalf("unexpected error loading plugin: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestLoadDaemonSet(t *testing.T) {
 		},
 	}
 
-	pluginIface, err := loadPlugin(daemonDef, namespace, image, "Always", "image-pull-secrets")
+	pluginIface, err := loadPlugin(daemonDef, namespace, image, "Always", "image-pull-secrets", nil)
 	if err != nil {
 		t.Fatalf("unexpected error loading plugin: %v", err)
 	}
@@ -205,6 +205,7 @@ func TestLoadAllPlugins(t *testing.T) {
 		sonobuoyImage       string
 		imagePullPolicy     string
 		imagePullSecrets    string
+		customAnnotations   map[string]string
 		searchPath          []string
 		selections          []plugin.Selection
 		expectedPluginNames []string
@@ -213,8 +214,8 @@ func TestLoadAllPlugins(t *testing.T) {
 			testname:   "ensure duplicate paths do not result in duplicate loaded plugins.",
 			searchPath: []string{path.Join("testdata", "plugin.d"), path.Join("testdata", "plugin.d")},
 			selections: []plugin.Selection{
-				plugin.Selection{Name: "test-job-plugin"},
-				plugin.Selection{Name: "test-daemon-set-plugin"},
+				{Name: "test-job-plugin"},
+				{Name: "test-daemon-set-plugin"},
 			},
 			expectedPluginNames: []string{"test-job-plugin", "test-daemon-set-plugin"},
 		}, {
@@ -232,7 +233,7 @@ func TestLoadAllPlugins(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.testname, func(t *testing.T) {
-			plugins, err := LoadAllPlugins(tc.namespace, tc.sonobuoyImage, tc.imagePullPolicy, tc.imagePullSecrets, tc.searchPath, tc.selections)
+			plugins, err := LoadAllPlugins(tc.namespace, tc.sonobuoyImage, tc.imagePullPolicy, tc.imagePullSecrets, tc.customAnnotations, tc.searchPath, tc.selections)
 			if err != nil {
 				t.Fatalf("error loading all plugins: %v", err)
 			}

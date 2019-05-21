@@ -40,9 +40,10 @@ const (
 
 // GenPluginConfig are the input options for running
 type GenPluginConfig struct {
-	Paths            []string
-	PluginName       string
-	ImagePullSecrets string
+	Paths             []string
+	PluginName        string
+	ImagePullSecrets  string
+	CustomAnnotations map[string]string
 }
 
 var genPluginOpts GenPluginConfig
@@ -86,6 +87,7 @@ func generatePluginManifest(cfg GenPluginConfig) ([]byte, error) {
 		config.DefaultImage,
 		"Always",
 		cfg.ImagePullSecrets,
+		cfg.CustomAnnotations,
 		cfg.Paths,
 		[]plugin.Selection{{Name: cfg.PluginName}},
 	)

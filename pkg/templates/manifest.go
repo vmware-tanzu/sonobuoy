@@ -114,6 +114,11 @@ metadata:
     tier: analysis
   name: sonobuoy
   namespace: {{.Namespace}}
+{{- if .CustomAnnotations }}
+  annotations:{{- range $k, $v := .CustomAnnotations }}
+    {{ indent 4 $k}}: {{$v}}
+{{- end }}
+{{- end }}
 spec:
   containers:
   - command:

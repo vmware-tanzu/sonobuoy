@@ -33,13 +33,14 @@ import (
 
 // Base is the struct that stores state for plugin drivers and contains helper methods.
 type Base struct {
-	Definition       plugin.Definition
-	SessionID        string
-	Namespace        string
-	SonobuoyImage    string
-	CleanedUp        bool
-	ImagePullPolicy  string
-	ImagePullSecrets string
+	Definition        plugin.Definition
+	SessionID         string
+	Namespace         string
+	SonobuoyImage     string
+	CleanedUp         bool
+	ImagePullPolicy   string
+	ImagePullSecrets  string
+	CustomAnnotations map[string]string
 }
 
 // TemplateData is all the fields available to plugin driver templates.
@@ -51,6 +52,7 @@ type TemplateData struct {
 	SonobuoyImage     string
 	ImagePullPolicy   string
 	ImagePullSecrets  string
+	CustomAnnotations map[string]string
 	ProducerContainer string
 	MasterAddress     string
 	CACert            string
@@ -105,6 +107,7 @@ func (b *Base) GetTemplateData(masterAddress string, cert *tls.Certificate) (*Te
 		SonobuoyImage:     b.SonobuoyImage,
 		ImagePullPolicy:   b.ImagePullPolicy,
 		ImagePullSecrets:  b.ImagePullSecrets,
+		CustomAnnotations: b.CustomAnnotations,
 		ProducerContainer: string(container),
 		MasterAddress:     masterAddress,
 		CACert:            cacert,

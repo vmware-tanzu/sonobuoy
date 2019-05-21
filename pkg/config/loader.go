@@ -123,6 +123,7 @@ func loadAllPlugins(cfg *Config) error {
 		cfg.WorkerImage,
 		cfg.ImagePullPolicy,
 		cfg.ImagePullSecrets,
+		cfg.CustomAnnotations,
 		cfg.PluginSearchPath,
 		cfg.PluginSelections,
 	)
