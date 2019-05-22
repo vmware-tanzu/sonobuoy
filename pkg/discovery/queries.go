@@ -137,6 +137,11 @@ func QueryResources(
 	ns *string,
 	cfg *config.Config) error {
 
+	// Early exit; avoid forming query or creating output directories.
+	if len(resources) == 0 {
+		return nil
+	}
+
 	if ns != nil {
 		logrus.Infof("Running ns query (%v)", *ns)
 	} else {
