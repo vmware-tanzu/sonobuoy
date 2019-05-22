@@ -17,7 +17,9 @@ limitations under the License.
 package config
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -25,34 +27,36 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	pluginloader "github.com/heptio/sonobuoy/pkg/plugin/loader"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
+)
+
+const (
+	defaultCfgFileName  = "config.json"
+	fallbackCfgFileName = "/etc/sonobuoy/config.json"
 )
 
 // LoadConfig will load the current sonobuoy configuration using the filesystem
 // and environment variables, and returns a config object
 func LoadConfig() (*Config, error) {
-	var err error
-	cfg := New()
+	cfg := &Config{}
 
-	// 0 - load defaults
-	viper.SetConfigType("json")
-	viper.SetConfigName("config")
-	viper.AddConfigPath("/etc/sonobuoy/")
-	viper.AddConfigPath(".")
-
-	// Allow specifying a custom config file via the SONOBUOY_CONFIG env var
-	if forceCfg := os.Getenv("SONOBUOY_CONFIG"); forceCfg != "" {
-		viper.SetConfigFile(forceCfg)
+	pathsToTry := []string{}
+	envCfgFileName := os.Getenv("SONOBUOY_CONFIG")
+	if envCfgFileName != "" {
+		pathsToTry = []string{envCfgFileName}
+	} else {
+		pathsToTry = []string{defaultCfgFileName, fallbackCfgFileName}
 	}
 
-	// 1 - Read in the config file.
-	if err = viper.ReadInConfig(); err != nil {
-		return nil, errors.WithStack(err)
+	jsonFile, fpath, err := openFiles(pathsToTry...)
+	if err != nil {
+		return nil, errors.Wrap(err, "open config")
 	}
+	defer jsonFile.Close()
 
-	// 2 - Unmarshal the Config struct
-	if err = viper.Unmarshal(cfg); err != nil {
-		return nil, errors.WithStack(err)
+	b, err := ioutil.ReadAll(jsonFile)
+	err = json.Unmarshal(b, cfg)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unmarshal config file %q", fpath)
 	}
 
 	// 3 - figure out what address we will tell pods to dial for aggregation
@@ -74,11 +78,6 @@ func LoadConfig() (*Config, error) {
 	if resultsDir, ok := os.LookupEnv("RESULTS_DIR"); ok {
 		cfg.ResultsDir = resultsDir
 	}
-
-	// Always take what the user set for Resources, even if it is empty. Do not
-	// merge with the defaults. Sending the empty slice queries everything using
-	// the dynamic client.
-	cfg.Resources = viper.GetStringSlice("Resources")
 
 	// 5 - Load any plugins we have
 	err = loadAllPlugins(cfg)
@@ -150,4 +149,27 @@ func loadAllPlugins(cfg *Config) error {
 	}
 
 	return nil
+}
+
+// openFiles tries opening each of the files given, returning the first file/error
+// that either opens correctly or provides an error which is not os.IsNotExist(). The
+// string is the filename corresponding to the file/error returned.
+func openFiles(paths ...string) (*os.File, string, error) {
+	var f *os.File
+	var path string
+	var err error
+
+	for _, path = range paths {
+		f, err = os.Open(path)
+		switch {
+		case err == nil:
+			return f, path, nil
+		case err != nil && os.IsNotExist(err):
+			continue
+		default:
+			return nil, path, errors.Wrap(err, "opening config file")
+		}
+	}
+
+	return f, path, errors.Wrap(err, "opening config file")
 }
