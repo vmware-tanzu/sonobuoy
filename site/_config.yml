@@ -7,12 +7,13 @@ url:
 logo: Sonobuoy.svg
 vm_logo: vm-logo.png
 gh_repo: https://github.com/heptio/sonobuoy
-hero: 
+markdown: redcarpet
+hero:
   background-color: med-blue
 footer:
   title: Getting Started
   content: To help you get started, see the documentation.
-  cta_title: 
+  cta_title:
   cta_url: /docs/latest
   cta_text: Documentation
   vm-link: http://vmware.github.io/
@@ -27,11 +28,14 @@ footer_social_links:
   RSS:
     fa_icon: fa fa-rss
     url: feed.xml
+  GitHub:
+    fa_icon: fab fa-github
+    url: https://github.com/heptio/sonobuoy
 
 defaults:
   - scope:
       path: "" # an empty string here means all files in the project
-      type: "posts" 
+      type: "posts"
     values:
       layout: "posts"
   - scope:
@@ -73,7 +77,7 @@ plugins:
 
 
 # Include these subdirectories
-include: 
+include:
   - CONTRIBUTING.md
   - README.md
 
@@ -86,3 +90,6 @@ exclude:
   - CNAME
   - Runbook.docx
   - '*.sh'
+
+redcarpet:
+    extensions: ["no_intra_emphasis", "tables", "autolink", "strikethrough", "with_toc_data"]
