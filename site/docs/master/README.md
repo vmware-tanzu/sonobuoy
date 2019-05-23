@@ -42,6 +42,7 @@ Golang version 1.12 or greater is recommended. Golang can be installed via
 
 ## Getting Started
 To launch conformance tests (ensuring [CNCF][cncf] conformance) and wait until they are finished run:
+
 ```
 sonobuoy run --wait
 ```
@@ -49,11 +50,13 @@ sonobuoy run --wait
 > Note: Using `--mode quick` will significantly shorten the runtime of Sonobuoy. It runs just a single test, helping to quickly validate your Sonobuoy and Kubernetes configuration.
 
 Get the results from the plugins (e.g. e2e test results):
+
 ```
 results=$(sonobuoy retrieve)
 ```
 
 Inspect results for test failures.  This will list the number of tests failed and their names:
+
 ```
 sonobuoy e2e $results
 ```
@@ -74,11 +77,13 @@ sonobuoy delete --wait
 
 ### Monitoring Sonobuoy during a run
 You can check on the status of each of the plugins running with:
+
 ```
 sonobuoy status
 ```
 
 You can also inspect the logs of all Sonobuoy containers:
+
 ```
 sonobuoy logs
 ```
@@ -103,6 +108,7 @@ issue][issue].
 
 There are some Kubernetes e2e tests that may leak resources. Sonobuoy can
 help clean those up as well by deleting all namespaces prefixed with `e2e`:
+
 ```
 sonobuoy delete --all
 ```
