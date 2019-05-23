@@ -18,6 +18,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -25,6 +26,78 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 )
+
+func TestOpenConfigFile(t *testing.T) {
+
+	// Set up 3 files with contents matching their path for this test. Cleanup afterwards.
+	f1, f2 := "TestOpenConfigFile1", "TestOpenConfigFile2"
+	for _, v := range []string{f1, f2} {
+		err := ioutil.WriteFile(v, []byte(v), 0644)
+		if err != nil {
+			t.Fatalf("Failed to setup test files: %v", err)
+		}
+		defer os.Remove(v)
+	}
+
+	testCases := []struct {
+		desc       string
+		files      []string
+		expectPath string
+		expectErr  string
+	}{
+		{
+			desc:       "Open existing file",
+			files:      []string{f1},
+			expectPath: f1,
+		}, {
+			desc:      "File DNE",
+			files:     []string{"bad"},
+			expectErr: "opening config file: open bad: no such file or directory",
+		}, {
+			desc:       "File DNE and falls back to next file",
+			files:      []string{"bad", f1},
+			expectPath: f1,
+		}, {
+			desc:       "Returns first good file",
+			files:      []string{f2, f1},
+			expectPath: f2,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			f, fpath, err := openFiles(tc.files...)
+			if f != nil {
+				defer f.Close()
+			}
+
+			switch {
+			case err != nil && len(tc.expectErr) == 0:
+				t.Fatalf("Expected nil error but got %q", err)
+			case err != nil && len(tc.expectErr) > 0:
+				if fmt.Sprint(err) != tc.expectErr {
+					t.Errorf("Expected error \n\t%q\nbut got\n\t%q", tc.expectErr, err)
+				}
+				return
+			case err == nil && len(tc.expectErr) > 0:
+				t.Fatalf("Expected error %q but got nil", tc.expectErr)
+			default:
+				// No error
+			}
+
+			if fpath != tc.expectPath {
+				t.Errorf("Expected %v but got %v", tc.expectPath, fpath)
+			}
+
+			b, err := ioutil.ReadAll(f)
+			if err != nil {
+				t.Fatalf("Failed to read file %v: %v", fpath, err)
+			}
+			if string(b) != fpath {
+				t.Errorf("Expected contents of file %v to be %v but got %v", fpath, fpath, string(b))
+			}
+		})
+	}
+}
 
 func TestSaveAndLoad(t *testing.T) {
 	cfg := New()
@@ -71,6 +144,9 @@ func TestDefaultResources(t *testing.T) {
 	if len(cfg.Resources) != 0 {
 		t.Error("Default resources should not be applied if specified in config")
 	}
+	if cfg.Resources == nil {
+		t.Error("Empty resources should not be converted to nil")
+	}
 
 	// Check that not specifying resources results in all the defaults
 	blob = `{}`
@@ -86,7 +162,7 @@ func TestDefaultResources(t *testing.T) {
 	}
 
 	// Check that specifying one resource results in one resource
-	blob = `{"Resources": "Pods"}`
+	blob = `{"Resources": ["Pods"]}`
 	if err = ioutil.WriteFile("./config.json", []byte(blob), 0644); err != nil {
 		t.Fatalf("Failed to write default config.json: %v", err)
 	}
@@ -104,9 +180,9 @@ func TestLoadAllPlugins(t *testing.T) {
 	cfg := &Config{
 		PluginSearchPath: []string{"./examples/plugins.d"},
 		PluginSelections: []plugin.Selection{
-			plugin.Selection{Name: "systemd-logs"},
-			plugin.Selection{Name: "e2e"},
-			plugin.Selection{Name: "heptio-e2e"},
+			{Name: "systemd-logs"},
+			{Name: "e2e"},
+			{Name: "heptio-e2e"},
 		},
 	}
 
