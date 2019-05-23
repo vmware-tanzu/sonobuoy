@@ -68,7 +68,7 @@ func TestFillTemplate(t *testing.T) {
 				},
 			},
 		},
-	}, expectedNamespace, expectedImageName, "Always", "image-pull-secret")
+	}, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{"key1": "val1", "key2": "val2"})
 
 	auth, err := ca.NewAuthority()
 	if err != nil {
@@ -155,5 +155,14 @@ func TestFillTemplate(t *testing.T) {
 		if pullSecrets[0].Name != "image-pull-secret" {
 			t.Errorf("Expected imagePullSecrets with name %v but got %v", "image-pull-secret", pullSecrets)
 		}
+	}
+
+	if daemonSet.Annotations["key1"] != "val1" ||
+		daemonSet.Annotations["key2"] != "val2" {
+		t.Errorf("Expected annotations key1:val1 and key2:val2 to be set, but got %v", daemonSet.Annotations)
+	}
+	if daemonSet.Spec.Template.Annotations["key1"] != "val1" ||
+		daemonSet.Spec.Template.Annotations["key2"] != "val2" {
+		t.Errorf("Expected annotations key1:val1 and key2:val2 to be set, but got %v", daemonSet.Spec.Template.Annotations)
 	}
 }

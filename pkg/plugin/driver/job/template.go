@@ -29,6 +29,9 @@ metadata:
     sonobuoy-driver: Job
     sonobuoy-plugin: {{.PluginName}}
     sonobuoy-result-type: {{.ResultType}}
+    {{- if .CustomAnnotations }}{{- range $k, $v := .CustomAnnotations }}
+    {{ indent 4 $k}}: {{$v}}
+    {{- end }}{{- end }}
   labels:
     component: sonobuoy
     sonobuoy-run: '{{.SessionID}}'

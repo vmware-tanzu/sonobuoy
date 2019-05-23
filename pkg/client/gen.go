@@ -46,14 +46,15 @@ const (
 type templateValues struct {
 	Plugins []string
 
-	SonobuoyConfig   string
-	SonobuoyImage    string
-	Namespace        string
-	EnableRBAC       bool
-	ImagePullPolicy  string
-	ImagePullSecrets string
-	SSHKey           string
-	SSHUser          string
+	SonobuoyConfig    string
+	SonobuoyImage     string
+	Namespace         string
+	EnableRBAC        bool
+	ImagePullPolicy   string
+	ImagePullSecrets  string
+	CustomAnnotations map[string]string
+	SSHKey            string
+	SSHUser           string
 
 	// CustomRegistries should be a multiline yaml string which represents
 	// the file contents of KUBE_TEST_REPO_LIST, the overrides for k8s e2e
@@ -159,14 +160,15 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	}
 
 	tmplVals := &templateValues{
-		SonobuoyConfig:   string(marshalledConfig),
-		SonobuoyImage:    conf.WorkerImage,
-		Namespace:        conf.Namespace,
-		EnableRBAC:       cfg.EnableRBAC,
-		ImagePullPolicy:  conf.ImagePullPolicy,
-		ImagePullSecrets: conf.ImagePullSecrets,
-		SSHKey:           base64.StdEncoding.EncodeToString(sshKeyData),
-		SSHUser:          cfg.SSHUser,
+		SonobuoyConfig:    string(marshalledConfig),
+		SonobuoyImage:     conf.WorkerImage,
+		Namespace:         conf.Namespace,
+		EnableRBAC:        cfg.EnableRBAC,
+		ImagePullPolicy:   conf.ImagePullPolicy,
+		ImagePullSecrets:  conf.ImagePullSecrets,
+		CustomAnnotations: conf.CustomAnnotations,
+		SSHKey:            base64.StdEncoding.EncodeToString(sshKeyData),
+		SSHUser:           cfg.SSHUser,
 
 		Plugins: pluginYAML,
 
@@ -245,9 +247,9 @@ func systemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 				Command:         []string{"/bin/sh", "-c", "/get_systemd_logs.sh && sleep 3600"},
 				ImagePullPolicy: corev1.PullPolicy(cfg.ImagePullPolicy),
 				Env: []corev1.EnvVar{
-					corev1.EnvVar{Name: "CHROOT_DIR", Value: "/node"},
-					corev1.EnvVar{Name: "RESULTS_DIR", Value: pluginResultsDir},
-					corev1.EnvVar{Name: "NODE_NAME",
+					{Name: "CHROOT_DIR", Value: "/node"},
+					{Name: "RESULTS_DIR", Value: pluginResultsDir},
+					{Name: "NODE_NAME",
 						ValueFrom: &corev1.EnvVarSource{
 							FieldRef: &corev1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
 						},
@@ -257,11 +259,11 @@ func systemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 					Privileged: &trueVal,
 				},
 				VolumeMounts: []corev1.VolumeMount{
-					corev1.VolumeMount{
+					{
 						ReadOnly:  false,
 						Name:      "results",
 						MountPath: pluginResultsDir,
-					}, corev1.VolumeMount{
+					}, {
 						ReadOnly:  false,
 						Name:      "root",
 						MountPath: "/node",
@@ -286,12 +288,12 @@ func e2eManifest(cfg *GenConfig) *manifest.Manifest {
 				Command:         []string{"/run_e2e.sh"},
 				ImagePullPolicy: corev1.PullPolicy(cfg.ImagePullPolicy),
 				Env: []corev1.EnvVar{
-					corev1.EnvVar{Name: "E2E_FOCUS", Value: cfg.E2EConfig.Focus},
-					corev1.EnvVar{Name: "E2E_SKIP", Value: cfg.E2EConfig.Skip},
-					corev1.EnvVar{Name: "E2E_PARALLEL", Value: cfg.E2EConfig.Parallel},
+					{Name: "E2E_FOCUS", Value: cfg.E2EConfig.Focus},
+					{Name: "E2E_SKIP", Value: cfg.E2EConfig.Skip},
+					{Name: "E2E_PARALLEL", Value: cfg.E2EConfig.Parallel},
 				},
 				VolumeMounts: []corev1.VolumeMount{
-					corev1.VolumeMount{
+					{
 						ReadOnly:  false,
 						Name:      "results",
 						MountPath: pluginResultsDir,

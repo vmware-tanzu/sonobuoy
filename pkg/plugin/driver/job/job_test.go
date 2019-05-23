@@ -67,7 +67,7 @@ func TestFillTemplate(t *testing.T) {
 				},
 			},
 		},
-	}, expectedNamespace, expectedImageName, "Always", "image-pull-secret")
+	}, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{"key1": "val1", "key2": "val2"})
 
 	auth, err := ca.NewAuthority()
 	if err != nil {
@@ -152,6 +152,11 @@ func TestFillTemplate(t *testing.T) {
 		if pod.Spec.ImagePullSecrets[0].Name != "image-pull-secret" {
 			t.Errorf("Expected imagePullSecrets with name %v but got %v", "image-pull-secret", pod.Spec.ImagePullSecrets)
 		}
+	}
+
+	if pod.Annotations["key1"] != "val1" ||
+		pod.Annotations["key2"] != "val2" {
+		t.Errorf("Expected annotations key1:val1 and key2:val2 to be set, but got %v", pod.Annotations)
 	}
 
 }
