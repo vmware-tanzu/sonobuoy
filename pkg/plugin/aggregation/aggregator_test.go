@@ -18,12 +18,17 @@ package aggregation
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
+	"strings"
 	"testing"
+	"testing/iotest"
+	"time"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca/authtest"
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -33,7 +38,7 @@ import (
 
 func TestAggregation(t *testing.T) {
 	expected := []plugin.ExpectedResult{
-		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
+		{NodeName: "node1", ResultType: "systemd_logs"},
 	}
 
 	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
@@ -61,7 +66,7 @@ func TestAggregation(t *testing.T) {
 
 func TestAggregation_noExtension(t *testing.T) {
 	expected := []plugin.ExpectedResult{
-		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
+		{NodeName: "node1", ResultType: "systemd_logs"},
 	}
 
 	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
@@ -88,7 +93,7 @@ func TestAggregation_noExtension(t *testing.T) {
 
 func TestAggregation_tarfile(t *testing.T) {
 	expected := []plugin.ExpectedResult{
-		plugin.ExpectedResult{ResultType: "e2e"},
+		{ResultType: "e2e"},
 	}
 
 	fileBytes := []byte("foo")
@@ -125,7 +130,7 @@ func TestAggregation_tarfile(t *testing.T) {
 
 func TestAggregation_wrongnodes(t *testing.T) {
 	expected := []plugin.ExpectedResult{
-		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
+		{NodeName: "node1", ResultType: "systemd_logs"},
 	}
 
 	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
@@ -147,8 +152,8 @@ func TestAggregation_wrongnodes(t *testing.T) {
 
 func TestAggregation_duplicates(t *testing.T) {
 	expected := []plugin.ExpectedResult{
-		plugin.ExpectedResult{NodeName: "node1", ResultType: "systemd_logs"},
-		plugin.ExpectedResult{NodeName: "node12", ResultType: "systemd_logs"},
+		{NodeName: "node1", ResultType: "systemd_logs"},
+		{NodeName: "node12", ResultType: "systemd_logs"},
 	}
 	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
 		URL, err := NodeResultURL(srv.URL, "node1", "systemd_logs")
@@ -174,9 +179,150 @@ func TestAggregation_duplicates(t *testing.T) {
 	})
 }
 
+func TestAggregation_duplicatesWithErrors(t *testing.T) {
+	// Setup aggregator with expected results and preload the test data/info
+	// that we want to transmit/compare against.
+	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
+	if err != nil {
+		t.Fatalf("Could not create temp directory: %v", err)
+	}
+	defer os.RemoveAll(dir)
+	outpath := filepath.Join(dir, "systemd_logs", "results", "node1")
+	testDataPath := "./testdata/fakeLogData.txt"
+	testinfo, err := os.Stat(testDataPath)
+	if err != nil {
+		t.Fatalf("Could not stat test file: %v", err)
+	}
+	testDataReader, err := os.Open(testDataPath)
+	if err != nil {
+		t.Fatalf("Could not open test data file: %v", err)
+	}
+	defer testDataReader.Close()
+
+	expected := []plugin.ExpectedResult{
+		{NodeName: "node1", ResultType: "systemd_logs"},
+		{NodeName: "node12", ResultType: "systemd_logs"},
+	}
+	agg := NewAggregator(dir, expected)
+
+	// Send first result and force an error in processing.
+	errReader := iotest.TimeoutReader(testDataReader)
+	err = agg.processResult(&plugin.Result{Body: errReader, NodeName: "node1", ResultType: "systemd_logs"})
+	if err == nil {
+		t.Fatal("Expected error processing this due to reading error, instead got nil.")
+	}
+
+	// Confirm results are recorded but they are partial results.
+	realinfo, err := os.Stat(outpath)
+	if err != nil {
+		t.Fatalf("Could not stat output file: %v", err)
+	}
+	if realinfo.Size() == testinfo.Size() {
+		t.Fatal("Expected truncated results for first result (simulating error), but got all the data.")
+	}
+
+	// Retry the result without an error this time.
+	_, err = testDataReader.Seek(0, 0)
+	if err != nil {
+		t.Fatalf("Could not rewind test data file: %v", err)
+	}
+	err = agg.processResult(&plugin.Result{Body: testDataReader, NodeName: "node1", ResultType: "systemd_logs"})
+	if err != nil {
+		t.Errorf("Expected no error processing this result, got %v", err)
+	}
+
+	// Confirm the new results overwrite the old ones.
+	realinfo, err = os.Stat(outpath)
+	if err != nil {
+		t.Fatalf("Could not stat output file: %v", err)
+	}
+	if realinfo.Size() != testinfo.Size() {
+		t.Errorf("Expected all the data to be transmitted. Expected data size %v but got %v.", testinfo.Size(), realinfo.Size())
+	}
+}
+
+// TestAggregation_RetryWindow ensures that the server Wait() method
+// gives clients a chance to retry if their results were not processed correctly.
+func TestAggregation_RetryWindow(t *testing.T) {
+	// Setup aggregator with expected results and preload the test data/info
+	// that we want to transmit/compare against.
+	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
+	if err != nil {
+		t.Fatalf("Could not create temp directory: %v", err)
+	}
+	defer os.RemoveAll(dir)
+	testRetryWindow := 1 * time.Second
+	testBufferDuration := 200 * time.Millisecond
+	expected := []plugin.ExpectedResult{
+		{NodeName: "node1", ResultType: "systemd_logs"},
+	}
+
+	testCases := []struct {
+		desc             string
+		postProcessSleep time.Duration
+		simulateErr      bool
+		expectExtraWait  time.Duration
+	}{
+		{
+			desc:            "Error causes us to wait at least the retry window",
+			simulateErr:     true,
+			expectExtraWait: testRetryWindow,
+		}, {
+			desc:             "Retry window is sliding",
+			simulateErr:      true,
+			postProcessSleep: 500 * time.Millisecond,
+			expectExtraWait:  500 * time.Millisecond,
+		}, {
+			desc:             "Retry window can slide to 0",
+			simulateErr:      true,
+			postProcessSleep: testRetryWindow,
+			expectExtraWait:  0,
+		}, {
+			desc:            "No retry window without error",
+			simulateErr:     false,
+			expectExtraWait: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		agg := NewAggregator(dir, expected)
+		// Shorten retry window for testing.
+		agg.retryWindow = testRetryWindow
+		testDataPath := "./testdata/fakeLogData.txt"
+		testDataReader, err := os.Open(testDataPath)
+		if err != nil {
+			t.Fatalf("Could not open test data file: %v", err)
+		}
+		defer testDataReader.Close()
+
+		var r io.Reader
+		if tc.simulateErr {
+			r = iotest.TimeoutReader(testDataReader)
+		} else {
+			r = strings.NewReader("foo")
+		}
+
+		err = agg.processResult(&plugin.Result{Body: r, NodeName: "node1", ResultType: "systemd_logs"})
+		if err == nil && tc.simulateErr {
+			t.Fatal("Expected error processing this due to reading error, instead got nil.")
+		}
+		// check time before/after wait and ensure it is greater than the retryWindow.
+		time.Sleep(tc.postProcessSleep)
+		start := time.Now()
+		agg.Wait(make(chan bool))
+		waitTime := time.Now().Sub(start)
+
+		// Add buffer to avoid raciness due to processing time.
+		diffTime := waitTime - tc.expectExtraWait
+		if diffTime > testBufferDuration || diffTime < -1*testBufferDuration {
+			t.Errorf("Expected Wait() to wait the duration (%v) due to failed result, instead waited only %v", agg.retryWindow, waitTime)
+		}
+	}
+}
+
 func TestAggregation_errors(t *testing.T) {
 	expected := []plugin.ExpectedResult{
-		plugin.ExpectedResult{ResultType: "e2e"},
+		{ResultType: "e2e"},
 	}
 
 	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
@@ -202,7 +348,6 @@ func withAggregator(t *testing.T, expected []plugin.ExpectedResult, callback fun
 	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
 	if err != nil {
 		t.Fatal("Could not create temp directory")
-		t.FailNow()
 		return
 	}
 	defer os.RemoveAll(dir)
