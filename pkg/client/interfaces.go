@@ -98,6 +98,12 @@ type RetrieveConfig struct {
 	Namespace string
 }
 
+// StatusConfig is the input options for retrieving a Sonobuoy run's results.
+type StatusConfig struct {
+	// Namespace is the namespace the sonobuoy aggregator is running in.
+	Namespace string
+}
+
 // PreflightConfig are the options passed to PreflightChecks.
 type PreflightConfig struct {
 	Namespace string
@@ -155,7 +161,7 @@ type Interface interface {
 	// RetrieveResults copies results from a sonobuoy run into a Reader in tar format.
 	RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan error)
 	// GetStatus determines the status of the sonobuoy run in order to assist the user.
-	GetStatus(namespace string) (*aggregation.Status, error)
+	GetStatus(cfg *StatusConfig) (*aggregation.Status, error)
 	// LogReader returns a reader that contains a merged stream of sonobuoy logs.
 	LogReader(cfg *LogConfig) (*Reader, error)
 	// Delete removes a sonobuoy run, namespace, and all associated resources.
