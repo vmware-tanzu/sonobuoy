@@ -20,11 +20,11 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 )
 
-func (c *SonobuoyClient) GetStatus(namespace string) (*aggregation.Status, error) {
+func (c *SonobuoyClient) GetStatus(cfg *StatusConfig) (*aggregation.Status, error) {
 	client, err := c.Client()
 	if err != nil {
 		return nil, err
 	}
 
-	return aggregation.GetStatus(client, namespace)
+	return aggregation.GetStatus(client, cfg.Namespace)
 }

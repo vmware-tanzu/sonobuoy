@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 )
@@ -64,7 +65,9 @@ func getStatus(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	status, err := sbc.GetStatus(statusFlags.namespace)
+	status, err := sbc.GetStatus(&client.StatusConfig{
+		Namespace: statusFlags.namespace,
+	})
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
