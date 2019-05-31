@@ -27,8 +27,10 @@ import (
 	"github.com/heptio/sonobuoy/pkg/backplane/ca"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	sonotime "github.com/heptio/sonobuoy/pkg/time"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -85,7 +87,6 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// 1. Await results from each plugin
 	aggr := NewAggregator(outdir+"/plugins", expectedResults)
 	doneAggr := make(chan bool, 1)
-	monitorCh := make(chan *plugin.Result, len(expectedResults))
 	stopWaitCh := make(chan bool, 1)
 
 	go func() {
@@ -163,17 +164,8 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 	for _, p := range plugins {
 		logrus.WithField("plugin", p.GetName()).Info("Running plugin")
-		if err = p.Run(client, cfg.AdvertiseAddress, certs[p.GetName()]); err != nil {
-			err = errors.Wrapf(err, "error running plugin %v", p.GetName())
-			logrus.Error(err)
-			monitorCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{"error": err.Error()}, "")
-			continue
-		}
-		// Have the plugin monitor for errors
-		go p.Monitor(client, nodes.Items, monitorCh)
+		go aggr.RunAndMonitorPlugin(ctx, p, client, nodes.Items, cfg.AdvertiseAddress, certs[p.GetName()])
 	}
-	// 5. Have the aggregator plumb results from each plugins' monitor function
-	go aggr.IngestResults(monitorCh)
 
 	// Give the plugins a chance to cleanup before a hard timeout occurs
 	shutdownPlugins := time.After(time.Duration(cfg.TimeoutSeconds-plugin.GracefulShutdownPeriod) * time.Second)
@@ -208,4 +200,57 @@ func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
 	for _, p := range plugins {
 		p.Cleanup(client)
 	}
+}
+
+// RunAndMonitorPlugin will start a plugin then monitor it for errors starting/running.
+// Errors detected will be handled by saving an error result in the aggregator.Results.
+func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, p plugin.Interface, client kubernetes.Interface, nodes []corev1.Node, address string, cert *tls.Certificate) {
+	monitorCh := make(chan *plugin.Result, 1)
+	pCtx, cancel := context.WithCancel(ctx)
+
+	if err := p.Run(client, address, cert); err != nil {
+		err := errors.Wrapf(err, "error running plugin %v", p.GetName())
+		logrus.Error(err)
+		monitorCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{"error": err.Error()}, "")
+	}
+
+	go p.Monitor(pCtx, client, nodes, monitorCh)
+	go a.IngestResults(pCtx, monitorCh)
+
+	// Control loop; check regularly if we have results or not for this plugin. If results are in,
+	// then stop the go routines monitoring the plugin. If the parent context is cancelled, stop monitoring.
+	for {
+		select {
+		case <-ctx.Done():
+			cancel()
+			return
+		case <-sonotime.After(10 * time.Second):
+		}
+
+		hasResults := a.pluginHasResults(p)
+		if hasResults {
+			cancel()
+			return
+		}
+	}
+}
+
+// pluginHasResults returns true if all the expected results for the given plugin
+// have already been reported.
+func (a *Aggregator) pluginHasResults(p plugin.Interface) bool {
+	a.resultsMutex.Lock()
+	defer a.resultsMutex.Unlock()
+
+	targetType := p.GetResultType()
+	for expResultID, expResult := range a.ExpectedResults {
+		if expResult.ResultType != targetType {
+			continue
+		}
+
+		if _, ok := a.Results[expResultID]; !ok {
+			return false
+		}
+	}
+
+	return true
 }

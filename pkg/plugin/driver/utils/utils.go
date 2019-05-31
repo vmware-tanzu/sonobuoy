@@ -21,11 +21,16 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	gouuid "github.com/satori/go.uuid"
 
 	v1 "k8s.io/api/core/v1"
+)
+
+const (
+	terminatedContainerWindow = 1 * time.Minute
 )
 
 // GetSessionID generates a new session id.
@@ -60,6 +65,20 @@ func IsPodFailing(pod *v1.Pod) (bool, string) {
 		if waiting := cstatus.State.Waiting; waiting != nil {
 			if waiting.Reason == "ImagePullBackOff" || waiting.Reason == "ErrImagePull" {
 				errstr := fmt.Sprintf("Container %v is in state %v", cstatus.Name, waiting.Reason)
+				return true, errstr
+			}
+		}
+
+		// Container terminated without reporting results.
+		if cstatus.State.Terminated != nil {
+			// Ensure we give some time to process the results.
+			if time.Now().Sub(cstatus.State.Terminated.FinishedAt.Time) > terminatedContainerWindow {
+				errstr := fmt.Sprintf("Container %v is terminated state (exit code %v) due to reason: %v: %v",
+					cstatus.Name,
+					cstatus.State.Terminated.ExitCode,
+					cstatus.State.Terminated.Reason,
+					cstatus.State.Terminated.Message,
+				)
 				return true, errstr
 			}
 		}

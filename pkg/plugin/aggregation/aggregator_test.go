@@ -18,6 +18,7 @@ package aggregation
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -327,7 +328,7 @@ func TestAggregation_errors(t *testing.T) {
 
 	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
 		resultsCh := make(chan *plugin.Result)
-		go agg.IngestResults(resultsCh)
+		go agg.IngestResults(context.TODO(), resultsCh)
 
 		// Send an error
 		resultsCh <- pluginutils.MakeErrorResult("e2e", map[string]interface{}{"error": "foo"}, "")

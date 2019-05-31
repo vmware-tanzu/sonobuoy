@@ -17,16 +17,19 @@ limitations under the License.
 package job
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
+	sonotime "github.com/heptio/sonobuoy/pkg/time/timetest"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -240,6 +243,101 @@ func TestMonitorOnce(t *testing.T) {
 				t.Errorf("Expected error %v but got nil", tc.expectErrResultMsg)
 			case errResult != nil && tc.expectErrResultMsg != errResult.Error:
 				t.Errorf("Expected error %q but got %q", tc.expectErrResultMsg, errResult.Error)
+			}
+		})
+	}
+}
+
+func TestMonitor(t *testing.T) {
+	// For these tests ensure sleeping is fast; choosing non-zero we know which
+	// branch of select may be chosen first.
+	sonotime.UseShortAfter()
+	defer sonotime.ResetAfter()
+
+	failingPod := corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
+		Status: corev1.PodStatus{
+			Conditions: []corev1.PodCondition{
+				{Reason: "Unschedulable"},
+			},
+		},
+	}
+	healthyPod := corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
+	}
+
+	testCases := []struct {
+		desc       string
+		expectDone bool
+
+		// Ensure we are getting the err result we expect; lots of ways to get errors
+		// that may not be clear.
+		expectErrResultMsg string
+
+		podList               *corev1.PodList
+		expectNumResults      int
+		expectStillMonitoring bool
+		cancelContext         bool
+	}{
+		{
+			desc:                  "Errored pod should cause error on channel and exit",
+			expectNumResults:      1,
+			expectStillMonitoring: false,
+			podList: &corev1.PodList{
+				Items: []corev1.Pod{failingPod},
+			},
+		}, {
+			desc:                  "Continues to poll with healthy pod",
+			expectNumResults:      0,
+			expectStillMonitoring: true,
+			podList: &corev1.PodList{
+				Items: []corev1.Pod{healthyPod},
+			},
+		}, {
+			desc:                  "Can be cancelled via context",
+			cancelContext:         true,
+			expectNumResults:      0,
+			expectStillMonitoring: false,
+			podList: &corev1.PodList{
+				Items: []corev1.Pod{healthyPod},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			fclient := fake.NewSimpleClientset()
+			fclient.PrependReactor("list", "pods", func(action k8stesting.Action) (handled bool, ret kuberuntime.Object, err error) {
+				return true, tc.podList, nil
+			})
+
+			p := &Plugin{}
+			ctx, cancel := context.WithCancel(context.Background())
+			ch := make(chan (*plugin.Result), 1)
+
+			wasStillMonitoring := false
+			if tc.cancelContext {
+				cancel()
+			} else {
+				// Max timeout for test to unblock.
+				go func() {
+					time.Sleep(2 * time.Second)
+					wasStillMonitoring = true
+					cancel()
+				}()
+			}
+			go p.Monitor(ctx, fclient, nil, ch)
+
+			count := 0
+			for range ch {
+				count++
+			}
+
+			if count != tc.expectNumResults {
+				t.Errorf("Expected %v results but found %v", tc.expectNumResults, count)
+			}
+			if wasStillMonitoring != tc.expectStillMonitoring {
+				t.Errorf("Expected wasStillMonitoring %v but found %v", tc.expectStillMonitoring, wasStillMonitoring)
 			}
 		})
 	}

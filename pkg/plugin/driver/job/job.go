@@ -18,6 +18,7 @@ package job
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"fmt"
 	"time"
@@ -33,6 +34,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	sonotime "github.com/heptio/sonobuoy/pkg/time"
 )
 
 // Plugin is a plugin driver that dispatches a single pod to the given
@@ -120,13 +122,20 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 }
 
 // Monitor adheres to plugin.Interface by ensuring the pod created by the job
-// doesn't have any urecoverable failures.
-func (p *Plugin) Monitor(kubeclient kubernetes.Interface, _ []v1.Node, resultsCh chan<- *plugin.Result) {
+// doesn't have any unrecoverable failures. It closes the results channel when
+// it is done.
+func (p *Plugin) Monitor(ctx context.Context, kubeclient kubernetes.Interface, _ []v1.Node, resultsCh chan<- *plugin.Result) {
+	defer close(resultsCh)
 	for {
 		// Sleep between each poll, which should give the Job
-		// enough time to create a Pod
+		// enough time to create a Pod.
 		// TODO: maybe use a watcher instead of polling.
-		time.Sleep(10 * time.Second)
+		select {
+		case <-ctx.Done():
+			return
+		case <-sonotime.After(10 * time.Second):
+		}
+
 		done, errResult := p.monitorOnce(kubeclient, nil)
 		if errResult != nil {
 			resultsCh <- errResult

@@ -18,6 +18,7 @@ package daemonset
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"fmt"
 	"time"
@@ -33,6 +34,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	sonotime "github.com/heptio/sonobuoy/pkg/time"
 	"github.com/pkg/errors"
 )
 
@@ -170,7 +172,7 @@ func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*appsv1.DaemonS
 
 // Monitor adheres to plugin.Interface by ensuring the DaemonSet is correctly
 // configured and that each pod is running normally.
-func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.Node, resultsCh chan<- *plugin.Result) {
+func (p *Plugin) Monitor(ctx context.Context, kubeclient kubernetes.Interface, availableNodes []v1.Node, resultsCh chan<- *plugin.Result) {
 	podsReported := make(map[string]bool)
 	podsFound := make(map[string]bool, len(availableNodes))
 	for _, node := range availableNodes {
@@ -181,7 +183,12 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 	for {
 		// Sleep between each poll, which should give the DaemonSet
 		// enough time to create pods
-		time.Sleep(10 * time.Second)
+		select {
+		case <-ctx.Done():
+			return
+		case <-sonotime.After(10 * time.Second):
+		}
+
 		done, errResults := p.monitorOnce(kubeclient, availableNodes, podsFound, podsReported)
 		for _, v := range errResults {
 			resultsCh <- v
