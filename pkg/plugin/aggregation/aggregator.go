@@ -53,9 +53,31 @@ type Aggregator struct {
 	// resultEvents is a channel that is written to when results are seen
 	// by the server, so we can block until we're done.
 	resultEvents chan *plugin.Result
+
 	// resultsMutex prevents race conditions if two identical results
 	// come in at the same time.
 	resultsMutex sync.Mutex
+}
+
+// httpError is an internal error type which allows us to unify result processing
+// across http and non-http flows.
+type httpError struct {
+	err  error
+	code int
+}
+
+// HttpCode returns the http code associated with the error or an InternalServerError
+// if none is set.
+func (e *httpError) HttpCode() int {
+	if e.code != 0 {
+		return e.code
+	}
+	return http.StatusInternalServerError
+}
+
+// Error describes the error.
+func (e *httpError) Error() string {
+	return e.err.Error()
 }
 
 // NewAggregator constructs a new Aggregator object to write the given result
@@ -110,12 +132,11 @@ func (a *Aggregator) isResultDuplicate(result *plugin.Result) bool {
 	return ok
 }
 
-// HandleHTTPResult is called every time the HTTP server gets a well-formed
-// request with results. This method is responsible for returning with things
-// like a 409 conflict if a node has checked in twice (or a 403 forbidden if a
-// node isn't expected), as well as actually calling handleResult to write the
-// results to OutputDir.
-func (a *Aggregator) HandleHTTPResult(result *plugin.Result, w http.ResponseWriter) {
+// processResult is the centralized location for result processing. It is thread-safe
+// and checks for whether or not the result should be excluded due to be either
+// unexpected or a duplicate. Errors returned via this method will be of the type
+// *httpError so that HTTP servers can respond appropriately to clients.
+func (a *Aggregator) processResult(result *plugin.Result) error {
 	a.resultsMutex.Lock()
 	defer a.resultsMutex.Unlock()
 
@@ -123,34 +144,54 @@ func (a *Aggregator) HandleHTTPResult(result *plugin.Result, w http.ResponseWrit
 
 	// Make sure we were expecting this result
 	if !a.isResultExpected(result) {
-		http.Error(
-			w,
-			fmt.Sprintf("Result %v unexpected", resultID),
-			http.StatusForbidden,
-		)
-		return
+		return &httpError{
+			err:  fmt.Errorf("result %v unexpected", resultID),
+			code: http.StatusForbidden,
+		}
 	}
 
 	// Don't allow duplicates
 	if a.isResultDuplicate(result) {
-		logrus.Warningf("Got a duplicate result %v", resultID)
-		http.Error(
-			w,
-			fmt.Sprintf("Result %v already received", resultID),
-			http.StatusConflict,
-		)
-		return
+		return &httpError{
+			err:  fmt.Errorf("result %v already received", resultID),
+			code: http.StatusConflict,
+		}
 	}
 
 	if err := a.handleResult(result); err != nil {
-		errMsg := fmt.Sprintf("Error handling result %v: %v", resultID, err)
-		logrus.Info(errMsg)
-		http.Error(
-			w,
-			errMsg,
-			http.StatusInternalServerError,
-		)
-		return
+		return &httpError{
+			err:  fmt.Errorf("error handling result %v: %v", resultID, err),
+			code: http.StatusInternalServerError,
+		}
+	}
+
+	return nil
+}
+
+// HandleHTTPResult is called every time the HTTP server gets a well-formed
+// request with results. This method is responsible for returning with things
+// like a 409 conflict if a node has checked in twice (or a 403 forbidden if a
+// node isn't expected), as well as actually calling handleResult to write the
+// results to OutputDir.
+func (a *Aggregator) HandleHTTPResult(result *plugin.Result, w http.ResponseWriter) {
+	err := a.processResult(result)
+	if err != nil {
+		switch t := err.(type) {
+		case *httpError:
+			logrus.Errorf("Result processing error (%v): %v", t.HttpCode(), t.Error())
+			http.Error(
+				w,
+				t.Error(),
+				t.HttpCode(),
+			)
+		default:
+			logrus.Errorf("Result processing error (%v): %v", http.StatusInternalServerError, t.Error())
+			http.Error(
+				w,
+				err.Error(),
+				http.StatusInternalServerError,
+			)
+		}
 	}
 }
 
@@ -166,26 +207,16 @@ func (a *Aggregator) IngestResults(resultsCh <-chan *plugin.Result) {
 		if !more {
 			break
 		}
-		// Don't consume results we're not expecting, unless they're
-		// errors (see below.)
-		if !a.isResultExpected(result) {
-			logrus.Warningf("Result unexpected: %v", result)
-			continue
-		}
 
-		func() {
-			a.resultsMutex.Lock()
-			defer a.resultsMutex.Unlock()
-
-			// Don't consume results we've already seen
-			if a.isResultDuplicate(result) {
-				logrus.Warningf("Duplicate result: %v", result)
-				return
+		err := a.processResult(result)
+		if err != nil {
+			switch t := err.(type) {
+			case *httpError:
+				logrus.Errorf("Result processing error (%v): %v", t.HttpCode(), t.Error())
+			default:
+				logrus.Errorf("Result processing error (%v): %v", http.StatusInternalServerError, t.Error())
 			}
-
-			a.handleResult(result)
-		}()
-
+		}
 	}
 }
 
