@@ -27,6 +27,7 @@ import (
 	"os"
 	"path"
 	"sync"
+	"time"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/tarball"
@@ -35,7 +36,8 @@ import (
 )
 
 const (
-	gzipMimeType = "application/gzip"
+	gzipMimeType       = "application/gzip"
+	defaultRetryWindow = 15 * time.Second
 )
 
 // Aggregator is responsible for taking results from an HTTP server (configured
@@ -45,10 +47,19 @@ const (
 type Aggregator struct {
 	// OutputDir is the directory to write the node results
 	OutputDir string
+
 	// Results stores a map of check-in results the server has seen
 	Results map[string]*plugin.Result
+
 	// ExpectedResults stores a map of results the server should expect
 	ExpectedResults map[string]*plugin.ExpectedResult
+
+	// FailedResults is a map to track which plugin results were received
+	// but returned errors during processing. This enables us to retry results
+	// that failed to process if the client tries, as opposed to rejecting
+	// them as duplicates. Important if connection resets or network issues
+	// are common.
+	FailedResults map[string]time.Time
 
 	// resultEvents is a channel that is written to when results are seen
 	// by the server, so we can block until we're done.
@@ -57,6 +68,11 @@ type Aggregator struct {
 	// resultsMutex prevents race conditions if two identical results
 	// come in at the same time.
 	resultsMutex sync.Mutex
+
+	// retryWindow is the duration which the server will continue to block during
+	// Wait() after a FailedResult has been reported, even if all expected results
+	// are accounted for. This prevents racing the client retries that may occur.
+	retryWindow time.Duration
 }
 
 // httpError is an internal error type which allows us to unify result processing
@@ -87,7 +103,9 @@ func NewAggregator(outputDir string, expected []plugin.ExpectedResult) *Aggregat
 		OutputDir:       outputDir,
 		Results:         make(map[string]*plugin.Result, len(expected)),
 		ExpectedResults: make(map[string]*plugin.ExpectedResult, len(expected)),
+		FailedResults:   make(map[string]time.Time, len(expected)),
 		resultEvents:    make(chan *plugin.Result, len(expected)),
+		retryWindow:     defaultRetryWindow,
 	}
 
 	for i, expResult := range expected {
@@ -106,6 +124,22 @@ func (a *Aggregator) Wait(stop chan bool) {
 			return
 		}
 	}
+
+	// Give all clients a chance to retry failed requests.
+	for _, failedTime := range a.FailedResults {
+		remainingTime := retryWindowRemaining(failedTime, time.Now(), a.retryWindow)
+
+		// A sleep for 0 or < 0 returns immediately.
+		time.Sleep(remainingTime)
+	}
+}
+
+// retryWindowRemaining wraps the awkward looking calculation to see the time beteween
+// two events and subtract out a given duration. If the returned duration is 0 or negative
+// it means that the time between the first and second events is equal or greater to the
+// window's duration.
+func retryWindowRemaining(first, second time.Time, window time.Duration) time.Duration {
+	return first.Add(window).Sub(second)
 }
 
 // isComplete returns true if sure all expected results have checked in.
@@ -150,20 +184,34 @@ func (a *Aggregator) processResult(result *plugin.Result) error {
 		}
 	}
 
-	// Don't allow duplicates
-	if a.isResultDuplicate(result) {
+	// Don't allow duplicates unless it failed to process fully.
+	isDup := a.isResultDuplicate(result)
+	_, hadErrs := a.FailedResults[resultID]
+	if isDup && !hadErrs {
 		return &httpError{
 			err:  fmt.Errorf("result %v already received", resultID),
 			code: http.StatusConflict,
 		}
 	}
 
+	// Send an event that we got this result even if we get an error, so
+	// that Wait() doesn't hang forever on problems.
+	defer func() {
+		a.Results[result.ExpectedResultID()] = result
+		a.resultEvents <- result
+	}()
+
 	if err := a.handleResult(result); err != nil {
+		// Drop a breadcrumb so that we reconsider new results from this result.
+		a.FailedResults[result.ExpectedResultID()] = time.Now()
 		return &httpError{
 			err:  fmt.Errorf("error handling result %v: %v", resultID, err),
 			code: http.StatusInternalServerError,
 		}
 	}
+
+	// Upon success, we no longer want to keep processing duplicate results.
+	delete(a.FailedResults, result.ExpectedResultID())
 
 	return nil
 }
@@ -223,13 +271,6 @@ func (a *Aggregator) IngestResults(resultsCh <-chan *plugin.Result) {
 // handleResult takes a given plugin Result and writes it out to the
 // filesystem, signaling to the resultEvents channel when complete.
 func (a *Aggregator) handleResult(result *plugin.Result) error {
-	// Send an event that we got this result even if we get an error, so
-	// that Wait() doesn't hang forever on problems.
-	defer func() {
-		a.Results[result.ExpectedResultID()] = result
-		a.resultEvents <- result
-	}()
-
 	if result.MimeType == gzipMimeType {
 		return a.handleArchiveResult(result)
 	}

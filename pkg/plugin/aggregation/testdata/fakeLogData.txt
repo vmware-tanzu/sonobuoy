@@ -1,0 +1,1610 @@
+/usr/local/bin/ginkgo --focus=\[Conformance\] --skip=Alpha|\[(Disruptive|Feature:[^\]]+|Flaky)\] --noColor=true --nodes=1 /usr/local/bin/e2e.test -- --disable-log-dump --repo-root=/kubernetes --provider="local" --report-dir="/tmp/results" --kubeconfig=""
+I0522 19:08:16.343730      17 test_context.go:358] Using a temporary kubeconfig file from in-cluster config : /tmp/kubeconfig-090171009
+I0522 19:08:16.344056      17 e2e.go:224] Starting e2e run "f35bfa7d-7cc4-11e9-85fe-4e19dc9bc03e" on Ginkgo node 1
+Running Suite: Kubernetes e2e suite
+===================================
+Random Seed: 1558552093 - Will randomize all specs
+Will run 201 of 1946 specs
+
+May 22 19:08:16.675: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+May 22 19:08:16.683: INFO: Waiting up to 30m0s for all (but 0) nodes to be schedulable
+May 22 19:08:16.719: INFO: Waiting up to 10m0s for all pods (need at least 0) in namespace 'kube-system' to be running and ready
+May 22 19:08:16.790: INFO: 37 / 37 pods in namespace 'kube-system' are running and ready (0 seconds elapsed)
+May 22 19:08:16.790: INFO: expected 3 pod replicas in namespace 'kube-system', 3 are Running and Ready.
+May 22 19:08:16.790: INFO: Waiting up to 5m0s for all daemonsets in namespace 'kube-system' to start
+May 22 19:08:16.805: INFO: 11 / 11 pods ready in namespace 'kube-system' in daemonset 'calico-node' (0 seconds elapsed)
+May 22 19:08:16.805: INFO: 11 / 11 pods ready in namespace 'kube-system' in daemonset 'kube-proxy' (0 seconds elapsed)
+May 22 19:08:16.805: INFO: e2e test version: v1.13.0
+May 22 19:08:16.807: INFO: kube-apiserver version: v1.13.5
+SSSSSSSSSSSSSSSS
+------------------------------
+[sig-apps] Daemon set [Serial] 
+  should run and stop simple daemon [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-apps] Daemon set [Serial]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:08:16.808: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename daemonsets
+May 22 19:08:16.971: INFO: No PodSecurityPolicies found; assuming PodSecurityPolicy is disabled.
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [sig-apps] Daemon set [Serial]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/apps/daemon_set.go:102
+[It] should run and stop simple daemon [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating simple DaemonSet "daemon-set"
+STEP: Check that daemon pods launch on every node of the cluster.
+May 22 19:08:17.039: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:17.040: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:17.040: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:17.044: INFO: Number of nodes with available pods: 0
+May 22 19:08:17.044: INFO: Node tpacospakd001 is running more than one daemon pod
+May 22 19:08:18.054: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:18.054: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:18.054: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:18.061: INFO: Number of nodes with available pods: 0
+May 22 19:08:18.061: INFO: Node tpacospakd001 is running more than one daemon pod
+May 22 19:08:19.057: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:19.057: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:19.057: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:19.062: INFO: Number of nodes with available pods: 0
+May 22 19:08:19.062: INFO: Node tpacospakd001 is running more than one daemon pod
+May 22 19:08:20.053: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:20.053: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:20.053: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:20.058: INFO: Number of nodes with available pods: 7
+May 22 19:08:20.058: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:21.054: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:21.055: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:21.055: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:21.060: INFO: Number of nodes with available pods: 8
+May 22 19:08:21.060: INFO: Number of running nodes: 8, number of available pods: 8
+STEP: Stop a daemon pod, check that the daemon pod is revived.
+May 22 19:08:21.082: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:21.082: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:21.082: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:21.088: INFO: Number of nodes with available pods: 7
+May 22 19:08:21.088: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:22.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:22.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:22.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:22.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:22.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:23.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:23.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:23.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:23.104: INFO: Number of nodes with available pods: 7
+May 22 19:08:23.104: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:24.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:24.099: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:24.099: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:24.104: INFO: Number of nodes with available pods: 7
+May 22 19:08:24.104: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:25.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:25.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:25.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:25.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:25.104: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:26.096: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:26.096: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:26.096: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:26.101: INFO: Number of nodes with available pods: 7
+May 22 19:08:26.101: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:27.103: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:27.103: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:27.103: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:27.108: INFO: Number of nodes with available pods: 7
+May 22 19:08:27.109: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:28.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:28.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:28.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:28.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:28.104: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:29.096: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:29.096: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:29.096: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:29.101: INFO: Number of nodes with available pods: 7
+May 22 19:08:29.101: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:30.096: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:30.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:30.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:30.102: INFO: Number of nodes with available pods: 7
+May 22 19:08:30.102: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:31.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:31.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:31.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:31.102: INFO: Number of nodes with available pods: 7
+May 22 19:08:31.102: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:32.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:32.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:32.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:32.106: INFO: Number of nodes with available pods: 7
+May 22 19:08:32.107: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:33.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:33.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:33.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:33.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:33.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:34.096: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:34.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:34.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:34.101: INFO: Number of nodes with available pods: 7
+May 22 19:08:34.101: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:35.099: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:35.099: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:35.099: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:35.105: INFO: Number of nodes with available pods: 7
+May 22 19:08:35.105: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:36.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:36.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:36.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:36.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:36.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:37.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:37.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:37.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:37.107: INFO: Number of nodes with available pods: 7
+May 22 19:08:37.107: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:38.096: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:38.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:38.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:38.101: INFO: Number of nodes with available pods: 7
+May 22 19:08:38.101: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:39.096: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:39.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:39.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:39.102: INFO: Number of nodes with available pods: 7
+May 22 19:08:39.102: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:40.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:40.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:40.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:40.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:40.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:41.095: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:41.095: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:41.095: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:41.099: INFO: Number of nodes with available pods: 7
+May 22 19:08:41.099: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:42.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:42.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:42.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:42.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:42.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:43.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:43.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:43.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:43.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:43.104: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:44.096: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:44.096: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:44.096: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:44.102: INFO: Number of nodes with available pods: 7
+May 22 19:08:44.102: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:45.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:45.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:45.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:45.102: INFO: Number of nodes with available pods: 7
+May 22 19:08:45.102: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:46.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:46.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:46.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:46.102: INFO: Number of nodes with available pods: 7
+May 22 19:08:46.102: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:47.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:47.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:47.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:47.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:47.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:48.105: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:48.105: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:48.105: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:48.111: INFO: Number of nodes with available pods: 7
+May 22 19:08:48.111: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:49.100: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:49.100: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:49.100: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:49.104: INFO: Number of nodes with available pods: 7
+May 22 19:08:49.104: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:50.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:50.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:50.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:50.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:50.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:51.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:51.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:51.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:51.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:51.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:52.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:52.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:52.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:52.104: INFO: Number of nodes with available pods: 7
+May 22 19:08:52.104: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:53.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:53.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:53.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:53.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:53.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:54.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:54.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:54.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:54.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:54.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:55.103: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:55.104: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:55.104: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:55.110: INFO: Number of nodes with available pods: 7
+May 22 19:08:55.110: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:56.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:56.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:56.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:56.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:56.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:57.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:57.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:57.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:57.103: INFO: Number of nodes with available pods: 7
+May 22 19:08:57.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:58.096: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:58.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:58.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:58.107: INFO: Number of nodes with available pods: 7
+May 22 19:08:58.107: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:08:59.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:59.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:59.099: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:08:59.104: INFO: Number of nodes with available pods: 7
+May 22 19:08:59.104: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:09:00.097: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:09:00.097: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:09:00.097: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:09:00.103: INFO: Number of nodes with available pods: 7
+May 22 19:09:00.103: INFO: Node tpacospakd008 is running more than one daemon pod
+May 22 19:09:01.098: INFO: DaemonSet pods can't tolerate node tpacospakd009 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:09:01.098: INFO: DaemonSet pods can't tolerate node tpacospakd010 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:09:01.098: INFO: DaemonSet pods can't tolerate node tpacospakd011 with taints [{Key:node-role.kubernetes.io/master Value: Effect:NoSchedule TimeAdded:<nil>}], skip checking this node
+May 22 19:09:01.104: INFO: Number of nodes with available pods: 8
+May 22 19:09:01.104: INFO: Number of running nodes: 8, number of available pods: 8
+[AfterEach] [sig-apps] Daemon set [Serial]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/apps/daemon_set.go:68
+STEP: Deleting DaemonSet "daemon-set"
+STEP: deleting DaemonSet.extensions daemon-set in namespace e2e-tests-daemonsets-wfcwf, will wait for the garbage collector to delete the pods
+May 22 19:09:01.177: INFO: Deleting DaemonSet.extensions daemon-set took: 12.825345ms
+May 22 19:09:01.278: INFO: Terminating DaemonSet.extensions daemon-set pods took: 100.650309ms
+May 22 19:09:38.390: INFO: Number of nodes with available pods: 0
+May 22 19:09:38.390: INFO: Number of running nodes: 0, number of available pods: 0
+May 22 19:09:38.399: INFO: daemonset: {"kind":"DaemonSetList","apiVersion":"apps/v1","metadata":{"selfLink":"/apis/apps/v1/namespaces/e2e-tests-daemonsets-wfcwf/daemonsets","resourceVersion":"1967994"},"items":null}
+
+May 22 19:09:38.404: INFO: pods: {"kind":"PodList","apiVersion":"v1","metadata":{"selfLink":"/api/v1/namespaces/e2e-tests-daemonsets-wfcwf/pods","resourceVersion":"1967994"},"items":null}
+
+[AfterEach] [sig-apps] Daemon set [Serial]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:09:38.443: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-daemonsets-wfcwf" for this suite.
+May 22 19:09:44.467: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:09:44.498: INFO: namespace: e2e-tests-daemonsets-wfcwf, resource: bindings, ignored listing per whitelist
+May 22 19:09:44.611: INFO: namespace e2e-tests-daemonsets-wfcwf deletion completed in 6.161556666s
+
+• [SLOW TEST:87.803 seconds]
+[sig-apps] Daemon set [Serial]
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/apps/framework.go:22
+  should run and stop simple daemon [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSS
+------------------------------
+[sig-storage] EmptyDir volumes 
+  should support (root,0644,default) [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] EmptyDir volumes
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:09:44.612: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename emptydir
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should support (root,0644,default) [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating a pod to test emptydir 0644 on node default medium
+May 22 19:09:44.743: INFO: Waiting up to 5m0s for pod "pod-28dab9af-7cc5-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-emptydir-7qkcj" to be "success or failure"
+May 22 19:09:44.747: INFO: Pod "pod-28dab9af-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 3.051183ms
+May 22 19:09:46.752: INFO: Pod "pod-28dab9af-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.008386365s
+May 22 19:09:48.768: INFO: Pod "pod-28dab9af-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.024801646s
+STEP: Saw pod success
+May 22 19:09:48.768: INFO: Pod "pod-28dab9af-7cc5-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:09:48.772: INFO: Trying to get logs from node tpacospakd003 pod pod-28dab9af-7cc5-11e9-85fe-4e19dc9bc03e container test-container: <nil>
+STEP: delete the pod
+May 22 19:09:48.813: INFO: Waiting for pod pod-28dab9af-7cc5-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:09:48.817: INFO: Pod pod-28dab9af-7cc5-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] EmptyDir volumes
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:09:48.817: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-emptydir-7qkcj" for this suite.
+May 22 19:09:54.843: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:09:54.854: INFO: namespace: e2e-tests-emptydir-7qkcj, resource: bindings, ignored listing per whitelist
+May 22 19:09:54.976: INFO: namespace e2e-tests-emptydir-7qkcj deletion completed in 6.150857578s
+
+• [SLOW TEST:10.364 seconds]
+[sig-storage] EmptyDir volumes
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/empty_dir.go:40
+  should support (root,0644,default) [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSS
+------------------------------
+[sig-storage] EmptyDir volumes 
+  volume on tmpfs should have the correct mode [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] EmptyDir volumes
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:09:54.976: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename emptydir
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] volume on tmpfs should have the correct mode [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating a pod to test emptydir volume type on tmpfs
+May 22 19:09:55.100: INFO: Waiting up to 5m0s for pod "pod-2f06f432-7cc5-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-emptydir-zv2hr" to be "success or failure"
+May 22 19:09:55.105: INFO: Pod "pod-2f06f432-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 4.633425ms
+May 22 19:09:57.110: INFO: Pod "pod-2f06f432-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.009598398s
+May 22 19:09:59.120: INFO: Pod "pod-2f06f432-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.019974516s
+STEP: Saw pod success
+May 22 19:09:59.120: INFO: Pod "pod-2f06f432-7cc5-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:09:59.124: INFO: Trying to get logs from node tpacospakd001 pod pod-2f06f432-7cc5-11e9-85fe-4e19dc9bc03e container test-container: <nil>
+STEP: delete the pod
+May 22 19:09:59.150: INFO: Waiting for pod pod-2f06f432-7cc5-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:09:59.153: INFO: Pod pod-2f06f432-7cc5-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] EmptyDir volumes
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:09:59.153: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-emptydir-zv2hr" for this suite.
+May 22 19:10:05.181: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:10:05.308: INFO: namespace: e2e-tests-emptydir-zv2hr, resource: bindings, ignored listing per whitelist
+May 22 19:10:05.321: INFO: namespace e2e-tests-emptydir-zv2hr deletion completed in 6.15763196s
+
+• [SLOW TEST:10.345 seconds]
+[sig-storage] EmptyDir volumes
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/empty_dir.go:40
+  volume on tmpfs should have the correct mode [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSS
+------------------------------
+[sig-storage] Projected downwardAPI 
+  should provide podname only [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] Projected downwardAPI
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:10:05.322: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename projected
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [sig-storage] Projected downwardAPI
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/projected_downwardapi.go:39
+[It] should provide podname only [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating a pod to test downward API volume plugin
+May 22 19:10:05.431: INFO: Waiting up to 5m0s for pod "downwardapi-volume-352f34cc-7cc5-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-projected-r67dz" to be "success or failure"
+May 22 19:10:05.436: INFO: Pod "downwardapi-volume-352f34cc-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 4.06511ms
+May 22 19:10:07.443: INFO: Pod "downwardapi-volume-352f34cc-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.011304943s
+May 22 19:10:09.456: INFO: Pod "downwardapi-volume-352f34cc-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.024325533s
+STEP: Saw pod success
+May 22 19:10:09.456: INFO: Pod "downwardapi-volume-352f34cc-7cc5-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:10:09.460: INFO: Trying to get logs from node tpacospakd001 pod downwardapi-volume-352f34cc-7cc5-11e9-85fe-4e19dc9bc03e container client-container: <nil>
+STEP: delete the pod
+May 22 19:10:09.487: INFO: Waiting for pod downwardapi-volume-352f34cc-7cc5-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:10:09.491: INFO: Pod downwardapi-volume-352f34cc-7cc5-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] Projected downwardAPI
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:10:09.491: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-projected-r67dz" for this suite.
+May 22 19:10:15.513: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:10:15.604: INFO: namespace: e2e-tests-projected-r67dz, resource: bindings, ignored listing per whitelist
+May 22 19:10:15.658: INFO: namespace e2e-tests-projected-r67dz deletion completed in 6.159709716s
+
+• [SLOW TEST:10.337 seconds]
+[sig-storage] Projected downwardAPI
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/projected_downwardapi.go:33
+  should provide podname only [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSSSSSSSSSSSSSSS
+------------------------------
+[sig-apps] Daemon set [Serial] 
+  should rollback without unnecessary restarts [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-apps] Daemon set [Serial]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:10:15.659: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename daemonsets
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [sig-apps] Daemon set [Serial]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/apps/daemon_set.go:102
+[It] should rollback without unnecessary restarts [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+May 22 19:10:15.858: INFO: Requires at least 2 nodes (not -1)
+[AfterEach] [sig-apps] Daemon set [Serial]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/apps/daemon_set.go:68
+May 22 19:10:15.870: INFO: daemonset: {"kind":"DaemonSetList","apiVersion":"apps/v1","metadata":{"selfLink":"/apis/apps/v1/namespaces/e2e-tests-daemonsets-tmdmm/daemonsets","resourceVersion":"1968232"},"items":null}
+
+May 22 19:10:15.877: INFO: pods: {"kind":"PodList","apiVersion":"v1","metadata":{"selfLink":"/api/v1/namespaces/e2e-tests-daemonsets-tmdmm/pods","resourceVersion":"1968232"},"items":null}
+
+[AfterEach] [sig-apps] Daemon set [Serial]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:10:15.916: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-daemonsets-tmdmm" for this suite.
+May 22 19:10:21.937: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:10:22.046: INFO: namespace: e2e-tests-daemonsets-tmdmm, resource: bindings, ignored listing per whitelist
+May 22 19:10:22.055: INFO: namespace e2e-tests-daemonsets-tmdmm deletion completed in 6.132978897s
+
+S [SKIPPING] [6.397 seconds]
+[sig-apps] Daemon set [Serial]
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/apps/framework.go:22
+  should rollback without unnecessary restarts [Conformance] [It]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+
+  May 22 19:10:15.858: Requires at least 2 nodes (not -1)
+
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/util.go:292
+------------------------------
+SSSSSSS
+------------------------------
+[sig-node] ConfigMap 
+  should be consumable via the environment [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-node] ConfigMap
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:10:22.056: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename configmap
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should be consumable via the environment [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating configMap e2e-tests-configmap-zk7v9/configmap-test-3f290bd6-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: Creating a pod to test consume configMaps
+May 22 19:10:22.176: INFO: Waiting up to 5m0s for pod "pod-configmaps-3f2aa0f9-7cc5-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-configmap-zk7v9" to be "success or failure"
+May 22 19:10:22.181: INFO: Pod "pod-configmaps-3f2aa0f9-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 4.788629ms
+May 22 19:10:24.187: INFO: Pod "pod-configmaps-3f2aa0f9-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.010410719s
+May 22 19:10:26.193: INFO: Pod "pod-configmaps-3f2aa0f9-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.01639992s
+STEP: Saw pod success
+May 22 19:10:26.193: INFO: Pod "pod-configmaps-3f2aa0f9-7cc5-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:10:26.197: INFO: Trying to get logs from node tpacospakd007 pod pod-configmaps-3f2aa0f9-7cc5-11e9-85fe-4e19dc9bc03e container env-test: <nil>
+STEP: delete the pod
+May 22 19:10:26.224: INFO: Waiting for pod pod-configmaps-3f2aa0f9-7cc5-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:10:26.228: INFO: Pod pod-configmaps-3f2aa0f9-7cc5-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-node] ConfigMap
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:10:26.228: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-configmap-zk7v9" for this suite.
+May 22 19:10:32.254: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:10:32.346: INFO: namespace: e2e-tests-configmap-zk7v9, resource: bindings, ignored listing per whitelist
+May 22 19:10:32.422: INFO: namespace e2e-tests-configmap-zk7v9 deletion completed in 6.187185556s
+
+• [SLOW TEST:10.366 seconds]
+[sig-node] ConfigMap
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/configmap.go:31
+  should be consumable via the environment [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSS
+------------------------------
+[sig-storage] Projected downwardAPI 
+  should provide container's cpu request [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] Projected downwardAPI
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:10:32.423: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename projected
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [sig-storage] Projected downwardAPI
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/projected_downwardapi.go:39
+[It] should provide container's cpu request [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating a pod to test downward API volume plugin
+May 22 19:10:32.552: INFO: Waiting up to 5m0s for pod "downwardapi-volume-455966c4-7cc5-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-projected-n88l6" to be "success or failure"
+May 22 19:10:32.556: INFO: Pod "downwardapi-volume-455966c4-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 4.026308ms
+May 22 19:10:34.562: INFO: Pod "downwardapi-volume-455966c4-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.010131412s
+May 22 19:10:36.568: INFO: Pod "downwardapi-volume-455966c4-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.0156831s
+STEP: Saw pod success
+May 22 19:10:36.568: INFO: Pod "downwardapi-volume-455966c4-7cc5-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:10:36.572: INFO: Trying to get logs from node tpacospakd006 pod downwardapi-volume-455966c4-7cc5-11e9-85fe-4e19dc9bc03e container client-container: <nil>
+STEP: delete the pod
+May 22 19:10:36.598: INFO: Waiting for pod downwardapi-volume-455966c4-7cc5-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:10:36.601: INFO: Pod downwardapi-volume-455966c4-7cc5-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] Projected downwardAPI
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:10:36.601: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-projected-n88l6" for this suite.
+May 22 19:10:42.623: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:10:42.655: INFO: namespace: e2e-tests-projected-n88l6, resource: bindings, ignored listing per whitelist
+May 22 19:10:42.755: INFO: namespace e2e-tests-projected-n88l6 deletion completed in 6.147407085s
+
+• [SLOW TEST:10.332 seconds]
+[sig-storage] Projected downwardAPI
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/projected_downwardapi.go:33
+  should provide container's cpu request [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSSSSSSSSSS
+------------------------------
+[sig-storage] Projected configMap 
+  should be consumable from pods in volume with mappings and Item mode set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] Projected configMap
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:10:42.756: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename projected
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should be consumable from pods in volume with mappings and Item mode set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating configMap with name projected-configmap-test-volume-map-4b7f4ebc-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: Creating a pod to test consume configMaps
+May 22 19:10:42.872: INFO: Waiting up to 5m0s for pod "pod-projected-configmaps-4b80a02d-7cc5-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-projected-422dw" to be "success or failure"
+May 22 19:10:42.877: INFO: Pod "pod-projected-configmaps-4b80a02d-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 4.253815ms
+May 22 19:10:44.883: INFO: Pod "pod-projected-configmaps-4b80a02d-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.010351118s
+May 22 19:10:46.889: INFO: Pod "pod-projected-configmaps-4b80a02d-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.016293817s
+STEP: Saw pod success
+May 22 19:10:46.889: INFO: Pod "pod-projected-configmaps-4b80a02d-7cc5-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:10:46.893: INFO: Trying to get logs from node tpacospakd005 pod pod-projected-configmaps-4b80a02d-7cc5-11e9-85fe-4e19dc9bc03e container projected-configmap-volume-test: <nil>
+STEP: delete the pod
+May 22 19:10:46.922: INFO: Waiting for pod pod-projected-configmaps-4b80a02d-7cc5-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:10:46.926: INFO: Pod pod-projected-configmaps-4b80a02d-7cc5-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] Projected configMap
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:10:46.926: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-projected-422dw" for this suite.
+May 22 19:10:52.953: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:10:52.974: INFO: namespace: e2e-tests-projected-422dw, resource: bindings, ignored listing per whitelist
+May 22 19:10:53.078: INFO: namespace e2e-tests-projected-422dw deletion completed in 6.143002866s
+
+• [SLOW TEST:10.323 seconds]
+[sig-storage] Projected configMap
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/projected_configmap.go:34
+  should be consumable from pods in volume with mappings and Item mode set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSSSSSSSSSSSSSSSS
+------------------------------
+[k8s.io] InitContainer [NodeConformance] 
+  should not start app containers if init containers fail on a RestartAlways pod [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [k8s.io] InitContainer [NodeConformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:10:53.079: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename init-container
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [k8s.io] InitContainer [NodeConformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/init_container.go:43
+[It] should not start app containers if init containers fail on a RestartAlways pod [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: creating the pod
+May 22 19:10:53.174: INFO: PodSpec: initContainers in spec.initContainers
+May 22 19:11:45.608: INFO: init container has failed twice: &v1.Pod{TypeMeta:v1.TypeMeta{Kind:"", APIVersion:""}, ObjectMeta:v1.ObjectMeta{Name:"pod-init-51a5ec54-7cc5-11e9-85fe-4e19dc9bc03e", GenerateName:"", Namespace:"e2e-tests-init-container-87k2v", SelfLink:"/api/v1/namespaces/e2e-tests-init-container-87k2v/pods/pod-init-51a5ec54-7cc5-11e9-85fe-4e19dc9bc03e", UID:"51a735a1-7cc5-11e9-9fce-00505680c9f6", ResourceVersion:"1968575", Generation:0, CreationTimestamp:v1.Time{Time:time.Time{wall:0x0, ext:63694149053, loc:(*time.Location)(0x7b33b80)}}, DeletionTimestamp:(*v1.Time)(nil), DeletionGracePeriodSeconds:(*int64)(nil), Labels:map[string]string{"name":"foo", "time":"174085707"}, Annotations:map[string]string{"cni.projectcalico.org/podIP":"10.244.9.59/32"}, OwnerReferences:[]v1.OwnerReference(nil), Initializers:(*v1.Initializers)(nil), Finalizers:[]string(nil), ClusterName:""}, Spec:v1.PodSpec{Volumes:[]v1.Volume{v1.Volume{Name:"default-token-jl7cz", VolumeSource:v1.VolumeSource{HostPath:(*v1.HostPathVolumeSource)(nil), EmptyDir:(*v1.EmptyDirVolumeSource)(nil), GCEPersistentDisk:(*v1.GCEPersistentDiskVolumeSource)(nil), AWSElasticBlockStore:(*v1.AWSElasticBlockStoreVolumeSource)(nil), GitRepo:(*v1.GitRepoVolumeSource)(nil), Secret:(*v1.SecretVolumeSource)(0xc001aa4580), NFS:(*v1.NFSVolumeSource)(nil), ISCSI:(*v1.ISCSIVolumeSource)(nil), Glusterfs:(*v1.GlusterfsVolumeSource)(nil), PersistentVolumeClaim:(*v1.PersistentVolumeClaimVolumeSource)(nil), RBD:(*v1.RBDVolumeSource)(nil), FlexVolume:(*v1.FlexVolumeSource)(nil), Cinder:(*v1.CinderVolumeSource)(nil), CephFS:(*v1.CephFSVolumeSource)(nil), Flocker:(*v1.FlockerVolumeSource)(nil), DownwardAPI:(*v1.DownwardAPIVolumeSource)(nil), FC:(*v1.FCVolumeSource)(nil), AzureFile:(*v1.AzureFileVolumeSource)(nil), ConfigMap:(*v1.ConfigMapVolumeSource)(nil), VsphereVolume:(*v1.VsphereVirtualDiskVolumeSource)(nil), Quobyte:(*v1.QuobyteVolumeSource)(nil), AzureDisk:(*v1.AzureDiskVolumeSource)(nil), PhotonPersistentDisk:(*v1.PhotonPersistentDiskVolumeSource)(nil), Projected:(*v1.ProjectedVolumeSource)(nil), PortworxVolume:(*v1.PortworxVolumeSource)(nil), ScaleIO:(*v1.ScaleIOVolumeSource)(nil), StorageOS:(*v1.StorageOSVolumeSource)(nil)}}}, InitContainers:[]v1.Container{v1.Container{Name:"init1", Image:"docker.io/library/busybox:1.29", Command:[]string{"/bin/false"}, Args:[]string(nil), WorkingDir:"", Ports:[]v1.ContainerPort(nil), EnvFrom:[]v1.EnvFromSource(nil), Env:[]v1.EnvVar(nil), Resources:v1.ResourceRequirements{Limits:v1.ResourceList(nil), Requests:v1.ResourceList(nil)}, VolumeMounts:[]v1.VolumeMount{v1.VolumeMount{Name:"default-token-jl7cz", ReadOnly:true, MountPath:"/var/run/secrets/kubernetes.io/serviceaccount", SubPath:"", MountPropagation:(*v1.MountPropagationMode)(nil)}}, VolumeDevices:[]v1.VolumeDevice(nil), LivenessProbe:(*v1.Probe)(nil), ReadinessProbe:(*v1.Probe)(nil), Lifecycle:(*v1.Lifecycle)(nil), TerminationMessagePath:"/dev/termination-log", TerminationMessagePolicy:"File", ImagePullPolicy:"IfNotPresent", SecurityContext:(*v1.SecurityContext)(nil), Stdin:false, StdinOnce:false, TTY:false}, v1.Container{Name:"init2", Image:"docker.io/library/busybox:1.29", Command:[]string{"/bin/true"}, Args:[]string(nil), WorkingDir:"", Ports:[]v1.ContainerPort(nil), EnvFrom:[]v1.EnvFromSource(nil), Env:[]v1.EnvVar(nil), Resources:v1.ResourceRequirements{Limits:v1.ResourceList(nil), Requests:v1.ResourceList(nil)}, VolumeMounts:[]v1.VolumeMount{v1.VolumeMount{Name:"default-token-jl7cz", ReadOnly:true, MountPath:"/var/run/secrets/kubernetes.io/serviceaccount", SubPath:"", MountPropagation:(*v1.MountPropagationMode)(nil)}}, VolumeDevices:[]v1.VolumeDevice(nil), LivenessProbe:(*v1.Probe)(nil), ReadinessProbe:(*v1.Probe)(nil), Lifecycle:(*v1.Lifecycle)(nil), TerminationMessagePath:"/dev/termination-log", TerminationMessagePolicy:"File", ImagePullPolicy:"IfNotPresent", SecurityContext:(*v1.SecurityContext)(nil), Stdin:false, StdinOnce:false, TTY:false}}, Containers:[]v1.Container{v1.Container{Name:"run1", Image:"k8s.gcr.io/pause:3.1", Command:[]string(nil), Args:[]string(nil), WorkingDir:"", Ports:[]v1.ContainerPort(nil), EnvFrom:[]v1.EnvFromSource(nil), Env:[]v1.EnvVar(nil), Resources:v1.ResourceRequirements{Limits:v1.ResourceList{"cpu":resource.Quantity{i:resource.int64Amount{value:100, scale:-3}, d:resource.infDecAmount{Dec:(*inf.Dec)(nil)}, s:"100m", Format:"DecimalSI"}, "memory":resource.Quantity{i:resource.int64Amount{value:52428800, scale:0}, d:resource.infDecAmount{Dec:(*inf.Dec)(nil)}, s:"52428800", Format:"DecimalSI"}}, Requests:v1.ResourceList{"cpu":resource.Quantity{i:resource.int64Amount{value:100, scale:-3}, d:resource.infDecAmount{Dec:(*inf.Dec)(nil)}, s:"100m", Format:"DecimalSI"}, "memory":resource.Quantity{i:resource.int64Amount{value:52428800, scale:0}, d:resource.infDecAmount{Dec:(*inf.Dec)(nil)}, s:"52428800", Format:"DecimalSI"}}}, VolumeMounts:[]v1.VolumeMount{v1.VolumeMount{Name:"default-token-jl7cz", ReadOnly:true, MountPath:"/var/run/secrets/kubernetes.io/serviceaccount", SubPath:"", MountPropagation:(*v1.MountPropagationMode)(nil)}}, VolumeDevices:[]v1.VolumeDevice(nil), LivenessProbe:(*v1.Probe)(nil), ReadinessProbe:(*v1.Probe)(nil), Lifecycle:(*v1.Lifecycle)(nil), TerminationMessagePath:"/dev/termination-log", TerminationMessagePolicy:"File", ImagePullPolicy:"IfNotPresent", SecurityContext:(*v1.SecurityContext)(nil), Stdin:false, StdinOnce:false, TTY:false}}, RestartPolicy:"Always", TerminationGracePeriodSeconds:(*int64)(0xc001e812d8), ActiveDeadlineSeconds:(*int64)(nil), DNSPolicy:"ClusterFirst", NodeSelector:map[string]string(nil), ServiceAccountName:"default", DeprecatedServiceAccount:"default", AutomountServiceAccountToken:(*bool)(nil), NodeName:"tpacospakd004", HostNetwork:false, HostPID:false, HostIPC:false, ShareProcessNamespace:(*bool)(nil), SecurityContext:(*v1.PodSecurityContext)(0xc000ed3800), ImagePullSecrets:[]v1.LocalObjectReference(nil), Hostname:"", Subdomain:"", Affinity:(*v1.Affinity)(nil), SchedulerName:"default-scheduler", Tolerations:[]v1.Toleration{v1.Toleration{Key:"node.kubernetes.io/not-ready", Operator:"Exists", Value:"", Effect:"NoExecute", TolerationSeconds:(*int64)(0xc001e81370)}, v1.Toleration{Key:"node.kubernetes.io/unreachable", Operator:"Exists", Value:"", Effect:"NoExecute", TolerationSeconds:(*int64)(0xc001e81390)}}, HostAliases:[]v1.HostAlias(nil), PriorityClassName:"", Priority:(*int32)(0xc001e81398), DNSConfig:(*v1.PodDNSConfig)(nil), ReadinessGates:[]v1.PodReadinessGate(nil), RuntimeClassName:(*string)(nil), EnableServiceLinks:(*bool)(0xc001e8139c)}, Status:v1.PodStatus{Phase:"Pending", Conditions:[]v1.PodCondition{v1.PodCondition{Type:"Initialized", Status:"False", LastProbeTime:v1.Time{Time:time.Time{wall:0x0, ext:0, loc:(*time.Location)(nil)}}, LastTransitionTime:v1.Time{Time:time.Time{wall:0x0, ext:63694149053, loc:(*time.Location)(0x7b33b80)}}, Reason:"ContainersNotInitialized", Message:"containers with incomplete status: [init1 init2]"}, v1.PodCondition{Type:"Ready", Status:"False", LastProbeTime:v1.Time{Time:time.Time{wall:0x0, ext:0, loc:(*time.Location)(nil)}}, LastTransitionTime:v1.Time{Time:time.Time{wall:0x0, ext:63694149053, loc:(*time.Location)(0x7b33b80)}}, Reason:"ContainersNotReady", Message:"containers with unready status: [run1]"}, v1.PodCondition{Type:"ContainersReady", Status:"False", LastProbeTime:v1.Time{Time:time.Time{wall:0x0, ext:0, loc:(*time.Location)(nil)}}, LastTransitionTime:v1.Time{Time:time.Time{wall:0x0, ext:63694149053, loc:(*time.Location)(0x7b33b80)}}, Reason:"ContainersNotReady", Message:"containers with unready status: [run1]"}, v1.PodCondition{Type:"PodScheduled", Status:"True", LastProbeTime:v1.Time{Time:time.Time{wall:0x0, ext:0, loc:(*time.Location)(nil)}}, LastTransitionTime:v1.Time{Time:time.Time{wall:0x0, ext:63694149053, loc:(*time.Location)(0x7b33b80)}}, Reason:"", Message:""}}, Message:"", Reason:"", NominatedNodeName:"", HostIP:"10.39.5.209", PodIP:"10.244.9.59", StartTime:(*v1.Time)(0xc001b1ec40), InitContainerStatuses:[]v1.ContainerStatus{v1.ContainerStatus{Name:"init1", State:v1.ContainerState{Waiting:(*v1.ContainerStateWaiting)(nil), Running:(*v1.ContainerStateRunning)(nil), Terminated:(*v1.ContainerStateTerminated)(0xc000024f50)}, LastTerminationState:v1.ContainerState{Waiting:(*v1.ContainerStateWaiting)(nil), Running:(*v1.ContainerStateRunning)(nil), Terminated:(*v1.ContainerStateTerminated)(0xc000025030)}, Ready:false, RestartCount:3, Image:"busybox:1.29", ImageID:"docker-pullable://busybox@sha256:8ccbac733d19c0dd4d70b4f0c1e12245b5fa3ad24758a11035ee505c629c0796", ContainerID:"docker://98016143fedbf358576c848236b41991dca29ef8663677b47332d4e39552bdb5"}, v1.ContainerStatus{Name:"init2", State:v1.ContainerState{Waiting:(*v1.ContainerStateWaiting)(0xc001b1ec80), Running:(*v1.ContainerStateRunning)(nil), Terminated:(*v1.ContainerStateTerminated)(nil)}, LastTerminationState:v1.ContainerState{Waiting:(*v1.ContainerStateWaiting)(nil), Running:(*v1.ContainerStateRunning)(nil), Terminated:(*v1.ContainerStateTerminated)(nil)}, Ready:false, RestartCount:0, Image:"docker.io/library/busybox:1.29", ImageID:"", ContainerID:""}}, ContainerStatuses:[]v1.ContainerStatus{v1.ContainerStatus{Name:"run1", State:v1.ContainerState{Waiting:(*v1.ContainerStateWaiting)(0xc001b1ec60), Running:(*v1.ContainerStateRunning)(nil), Terminated:(*v1.ContainerStateTerminated)(nil)}, LastTerminationState:v1.ContainerState{Waiting:(*v1.ContainerStateWaiting)(nil), Running:(*v1.ContainerStateRunning)(nil), Terminated:(*v1.ContainerStateTerminated)(nil)}, Ready:false, RestartCount:0, Image:"k8s.gcr.io/pause:3.1", ImageID:"", ContainerID:""}}, QOSClass:"Guaranteed"}}
+[AfterEach] [k8s.io] InitContainer [NodeConformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:11:45.609: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-init-container-87k2v" for this suite.
+May 22 19:12:07.648: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:12:07.704: INFO: namespace: e2e-tests-init-container-87k2v, resource: bindings, ignored listing per whitelist
+May 22 19:12:07.773: INFO: namespace e2e-tests-init-container-87k2v deletion completed in 22.145411342s
+
+• [SLOW TEST:74.694 seconds]
+[k8s.io] InitContainer [NodeConformance]
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:694
+  should not start app containers if init containers fail on a RestartAlways pod [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSSSS
+------------------------------
+[sig-storage] EmptyDir volumes 
+  volume on default medium should have the correct mode [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] EmptyDir volumes
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:12:07.774: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename emptydir
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] volume on default medium should have the correct mode [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating a pod to test emptydir volume type on node default medium
+May 22 19:12:07.874: INFO: Waiting up to 5m0s for pod "pod-7e2ab2d4-7cc5-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-emptydir-79gjb" to be "success or failure"
+May 22 19:12:07.878: INFO: Pod "pod-7e2ab2d4-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 3.419992ms
+May 22 19:12:09.884: INFO: Pod "pod-7e2ab2d4-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.009291789s
+May 22 19:12:11.889: INFO: Pod "pod-7e2ab2d4-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.01495038s
+STEP: Saw pod success
+May 22 19:12:11.890: INFO: Pod "pod-7e2ab2d4-7cc5-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:12:11.893: INFO: Trying to get logs from node tpacospakd007 pod pod-7e2ab2d4-7cc5-11e9-85fe-4e19dc9bc03e container test-container: <nil>
+STEP: delete the pod
+May 22 19:12:11.914: INFO: Waiting for pod pod-7e2ab2d4-7cc5-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:12:11.918: INFO: Pod pod-7e2ab2d4-7cc5-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] EmptyDir volumes
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:12:11.918: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-emptydir-79gjb" for this suite.
+May 22 19:12:17.951: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:12:18.056: INFO: namespace: e2e-tests-emptydir-79gjb, resource: bindings, ignored listing per whitelist
+May 22 19:12:18.077: INFO: namespace e2e-tests-emptydir-79gjb deletion completed in 6.149947754s
+
+• [SLOW TEST:10.304 seconds]
+[sig-storage] EmptyDir volumes
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/empty_dir.go:40
+  volume on default medium should have the correct mode [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SS
+------------------------------
+[sig-storage] Projected combined 
+  should project all components that make up the projection API [Projection][NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] Projected combined
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:12:18.078: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename projected
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should project all components that make up the projection API [Projection][NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating configMap with name configmap-projected-all-test-volume-844fdd84-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: Creating secret with name secret-projected-all-test-volume-844fdd5d-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: Creating a pod to test Check all projections for projected volume plugin
+May 22 19:12:18.196: INFO: Waiting up to 5m0s for pod "projected-volume-844fdcca-7cc5-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-projected-2gdgq" to be "success or failure"
+May 22 19:12:18.200: INFO: Pod "projected-volume-844fdcca-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 3.885104ms
+May 22 19:12:20.206: INFO: Pod "projected-volume-844fdcca-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.009900305s
+May 22 19:12:22.212: INFO: Pod "projected-volume-844fdcca-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.015782703s
+STEP: Saw pod success
+May 22 19:12:22.212: INFO: Pod "projected-volume-844fdcca-7cc5-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:12:22.216: INFO: Trying to get logs from node tpacospakd003 pod projected-volume-844fdcca-7cc5-11e9-85fe-4e19dc9bc03e container projected-all-volume-test: <nil>
+STEP: delete the pod
+May 22 19:12:22.243: INFO: Waiting for pod projected-volume-844fdcca-7cc5-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:12:22.246: INFO: Pod projected-volume-844fdcca-7cc5-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] Projected combined
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:12:22.247: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-projected-2gdgq" for this suite.
+May 22 19:12:28.275: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:12:28.349: INFO: namespace: e2e-tests-projected-2gdgq, resource: bindings, ignored listing per whitelist
+May 22 19:12:28.402: INFO: namespace e2e-tests-projected-2gdgq deletion completed in 6.147093277s
+
+• [SLOW TEST:10.324 seconds]
+[sig-storage] Projected combined
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/projected_combined.go:31
+  should project all components that make up the projection API [Projection][NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSS
+------------------------------
+[sig-storage] ConfigMap 
+  should be consumable from pods in volume with defaultMode set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] ConfigMap
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:12:28.402: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename configmap
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should be consumable from pods in volume with defaultMode set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating configMap with name configmap-test-volume-8a7528c8-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: Creating a pod to test consume configMaps
+May 22 19:12:28.500: INFO: Waiting up to 5m0s for pod "pod-configmaps-8a765ffc-7cc5-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-configmap-zngcs" to be "success or failure"
+May 22 19:12:28.504: INFO: Pod "pod-configmaps-8a765ffc-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 3.7059ms
+May 22 19:12:30.510: INFO: Pod "pod-configmaps-8a765ffc-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.009489794s
+May 22 19:12:32.515: INFO: Pod "pod-configmaps-8a765ffc-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.015073084s
+STEP: Saw pod success
+May 22 19:12:32.515: INFO: Pod "pod-configmaps-8a765ffc-7cc5-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:12:32.519: INFO: Trying to get logs from node tpacospakd002 pod pod-configmaps-8a765ffc-7cc5-11e9-85fe-4e19dc9bc03e container configmap-volume-test: <nil>
+STEP: delete the pod
+May 22 19:12:32.547: INFO: Waiting for pod pod-configmaps-8a765ffc-7cc5-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:12:32.551: INFO: Pod pod-configmaps-8a765ffc-7cc5-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] ConfigMap
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:12:32.551: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-configmap-zngcs" for this suite.
+May 22 19:12:38.583: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:12:38.594: INFO: namespace: e2e-tests-configmap-zngcs, resource: bindings, ignored listing per whitelist
+May 22 19:12:38.713: INFO: namespace e2e-tests-configmap-zngcs deletion completed in 6.154275769s
+
+• [SLOW TEST:10.311 seconds]
+[sig-storage] ConfigMap
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/configmap_volume.go:33
+  should be consumable from pods in volume with defaultMode set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSS
+------------------------------
+[sig-network] DNS 
+  should provide DNS for the cluster  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-network] DNS
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:12:38.713: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename dns
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should provide DNS for the cluster  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Running these commands on wheezy: for i in `seq 1 600`; do check="$$(dig +notcp +noall +answer +search kubernetes.default A)" && test -n "$$check" && echo OK > /results/wheezy_udp@kubernetes.default;check="$$(dig +tcp +noall +answer +search kubernetes.default A)" && test -n "$$check" && echo OK > /results/wheezy_tcp@kubernetes.default;check="$$(dig +notcp +noall +answer +search kubernetes.default.svc A)" && test -n "$$check" && echo OK > /results/wheezy_udp@kubernetes.default.svc;check="$$(dig +tcp +noall +answer +search kubernetes.default.svc A)" && test -n "$$check" && echo OK > /results/wheezy_tcp@kubernetes.default.svc;check="$$(dig +notcp +noall +answer +search kubernetes.default.svc.cluster.local A)" && test -n "$$check" && echo OK > /results/wheezy_udp@kubernetes.default.svc.cluster.local;check="$$(dig +tcp +noall +answer +search kubernetes.default.svc.cluster.local A)" && test -n "$$check" && echo OK > /results/wheezy_tcp@kubernetes.default.svc.cluster.local;test -n "$$(getent hosts dns-querier-1.dns-test-service.e2e-tests-dns-ghbb6.svc.cluster.local)" && echo OK > /results/wheezy_hosts@dns-querier-1.dns-test-service.e2e-tests-dns-ghbb6.svc.cluster.local;test -n "$$(getent hosts dns-querier-1)" && echo OK > /results/wheezy_hosts@dns-querier-1;podARec=$$(hostname -i| awk -F. '{print $$1"-"$$2"-"$$3"-"$$4".e2e-tests-dns-ghbb6.pod.cluster.local"}');check="$$(dig +notcp +noall +answer +search $${podARec} A)" && test -n "$$check" && echo OK > /results/wheezy_udp@PodARecord;check="$$(dig +tcp +noall +answer +search $${podARec} A)" && test -n "$$check" && echo OK > /results/wheezy_tcp@PodARecord;sleep 1; done
+
+STEP: Running these commands on jessie: for i in `seq 1 600`; do check="$$(dig +notcp +noall +answer +search kubernetes.default A)" && test -n "$$check" && echo OK > /results/jessie_udp@kubernetes.default;check="$$(dig +tcp +noall +answer +search kubernetes.default A)" && test -n "$$check" && echo OK > /results/jessie_tcp@kubernetes.default;check="$$(dig +notcp +noall +answer +search kubernetes.default.svc A)" && test -n "$$check" && echo OK > /results/jessie_udp@kubernetes.default.svc;check="$$(dig +tcp +noall +answer +search kubernetes.default.svc A)" && test -n "$$check" && echo OK > /results/jessie_tcp@kubernetes.default.svc;check="$$(dig +notcp +noall +answer +search kubernetes.default.svc.cluster.local A)" && test -n "$$check" && echo OK > /results/jessie_udp@kubernetes.default.svc.cluster.local;check="$$(dig +tcp +noall +answer +search kubernetes.default.svc.cluster.local A)" && test -n "$$check" && echo OK > /results/jessie_tcp@kubernetes.default.svc.cluster.local;test -n "$$(getent hosts dns-querier-1.dns-test-service.e2e-tests-dns-ghbb6.svc.cluster.local)" && echo OK > /results/jessie_hosts@dns-querier-1.dns-test-service.e2e-tests-dns-ghbb6.svc.cluster.local;test -n "$$(getent hosts dns-querier-1)" && echo OK > /results/jessie_hosts@dns-querier-1;podARec=$$(hostname -i| awk -F. '{print $$1"-"$$2"-"$$3"-"$$4".e2e-tests-dns-ghbb6.pod.cluster.local"}');check="$$(dig +notcp +noall +answer +search $${podARec} A)" && test -n "$$check" && echo OK > /results/jessie_udp@PodARecord;check="$$(dig +tcp +noall +answer +search $${podARec} A)" && test -n "$$check" && echo OK > /results/jessie_tcp@PodARecord;sleep 1; done
+
+STEP: creating a pod to probe DNS
+STEP: submitting the pod to kubernetes
+STEP: retrieving the pod
+STEP: looking for the results for each expected name from probers
+May 22 19:13:40.940: INFO: Unable to read jessie_hosts@dns-querier-1 from pod e2e-tests-dns-ghbb6/dns-test-909d7cd3-7cc5-11e9-85fe-4e19dc9bc03e: the server could not find the requested resource (get pods dns-test-909d7cd3-7cc5-11e9-85fe-4e19dc9bc03e)
+May 22 19:13:40.945: INFO: Unable to read jessie_udp@PodARecord from pod e2e-tests-dns-ghbb6/dns-test-909d7cd3-7cc5-11e9-85fe-4e19dc9bc03e: the server could not find the requested resource (get pods dns-test-909d7cd3-7cc5-11e9-85fe-4e19dc9bc03e)
+May 22 19:13:40.950: INFO: Unable to read jessie_tcp@PodARecord from pod e2e-tests-dns-ghbb6/dns-test-909d7cd3-7cc5-11e9-85fe-4e19dc9bc03e: the server could not find the requested resource (get pods dns-test-909d7cd3-7cc5-11e9-85fe-4e19dc9bc03e)
+May 22 19:13:40.950: INFO: Lookups using e2e-tests-dns-ghbb6/dns-test-909d7cd3-7cc5-11e9-85fe-4e19dc9bc03e failed for: [jessie_hosts@dns-querier-1 jessie_udp@PodARecord jessie_tcp@PodARecord]
+
+May 22 19:13:46.054: INFO: DNS probes using e2e-tests-dns-ghbb6/dns-test-909d7cd3-7cc5-11e9-85fe-4e19dc9bc03e succeeded
+
+STEP: deleting the pod
+[AfterEach] [sig-network] DNS
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:13:46.069: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-dns-ghbb6" for this suite.
+May 22 19:13:52.100: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:13:52.135: INFO: namespace: e2e-tests-dns-ghbb6, resource: bindings, ignored listing per whitelist
+May 22 19:13:52.240: INFO: namespace e2e-tests-dns-ghbb6 deletion completed in 6.160693542s
+
+• [SLOW TEST:73.527 seconds]
+[sig-network] DNS
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/network/framework.go:22
+  should provide DNS for the cluster  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSSSSSSSSS
+------------------------------
+[sig-network] Networking Granular Checks: Pods 
+  should function for node-pod communication: http [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-network] Networking
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:13:52.241: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename pod-network-test
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should function for node-pod communication: http [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Performing setup for networking test in namespace e2e-tests-pod-network-test-sdbs6
+STEP: creating a selector
+STEP: Creating the service pods in kubernetes
+May 22 19:13:52.340: INFO: Waiting up to 10m0s for all (but 0) nodes to be schedulable
+STEP: Creating test pods
+May 22 19:14:20.546: INFO: ExecWithOptions {Command:[/bin/sh -c curl -g -q -s --max-time 15 --connect-timeout 1 http://10.244.8.48:8080/hostName | grep -v '^\s*$'] Namespace:e2e-tests-pod-network-test-sdbs6 PodName:host-test-container-pod ContainerName:hostexec Stdin:<nil> CaptureStdout:true CaptureStderr:true PreserveWhitespace:false}
+May 22 19:14:20.546: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+May 22 19:14:21.071: INFO: Found all expected endpoints: [netserver-0]
+May 22 19:14:21.076: INFO: ExecWithOptions {Command:[/bin/sh -c curl -g -q -s --max-time 15 --connect-timeout 1 http://10.244.6.52:8080/hostName | grep -v '^\s*$'] Namespace:e2e-tests-pod-network-test-sdbs6 PodName:host-test-container-pod ContainerName:hostexec Stdin:<nil> CaptureStdout:true CaptureStderr:true PreserveWhitespace:false}
+May 22 19:14:21.076: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+May 22 19:14:21.584: INFO: Found all expected endpoints: [netserver-1]
+May 22 19:14:21.588: INFO: ExecWithOptions {Command:[/bin/sh -c curl -g -q -s --max-time 15 --connect-timeout 1 http://10.244.9.60:8080/hostName | grep -v '^\s*$'] Namespace:e2e-tests-pod-network-test-sdbs6 PodName:host-test-container-pod ContainerName:hostexec Stdin:<nil> CaptureStdout:true CaptureStderr:true PreserveWhitespace:false}
+May 22 19:14:21.588: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+May 22 19:14:22.026: INFO: Found all expected endpoints: [netserver-2]
+May 22 19:14:22.031: INFO: ExecWithOptions {Command:[/bin/sh -c curl -g -q -s --max-time 15 --connect-timeout 1 http://10.244.3.60:8080/hostName | grep -v '^\s*$'] Namespace:e2e-tests-pod-network-test-sdbs6 PodName:host-test-container-pod ContainerName:hostexec Stdin:<nil> CaptureStdout:true CaptureStderr:true PreserveWhitespace:false}
+May 22 19:14:22.031: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+May 22 19:14:22.520: INFO: Found all expected endpoints: [netserver-3]
+May 22 19:14:22.525: INFO: ExecWithOptions {Command:[/bin/sh -c curl -g -q -s --max-time 15 --connect-timeout 1 http://10.244.4.58:8080/hostName | grep -v '^\s*$'] Namespace:e2e-tests-pod-network-test-sdbs6 PodName:host-test-container-pod ContainerName:hostexec Stdin:<nil> CaptureStdout:true CaptureStderr:true PreserveWhitespace:false}
+May 22 19:14:22.525: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+May 22 19:14:23.062: INFO: Found all expected endpoints: [netserver-4]
+May 22 19:14:23.068: INFO: ExecWithOptions {Command:[/bin/sh -c curl -g -q -s --max-time 15 --connect-timeout 1 http://10.244.10.52:8080/hostName | grep -v '^\s*$'] Namespace:e2e-tests-pod-network-test-sdbs6 PodName:host-test-container-pod ContainerName:hostexec Stdin:<nil> CaptureStdout:true CaptureStderr:true PreserveWhitespace:false}
+May 22 19:14:23.068: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+May 22 19:14:23.548: INFO: Found all expected endpoints: [netserver-5]
+May 22 19:14:23.553: INFO: ExecWithOptions {Command:[/bin/sh -c curl -g -q -s --max-time 15 --connect-timeout 1 http://10.244.7.67:8080/hostName | grep -v '^\s*$'] Namespace:e2e-tests-pod-network-test-sdbs6 PodName:host-test-container-pod ContainerName:hostexec Stdin:<nil> CaptureStdout:true CaptureStderr:true PreserveWhitespace:false}
+May 22 19:14:23.553: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+May 22 19:14:24.093: INFO: Found all expected endpoints: [netserver-6]
+May 22 19:14:24.098: INFO: ExecWithOptions {Command:[/bin/sh -c curl -g -q -s --max-time 15 --connect-timeout 1 http://10.244.5.81:8080/hostName | grep -v '^\s*$'] Namespace:e2e-tests-pod-network-test-sdbs6 PodName:host-test-container-pod ContainerName:hostexec Stdin:<nil> CaptureStdout:true CaptureStderr:true PreserveWhitespace:false}
+May 22 19:14:24.098: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+May 22 19:14:24.522: INFO: Found all expected endpoints: [netserver-7]
+[AfterEach] [sig-network] Networking
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:14:24.522: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-pod-network-test-sdbs6" for this suite.
+May 22 19:14:46.546: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:14:46.599: INFO: namespace: e2e-tests-pod-network-test-sdbs6, resource: bindings, ignored listing per whitelist
+May 22 19:14:46.687: INFO: namespace e2e-tests-pod-network-test-sdbs6 deletion completed in 22.154857697s
+
+• [SLOW TEST:54.446 seconds]
+[sig-network] Networking
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/networking.go:25
+  Granular Checks: Pods
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/networking.go:28
+    should function for node-pod communication: http [NodeConformance] [Conformance]
+    /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSSSSSSSSSSSSSSSSSSSS
+------------------------------
+[sig-storage] Projected configMap 
+  should be consumable from pods in volume with mappings as non-root [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] Projected configMap
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:14:46.688: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename projected
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should be consumable from pods in volume with mappings as non-root [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating configMap with name projected-configmap-test-volume-map-dce3e8e8-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: Creating a pod to test consume configMaps
+May 22 19:14:46.799: INFO: Waiting up to 5m0s for pod "pod-projected-configmaps-dce4fcc7-7cc5-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-projected-wp9g2" to be "success or failure"
+May 22 19:14:46.802: INFO: Pod "pod-projected-configmaps-dce4fcc7-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 3.254588ms
+May 22 19:14:48.806: INFO: Pod "pod-projected-configmaps-dce4fcc7-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.007726247s
+May 22 19:14:50.817: INFO: Pod "pod-projected-configmaps-dce4fcc7-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.018751683s
+STEP: Saw pod success
+May 22 19:14:50.817: INFO: Pod "pod-projected-configmaps-dce4fcc7-7cc5-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:14:50.821: INFO: Trying to get logs from node tpacospakd008 pod pod-projected-configmaps-dce4fcc7-7cc5-11e9-85fe-4e19dc9bc03e container projected-configmap-volume-test: <nil>
+STEP: delete the pod
+May 22 19:14:50.852: INFO: Waiting for pod pod-projected-configmaps-dce4fcc7-7cc5-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:14:50.856: INFO: Pod pod-projected-configmaps-dce4fcc7-7cc5-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] Projected configMap
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:14:50.857: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-projected-wp9g2" for this suite.
+May 22 19:14:56.882: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:14:56.967: INFO: namespace: e2e-tests-projected-wp9g2, resource: bindings, ignored listing per whitelist
+May 22 19:14:57.013: INFO: namespace e2e-tests-projected-wp9g2 deletion completed in 6.148471413s
+
+• [SLOW TEST:10.325 seconds]
+[sig-storage] Projected configMap
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/projected_configmap.go:34
+  should be consumable from pods in volume with mappings as non-root [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSSSSSSSSSSSSSSSSS
+------------------------------
+[sig-api-machinery] Secrets 
+  should be consumable from pods in env vars [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-api-machinery] Secrets
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:14:57.014: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename secrets
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should be consumable from pods in env vars [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating secret with name secret-test-e30c05b0-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: Creating a pod to test consume secrets
+May 22 19:14:57.129: INFO: Waiting up to 5m0s for pod "pod-secrets-e30d451c-7cc5-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-secrets-jfm4c" to be "success or failure"
+May 22 19:14:57.132: INFO: Pod "pod-secrets-e30d451c-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 3.144485ms
+May 22 19:14:59.137: INFO: Pod "pod-secrets-e30d451c-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.008019455s
+May 22 19:15:01.148: INFO: Pod "pod-secrets-e30d451c-7cc5-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.019564004s
+STEP: Saw pod success
+May 22 19:15:01.148: INFO: Pod "pod-secrets-e30d451c-7cc5-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:15:01.152: INFO: Trying to get logs from node tpacospakd008 pod pod-secrets-e30d451c-7cc5-11e9-85fe-4e19dc9bc03e container secret-env-test: <nil>
+STEP: delete the pod
+May 22 19:15:01.180: INFO: Waiting for pod pod-secrets-e30d451c-7cc5-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:15:01.183: INFO: Pod pod-secrets-e30d451c-7cc5-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-api-machinery] Secrets
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:15:01.183: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-secrets-jfm4c" for this suite.
+May 22 19:15:07.208: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:15:07.292: INFO: namespace: e2e-tests-secrets-jfm4c, resource: bindings, ignored listing per whitelist
+May 22 19:15:07.339: INFO: namespace e2e-tests-secrets-jfm4c deletion completed in 6.147466987s
+
+• [SLOW TEST:10.325 seconds]
+[sig-api-machinery] Secrets
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/secrets.go:32
+  should be consumable from pods in env vars [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+S
+------------------------------
+[sig-storage] Secrets 
+  optional updates should be reflected in volume [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] Secrets
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:15:07.339: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename secrets
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] optional updates should be reflected in volume [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating secret with name s-test-opt-del-e9347df0-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: Creating secret with name s-test-opt-upd-e9347e9e-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: Creating the pod
+STEP: Deleting secret s-test-opt-del-e9347df0-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: Updating secret s-test-opt-upd-e9347e9e-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: Creating secret with name s-test-opt-create-e9347ecd-7cc5-11e9-85fe-4e19dc9bc03e
+STEP: waiting to observe update in volume
+[AfterEach] [sig-storage] Secrets
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:15:15.628: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-secrets-9ftjg" for this suite.
+May 22 19:15:37.650: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:15:37.759: INFO: namespace: e2e-tests-secrets-9ftjg, resource: bindings, ignored listing per whitelist
+May 22 19:15:37.776: INFO: namespace e2e-tests-secrets-9ftjg deletion completed in 22.141153628s
+
+• [SLOW TEST:30.437 seconds]
+[sig-storage] Secrets
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/secrets_volume.go:34
+  optional updates should be reflected in volume [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSS
+------------------------------
+[sig-api-machinery] CustomResourceDefinition resources Simple CustomResourceDefinition 
+  creating/deleting custom resource definition objects works  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-api-machinery] CustomResourceDefinition resources
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:15:37.776: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename custom-resource-definition
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] creating/deleting custom resource definition objects works  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+May 22 19:15:37.877: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+[AfterEach] [sig-api-machinery] CustomResourceDefinition resources
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:15:38.939: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-custom-resource-definition-nwsmm" for this suite.
+May 22 19:15:44.970: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:15:45.065: INFO: namespace: e2e-tests-custom-resource-definition-nwsmm, resource: bindings, ignored listing per whitelist
+May 22 19:15:45.107: INFO: namespace e2e-tests-custom-resource-definition-nwsmm deletion completed in 6.158612787s
+
+• [SLOW TEST:7.331 seconds]
+[sig-api-machinery] CustomResourceDefinition resources
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/apimachinery/framework.go:22
+  Simple CustomResourceDefinition
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/apimachinery/custom_resource_definition.go:35
+    creating/deleting custom resource definition objects works  [Conformance]
+    /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSSSSSSSSS
+------------------------------
+[sig-cli] Kubectl client [k8s.io] Kubectl expose 
+  should create services for rc  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-cli] Kubectl client
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:15:45.108: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename kubectl
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [sig-cli] Kubectl client
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/kubectl/kubectl.go:243
+[It] should create services for rc  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: creating Redis RC
+May 22 19:15:45.202: INFO: namespace e2e-tests-kubectl-rrnpl
+May 22 19:15:45.202: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 create -f - --namespace=e2e-tests-kubectl-rrnpl'
+May 22 19:15:46.484: INFO: stderr: ""
+May 22 19:15:46.484: INFO: stdout: "replicationcontroller/redis-master created\n"
+STEP: Waiting for Redis master to start.
+May 22 19:15:47.490: INFO: Selector matched 1 pods for map[app:redis]
+May 22 19:15:47.491: INFO: Found 0 / 1
+May 22 19:15:48.490: INFO: Selector matched 1 pods for map[app:redis]
+May 22 19:15:48.490: INFO: Found 0 / 1
+May 22 19:15:49.490: INFO: Selector matched 1 pods for map[app:redis]
+May 22 19:15:49.490: INFO: Found 1 / 1
+May 22 19:15:49.490: INFO: WaitFor completed with timeout 5m0s.  Pods found = 1 out of 1
+May 22 19:15:49.494: INFO: Selector matched 1 pods for map[app:redis]
+May 22 19:15:49.494: INFO: ForEach: Found 1 pods from the filter.  Now looping through them.
+May 22 19:15:49.494: INFO: wait on redis-master startup in e2e-tests-kubectl-rrnpl 
+May 22 19:15:49.494: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 logs redis-master-9ngmf redis-master --namespace=e2e-tests-kubectl-rrnpl'
+May 22 19:15:49.707: INFO: stderr: ""
+May 22 19:15:49.707: INFO: stdout: "                _._                                                  \n           _.-``__ ''-._                                             \n      _.-``    `.  `_.  ''-._           Redis 3.2.12 (35a5711f/0) 64 bit\n  .-`` .-```.  ```\\/    _.,_ ''-._                                   \n (    '      ,       .-`  | `,    )     Running in standalone mode\n |`-._`-...-` __...-.``-._|'` _.-'|     Port: 6379\n |    `-._   `._    /     _.-'    |     PID: 1\n  `-._    `-._  `-./  _.-'    _.-'                                   \n |`-._`-._    `-.__.-'    _.-'_.-'|                                  \n |    `-._`-._        _.-'_.-'    |           http://redis.io        \n  `-._    `-._`-.__.-'_.-'    _.-'                                   \n |`-._`-._    `-.__.-'    _.-'_.-'|                                  \n |    `-._`-._        _.-'_.-'    |                                  \n  `-._    `-._`-.__.-'_.-'    _.-'                                   \n      `-._    `-.__.-'    _.-'                                       \n          `-._        _.-'                                           \n              `-.__.-'                                               \n\n1:M 22 May 19:15:48.276 # WARNING: The TCP backlog setting of 511 cannot be enforced because /proc/sys/net/core/somaxconn is set to the lower value of 128.\n1:M 22 May 19:15:48.276 # Server started, Redis version 3.2.12\n1:M 22 May 19:15:48.277 # WARNING you have Transparent Huge Pages (THP) support enabled in your kernel. This will create latency and memory usage issues with Redis. To fix this issue run the command 'echo never > /sys/kernel/mm/transparent_hugepage/enabled' as root, and add it to your /etc/rc.local in order to retain the setting after a reboot. Redis must be restarted after THP is disabled.\n1:M 22 May 19:15:48.277 * The server is now ready to accept connections on port 6379\n"
+STEP: exposing RC
+May 22 19:15:49.707: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 expose rc redis-master --name=rm2 --port=1234 --target-port=6379 --namespace=e2e-tests-kubectl-rrnpl'
+May 22 19:15:49.933: INFO: stderr: ""
+May 22 19:15:49.933: INFO: stdout: "service/rm2 exposed\n"
+May 22 19:15:49.938: INFO: Service rm2 in namespace e2e-tests-kubectl-rrnpl found.
+STEP: exposing service
+May 22 19:15:51.946: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 expose service rm2 --name=rm3 --port=2345 --target-port=6379 --namespace=e2e-tests-kubectl-rrnpl'
+May 22 19:15:52.194: INFO: stderr: ""
+May 22 19:15:52.194: INFO: stdout: "service/rm3 exposed\n"
+May 22 19:15:52.199: INFO: Service rm3 in namespace e2e-tests-kubectl-rrnpl found.
+[AfterEach] [sig-cli] Kubectl client
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:15:54.210: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-kubectl-rrnpl" for this suite.
+May 22 19:16:10.235: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:16:10.297: INFO: namespace: e2e-tests-kubectl-rrnpl, resource: bindings, ignored listing per whitelist
+May 22 19:16:10.372: INFO: namespace e2e-tests-kubectl-rrnpl deletion completed in 16.153644148s
+
+• [SLOW TEST:25.264 seconds]
+[sig-cli] Kubectl client
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/kubectl/framework.go:22
+  [k8s.io] Kubectl expose
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:694
+    should create services for rc  [Conformance]
+    /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSS
+------------------------------
+[sig-storage] Projected downwardAPI 
+  should provide node allocatable (memory) as default memory limit if the limit is not set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] Projected downwardAPI
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:16:10.372: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename projected
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [sig-storage] Projected downwardAPI
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/projected_downwardapi.go:39
+[It] should provide node allocatable (memory) as default memory limit if the limit is not set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating a pod to test downward API volume plugin
+May 22 19:16:10.490: INFO: Waiting up to 5m0s for pod "downwardapi-volume-0ec6ae39-7cc6-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-projected-z42gv" to be "success or failure"
+May 22 19:16:10.493: INFO: Pod "downwardapi-volume-0ec6ae39-7cc6-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 3.717ms
+May 22 19:16:12.498: INFO: Pod "downwardapi-volume-0ec6ae39-7cc6-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.008738474s
+May 22 19:16:14.504: INFO: Pod "downwardapi-volume-0ec6ae39-7cc6-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.014381365s
+STEP: Saw pod success
+May 22 19:16:14.504: INFO: Pod "downwardapi-volume-0ec6ae39-7cc6-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 19:16:14.508: INFO: Trying to get logs from node tpacospakd002 pod downwardapi-volume-0ec6ae39-7cc6-11e9-85fe-4e19dc9bc03e container client-container: <nil>
+STEP: delete the pod
+May 22 19:16:14.540: INFO: Waiting for pod downwardapi-volume-0ec6ae39-7cc6-11e9-85fe-4e19dc9bc03e to disappear
+May 22 19:16:14.544: INFO: Pod downwardapi-volume-0ec6ae39-7cc6-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] Projected downwardAPI
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 19:16:14.544: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-projected-z42gv" for this suite.
+May 22 19:16:20.566: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 19:16:20.660: INFO: namespace: e2e-tests-projected-z42gv, resource: bindings, ignored listing per whitelist
+May 22 19:16:20.708: INFO: namespace e2e-tests-projected-z42gv deletion completed in 6.155990816s
+
+• [SLOW TEST:10.336 seconds]
+[sig-storage] Projected downwardAPI
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/projected_downwardapi.go:33
+  should provide node allocatable (memory) as default memory limit if the limit is not set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSS
+------------------------------
+[sig-cli] Kubectl client [k8s.io] Update Demo 
+  should scale a replication controller  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-cli] Kubectl client
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 19:16:20.708: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename kubectl
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [sig-cli] Kubectl client
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/kubectl/kubectl.go:243
+[BeforeEach] [k8s.io] Update Demo
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/kubectl/kubectl.go:295
+[It] should scale a replication controller  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: creating a replication controller
+May 22 19:16:20.819: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 create -f - --namespace=e2e-tests-kubectl-8prht'
+May 22 19:16:21.123: INFO: stderr: ""
+May 22 19:16:21.123: INFO: stdout: "replicationcontroller/update-demo-nautilus created\n"
+STEP: waiting for all containers in name=update-demo pods to come up.
+May 22 19:16:21.123: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 get pods -o template --template={{range.items}}{{.metadata.name}} {{end}} -l name=update-demo --namespace=e2e-tests-kubectl-8prht'
+May 22 19:16:21.309: INFO: stderr: ""
+May 22 19:16:21.309: INFO: stdout: "update-demo-nautilus-jdwj6 update-demo-nautilus-ls5mq "
+May 22 19:16:21.309: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 get pods update-demo-nautilus-jdwj6 -o template --template={{if (exists . "status" "containerStatuses")}}{{range .status.containerStatuses}}{{if (and (eq .name "update-demo") (exists . "state" "running"))}}true{{end}}{{end}}{{end}} --namespace=e2e-tests-kubectl-8prht'
+May 22 19:16:21.484: INFO: stderr: ""
+May 22 19:16:21.484: INFO: stdout: ""
+May 22 19:16:21.484: INFO: update-demo-nautilus-jdwj6 is created but not running
+May 22 19:16:26.484: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 get pods -o template --template={{range.items}}{{.metadata.name}} {{end}} -l name=update-demo --namespace=e2e-tests-kubectl-8prht'
+May 22 19:16:26.670: INFO: stderr: ""
+May 22 19:16:26.670: INFO: stdout: "update-demo-nautilus-jdwj6 update-demo-nautilus-ls5mq "
+May 22 19:16:26.670: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 get pods update-demo-nautilus-jdwj6 -o template --template={{if (exists . "status" "containerStatuses")}}{{range .status.containerStatuses}}{{if (and (eq .name "update-demo") (exists . "state" "running"))}}true{{end}}{{end}}{{end}} --namespace=e2e-tests-kubectl-8prht'
+May 22 19:16:26.854: INFO: stderr: ""
+May 22 19:16:26.854: INFO: stdout: "true"
+May 22 19:16:26.854: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 get pods update-demo-nautilus-jdwj6 -o template --template={{if (exists . "spec" "containers")}}{{range .spec.containers}}{{if eq .name "update-demo"}}{{.image}}{{end}}{{end}}{{end}} --namespace=e2e-tests-kubectl-8prht'
+May 22 19:16:27.073: INFO: stderr: ""
+May 22 19:16:27.073: INFO: stdout: "gcr.io/kubernetes-e2e-test-images/nautilus:1.0"
+May 22 19:16:27.073: INFO: validating pod update-demo-nautilus-jdwj6
+May 22 19:16:27.083: INFO: got data: {
+  "image": "nautilus.jpg"
+}
+
+May 22 19:16:27.083: INFO: Unmarshalled json jpg/img => {nautilus.jpg} , expecting nautilus.jpg .
+May 22 19:16:27.083: INFO: update-demo-nautilus-jdwj6 is verified up and running
+May 22 19:16:27.083: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 get pods update-demo-nautilus-ls5mq -o template --template={{if (exists . "status" "containerStatuses")}}{{range .status.containerStatuses}}{{if (and (eq .name "update-demo") (exists . "state" "running"))}}true{{end}}{{end}}{{end}} --namespace=e2e-tests-kubectl-8prht'
+May 22 19:16:27.280: INFO: stderr: ""
+May 22 19:16:27.280: INFO: stdout: "true"
+May 22 19:16:27.280: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 get pods update-demo-nautilus-ls5mq -o template --template={{if (exists . "spec" "containers")}}{{range .spec.containers}}{{if eq .name "update-demo"}}{{.image}}{{end}}{{end}}{{end}} --namespace=e2e-tests-kubectl-8prht'
+May 22 19:16:27.449: INFO: stderr: ""
+May 22 19:16:27.449: INFO: stdout: "gcr.io/kubernetes-e2e-test-images/nautilus:1.0"
+May 22 19:16:27.449: INFO: validating pod update-demo-nautilus-ls5mq
+May 22 19:16:27.461: INFO: got data: {
+  "image": "nautilus.jpg"
+}
+
+May 22 19:16:27.461: INFO: Unmarshalled json jpg/img => {nautilus.jpg} , expecting nautilus.jpg .
+May 22 19:16:27.461: INFO: update-demo-nautilus-ls5mq is verified up and running
+STEP: scaling down the replication controller
+May 22 19:16:27.470: INFO: scanned /root for discovery docs: <nil>
+May 22 19:16:27.471: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 scale rc update-demo-nautilus --replicas=1 --timeout=5m --namespace=e2e-tests-kubectl-8prht'
+May 22 19:16:28.711: INFO: stderr: ""
+May 22 20:45:11.182: INFO: Got endpoints: latency-svc-64xh2 [750.91188ms]
+May 22 20:45:11.197: INFO: Created: latency-svc-zzp4b
+May 22 20:45:11.233: INFO: Got endpoints: latency-svc-6w97p [751.6429ms]
+May 22 20:45:11.250: INFO: Created: latency-svc-z6pdg
+May 22 20:45:11.280: INFO: Got endpoints: latency-svc-gx2sr [749.488443ms]
+May 22 20:45:11.294: INFO: Created: latency-svc-6xh4p
+May 22 20:45:11.331: INFO: Got endpoints: latency-svc-v6ztg [748.563318ms]
+May 22 20:45:11.368: INFO: Created: latency-svc-spvfp
+May 22 20:45:11.380: INFO: Got endpoints: latency-svc-kw2v8 [747.621092ms]
+May 22 20:45:11.394: INFO: Created: latency-svc-znpk5
+May 22 20:45:11.431: INFO: Got endpoints: latency-svc-qr57z [749.807051ms]
+May 22 20:45:11.447: INFO: Created: latency-svc-h2r56
+May 22 20:45:11.481: INFO: Got endpoints: latency-svc-kzq7k [750.796978ms]
+May 22 20:45:11.496: INFO: Created: latency-svc-btm9s
+May 22 20:45:11.530: INFO: Got endpoints: latency-svc-2s8rw [750.53597ms]
+May 22 20:45:11.548: INFO: Created: latency-svc-gw5q8
+May 22 20:45:11.580: INFO: Got endpoints: latency-svc-fsncp [748.772423ms]
+May 22 20:45:11.597: INFO: Created: latency-svc-2g5cl
+May 22 20:45:11.631: INFO: Got endpoints: latency-svc-rp224 [749.436441ms]
+May 22 20:45:11.645: INFO: Created: latency-svc-447tf
+May 22 20:45:11.681: INFO: Got endpoints: latency-svc-lt4hz [749.921954ms]
+May 22 20:45:11.695: INFO: Created: latency-svc-dllsg
+May 22 20:45:11.730: INFO: Got endpoints: latency-svc-cmw69 [746.984876ms]
+May 22 20:45:11.744: INFO: Created: latency-svc-c7pbp
+May 22 20:45:11.780: INFO: Got endpoints: latency-svc-sffxh [750.356066ms]
+May 22 20:45:11.794: INFO: Created: latency-svc-m5sdj
+May 22 20:45:11.830: INFO: Got endpoints: latency-svc-n7v22 [748.336312ms]
+May 22 20:45:11.844: INFO: Created: latency-svc-6xwq7
+May 22 20:45:11.881: INFO: Got endpoints: latency-svc-v9v2h [750.674774ms]
+May 22 20:45:11.899: INFO: Created: latency-svc-dbdjn
+May 22 20:45:11.931: INFO: Got endpoints: latency-svc-zzp4b [748.857025ms]
+May 22 20:45:11.945: INFO: Created: latency-svc-42grr
+May 22 20:45:11.981: INFO: Got endpoints: latency-svc-z6pdg [748.513916ms]
+May 22 20:45:12.000: INFO: Created: latency-svc-mhvq6
+May 22 20:45:12.031: INFO: Got endpoints: latency-svc-6xh4p [750.875579ms]
+May 22 20:45:12.047: INFO: Created: latency-svc-ttfkp
+May 22 20:45:12.080: INFO: Got endpoints: latency-svc-spvfp [748.864225ms]
+May 22 20:45:12.098: INFO: Created: latency-svc-fhgkk
+May 22 20:45:12.129: INFO: Got endpoints: latency-svc-znpk5 [749.556044ms]
+May 22 20:45:12.145: INFO: Created: latency-svc-q585n
+May 22 20:45:12.181: INFO: Got endpoints: latency-svc-h2r56 [749.78125ms]
+May 22 20:45:12.197: INFO: Created: latency-svc-fvhnm
+May 22 20:45:12.233: INFO: Got endpoints: latency-svc-btm9s [752.097212ms]
+May 22 20:45:12.248: INFO: Created: latency-svc-k7hjw
+May 22 20:45:12.286: INFO: Got endpoints: latency-svc-gw5q8 [755.410101ms]
+May 22 20:45:12.301: INFO: Created: latency-svc-w8d2b
+May 22 20:45:12.331: INFO: Got endpoints: latency-svc-2g5cl [750.236162ms]
+May 22 20:45:12.346: INFO: Created: latency-svc-nwck5
+May 22 20:45:12.381: INFO: Got endpoints: latency-svc-447tf [749.577745ms]
+May 22 20:45:12.400: INFO: Created: latency-svc-pxltd
+May 22 20:45:12.433: INFO: Got endpoints: latency-svc-dllsg [751.878307ms]
+May 22 20:45:12.448: INFO: Created: latency-svc-wjm8b
+May 22 20:45:12.481: INFO: Got endpoints: latency-svc-c7pbp [750.930981ms]
+May 22 20:45:12.497: INFO: Created: latency-svc-95s4g
+May 22 20:45:12.530: INFO: Got endpoints: latency-svc-m5sdj [750.321365ms]
+May 22 20:45:12.545: INFO: Created: latency-svc-4qfbj
+May 22 20:45:12.580: INFO: Got endpoints: latency-svc-6xwq7 [749.928854ms]
+May 22 20:45:12.595: INFO: Created: latency-svc-hskgr
+May 22 20:45:12.630: INFO: Got endpoints: latency-svc-dbdjn [748.867125ms]
+May 22 20:45:12.645: INFO: Created: latency-svc-8dm42
+May 22 20:45:12.680: INFO: Got endpoints: latency-svc-42grr [748.65892ms]
+May 22 20:45:12.695: INFO: Created: latency-svc-lzmwl
+May 22 20:45:12.730: INFO: Got endpoints: latency-svc-mhvq6 [748.241509ms]
+May 22 20:45:12.745: INFO: Created: latency-svc-lw4ks
+May 22 20:45:12.781: INFO: Got endpoints: latency-svc-ttfkp [749.907754ms]
+May 22 20:45:12.798: INFO: Created: latency-svc-l7vll
+May 22 20:45:12.830: INFO: Got endpoints: latency-svc-fhgkk [749.494843ms]
+May 22 20:45:12.847: INFO: Created: latency-svc-f24rf
+May 22 20:45:12.881: INFO: Got endpoints: latency-svc-q585n [751.6486ms]
+May 22 20:45:12.900: INFO: Created: latency-svc-qjk6v
+May 22 20:45:12.930: INFO: Got endpoints: latency-svc-fvhnm [748.929528ms]
+May 22 20:45:12.944: INFO: Created: latency-svc-ph5p7
+May 22 20:45:12.981: INFO: Got endpoints: latency-svc-k7hjw [747.318684ms]
+May 22 20:45:12.997: INFO: Created: latency-svc-vdcwd
+May 22 20:45:13.034: INFO: Got endpoints: latency-svc-w8d2b [748.250209ms]
+May 22 20:45:13.050: INFO: Created: latency-svc-whhjb
+May 22 20:45:13.083: INFO: Got endpoints: latency-svc-nwck5 [752.207315ms]
+May 22 20:45:13.098: INFO: Created: latency-svc-d8r9p
+May 22 20:45:13.131: INFO: Got endpoints: latency-svc-pxltd [749.360239ms]
+May 22 20:45:13.144: INFO: Created: latency-svc-7rlc8
+May 22 20:45:13.180: INFO: Got endpoints: latency-svc-wjm8b [747.032177ms]
+May 22 20:45:13.195: INFO: Created: latency-svc-t9vcw
+May 22 20:45:13.231: INFO: Got endpoints: latency-svc-95s4g [749.987656ms]
+May 22 20:45:13.246: INFO: Created: latency-svc-b8ggz
+May 22 20:45:13.280: INFO: Got endpoints: latency-svc-4qfbj [749.527944ms]
+May 22 20:45:13.294: INFO: Created: latency-svc-j4djh
+May 22 20:45:13.331: INFO: Got endpoints: latency-svc-hskgr [750.048058ms]
+May 22 20:45:13.345: INFO: Created: latency-svc-jdhfc
+May 22 20:45:13.381: INFO: Got endpoints: latency-svc-8dm42 [750.257763ms]
+May 22 20:45:13.395: INFO: Created: latency-svc-g5fmw
+May 22 20:45:13.431: INFO: Got endpoints: latency-svc-lzmwl [751.140786ms]
+May 22 20:45:13.448: INFO: Created: latency-svc-pw5mc
+May 22 20:45:13.481: INFO: Got endpoints: latency-svc-lw4ks [750.89738ms]
+May 22 20:45:13.496: INFO: Created: latency-svc-xmqv4
+May 22 20:45:13.531: INFO: Got endpoints: latency-svc-l7vll [749.540344ms]
+May 22 20:45:13.546: INFO: Created: latency-svc-ln2sr
+May 22 20:45:13.580: INFO: Got endpoints: latency-svc-f24rf [750.221962ms]
+May 22 20:45:13.595: INFO: Created: latency-svc-rnzzg
+May 22 20:45:13.630: INFO: Got endpoints: latency-svc-qjk6v [748.430514ms]
+May 22 20:45:13.650: INFO: Created: latency-svc-bphzc
+May 22 20:45:13.681: INFO: Got endpoints: latency-svc-ph5p7 [750.404067ms]
+May 22 20:45:13.695: INFO: Created: latency-svc-wb6hr
+May 22 20:45:13.731: INFO: Got endpoints: latency-svc-vdcwd [749.671247ms]
+May 22 20:45:13.745: INFO: Created: latency-svc-cqdjz
+May 22 20:45:13.782: INFO: Got endpoints: latency-svc-whhjb [747.855399ms]
+May 22 20:45:13.797: INFO: Created: latency-svc-72kvl
+May 22 20:45:13.830: INFO: Got endpoints: latency-svc-d8r9p [746.926774ms]
+May 22 20:45:13.844: INFO: Created: latency-svc-9kbnw
+May 22 20:45:13.883: INFO: Got endpoints: latency-svc-7rlc8 [751.859606ms]
+May 22 20:45:13.932: INFO: Got endpoints: latency-svc-t9vcw [751.867106ms]
+May 22 20:45:13.981: INFO: Got endpoints: latency-svc-b8ggz [749.717548ms]
+May 22 20:45:14.031: INFO: Got endpoints: latency-svc-j4djh [750.452668ms]
+May 22 20:45:14.081: INFO: Got endpoints: latency-svc-jdhfc [750.001156ms]
+May 22 20:45:14.132: INFO: Got endpoints: latency-svc-g5fmw [751.549798ms]
+May 22 20:45:14.181: INFO: Got endpoints: latency-svc-pw5mc [749.535343ms]
+May 22 20:45:14.233: INFO: Got endpoints: latency-svc-xmqv4 [751.793604ms]
+May 22 20:45:14.282: INFO: Got endpoints: latency-svc-ln2sr [751.070485ms]
+May 22 20:45:14.333: INFO: Got endpoints: latency-svc-rnzzg [752.308218ms]
+May 22 20:45:14.382: INFO: Got endpoints: latency-svc-bphzc [751.464295ms]
+May 22 20:45:14.433: INFO: Got endpoints: latency-svc-wb6hr [752.515023ms]
+May 22 20:45:14.481: INFO: Got endpoints: latency-svc-cqdjz [750.460568ms]
+May 22 20:45:14.531: INFO: Got endpoints: latency-svc-72kvl [749.185234ms]
+May 22 20:45:14.581: INFO: Got endpoints: latency-svc-9kbnw [751.138586ms]
+May 22 20:45:14.582: INFO: Latencies: [19.165013ms 32.206461ms 44.290085ms 58.371861ms 69.945871ms 80.822861ms 91.719752ms 105.092411ms 120.879833ms 132.348839ms 143.470437ms 154.961144ms 168.217498ms 173.772847ms 173.912951ms 174.500066ms 175.078482ms 175.391691ms 175.600496ms 175.782201ms 175.994007ms 176.462119ms 178.37367ms 178.848883ms 178.904984ms 179.281694ms 179.615203ms 179.909111ms 180.120116ms 180.508327ms 180.752734ms 181.078442ms 181.425051ms 182.908491ms 183.259101ms 183.720213ms 186.330083ms 193.845384ms 199.878945ms 227.72939ms 270.446532ms 306.850405ms 348.762727ms 386.008323ms 423.359121ms 462.351464ms 500.278578ms 538.4788ms 574.377259ms 613.364302ms 651.031609ms 693.276039ms 733.898226ms 746.219255ms 746.926774ms 746.961875ms 746.984876ms 747.032177ms 747.061577ms 747.096478ms 747.236682ms 747.318684ms 747.477889ms 747.621092ms 747.669794ms 747.855399ms 748.000103ms 748.146506ms 748.151807ms 748.187308ms 748.241509ms 748.250209ms 748.336312ms 748.348211ms 748.422214ms 748.430514ms 748.435414ms 748.508616ms 748.513916ms 748.563318ms 748.590419ms 748.65892ms 748.66972ms 748.722722ms 748.772423ms 748.803824ms 748.845626ms 748.857025ms 748.864225ms 748.867125ms 748.917727ms 748.929528ms 748.979728ms 748.980728ms 748.990929ms 749.094732ms 749.185234ms 749.221235ms 749.263137ms 749.265336ms 749.291237ms 749.343538ms 749.349139ms 749.360239ms 749.370639ms 749.372139ms 749.39174ms 749.436441ms 749.488443ms 749.494843ms 749.527944ms 749.535343ms 749.540344ms 749.540444ms 749.556044ms 749.577745ms 749.652446ms 749.671247ms 749.693247ms 749.717548ms 749.76335ms 749.78125ms 749.792251ms 749.807051ms 749.853652ms 749.907754ms 749.921954ms 749.926154ms 749.928854ms 749.987656ms 750.001156ms 750.048058ms 750.071858ms 750.105458ms 750.221962ms 750.236162ms 750.257763ms 750.265963ms 750.293164ms 750.321365ms 750.327265ms 750.338265ms 750.350365ms 750.356066ms 750.392567ms 750.404067ms 750.452668ms 750.460568ms 750.488069ms 750.52807ms 750.53597ms 750.674774ms 750.747676ms 750.787777ms 750.796978ms 750.867079ms 750.875579ms 750.89738ms 750.89828ms 750.90788ms 750.91188ms 750.930981ms 750.989582ms 751.070485ms 751.092085ms 751.092885ms 751.138586ms 751.140786ms 751.24409ms 751.249389ms 751.264089ms 751.336792ms 751.376893ms 751.421094ms 751.431195ms 751.464295ms 751.484095ms 751.549798ms 751.616999ms 751.6429ms 751.6486ms 751.706802ms 751.793604ms 751.797004ms 751.859606ms 751.867106ms 751.878307ms 751.909807ms 751.976809ms 752.097212ms 752.207315ms 752.303318ms 752.308218ms 752.356819ms 752.40182ms 752.499022ms 752.515023ms 752.551225ms 752.745029ms 755.410101ms]
+May 22 20:45:14.582: INFO: 50 %ile: 749.291237ms
+May 22 20:45:14.582: INFO: 90 %ile: 751.6486ms
+May 22 20:45:14.582: INFO: 99 %ile: 752.745029ms
+May 22 20:45:14.582: INFO: Total sample count: 200
+[AfterEach] [sig-network] Service endpoints latency
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 20:45:14.582: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-svc-latency-pnpcp" for this suite.
+May 22 20:45:40.610: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 20:45:40.635: INFO: namespace: e2e-tests-svc-latency-pnpcp, resource: bindings, ignored listing per whitelist
+May 22 20:45:40.734: INFO: namespace e2e-tests-svc-latency-pnpcp deletion completed in 26.144695443s
+
+• [SLOW TEST:37.978 seconds]
+[sig-network] Service endpoints latency
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/network/framework.go:22
+  should not be very high  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSS
+------------------------------
+[k8s.io] InitContainer [NodeConformance] 
+  should not start app containers and fail the pod if init containers fail on a RestartNever pod [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [k8s.io] InitContainer [NodeConformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 20:45:40.735: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename init-container
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [k8s.io] InitContainer [NodeConformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/init_container.go:43
+[It] should not start app containers and fail the pod if init containers fail on a RestartNever pod [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: creating the pod
+May 22 20:45:40.845: INFO: PodSpec: initContainers in spec.initContainers
+[AfterEach] [k8s.io] InitContainer [NodeConformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 20:45:47.472: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-init-container-kmlmz" for this suite.
+May 22 20:45:53.502: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 20:45:53.550: INFO: namespace: e2e-tests-init-container-kmlmz, resource: bindings, ignored listing per whitelist
+May 22 20:45:53.624: INFO: namespace e2e-tests-init-container-kmlmz deletion completed in 6.136637002s
+
+• [SLOW TEST:12.890 seconds]
+[k8s.io] InitContainer [NodeConformance]
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:694
+  should not start app containers and fail the pod if init containers fail on a RestartNever pod [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSS
+------------------------------
+[k8s.io] Pods 
+  should be updated [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [k8s.io] Pods
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 20:45:53.624: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename pods
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [k8s.io] Pods
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/pods.go:132
+[It] should be updated [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: creating the pod
+STEP: submitting the pod to kubernetes
+STEP: verifying the pod is in kubernetes
+STEP: updating the pod
+May 22 20:45:58.270: INFO: Successfully updated pod "pod-update-97706304-7cd2-11e9-85fe-4e19dc9bc03e"
+STEP: verifying the updated pod is in kubernetes
+May 22 20:45:58.277: INFO: Pod update OK
+[AfterEach] [k8s.io] Pods
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 20:45:58.277: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-pods-gcbxv" for this suite.
+May 22 20:46:10.301: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 20:46:10.364: INFO: namespace: e2e-tests-pods-gcbxv, resource: bindings, ignored listing per whitelist
+May 22 20:46:10.436: INFO: namespace e2e-tests-pods-gcbxv deletion completed in 12.151264841s
+
+• [SLOW TEST:16.812 seconds]
+[k8s.io] Pods
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:694
+  should be updated [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSS
+------------------------------
+[sig-cli] Kubectl client [k8s.io] Kubectl replace 
+  should update a single-container pod's image  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-cli] Kubectl client
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 20:46:10.437: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename kubectl
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [sig-cli] Kubectl client
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/kubectl/kubectl.go:243
+[BeforeEach] [k8s.io] Kubectl replace
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/kubectl/kubectl.go:1563
+[It] should update a single-container pod's image  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: running the image docker.io/library/nginx:1.14-alpine
+May 22 20:46:10.533: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 run e2e-test-nginx-pod --generator=run-pod/v1 --image=docker.io/library/nginx:1.14-alpine --labels=run=e2e-test-nginx-pod --namespace=e2e-tests-kubectl-m47sk'
+May 22 20:46:11.061: INFO: stderr: ""
+May 22 20:46:11.061: INFO: stdout: "pod/e2e-test-nginx-pod created\n"
+STEP: verifying the pod e2e-test-nginx-pod is running
+STEP: verifying the pod e2e-test-nginx-pod was created
+May 22 20:46:16.112: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 get pod e2e-test-nginx-pod --namespace=e2e-tests-kubectl-m47sk -o json'
+May 22 20:46:16.302: INFO: stderr: ""
+May 22 20:46:16.302: INFO: stdout: "{\n    \"apiVersion\": \"v1\",\n    \"kind\": \"Pod\",\n    \"metadata\": {\n        \"annotations\": {\n            \"cni.projectcalico.org/podIP\": \"10.244.6.93/32\"\n        },\n        \"creationTimestamp\": \"2019-05-22T20:46:11Z\",\n        \"labels\": {\n            \"run\": \"e2e-test-nginx-pod\"\n        },\n        \"name\": \"e2e-test-nginx-pod\",\n        \"namespace\": \"e2e-tests-kubectl-m47sk\",\n        \"resourceVersion\": \"1994831\",\n        \"selfLink\": \"/api/v1/namespaces/e2e-tests-kubectl-m47sk/pods/e2e-test-nginx-pod\",\n        \"uid\": \"a1c27daf-7cd2-11e9-a877-005056802cc1\"\n    },\n    \"spec\": {\n        \"containers\": [\n            {\n                \"image\": \"docker.io/library/nginx:1.14-alpine\",\n                \"imagePullPolicy\": \"IfNotPresent\",\n                \"name\": \"e2e-test-nginx-pod\",\n                \"resources\": {},\n                \"terminationMessagePath\": \"/dev/termination-log\",\n                \"terminationMessagePolicy\": \"File\",\n                \"volumeMounts\": [\n                    {\n                        \"mountPath\": \"/var/run/secrets/kubernetes.io/serviceaccount\",\n                        \"name\": \"default-token-7l6mm\",\n                        \"readOnly\": true\n                    }\n                ]\n            }\n        ],\n        \"dnsPolicy\": \"ClusterFirst\",\n        \"enableServiceLinks\": true,\n        \"nodeName\": \"tpacospakd007\",\n        \"priority\": 0,\n        \"restartPolicy\": \"Always\",\n        \"schedulerName\": \"default-scheduler\",\n        \"securityContext\": {},\n        \"serviceAccount\": \"default\",\n        \"serviceAccountName\": \"default\",\n        \"terminationGracePeriodSeconds\": 30,\n        \"tolerations\": [\n            {\n                \"effect\": \"NoExecute\",\n                \"key\": \"node.kubernetes.io/not-ready\",\n                \"operator\": \"Exists\",\n                \"tolerationSeconds\": 300\n            },\n            {\n                \"effect\": \"NoExecute\",\n                \"key\": \"node.kubernetes.io/unreachable\",\n                \"operator\": \"Exists\",\n                \"tolerationSeconds\": 300\n            }\n        ],\n        \"volumes\": [\n            {\n                \"name\": \"default-token-7l6mm\",\n                \"secret\": {\n                    \"defaultMode\": 420,\n                    \"secretName\": \"default-token-7l6mm\"\n                }\n            }\n        ]\n    },\n    \"status\": {\n        \"conditions\": [\n            {\n                \"lastProbeTime\": null,\n                \"lastTransitionTime\": \"2019-05-22T20:46:11Z\",\n                \"status\": \"True\",\n                \"type\": \"Initialized\"\n            },\n            {\n                \"lastProbeTime\": null,\n                \"lastTransitionTime\": \"2019-05-22T20:46:13Z\",\n                \"status\": \"True\",\n                \"type\": \"Ready\"\n            },\n            {\n                \"lastProbeTime\": null,\n                \"lastTransitionTime\": \"2019-05-22T20:46:13Z\",\n                \"status\": \"True\",\n                \"type\": \"ContainersReady\"\n            },\n            {\n                \"lastProbeTime\": null,\n                \"lastTransitionTime\": \"2019-05-22T20:46:11Z\",\n                \"status\": \"True\",\n                \"type\": \"PodScheduled\"\n            }\n        ],\n        \"containerStatuses\": [\n            {\n                \"containerID\": \"docker://fbf4aca6ffb27f6f1860fa31492241f8598f9c0510e310cd771fa351521ea316\",\n                \"image\": \"nginx:1.14-alpine\",\n                \"imageID\": \"docker-pullable://nginx@sha256:485b610fefec7ff6c463ced9623314a04ed67e3945b9c08d7e53a47f6d108dc7\",\n                \"lastState\": {},\n                \"name\": \"e2e-test-nginx-pod\",\n                \"ready\": true,\n                \"restartCount\": 0,\n                \"state\": {\n                    \"running\": {\n                        \"startedAt\": \"2019-05-22T20:46:12Z\"\n                    }\n                }\n            }\n        ],\n        \"hostIP\": \"10.39.5.212\",\n        \"phase\": \"Running\",\n        \"podIP\": \"10.244.6.93\",\n        \"qosClass\": \"BestEffort\",\n        \"startTime\": \"2019-05-22T20:46:11Z\"\n    }\n}\n"
+STEP: replace the image in the pod
+May 22 20:46:16.302: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 replace -f - --namespace=e2e-tests-kubectl-m47sk'
+May 22 20:46:16.651: INFO: stderr: ""
+May 22 20:46:16.652: INFO: stdout: "pod/e2e-test-nginx-pod replaced\n"
+STEP: verifying the pod e2e-test-nginx-pod has the right image docker.io/library/busybox:1.29
+[AfterEach] [k8s.io] Kubectl replace
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/kubectl/kubectl.go:1568
+May 22 20:46:16.656: INFO: Running '/usr/local/bin/kubectl --kubeconfig=/tmp/kubeconfig-090171009 delete pods e2e-test-nginx-pod --namespace=e2e-tests-kubectl-m47sk'
+May 22 20:46:19.542: INFO: stderr: ""
+May 22 20:46:19.542: INFO: stdout: "pod \"e2e-test-nginx-pod\" deleted\n"
+[AfterEach] [sig-cli] Kubectl client
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 20:46:19.542: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-kubectl-m47sk" for this suite.
+May 22 20:46:25.576: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 20:46:25.589: INFO: namespace: e2e-tests-kubectl-m47sk, resource: bindings, ignored listing per whitelist
+May 22 20:46:25.713: INFO: namespace e2e-tests-kubectl-m47sk deletion completed in 6.153922264s
+
+• [SLOW TEST:15.276 seconds]
+[sig-cli] Kubectl client
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/kubectl/framework.go:22
+  [k8s.io] Kubectl replace
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:694
+    should update a single-container pod's image  [Conformance]
+    /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+------------------------------
+[sig-storage] Projected configMap 
+  should be consumable from pods in volume with mappings [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] Projected configMap
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 20:46:25.714: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename projected
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should be consumable from pods in volume with mappings [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating configMap with name projected-configmap-test-volume-map-aa91ca5e-7cd2-11e9-85fe-4e19dc9bc03e
+STEP: Creating a pod to test consume configMaps
+May 22 20:46:25.832: INFO: Waiting up to 5m0s for pod "pod-projected-configmaps-aa931a77-7cd2-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-projected-ph2dw" to be "success or failure"
+May 22 20:46:25.837: INFO: Pod "pod-projected-configmaps-aa931a77-7cd2-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 4.320916ms
+May 22 20:46:27.844: INFO: Pod "pod-projected-configmaps-aa931a77-7cd2-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.011067879s
+May 22 20:46:29.859: INFO: Pod "pod-projected-configmaps-aa931a77-7cd2-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.026937786s
+STEP: Saw pod success
+May 22 20:46:29.860: INFO: Pod "pod-projected-configmaps-aa931a77-7cd2-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 20:46:29.864: INFO: Trying to get logs from node tpacospakd007 pod pod-projected-configmaps-aa931a77-7cd2-11e9-85fe-4e19dc9bc03e container projected-configmap-volume-test: <nil>
+STEP: delete the pod
+May 22 20:46:29.893: INFO: Waiting for pod pod-projected-configmaps-aa931a77-7cd2-11e9-85fe-4e19dc9bc03e to disappear
+May 22 20:46:29.897: INFO: Pod pod-projected-configmaps-aa931a77-7cd2-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] Projected configMap
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 20:46:29.897: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-projected-ph2dw" for this suite.
+May 22 20:46:35.923: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 20:46:35.971: INFO: namespace: e2e-tests-projected-ph2dw, resource: bindings, ignored listing per whitelist
+May 22 20:46:36.057: INFO: namespace e2e-tests-projected-ph2dw deletion completed in 6.151092789s
+
+• [SLOW TEST:10.343 seconds]
+[sig-storage] Projected configMap
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/projected_configmap.go:34
+  should be consumable from pods in volume with mappings [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSS
+------------------------------
+[sig-storage] Projected secret 
+  should be consumable from pods in volume with defaultMode set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-storage] Projected secret
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 20:46:36.058: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename projected
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should be consumable from pods in volume with defaultMode set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating projection with secret that has name projected-secret-test-b0bb43dd-7cd2-11e9-85fe-4e19dc9bc03e
+STEP: Creating a pod to test consume secrets
+May 22 20:46:36.171: INFO: Waiting up to 5m0s for pod "pod-projected-secrets-b0bc784b-7cd2-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-projected-bxjc5" to be "success or failure"
+May 22 20:46:36.178: INFO: Pod "pod-projected-secrets-b0bc784b-7cd2-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 6.417671ms
+May 22 20:46:38.184: INFO: Pod "pod-projected-secrets-b0bc784b-7cd2-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.01261602s
+May 22 20:46:40.197: INFO: Pod "pod-projected-secrets-b0bc784b-7cd2-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.025305942s
+STEP: Saw pod success
+May 22 20:46:40.199: INFO: Pod "pod-projected-secrets-b0bc784b-7cd2-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 20:46:40.204: INFO: Trying to get logs from node tpacospakd005 pod pod-projected-secrets-b0bc784b-7cd2-11e9-85fe-4e19dc9bc03e container projected-secret-volume-test: <nil>
+STEP: delete the pod
+May 22 20:46:40.233: INFO: Waiting for pod pod-projected-secrets-b0bc784b-7cd2-11e9-85fe-4e19dc9bc03e to disappear
+May 22 20:46:40.237: INFO: Pod pod-projected-secrets-b0bc784b-7cd2-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-storage] Projected secret
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 20:46:40.237: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-projected-bxjc5" for this suite.
+May 22 20:46:46.258: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 20:46:46.386: INFO: namespace: e2e-tests-projected-bxjc5, resource: bindings, ignored listing per whitelist
+May 22 20:46:46.390: INFO: namespace e2e-tests-projected-bxjc5 deletion completed in 6.145774147s
+
+• [SLOW TEST:10.332 seconds]
+[sig-storage] Projected secret
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/projected_secret.go:34
+  should be consumable from pods in volume with defaultMode set [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+[sig-node] Downward API 
+  should provide container's limits.cpu/memory and requests.cpu/memory as env vars [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [sig-node] Downward API
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 20:46:46.390: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename downward-api
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should provide container's limits.cpu/memory and requests.cpu/memory as env vars [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: Creating a pod to test downward api env vars
+May 22 20:46:46.507: INFO: Waiting up to 5m0s for pod "downward-api-b6e55672-7cd2-11e9-85fe-4e19dc9bc03e" in namespace "e2e-tests-downward-api-cfvq2" to be "success or failure"
+May 22 20:46:46.511: INFO: Pod "downward-api-b6e55672-7cd2-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 3.614797ms
+May 22 20:46:48.516: INFO: Pod "downward-api-b6e55672-7cd2-11e9-85fe-4e19dc9bc03e": Phase="Pending", Reason="", readiness=false. Elapsed: 2.008730316s
+May 22 20:46:50.530: INFO: Pod "downward-api-b6e55672-7cd2-11e9-85fe-4e19dc9bc03e": Phase="Succeeded", Reason="", readiness=false. Elapsed: 4.022542768s
+STEP: Saw pod success
+May 22 20:46:50.530: INFO: Pod "downward-api-b6e55672-7cd2-11e9-85fe-4e19dc9bc03e" satisfied condition "success or failure"
+May 22 20:46:50.534: INFO: Trying to get logs from node tpacospakd005 pod downward-api-b6e55672-7cd2-11e9-85fe-4e19dc9bc03e container dapi-container: <nil>
+STEP: delete the pod
+May 22 20:46:50.562: INFO: Waiting for pod downward-api-b6e55672-7cd2-11e9-85fe-4e19dc9bc03e to disappear
+May 22 20:46:50.566: INFO: Pod downward-api-b6e55672-7cd2-11e9-85fe-4e19dc9bc03e no longer exists
+[AfterEach] [sig-node] Downward API
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 20:46:50.566: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-downward-api-cfvq2" for this suite.
+May 22 20:46:56.589: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 20:46:56.652: INFO: namespace: e2e-tests-downward-api-cfvq2, resource: bindings, ignored listing per whitelist
+May 22 20:46:56.719: INFO: namespace e2e-tests-downward-api-cfvq2 deletion completed in 6.144154203s
+
+• [SLOW TEST:10.328 seconds]
+[sig-node] Downward API
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/downward_api.go:38
+  should provide container's limits.cpu/memory and requests.cpu/memory as env vars [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSS
+------------------------------
+[k8s.io] [sig-node] Events 
+  should be sent by kubelets and the scheduler about pods scheduling and running  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [k8s.io] [sig-node] Events
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 20:46:56.719: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename events
+STEP: Waiting for a default service account to be provisioned in namespace
+[It] should be sent by kubelets and the scheduler about pods scheduling and running  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: creating the pod
+STEP: submitting the pod to kubernetes
+STEP: verifying the pod is in kubernetes
+STEP: retrieving the pod
+May 22 20:47:00.851: INFO: &Pod{ObjectMeta:k8s_io_apimachinery_pkg_apis_meta_v1.ObjectMeta{Name:send-events-bd0c46b7-7cd2-11e9-85fe-4e19dc9bc03e,GenerateName:,Namespace:e2e-tests-events-tsl5g,SelfLink:/api/v1/namespaces/e2e-tests-events-tsl5g/pods/send-events-bd0c46b7-7cd2-11e9-85fe-4e19dc9bc03e,UID:bd0d50ce-7cd2-11e9-9fce-00505680c9f6,ResourceVersion:1995060,Generation:0,CreationTimestamp:2019-05-22 20:46:56 +0000 UTC,DeletionTimestamp:<nil>,DeletionGracePeriodSeconds:nil,Labels:map[string]string{name: foo,time: 818567328,},Annotations:map[string]string{cni.projectcalico.org/podIP: 10.244.10.98/32,},OwnerReferences:[],Finalizers:[],ClusterName:,Initializers:nil,},Spec:PodSpec{Volumes:[{default-token-lcsdl {nil nil nil nil nil SecretVolumeSource{SecretName:default-token-lcsdl,Items:[],DefaultMode:*420,Optional:nil,} nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil nil}}],Containers:[{p gcr.io/kubernetes-e2e-test-images/serve-hostname:1.1 [] []  [{ 0 80 TCP }] [] [] {map[] map[]} [{default-token-lcsdl true /var/run/secrets/kubernetes.io/serviceaccount  <nil>}] [] nil nil nil /dev/termination-log File IfNotPresent nil false false false}],RestartPolicy:Always,TerminationGracePeriodSeconds:*30,ActiveDeadlineSeconds:nil,DNSPolicy:ClusterFirst,NodeSelector:map[string]string{},ServiceAccountName:default,DeprecatedServiceAccount:default,NodeName:tpacospakd008,HostNetwork:false,HostPID:false,HostIPC:false,SecurityContext:&PodSecurityContext{SELinuxOptions:nil,RunAsUser:nil,RunAsNonRoot:nil,SupplementalGroups:[],FSGroup:nil,RunAsGroup:nil,Sysctls:[],},ImagePullSecrets:[],Hostname:,Subdomain:,Affinity:nil,SchedulerName:default-scheduler,InitContainers:[],AutomountServiceAccountToken:nil,Tolerations:[{node.kubernetes.io/not-ready Exists  NoExecute 0xc0024b3010} {node.kubernetes.io/unreachable Exists  NoExecute 0xc0024b3030}],HostAliases:[],PriorityClassName:,Priority:*0,DNSConfig:nil,ShareProcessNamespace:nil,ReadinessGates:[],RuntimeClassName:nil,EnableServiceLinks:*true,},Status:PodStatus{Phase:Running,Conditions:[{Initialized True 0001-01-01 00:00:00 +0000 UTC 2019-05-22 20:46:56 +0000 UTC  } {Ready True 0001-01-01 00:00:00 +0000 UTC 2019-05-22 20:46:58 +0000 UTC  } {ContainersReady True 0001-01-01 00:00:00 +0000 UTC 2019-05-22 20:46:58 +0000 UTC  } {PodScheduled True 0001-01-01 00:00:00 +0000 UTC 2019-05-22 20:46:56 +0000 UTC  }],Message:,Reason:,HostIP:10.39.5.213,PodIP:10.244.10.98,StartTime:2019-05-22 20:46:56 +0000 UTC,ContainerStatuses:[{p {nil ContainerStateRunning{StartedAt:2019-05-22 20:46:58 +0000 UTC,} nil} {nil nil nil} true 0 gcr.io/kubernetes-e2e-test-images/serve-hostname:1.1 docker-pullable://gcr.io/kubernetes-e2e-test-images/serve-hostname@sha256:bab70473a6d8ef65a22625dc9a1b0f0452e811530fdbe77e4408523460177ff1 docker://aac5727f5a63209a6c3ae35a7c6e0b4b463c20fcf39638bc1871a66e37201604}],QOSClass:BestEffort,InitContainerStatuses:[],NominatedNodeName:,},}
+
+STEP: checking for scheduler event about the pod
+May 22 20:47:02.857: INFO: Saw scheduler event for our pod.
+STEP: checking for kubelet event about the pod
+May 22 20:47:04.863: INFO: Saw kubelet event for our pod.
+STEP: deleting the pod
+[AfterEach] [k8s.io] [sig-node] Events
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 20:47:04.871: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-events-tsl5g" for this suite.
+May 22 20:47:50.897: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 20:47:51.015: INFO: namespace: e2e-tests-events-tsl5g, resource: bindings, ignored listing per whitelist
+May 22 20:47:51.044: INFO: namespace e2e-tests-events-tsl5g deletion completed in 46.162609649s
+
+• [SLOW TEST:54.325 seconds]
+[k8s.io] [sig-node] Events
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:694
+  should be sent by kubelets and the scheduler about pods scheduling and running  [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSSSSSS
+------------------------------
+[k8s.io] Pods 
+  should support retrieving logs from the container over websockets [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+[BeforeEach] [k8s.io] Pods
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:153
+STEP: Creating a kubernetes client
+May 22 20:47:51.045: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: Building a namespace api object, basename pods
+STEP: Waiting for a default service account to be provisioned in namespace
+[BeforeEach] [k8s.io] Pods
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/pods.go:132
+[It] should support retrieving logs from the container over websockets [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+May 22 20:47:51.151: INFO: >>> kubeConfig: /tmp/kubeconfig-090171009
+STEP: creating the pod
+STEP: submitting the pod to kubernetes
+[AfterEach] [k8s.io] Pods
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 20:47:55.201: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-pods-5qv8k" for this suite.
+May 22 20:48:41.222: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 20:48:41.242: INFO: namespace: e2e-tests-pods-5qv8k, resource: bindings, ignored listing per whitelist
+May 22 20:48:41.344: INFO: namespace e2e-tests-pods-5qv8k deletion completed in 46.135896735s
+
+• [SLOW TEST:50.299 seconds]
+[k8s.io] Pods
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:694
+  should support retrieving logs from the container over websockets [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSSSSSSSSSSSSSSSSSSSS
+------------------------------
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/common/pods.go:132
+[It] should be submitted and removed [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+STEP: creating the pod
+STEP: setting up watch
+STEP: submitting the pod to kubernetes
+STEP: verifying the pod is in kubernetes
+STEP: verifying pod creation was observed
+May 22 20:50:54.845: INFO: running pod: &v1.Pod{TypeMeta:v1.TypeMeta{Kind:"", APIVersion:""}, ObjectMeta:v1.ObjectMeta{Name:"pod-submit-remove-4884c529-7cd3-11e9-85fe-4e19dc9bc03e", GenerateName:"", Namespace:"e2e-tests-pods-t5s7x", SelfLink:"/api/v1/namespaces/e2e-tests-pods-t5s7x/pods/pod-submit-remove-4884c529-7cd3-11e9-85fe-4e19dc9bc03e", UID:"48869b1b-7cd3-11e9-9fce-00505680c9f6", ResourceVersion:"1995834", Generation:0, CreationTimestamp:v1.Time{Time:time.Time{wall:0x0, ext:63694155050, loc:(*time.Location)(0x7b33b80)}}, DeletionTimestamp:(*v1.Time)(nil), DeletionGracePeriodSeconds:(*int64)(nil), Labels:map[string]string{"name":"foo", "time":"811536409"}, Annotations:map[string]string{"cni.projectcalico.org/podIP":"10.244.7.109/32"}, OwnerReferences:[]v1.OwnerReference(nil), Initializers:(*v1.Initializers)(nil), Finalizers:[]string(nil), ClusterName:""}, Spec:v1.PodSpec{Volumes:[]v1.Volume{v1.Volume{Name:"default-token-gzm9r", VolumeSource:v1.VolumeSource{HostPath:(*v1.HostPathVolumeSource)(nil), EmptyDir:(*v1.EmptyDirVolumeSource)(nil), GCEPersistentDisk:(*v1.GCEPersistentDiskVolumeSource)(nil), AWSElasticBlockStore:(*v1.AWSElasticBlockStoreVolumeSource)(nil), GitRepo:(*v1.GitRepoVolumeSource)(nil), Secret:(*v1.SecretVolumeSource)(0xc002834b40), NFS:(*v1.NFSVolumeSource)(nil), ISCSI:(*v1.ISCSIVolumeSource)(nil), Glusterfs:(*v1.GlusterfsVolumeSource)(nil), PersistentVolumeClaim:(*v1.PersistentVolumeClaimVolumeSource)(nil), RBD:(*v1.RBDVolumeSource)(nil), FlexVolume:(*v1.FlexVolumeSource)(nil), Cinder:(*v1.CinderVolumeSource)(nil), CephFS:(*v1.CephFSVolumeSource)(nil), Flocker:(*v1.FlockerVolumeSource)(nil), DownwardAPI:(*v1.DownwardAPIVolumeSource)(nil), FC:(*v1.FCVolumeSource)(nil), AzureFile:(*v1.AzureFileVolumeSource)(nil), ConfigMap:(*v1.ConfigMapVolumeSource)(nil), VsphereVolume:(*v1.VsphereVirtualDiskVolumeSource)(nil), Quobyte:(*v1.QuobyteVolumeSource)(nil), AzureDisk:(*v1.AzureDiskVolumeSource)(nil), PhotonPersistentDisk:(*v1.PhotonPersistentDiskVolumeSource)(nil), Projected:(*v1.ProjectedVolumeSource)(nil), PortworxVolume:(*v1.PortworxVolumeSource)(nil), ScaleIO:(*v1.ScaleIOVolumeSource)(nil), StorageOS:(*v1.StorageOSVolumeSource)(nil)}}}, InitContainers:[]v1.Container(nil), Containers:[]v1.Container{v1.Container{Name:"nginx", Image:"docker.io/library/nginx:1.14-alpine", Command:[]string(nil), Args:[]string(nil), WorkingDir:"", Ports:[]v1.ContainerPort(nil), EnvFrom:[]v1.EnvFromSource(nil), Env:[]v1.EnvVar(nil), Resources:v1.ResourceRequirements{Limits:v1.ResourceList(nil), Requests:v1.ResourceList(nil)}, VolumeMounts:[]v1.VolumeMount{v1.VolumeMount{Name:"default-token-gzm9r", ReadOnly:true, MountPath:"/var/run/secrets/kubernetes.io/serviceaccount", SubPath:"", MountPropagation:(*v1.MountPropagationMode)(nil)}}, VolumeDevices:[]v1.VolumeDevice(nil), LivenessProbe:(*v1.Probe)(nil), ReadinessProbe:(*v1.Probe)(nil), Lifecycle:(*v1.Lifecycle)(nil), TerminationMessagePath:"/dev/termination-log", TerminationMessagePolicy:"File", ImagePullPolicy:"IfNotPresent", SecurityContext:(*v1.SecurityContext)(nil), Stdin:false, StdinOnce:false, TTY:false}}, RestartPolicy:"Always", TerminationGracePeriodSeconds:(*int64)(0xc002829768), ActiveDeadlineSeconds:(*int64)(nil), DNSPolicy:"ClusterFirst", NodeSelector:map[string]string(nil), ServiceAccountName:"default", DeprecatedServiceAccount:"default", AutomountServiceAccountToken:(*bool)(nil), NodeName:"tpacospakd006", HostNetwork:false, HostPID:false, HostIPC:false, ShareProcessNamespace:(*bool)(nil), SecurityContext:(*v1.PodSecurityContext)(0xc001aef6e0), ImagePullSecrets:[]v1.LocalObjectReference(nil), Hostname:"", Subdomain:"", Affinity:(*v1.Affinity)(nil), SchedulerName:"default-scheduler", Tolerations:[]v1.Toleration{v1.Toleration{Key:"node.kubernetes.io/not-ready", Operator:"Exists", Value:"", Effect:"NoExecute", TolerationSeconds:(*int64)(0xc0028297b0)}, v1.Toleration{Key:"node.kubernetes.io/unreachable", Operator:"Exists", Value:"", Effect:"NoExecute", TolerationSeconds:(*int64)(0xc0028297d0)}}, HostAliases:[]v1.HostAlias(nil), PriorityClassName:"", Priority:(*int32)(0xc0028297d8), DNSConfig:(*v1.PodDNSConfig)(nil), ReadinessGates:[]v1.PodReadinessGate(nil), RuntimeClassName:(*string)(nil), EnableServiceLinks:(*bool)(0xc0028297dc)}, Status:v1.PodStatus{Phase:"Running", Conditions:[]v1.PodCondition{v1.PodCondition{Type:"Initialized", Status:"True", LastProbeTime:v1.Time{Time:time.Time{wall:0x0, ext:0, loc:(*time.Location)(nil)}}, LastTransitionTime:v1.Time{Time:time.Time{wall:0x0, ext:63694155050, loc:(*time.Location)(0x7b33b80)}}, Reason:"", Message:""}, v1.PodCondition{Type:"Ready", Status:"True", LastProbeTime:v1.Time{Time:time.Time{wall:0x0, ext:0, loc:(*time.Location)(nil)}}, LastTransitionTime:v1.Time{Time:time.Time{wall:0x0, ext:63694155053, loc:(*time.Location)(0x7b33b80)}}, Reason:"", Message:""}, v1.PodCondition{Type:"ContainersReady", Status:"True", LastProbeTime:v1.Time{Time:time.Time{wall:0x0, ext:0, loc:(*time.Location)(nil)}}, LastTransitionTime:v1.Time{Time:time.Time{wall:0x0, ext:63694155053, loc:(*time.Location)(0x7b33b80)}}, Reason:"", Message:""}, v1.PodCondition{Type:"PodScheduled", Status:"True", LastProbeTime:v1.Time{Time:time.Time{wall:0x0, ext:0, loc:(*time.Location)(nil)}}, LastTransitionTime:v1.Time{Time:time.Time{wall:0x0, ext:63694155050, loc:(*time.Location)(0x7b33b80)}}, Reason:"", Message:""}}, Message:"", Reason:"", NominatedNodeName:"", HostIP:"10.39.5.211", PodIP:"10.244.7.109", StartTime:(*v1.Time)(0xc0025d6c40), InitContainerStatuses:[]v1.ContainerStatus(nil), ContainerStatuses:[]v1.ContainerStatus{v1.ContainerStatus{Name:"nginx", State:v1.ContainerState{Waiting:(*v1.ContainerStateWaiting)(nil), Running:(*v1.ContainerStateRunning)(0xc0025d6c60), Terminated:(*v1.ContainerStateTerminated)(nil)}, LastTerminationState:v1.ContainerState{Waiting:(*v1.ContainerStateWaiting)(nil), Running:(*v1.ContainerStateRunning)(nil), Terminated:(*v1.ContainerStateTerminated)(nil)}, Ready:true, RestartCount:0, Image:"nginx:1.14-alpine", ImageID:"docker-pullable://nginx@sha256:485b610fefec7ff6c463ced9623314a04ed67e3945b9c08d7e53a47f6d108dc7", ContainerID:"docker://120b113165ae73e18e77ad9a3c6f7003dd45cde6d7cace8617034e7551c25174"}}, QOSClass:"BestEffort"}}
+STEP: deleting the pod gracefully
+STEP: verifying the kubelet observed the termination notice
+STEP: verifying pod deletion was observed
+[AfterEach] [k8s.io] Pods
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:154
+May 22 20:51:07.985: INFO: Waiting up to 3m0s for all (but 0) nodes to be ready
+STEP: Destroying namespace "e2e-tests-pods-t5s7x" for this suite.
+May 22 20:51:14.008: INFO: Waiting up to 30s for server preferred namespaced resources to be successfully discovered
+May 22 20:51:14.110: INFO: namespace: e2e-tests-pods-t5s7x, resource: bindings, ignored listing per whitelist
+May 22 20:51:14.154: INFO: namespace e2e-tests-pods-t5s7x deletion completed in 6.162092383s
+
+• [SLOW TEST:23.450 seconds]
+[k8s.io] Pods
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:694
+  should be submitted and removed [NodeConformance] [Conformance]
+  /workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:699
+------------------------------
+SSSSSSSSMay 22 20:51:14.154: INFO: Running AfterSuite actions on all nodes
+May 22 20:51:14.154: INFO: Running AfterSuite actions on node 1
+May 22 20:51:14.154: INFO: Skipping dumping logs from cluster
+
+
+Summarizing 1 Failure:
+
+[Fail] [sig-apps] Daemon set [Serial] [It] should update pod when spec was updated and update strategy is RollingUpdate [Conformance] 
+/workspace/anago-v1.13.0-rc.2.1+ddf47ac13c1a94/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/apps/daemon_set.go:355
+
+Ran 200 of 1946 Specs in 6177.480 seconds
+FAIL! -- 199 Passed | 1 Failed | 0 Pending | 1746 Skipped --- FAIL: TestE2E (6177.85s)
+FAIL
+
+Ginkgo ran 1 suite in 1h43m1.119877784s
+Test Suite Failed
