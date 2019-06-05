@@ -15,7 +15,9 @@ for the following use cases:
 * Workload debugging
 * Custom data collection via extensible plugins
 
-Sonobuoy supports Kubernetes versions 1.11, 1.12 and 1.13.
+Sonobuoy supports 3 Kubernetes minor versions: the current release and 2 minor versions before. Sonobuoy is currently versioned to track the Kubernetes minor version to clarify the support matrix. For example, Sonobuoy v0.14.x would support Kubernetes 1.14.x, 1.13.x, and 1.12.x.
+
+> Note: You can skip this version enforcement by running Sonobuoy with the `--skip-preflight` flag.
 
 ## Prerequisites
 
@@ -42,7 +44,6 @@ Golang version 1.12 or greater is recommended. Golang can be installed via
 
 ## Getting Started
 To launch conformance tests (ensuring [CNCF][cncf] conformance) and wait until they are finished run:
-
 ```
 sonobuoy run --wait
 ```
@@ -50,13 +51,11 @@ sonobuoy run --wait
 > Note: Using `--mode quick` will significantly shorten the runtime of Sonobuoy. It runs just a single test, helping to quickly validate your Sonobuoy and Kubernetes configuration.
 
 Get the results from the plugins (e.g. e2e test results):
-
 ```
 results=$(sonobuoy retrieve)
 ```
 
 Inspect results for test failures.  This will list the number of tests failed and their names:
-
 ```
 sonobuoy e2e $results
 ```
@@ -77,13 +76,11 @@ sonobuoy delete --wait
 
 ### Monitoring Sonobuoy during a run
 You can check on the status of each of the plugins running with:
-
 ```
 sonobuoy status
 ```
 
 You can also inspect the logs of all Sonobuoy containers:
-
 ```
 sonobuoy logs
 ```
@@ -108,7 +105,6 @@ issue][issue].
 
 There are some Kubernetes e2e tests that may leak resources. Sonobuoy can
 help clean those up as well by deleting all namespaces prefixed with `e2e`:
-
 ```
 sonobuoy delete --all
 ```

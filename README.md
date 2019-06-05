@@ -15,7 +15,9 @@ for the following use cases:
 * Workload debugging
 * Custom data collection via extensible plugins
 
-Sonobuoy supports Kubernetes versions 1.11, 1.12 and 1.13.
+Sonobuoy supports 3 Kubernetes minor versions: the current release and 2 minor versions before. Sonobuoy is currently versioned to track the Kubernetes minor version to clarify the support matrix. For example, Sonobuoy v0.14.x would support Kubernetes 1.14.x, 1.13.x, and 1.12.x.
+
+> Note: You can skip this version enforcement by running Sonobuoy with the `--skip-preflight` flag.
 
 ## Prerequisites
 
