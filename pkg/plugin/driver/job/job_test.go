@@ -19,16 +19,22 @@ package job
 import (
 	"crypto/sha1"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
+	k8stesting "k8s.io/client-go/testing"
 )
 
 const (
@@ -159,4 +165,83 @@ func TestFillTemplate(t *testing.T) {
 		t.Errorf("Expected annotations key1:val1 and key2:val2 to be set, but got %v", pod.Annotations)
 	}
 
+}
+
+func TestMonitorOnce(t *testing.T) {
+	// Note: the pods must be marked with the label "sonobuoy-run" or else our labelSelector
+	// logic will filter them out even though the fake server returns them.
+
+	testCases := []struct {
+		desc       string
+		expectDone bool
+
+		// Ensure we are getting the err result we expect; lots of ways to get errors
+		// that may not be clear.
+		expectErrResultMsg string
+
+		job           *Plugin
+		podOnServer   *corev1.Pod
+		errFromServer error
+	}{
+		{
+			desc:       "Cleaned up indicates exit without error",
+			expectDone: true,
+			job:        &Plugin{driver.Base{CleanedUp: true}},
+		}, {
+			desc:               "Missing pod results in error",
+			job:                &Plugin{},
+			podOnServer:        nil,
+			errFromServer:      errors.New("forcedError"),
+			expectErrResultMsg: "forcedError",
+			expectDone:         true,
+		}, {
+			desc: "Failing pod results in error",
+			job:  &Plugin{},
+			podOnServer: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
+				Status: corev1.PodStatus{
+					Conditions: []corev1.PodCondition{
+						{Reason: "Unschedulable"},
+					},
+				},
+			},
+			expectErrResultMsg: "Can't schedule pod: ",
+			expectDone:         true,
+		}, {
+			desc: "Healthy pod results in no error and continued monitoring",
+			job:  &Plugin{driver.Base{Namespace: "testNS"}},
+			podOnServer: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			fclient := fake.NewSimpleClientset()
+			fclient.PrependReactor("*", "*", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+				if tc.podOnServer == nil {
+					return true, &corev1.PodList{}, tc.errFromServer
+				}
+				podList := &corev1.PodList{
+					Items: []corev1.Pod{
+						*(tc.podOnServer),
+					},
+				}
+				return true, podList, tc.errFromServer
+			})
+
+			done, errResult := tc.job.monitorOnce(fclient, nil)
+			if done != tc.expectDone {
+				t.Errorf("Expected %v but got %v", tc.expectDone, done)
+			}
+			switch {
+			case errResult != nil && tc.expectErrResultMsg == "":
+				t.Errorf("Expected no error but got %v", errResult)
+			case errResult == nil && tc.expectErrResultMsg != "":
+				t.Errorf("Expected error %v but got nil", tc.expectErrResultMsg)
+			case errResult != nil && tc.expectErrResultMsg != errResult.Error:
+				t.Errorf("Expected error %q but got %q", tc.expectErrResultMsg, errResult.Error)
+			}
+		})
+	}
 }

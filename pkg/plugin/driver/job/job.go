@@ -127,27 +127,37 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, _ []v1.Node, resultsCh
 		// enough time to create a Pod
 		// TODO: maybe use a watcher instead of polling.
 		time.Sleep(10 * time.Second)
-		// If we've cleaned up after ourselves, stop monitoring
-		if p.CleanedUp {
-			break
+		done, errResult := p.monitorOnce(kubeclient, nil)
+		if errResult != nil {
+			resultsCh <- errResult
 		}
-
-		// Make sure there's a pod
-		pod, err := p.findPod(kubeclient)
-		if err != nil {
-			resultsCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{"error": err.Error()}, "")
-			break
-		}
-
-		// Make sure the pod isn't failing
-		if isFailing, reason := utils.IsPodFailing(pod); isFailing {
-			resultsCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
-				"error": reason,
-				"pod":   pod,
-			}, "")
-			break
+		if done {
+			return
 		}
 	}
+}
+
+func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, _ []v1.Node) (done bool, errResult *plugin.Result) {
+	// If we've cleaned up after ourselves, stop monitoring
+	if p.CleanedUp {
+		return true, nil
+	}
+
+	// Make sure there's a pod
+	pod, err := p.findPod(kubeclient)
+	if err != nil {
+		return true, utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{"error": err.Error()}, "")
+	}
+
+	// Make sure the pod isn't failing
+	if isFailing, reason := utils.IsPodFailing(pod); isFailing {
+		return true, utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
+			"error": reason,
+			"pod":   pod,
+		}, "")
+	}
+
+	return false, nil
 }
 
 // Cleanup cleans up the k8s Job and ConfigMap created by this plugin instance
