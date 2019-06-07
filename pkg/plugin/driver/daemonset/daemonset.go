@@ -182,65 +182,81 @@ func (p *Plugin) Monitor(kubeclient kubernetes.Interface, availableNodes []v1.No
 		// Sleep between each poll, which should give the DaemonSet
 		// enough time to create pods
 		time.Sleep(10 * time.Second)
-		// If we've cleaned up after ourselves, stop monitoring
-		if p.CleanedUp {
-			break
+		done, errResults := p.monitorOnce(kubeclient, availableNodes, podsFound, podsReported)
+		for _, v := range errResults {
+			resultsCh <- v
 		}
-
-		// If we don't have a daemonset created, retry next time.  We
-		// only send errors if we successfully see that an expected pod
-		// is having issues.
-		ds, err := p.findDaemonSet(kubeclient)
-		if err != nil {
-			errlog.LogError(errors.Wrapf(err, "could not find DaemonSet created by plugin %v, will retry", p.GetName()))
-			continue
-		}
-
-		// Find all the pods configured by this daemonset
-		pods, err := kubeclient.CoreV1().Pods(p.Namespace).List(p.listOptions())
-		if err != nil {
-			errlog.LogError(errors.Wrapf(err, "could not find pods created by plugin %v, will retry", p.GetName()))
-			// Likewise, if we can't query for pods, just retry next time.
-			continue
-		}
-
-		// Cycle through each pod in this daemonset, reporting any failures.
-		for _, pod := range pods.Items {
-			nodeName := pod.Spec.NodeName
-			// We don't care about nodes we already saw
-			if podsReported[nodeName] {
-				continue
-			}
-
-			podsFound[nodeName] = true
-			// Check if it's failing and submit the error result
-			if isFailing, reason := utils.IsPodFailing(&pod); isFailing {
-				podsReported[nodeName] = true
-
-				resultsCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
-					"error": reason,
-					"pod":   pod,
-				}, nodeName)
-			}
-		}
-
-		// DaemonSets are a bit strange, if node taints are preventing
-		// scheduling, pods won't even be created (unlike say Jobs,
-		// which will create the pod and leave it in an unscheduled
-		// state.)  So take any nodes we didn't see pods on, and report
-		// issues scheduling them.
-		for _, node := range availableNodes {
-			if !podsFound[node.Name] && !podsReported[node.Name] {
-				podsReported[node.Name] = true
-				resultsCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
-					"error": fmt.Sprintf(
-						"No pod was scheduled on node %v within %v. Check tolerations for plugin %v",
-						node.Name,
-						time.Now().Sub(ds.CreationTimestamp.Time),
-						p.Definition.Name,
-					),
-				}, node.Name)
-			}
+		if done {
+			return
 		}
 	}
+}
+
+// monitorOnce handles the actual logic executed in the Monitor routine which also adds polling.
+// It will return a boolean, indicating monitoring should stop, along with a result if one should
+// be generated. The arguments, podsFound and podsReported, are used to persist some knowledge about
+// the pods between calls.
+func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, availableNodes []v1.Node, podsFound, podsReported map[string]bool) (done bool, retErrs []*plugin.Result) {
+	// If we've cleaned up after ourselves, stop monitoring
+	if p.CleanedUp {
+		return true, nil
+	}
+
+	// If we don't have a daemonset created, retry next time.  We
+	// only send errors if we successfully see that an expected pod
+	// is having issues.
+	ds, err := p.findDaemonSet(kubeclient)
+	if err != nil {
+		errlog.LogError(errors.Wrapf(err, "could not find DaemonSet created by plugin %v, will retry", p.GetName()))
+		return false, nil
+	}
+
+	// Find all the pods configured by this daemonset
+	pods, err := kubeclient.CoreV1().Pods(p.Namespace).List(p.listOptions())
+	if err != nil {
+		errlog.LogError(errors.Wrapf(err, "could not find pods created by plugin %v, will retry", p.GetName()))
+		// Likewise, if we can't query for pods, just retry next time.
+		return false, nil
+	}
+
+	// Cycle through each pod in this daemonset, reporting any failures.
+	for _, pod := range pods.Items {
+		nodeName := pod.Spec.NodeName
+		// We don't care about nodes we already saw
+		if podsReported[nodeName] {
+			continue
+		}
+
+		podsFound[nodeName] = true
+		// Check if it's failing and submit the error result
+		if isFailing, reason := utils.IsPodFailing(&pod); isFailing {
+			podsReported[nodeName] = true
+
+			retErrs = append(retErrs, utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
+				"error": reason,
+				"pod":   pod,
+			}, nodeName))
+		}
+	}
+
+	// DaemonSets are a bit strange, if node taints are preventing
+	// scheduling, pods won't even be created (unlike say Jobs,
+	// which will create the pod and leave it in an unscheduled
+	// state.)  So take any nodes we didn't see pods on, and report
+	// issues scheduling them.
+	for _, node := range availableNodes {
+		if !podsFound[node.Name] && !podsReported[node.Name] {
+			podsReported[node.Name] = true
+			retErrs = append(retErrs, utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
+				"error": fmt.Sprintf(
+					"No pod was scheduled on node %v within %v. Check tolerations for plugin %v",
+					node.Name,
+					time.Now().Sub(ds.CreationTimestamp.Time),
+					p.Definition.Name,
+				),
+			}, node.Name))
+		}
+	}
+
+	return false, retErrs
 }

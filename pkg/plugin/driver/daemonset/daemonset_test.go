@@ -19,17 +19,22 @@ package daemonset
 import (
 	"crypto/sha1"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
+	k8stesting "k8s.io/client-go/testing"
 )
 
 const (
@@ -164,5 +169,151 @@ func TestFillTemplate(t *testing.T) {
 	if daemonSet.Spec.Template.Annotations["key1"] != "val1" ||
 		daemonSet.Spec.Template.Annotations["key2"] != "val2" {
 		t.Errorf("Expected annotations key1:val1 and key2:val2 to be set, but got %v", daemonSet.Spec.Template.Annotations)
+	}
+}
+
+func TestMonitorOnce(t *testing.T) {
+	// Note: the pods/ds must be marked with the label "sonobuoy-run" or else our labelSelector
+	// logic will filter them out even though the fake server returns them.
+
+	// We will need to be able to grab these items repeatedly and tweak the minor details
+	// so these helpers make the test cases much more readable.
+	testPlugin := &Plugin{Base: driver.Base{Definition: plugin.Definition{Name: "myPlugin"}}}
+	validDS := appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
+	}
+	validPod := func(node string) corev1.Pod {
+		return corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
+			Spec:       corev1.PodSpec{NodeName: node},
+		}
+	}
+	failingPod := func(node string) corev1.Pod {
+		return corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
+			Spec:       corev1.PodSpec{NodeName: node},
+			Status: corev1.PodStatus{
+				Conditions: []corev1.PodCondition{
+					{Reason: "Unschedulable", Message: "conditionMsg"},
+				},
+			},
+		}
+	}
+	default3Nodes := []corev1.Node{
+		{ObjectMeta: metav1.ObjectMeta{Name: "node1"}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "node2"}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "node3"}},
+	}
+
+	testCases := []struct {
+		desc       string
+		expectDone bool
+
+		// Ensure we are getting the err result we expect; lots of ways to get errors
+		// that may not be clear.
+		expectErrResultMsgs []string
+
+		dsPlugin                *Plugin
+		dsOnServer              *appsv1.DaemonSetList
+		podsOnServer            *corev1.PodList
+		nodes                   []corev1.Node
+		errFromServerForDSList  error
+		errFromServerForPodList error
+	}{
+		{
+			desc:       "Cleaned up indicates exit without error",
+			expectDone: true,
+			dsPlugin:   &Plugin{driver.Base{CleanedUp: true}},
+		}, {
+			desc:       "Missing daemonset results in no errors",
+			dsPlugin:   testPlugin,
+			dsOnServer: &appsv1.DaemonSetList{},
+		}, {
+			desc:                    "Failed pod lookup results in no error",
+			dsPlugin:                testPlugin,
+			dsOnServer:              &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{validDS}},
+			podsOnServer:            &corev1.PodList{},
+			errFromServerForPodList: errors.New("pod lookup err"),
+		}, {
+			desc:         "Missing pods results in errors for each",
+			nodes:        default3Nodes,
+			dsPlugin:     testPlugin,
+			dsOnServer:   &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{validDS}},
+			podsOnServer: &corev1.PodList{},
+			expectErrResultMsgs: []string{
+				"No pod was scheduled on node node1 within 2562047h47m16.854775807s. Check tolerations for plugin myPlugin",
+				"No pod was scheduled on node node2 within 2562047h47m16.854775807s. Check tolerations for plugin myPlugin",
+				"No pod was scheduled on node node3 within 2562047h47m16.854775807s. Check tolerations for plugin myPlugin",
+			},
+		}, {
+			desc:       "Failing pod results in error",
+			nodes:      default3Nodes,
+			dsPlugin:   testPlugin,
+			dsOnServer: &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{validDS}},
+			podsOnServer: &corev1.PodList{
+				Items: []corev1.Pod{failingPod("node1"), validPod("node2"), validPod("node3")},
+			},
+			expectErrResultMsgs: []string{"Can't schedule pod: conditionMsg"},
+		}, {
+			desc:       "Two failing pod results in 2 errors",
+			nodes:      default3Nodes,
+			dsPlugin:   testPlugin,
+			dsOnServer: &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{validDS}},
+			podsOnServer: &corev1.PodList{
+				Items: []corev1.Pod{validPod("node2"), failingPod("node1"), failingPod("node3")},
+			},
+			expectErrResultMsgs: []string{"Can't schedule pod: conditionMsg", "Can't schedule pod: conditionMsg"},
+		}, {
+			desc:       "Healthy pods results in no error and continued monitoring",
+			nodes:      default3Nodes,
+			dsPlugin:   testPlugin,
+			dsOnServer: &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{validDS}},
+			podsOnServer: &corev1.PodList{
+				Items: []corev1.Pod{validPod("node1"), validPod("node2"), validPod("node3")},
+			},
+		}, {
+			desc:       "Failing and missing pod errors both get reported",
+			nodes:      default3Nodes,
+			dsPlugin:   testPlugin,
+			dsOnServer: &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{validDS}},
+			podsOnServer: &corev1.PodList{
+				Items: []corev1.Pod{failingPod("node2")},
+			},
+			expectErrResultMsgs: []string{
+				"Can't schedule pod: conditionMsg",
+				"No pod was scheduled on node node1 within 2562047h47m16.854775807s. Check tolerations for plugin myPlugin",
+				"No pod was scheduled on node node3 within 2562047h47m16.854775807s. Check tolerations for plugin myPlugin",
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			fclient := fake.NewSimpleClientset()
+			fclient.PrependReactor("list", "daemonsets", func(action k8stesting.Action) (handled bool, ret kuberuntime.Object, err error) {
+				return true, tc.dsOnServer, tc.errFromServerForDSList
+			})
+			fclient.PrependReactor("list", "pods", func(action k8stesting.Action) (handled bool, ret kuberuntime.Object, err error) {
+				return true, tc.podsOnServer, tc.errFromServerForPodList
+			})
+			foundmap, reportedmap := map[string]bool{}, map[string]bool{}
+
+			done, errResults := tc.dsPlugin.monitorOnce(fclient, tc.nodes, foundmap, reportedmap)
+			if done != tc.expectDone {
+				t.Errorf("Expected %v but got %v", tc.expectDone, done)
+			}
+
+			if len(errResults) != len(tc.expectErrResultMsgs) {
+				t.Errorf("Expected %v errors but got %v:", len(tc.expectErrResultMsgs), len(errResults))
+				for _, v := range errResults {
+					t.Errorf("  - %q\n", v.Error)
+				}
+				t.FailNow()
+			}
+			for i := range errResults {
+				if errResults[i].Error != tc.expectErrResultMsgs[i] {
+					t.Errorf("Expected error[%v] to be %q but got %q", i, tc.expectErrResultMsgs[i], errResults[i].Error)
+				}
+			}
+		})
 	}
 }
