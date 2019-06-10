@@ -26,12 +26,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var deleteopts client.DeleteConfig
-
 var deleteFlags struct {
-	kubeconfig Kubeconfig
+	namespace  string
 	rbacMode   RBACMode
+	deleteAll  bool
 	wait       int
+	kubeconfig Kubeconfig
 }
 
 func NewCmdDelete() *cobra.Command {
@@ -43,9 +43,9 @@ func NewCmdDelete() *cobra.Command {
 	}
 
 	AddKubeconfigFlag(&deleteFlags.kubeconfig, cmd.Flags())
-	AddNamespaceFlag(&deleteopts.Namespace, cmd.Flags())
+	AddNamespaceFlag(&deleteFlags.namespace, cmd.Flags())
 	AddRBACModeFlags(&deleteFlags.rbacMode, cmd.Flags(), DetectRBACMode)
-	AddDeleteAllFlag(&deleteopts.DeleteAll, cmd.Flags())
+	AddDeleteAllFlag(&deleteFlags.deleteAll, cmd.Flags())
 	AddDeleteWaitFlag(&deleteFlags.wait, cmd.Flags())
 
 	return cmd
@@ -58,21 +58,26 @@ func deleteSonobuoyRun(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client, err := sbc.Client()
+	kc, err := sbc.Client()
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
 
-	rbacEnabled, err := deleteFlags.rbacMode.Enabled(client)
+	rbacEnabled, err := deleteFlags.rbacMode.Enabled(kc)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "couldn't detect RBAC status"))
 		os.Exit(1)
 	}
-	deleteopts.EnableRBAC = rbacEnabled
-	deleteopts.Wait = time.Duration(deleteFlags.wait) * time.Minute
 
-	if err := sbc.Delete(&deleteopts); err != nil {
+	deleteCfg := &client.DeleteConfig{
+		Namespace:  deleteFlags.namespace,
+		EnableRBAC: rbacEnabled,
+		DeleteAll:  deleteFlags.deleteAll,
+		Wait:       time.Duration(deleteFlags.wait) * time.Minute,
+	}
+
+	if err := sbc.Delete(deleteCfg); err != nil {
 		errlog.LogError(errors.Wrap(err, "failed to delete sonobuoy resources"))
 		os.Exit(1)
 	}

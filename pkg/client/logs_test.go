@@ -17,6 +17,7 @@ package client
 
 import (
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -199,5 +200,47 @@ func TestLogReaderNoError(t *testing.T) {
 				t.Fatalf("Expected Read to be called %v times but was only called %v times", len(tc.expectedReads), i)
 			}
 		})
+	}
+}
+
+func TestLogReaderInvalidConfig(t *testing.T) {
+	testcases := []struct {
+		desc             string
+		config           *LogConfig
+		expectedError    bool
+		expectedErrorMsg string
+	}{
+		{
+			desc:             "providing a nil config results in an error",
+			config:           nil,
+			expectedError:    true,
+			expectedErrorMsg: "nil LogConfig provided",
+		},
+		{
+			desc:             "providing an invalid config results in an error",
+			config:           &LogConfig{},
+			expectedError:    true,
+			expectedErrorMsg: "config validation failed",
+		},
+	}
+
+	c, err := NewSonobuoyClient(nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tc := range testcases {
+		_, err = c.LogReader(tc.config)
+		if !tc.expectedError && err != nil {
+			t.Errorf("Expected no error, got: %v", err)
+		}
+
+		if tc.expectedError {
+			if err == nil {
+				t.Errorf("Expected provided config to be invalid but got no error")
+			} else if !strings.Contains(err.Error(), tc.expectedErrorMsg) {
+				t.Errorf("Expected error to contain %q, got %q", tc.expectedErrorMsg, err.Error())
+			}
+		}
 	}
 }

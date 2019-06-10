@@ -43,6 +43,14 @@ var (
 // its own namespace, cluster roles/bindings, and optionally e2e scoped
 // namespaces.
 func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
+	if cfg == nil {
+		return errors.New("nil DeleteConfig provided")
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return errors.Wrap(err, "config validation failed")
+	}
+
 	client, err := c.Client()
 	if err != nil {
 		return err

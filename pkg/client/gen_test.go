@@ -269,6 +269,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 		}, {
 			name: "Duplicates plugin names fail",
 			inputcm: &client.GenConfig{
+				E2EConfig: &client.E2EConfig{},
 				StaticPlugins: []*manifest.Manifest{
 					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
 					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
@@ -357,6 +358,48 @@ func TestGenerateManifestGolden(t *testing.T) {
 				}
 				if !bytes.Equal(fileData, manifest) {
 					t.Errorf("Expected manifest to equal goldenfile: %v but instead got: %v", tc.goldenFile, string(manifest))
+				}
+			}
+		})
+	}
+}
+
+func TestGenerateManifestInvalidConfig(t *testing.T) {
+	testcases := []struct {
+		desc             string
+		config           *client.GenConfig
+		expectedErrorMsg string
+	}{
+		{
+			desc:             "Passing a nil config results in an error",
+			config:           nil,
+			expectedErrorMsg: "nil GenConfig provided",
+		},
+		{
+			desc:             "Passing an invalid config with an empty namespace results in an error",
+			config:           &client.GenConfig{},
+			expectedErrorMsg: "config validation failed",
+		},
+	}
+
+	c, err := client.NewSonobuoyClient(nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.desc, func(t *testing.T) {
+			expectedError := len(tc.expectedErrorMsg) > 0
+			_, err = c.GenerateManifest(tc.config)
+			if !expectedError && err != nil {
+				t.Errorf("Expected no error, got: %v", err)
+			}
+
+			if expectedError {
+				if err == nil {
+					t.Errorf("Expected provided config to be invalid but got no error")
+				} else if !strings.Contains(err.Error(), tc.expectedErrorMsg) {
+					t.Errorf("Expected error to contain %q, got %q", tc.expectedErrorMsg, err.Error())
 				}
 			}
 		})

@@ -40,6 +40,14 @@ var (
 )
 
 func (c *SonobuoyClient) Run(cfg *RunConfig) error {
+	if cfg == nil {
+		return errors.New("nil RunConfig provided")
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return errors.Wrap(err, "config validation failed")
+	}
+
 	manifest, err := c.GenerateManifest(&cfg.GenConfig)
 	if err != nil {
 		return errors.Wrap(err, "couldn't run invalid manifest")

@@ -18,6 +18,7 @@ package client
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	version "github.com/hashicorp/go-version"
@@ -215,6 +216,48 @@ func TestNamespaceCheck(t *testing.T) {
 				t.Fatalf("Expected error to be %q but got %q", tc.expectErr, err)
 			}
 		})
+	}
+}
+
+func TestPreflightChecksInvalidConfig(t *testing.T) {
+	testcases := []struct {
+		desc               string
+		config             *PreflightConfig
+		expectedErrorCount int
+		expectedErrorMsgs  []string
+	}{
+		{
+			desc:               "providing a nil config results in an error",
+			config:             nil,
+			expectedErrorCount: 1,
+			expectedErrorMsgs:  []string{"nil PreflightConfig provided"},
+		},
+		{
+			desc:               "providing an invalid config results in an error",
+			config:             &PreflightConfig{},
+			expectedErrorCount: 1,
+			expectedErrorMsgs:  []string{"config validation failed"},
+		},
+	}
+
+	c, err := NewSonobuoyClient(nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tc := range testcases {
+		errors := c.PreflightChecks(tc.config)
+
+		if len(errors) != tc.expectedErrorCount {
+			t.Errorf("Unexpected number of errors, expected %d, got %d", tc.expectedErrorCount, len(errors))
+		} else {
+			for i, err := range errors {
+				expectedErrorMsg := tc.expectedErrorMsgs[i]
+				if !strings.Contains(err.Error(), expectedErrorMsg) {
+					t.Errorf("Expected error to contain %q, got %q", expectedErrorMsg, err.Error())
+				}
+			}
+		}
 	}
 }
 
