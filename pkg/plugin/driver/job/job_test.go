@@ -30,7 +30,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -201,15 +200,15 @@ func TestMonitorOnce(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
 				Status: corev1.PodStatus{
 					Conditions: []corev1.PodCondition{
-						{Reason: "Unschedulable"},
+						{Reason: "Unschedulable", Message: "conditionMsg"},
 					},
 				},
 			},
-			expectErrResultMsg: "Can't schedule pod: ",
+			expectErrResultMsg: "Can't schedule pod: conditionMsg",
 			expectDone:         true,
 		}, {
 			desc: "Healthy pod results in no error and continued monitoring",
-			job:  &Plugin{driver.Base{Namespace: "testNS"}},
+			job:  &Plugin{},
 			podOnServer: &corev1.Pod{
 				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
 			},
@@ -218,7 +217,7 @@ func TestMonitorOnce(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			fclient := fake.NewSimpleClientset()
-			fclient.PrependReactor("*", "*", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
+			fclient.PrependReactor("*", "*", func(action k8stesting.Action) (handled bool, ret kuberuntime.Object, err error) {
 				if tc.podOnServer == nil {
 					return true, &corev1.PodList{}, tc.errFromServer
 				}
