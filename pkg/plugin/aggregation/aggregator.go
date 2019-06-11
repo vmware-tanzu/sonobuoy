@@ -21,6 +21,7 @@ limitations under the License.
 package aggregation
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -249,11 +250,19 @@ func (a *Aggregator) HandleHTTPResult(result *plugin.Result, w http.ResponseWrit
 //
 // If we support plugins that are just simple commands that the sonobuoy master
 // runs, those plugins can submit results through the same channel.
-func (a *Aggregator) IngestResults(resultsCh <-chan *plugin.Result) {
+func (a *Aggregator) IngestResults(ctx context.Context, resultsCh <-chan *plugin.Result) {
 	for {
-		result, more := <-resultsCh
+		var result *plugin.Result
+		var more bool
+
+		select {
+		case <-ctx.Done():
+			return
+		case result, more = <-resultsCh:
+		}
+
 		if !more {
-			break
+			return
 		}
 
 		err := a.processResult(result)

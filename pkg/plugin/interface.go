@@ -17,6 +17,7 @@ limitations under the License.
 package plugin
 
 import (
+	"context"
 	"crypto/tls"
 	"io"
 	"path"
@@ -37,8 +38,9 @@ type Interface interface {
 	// Monitor continually checks for problems in the resources created by a
 	// plugin (either because it won't schedule, or the image won't
 	// download, too many failed executions, etc) and sends the errors as
-	// Result objects through the provided channel.
-	Monitor(kubeClient kubernetes.Interface, availableNodes []v1.Node, resultsCh chan<- *Result)
+	// Result objects through the provided channel. It should return once the context
+	// is cancelled.
+	Monitor(ctx context.Context, kubeClient kubernetes.Interface, availableNodes []v1.Node, resultsCh chan<- *Result)
 	// ExpectedResults is an array of Result objects that a plugin should
 	// expect to submit.
 	ExpectedResults(nodes []v1.Node) []ExpectedResult
