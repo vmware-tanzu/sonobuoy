@@ -26,7 +26,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -284,25 +284,27 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 		return a.handleArchiveResult(result)
 	}
 
-	// Create the output directory for the result.  Will be of the
-	// form .../plugins/:results_type/:node.json (for DaemonSet plugins) or
-	// .../plugins/:results_type.json (for Job plugins)
-	resultsFile := path.Join(a.OutputDir, result.Path())
-	resultsDir := path.Dir(resultsFile)
+	// Create the output directory for the result. Will be of the
+	// form .../plugins/:results_type/results/[:node|global]/filename.json
+	resultsDir := filepath.Join(a.OutputDir, result.Path())
+	if result.Filename == "" {
+		result.Filename = defaultFilename
+	}
+	resultFile := filepath.Join(resultsDir, result.Filename)
 
 	if err := os.MkdirAll(resultsDir, 0755); err != nil {
-		errors.Wrapf(err, "couldn't create directory %v", resultsDir)
+		errors.Wrapf(err, "couldn't create directory %q", resultsDir)
 		return err
 	}
 
-	outFile, err := os.Create(resultsFile)
+	outFile, err := os.Create(resultFile)
 	if err != nil {
-		return errors.Wrapf(err, "couldn't create results file %v", resultsFile)
+		return errors.Wrapf(err, "couldn't create results file %q", resultFile)
 	}
 	defer outFile.Close()
 
 	if _, err = io.Copy(outFile, result.Body); err != nil {
-		err = errors.Wrapf(err, "could not write body to file %v", outFile.Name())
+		err = errors.Wrapf(err, "could not write body to file %q", resultFile)
 		return err
 	}
 
@@ -311,7 +313,7 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 }
 
 func (a *Aggregator) handleArchiveResult(result *plugin.Result) error {
-	resultsDir := path.Join(a.OutputDir, result.Path())
+	resultsDir := filepath.Join(a.OutputDir, result.Path())
 
 	return errors.Wrapf(
 		tarball.DecodeTarball(result.Body, resultsDir),

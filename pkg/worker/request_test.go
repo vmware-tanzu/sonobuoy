@@ -35,18 +35,18 @@ func TestErrorRequestRetry(t *testing.T) {
 
 	tests := []struct {
 		name string
-		f    func() (io.Reader, string, error)
+		f    func() (io.Reader, string, string, error)
 	}{
 		{
 			name: "error request retry",
-			f: func() (io.Reader, string, error) {
-				return nil, "", errors.New("didn't succeed")
+			f: func() (io.Reader, string, string, error) {
+				return nil, "fakefile", "", errors.New("didn't succeed")
 			},
 		},
 		{
 			name: "success request retry",
-			f: func() (io.Reader, string, error) {
-				return bytes.NewBuffer([]byte("success!")), "success!", nil
+			f: func() (io.Reader, string, string, error) {
+				return bytes.NewBuffer([]byte("success!")), "fakefile", "success!", nil
 			},
 		},
 	}
@@ -69,6 +69,57 @@ func TestErrorRequestRetry(t *testing.T) {
 
 			if testServer.responseCount != 2 {
 				t.Errorf("expected 2 requests, got %d", testServer.responseCount)
+			}
+		})
+	}
+}
+
+func TestDoRequest_Headers(t *testing.T) {
+	tests := []struct {
+		name            string
+		f               func() (io.Reader, string, string, error)
+		expectedHeaders map[string]string
+	}{
+		{
+			name: "filename and type",
+			f: func() (io.Reader, string, string, error) {
+				return nil, "myfile.xyz", "mytype", nil
+			},
+			expectedHeaders: map[string]string{
+				"content-type":        "mytype",
+				"content-disposition": "attachment;filename=myfile.xyz",
+			},
+		},
+		{
+			name: "type without filename",
+			f: func() (io.Reader, string, string, error) {
+				return nil, "", "mytype", nil
+			},
+			expectedHeaders: map[string]string{
+				"content-type":        "mytype",
+				"content-disposition": "attachment",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+
+			handler := func(w http.ResponseWriter, r *http.Request) {
+				for k, expect := range test.expectedHeaders {
+					real := r.Header.Get(k)
+					if real != expect {
+						t.Errorf("Expected header %q to have value %q but got %q", k, expect, real)
+					}
+				}
+			}
+
+			server := httptest.NewTLSServer(http.HandlerFunc(handler))
+			defer server.Close()
+
+			err := DoRequest(server.URL, server.Client(), test.f)
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
 			}
 		})
 	}
@@ -101,8 +152,8 @@ func TestDoRequestLogsMessagesAndRetries(t *testing.T) {
 	logrus.AddHook(testHook)
 	logrus.SetOutput(ioutil.Discard)
 
-	callback := func() (io.Reader, string, error) {
-		return strings.NewReader("testReader"), "testString", nil
+	callback := func() (io.Reader, string, string, error) {
+		return strings.NewReader("testReader"), "fakefilename", "testString", nil
 	}
 
 	passAfterN := func(i int) http.Handler {

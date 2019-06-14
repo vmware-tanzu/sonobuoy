@@ -91,8 +91,8 @@ func sendResults(t *testing.T, baseURL string, client *http.Client, n int) {
 	for i := 0; i < n; i++ {
 		go func(i int) {
 			url := baseURL + "/api/v1/results/by-node/node" + strconv.Itoa(i) + "/fake"
-			err := worker.DoRequest(url, client, func() (io.Reader, string, error) {
-				return bytes.NewReader([]byte("hello")), "", nil
+			err := worker.DoRequest(url, client, func() (io.Reader, string, string, error) {
+				return bytes.NewReader([]byte("hello")), "fakefile", "", nil
 			})
 			if err != nil {
 				t.Errorf("Error doing request to %v: %v\n", url, err)

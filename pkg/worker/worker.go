@@ -72,8 +72,8 @@ func handleWaitFile(resultFile, url string, client *http.Client) error {
 	}()
 
 	// transmit back the results file.
-	return DoRequest(url, client, func() (io.Reader, string, error) {
+	return DoRequest(url, client, func() (io.Reader, string, string, error) {
 		outfile, err = os.Open(resultFile)
-		return outfile, mimeType, errors.WithStack(err)
+		return outfile, filepath.Base(resultFile), mimeType, errors.WithStack(err)
 	})
 }

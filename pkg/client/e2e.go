@@ -35,6 +35,7 @@ func (*SonobuoyClient) GetTests(reader io.Reader, show string) ([]reporters.JUni
 	read := results.NewReaderWithVersion(reader, "irrelevant")
 	junitResults := reporters.JUnitTestSuite{}
 	e2eJunitPath := path.Join(results.PluginsDir, e2e.ResultsSubdirectory, e2e.JUnitResultsFile)
+	legacye2eJunitPath := path.Join(results.PluginsDir, e2e.LegacyResultsSubdirectory, e2e.JUnitResultsFile)
 
 	found := false
 	err := read.WalkFiles(
@@ -44,9 +45,9 @@ func (*SonobuoyClient) GetTests(reader io.Reader, show string) ([]reporters.JUni
 			}
 			// TODO(chuckha) consider reusing this function for any generic e2e-esque plugin results.
 			// TODO(chuckha) consider using path.Join()
-			if path == e2eJunitPath {
+			if path == e2eJunitPath || path == legacye2eJunitPath {
 				found = true
-				return results.ExtractFileIntoStruct(e2eJunitPath, path, info, &junitResults)
+				return results.ExtractFileIntoStruct(path, path, info, &junitResults)
 			}
 			return nil
 		})

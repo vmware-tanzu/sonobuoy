@@ -107,5 +107,6 @@ func MakeErrorResult(resultType string, errdata map[string]interface{}, nodeName
 		ResultType: resultType,
 		NodeName:   nodeName,
 		MimeType:   "application/json",
+		Filename:   "error.json",
 	}
 }

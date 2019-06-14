@@ -55,7 +55,7 @@ func TestAggregation(t *testing.T) {
 		}
 
 		if result, ok := agg.Results["systemd_logs/node1"]; ok {
-			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path()))
+			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path(), defaultFilename))
 			if string(bytes) != "foo" {
 				t.Errorf("results for node1 incorrect (got %v): %v", string(bytes), err)
 			}
@@ -82,7 +82,7 @@ func TestAggregation_noExtension(t *testing.T) {
 		}
 
 		if result, ok := agg.Results["systemd_logs/node1"]; ok {
-			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path()))
+			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path(), defaultFilename))
 			if string(bytes) != "foo" {
 				t.Errorf("results for node1 incorrect (got %v): %v", string(bytes), err)
 			}
@@ -94,7 +94,7 @@ func TestAggregation_noExtension(t *testing.T) {
 
 func TestAggregation_tarfile(t *testing.T) {
 	expected := []plugin.ExpectedResult{
-		{ResultType: "e2e"},
+		{ResultType: "e2e", NodeName: "global"},
 	}
 
 	fileBytes := []byte("foo")
@@ -115,7 +115,7 @@ func TestAggregation_tarfile(t *testing.T) {
 			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
 		}
 
-		if result, ok := agg.Results["e2e"]; ok {
+		if result, ok := agg.Results["e2e/global"]; ok {
 			realBytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path(), "inside_tar.txt"))
 			if err != nil || bytes.Compare(realBytes, fileBytes) != 0 {
 				t.Logf("results e2e tests incorrect (got %v, expected %v): %v", string(realBytes), string(fileBytes), err)
@@ -125,6 +125,9 @@ func TestAggregation_tarfile(t *testing.T) {
 			}
 		} else {
 			t.Errorf("AggregationServer didn't record a result for e2e tests. Got: %+v", agg.Results)
+			for k, v := range agg.Results {
+				t.Logf("Result %q: %+v\n", k, v)
+			}
 		}
 	})
 }
@@ -188,7 +191,7 @@ func TestAggregation_duplicatesWithErrors(t *testing.T) {
 		t.Fatalf("Could not create temp directory: %v", err)
 	}
 	defer os.RemoveAll(dir)
-	outpath := filepath.Join(dir, "systemd_logs", "results", "node1")
+	outpath := filepath.Join(dir, "systemd_logs", "results", "node1", "fakeLogData.txt")
 	testDataPath := "./testdata/fakeLogData.txt"
 	testinfo, err := os.Stat(testDataPath)
 	if err != nil {
@@ -208,7 +211,7 @@ func TestAggregation_duplicatesWithErrors(t *testing.T) {
 
 	// Send first result and force an error in processing.
 	errReader := iotest.TimeoutReader(testDataReader)
-	err = agg.processResult(&plugin.Result{Body: errReader, NodeName: "node1", ResultType: "systemd_logs"})
+	err = agg.processResult(&plugin.Result{Body: errReader, NodeName: "node1", ResultType: "systemd_logs", Filename: "fakeLogData.txt"})
 	if err == nil {
 		t.Fatal("Expected error processing this due to reading error, instead got nil.")
 	}
@@ -227,7 +230,7 @@ func TestAggregation_duplicatesWithErrors(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not rewind test data file: %v", err)
 	}
-	err = agg.processResult(&plugin.Result{Body: testDataReader, NodeName: "node1", ResultType: "systemd_logs"})
+	err = agg.processResult(&plugin.Result{Body: testDataReader, NodeName: "node1", ResultType: "systemd_logs", Filename: "fakeLogData.txt"})
 	if err != nil {
 		t.Errorf("Expected no error processing this result, got %v", err)
 	}
@@ -286,44 +289,46 @@ func TestAggregation_RetryWindow(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		agg := NewAggregator(dir, expected)
-		// Shorten retry window for testing.
-		agg.retryWindow = testRetryWindow
-		testDataPath := "./testdata/fakeLogData.txt"
-		testDataReader, err := os.Open(testDataPath)
-		if err != nil {
-			t.Fatalf("Could not open test data file: %v", err)
-		}
-		defer testDataReader.Close()
+		t.Run(tc.desc, func(t *testing.T) {
+			agg := NewAggregator(dir, expected)
+			// Shorten retry window for testing.
+			agg.retryWindow = testRetryWindow
+			testDataPath := "./testdata/fakeLogData.txt"
+			testDataReader, err := os.Open(testDataPath)
+			if err != nil {
+				t.Fatalf("Could not open test data file: %v", err)
+			}
+			defer testDataReader.Close()
 
-		var r io.Reader
-		if tc.simulateErr {
-			r = iotest.TimeoutReader(testDataReader)
-		} else {
-			r = strings.NewReader("foo")
-		}
+			var r io.Reader
+			if tc.simulateErr {
+				r = iotest.TimeoutReader(testDataReader)
+			} else {
+				r = strings.NewReader("foo")
+			}
 
-		err = agg.processResult(&plugin.Result{Body: r, NodeName: "node1", ResultType: "systemd_logs"})
-		if err == nil && tc.simulateErr {
-			t.Fatal("Expected error processing this due to reading error, instead got nil.")
-		}
-		// check time before/after wait and ensure it is greater than the retryWindow.
-		time.Sleep(tc.postProcessSleep)
-		start := time.Now()
-		agg.Wait(make(chan bool))
-		waitTime := time.Now().Sub(start)
+			err = agg.processResult(&plugin.Result{Body: r, NodeName: "node1", ResultType: "systemd_logs"})
+			if err == nil && tc.simulateErr {
+				t.Fatal("Expected error processing this due to reading error, instead got nil.")
+			}
+			// check time before/after wait and ensure it is greater than the retryWindow.
+			time.Sleep(tc.postProcessSleep)
+			start := time.Now()
+			agg.Wait(make(chan bool))
+			waitTime := time.Now().Sub(start)
 
-		// Add buffer to avoid raciness due to processing time.
-		diffTime := waitTime - tc.expectExtraWait
-		if diffTime > testBufferDuration || diffTime < -1*testBufferDuration {
-			t.Errorf("Expected Wait() to wait the duration (%v) due to failed result, instead waited only %v", agg.retryWindow, waitTime)
-		}
+			// Add buffer to avoid raciness due to processing time.
+			diffTime := waitTime - tc.expectExtraWait
+			if diffTime > testBufferDuration || diffTime < -1*testBufferDuration {
+				t.Errorf("Expected Wait() to wait the duration %v (+/- %v), instead waited %v", tc.expectExtraWait, testBufferDuration, waitTime)
+			}
+		})
 	}
 }
 
 func TestAggregation_errors(t *testing.T) {
 	expected := []plugin.ExpectedResult{
-		{ResultType: "e2e"},
+		{ResultType: "e2e", NodeName: "global"},
 	}
 
 	withAggregator(t, expected, func(agg *Aggregator, srv *authtest.Server) {
@@ -331,11 +336,11 @@ func TestAggregation_errors(t *testing.T) {
 		go agg.IngestResults(context.TODO(), resultsCh)
 
 		// Send an error
-		resultsCh <- pluginutils.MakeErrorResult("e2e", map[string]interface{}{"error": "foo"}, "")
+		resultsCh <- pluginutils.MakeErrorResult("e2e", map[string]interface{}{"error": "foo"}, "global")
 		agg.Wait(make(chan bool))
 
-		if result, ok := agg.Results["e2e"]; ok {
-			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path()))
+		if result, ok := agg.Results["e2e/global"]; ok {
+			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path(), "error.json"))
 			if err != nil || string(bytes) != `{"error":"foo"}` {
 				t.Errorf("results for e2e plugin incorrect (got %v): %v", string(bytes), err)
 			}

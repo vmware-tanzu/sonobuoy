@@ -22,11 +22,13 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
+	goversion "github.com/hashicorp/go-version"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 )
@@ -44,14 +46,19 @@ const (
 	defaultNodesFile          = "Nodes.json"
 	defaultServerVersionFile  = "serverversion.json"
 	defaultServerGroupsFile   = "servergroups.json"
-)
 
-const (
 	// UnknownVersion lets the consumer know if this client can detect the archive version or not.
 	UnknownVersion = "v?.?"
 	VersionEight   = "v0.8"
 	VersionNine    = "v0.9"
 	VersionTen     = "v0.10"
+	VersionFifteen = "v0.15"
+)
+
+var (
+	// v15 is the first version we started used a typed version. Allows more clean comparisons
+	// between versions.
+	v15 = goversion.Must(goversion.NewVersion("v0.15.0"))
 )
 
 // Reader holds a reader and a version. It uses the version to know where to
@@ -111,18 +118,30 @@ func DiscoverVersion(reader io.Reader) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "error extracting config")
 	}
-	var version string
+
+	parsedVersion, err := goversion.NewVersion(conf.Version)
+	if err != nil {
+		return "", errors.Wrap(err, "parsing version")
+	}
+	segments := parsedVersion.Segments()
+	if len(segments) < 2 {
+		return "", fmt.Errorf("version %q only has %d segments, need at least 2", conf.Version, len(segments))
+	}
+
 	// Get rid of any of the extra version information that doesn't affect archive layout.
 	// Example: v0.10.0-a2b3d4
-	if strings.HasPrefix(conf.Version, VersionEight) {
+	var version string
+	switch {
+	case strings.HasPrefix(conf.Version, VersionEight):
 		version = VersionEight
-	} else if strings.HasPrefix(conf.Version, VersionNine) {
+	case strings.HasPrefix(conf.Version, VersionNine):
 		version = VersionNine
-	} else if strings.HasPrefix(conf.Version, VersionTen) {
+	case strings.HasPrefix(conf.Version, VersionTen):
 		version = VersionTen
-	} else {
-		// This should be the version with the most recent sonobuoy tarball layout.
+	case parsedVersion.LessThan(v15):
 		version = VersionTen
+	default:
+		version = VersionFifteen
 	}
 	return version, nil
 }
