@@ -20,8 +20,8 @@ Dockerfile-arm64
 *.tar.gz
 *.tar
 
-# kubectl which is downloaded for testing in CI
-kubectl
+# kind is downloaded for testing in CI
+kind
 
 # coverage profile
 coverage.txt

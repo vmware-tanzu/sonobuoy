@@ -13,12 +13,10 @@ script:
   - ./travis-ci.sh 
 
 before_install:
-  # Download and install Kind and kubectl
-  - GO111MODULE=on go get sigs.k8s.io/kind
-  - kind create cluster --config kind-config.yaml
-  - export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
-  - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-
+  # Download and install Kind
+  - curl -L https://github.com/kubernetes-sigs/kind/releases/download/v0.3.0/kind-linux-amd64 --output kind && chmod +x kind
+  - ./kind create cluster --config kind-config.yaml
+  - export KUBECONFIG="$(./kind get kubeconfig-path --name="kind")"
 
 before_deploy:
   # Install gcloud cli here so it gets cached

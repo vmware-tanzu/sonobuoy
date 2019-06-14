@@ -7,7 +7,9 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"io/ioutil"
 	"math/big"
+	"os"
 	"testing"
 	"time"
 
@@ -118,7 +120,12 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			a := NewAggregator(".", tc.expectedResults)
+			tmpDir, err := ioutil.TempDir("", "sonobuoy-test")
+			if err != nil {
+				t.Fatalf("Failed to make temp directory: %v", err)
+			}
+			defer os.RemoveAll(tmpDir)
+			a := NewAggregator(tmpDir, tc.expectedResults)
 			ctx, cancel := context.WithCancel(context.Background())
 
 			fclient := fake.NewSimpleClientset()
