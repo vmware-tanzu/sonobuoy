@@ -16,7 +16,7 @@ metadata:
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"DEFAULT","UUID":"","Version":"v0.14.2","ResultsDir":"/tmp/sonobuoy","Resources":["apiservices","certificatesigningrequests","clusterrolebindings","clusterroles","componentstatuses","configmaps","controllerrevisions","cronjobs","customresourcedefinitions","daemonsets","deployments","endpoints","ingresses","jobs","leases","limitranges","mutatingwebhookconfigurations","namespaces","networkpolicies","nodes","persistentvolumeclaims","persistentvolumes","poddisruptionbudgets","pods","podsecuritypolicies","podtemplates","priorityclasses","replicasets","replicationcontrollers","resourcequotas","rolebindings","roles","servergroups","serverversion","serviceaccounts","services","statefulsets","storageclasses","validatingwebhookconfigurations","volumeattachments"],"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"LimitSize":"","LimitTime":""}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":10800},"Plugins":[{"name":"a"}],"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"heptio-sonobuoy","WorkerImage":"gcr.io/heptio-images/sonobuoy:v0.14.2","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":""}
+    {"Description":"DEFAULT","UUID":"","Version":"v0.14.3","ResultsDir":"/tmp/sonobuoy","Resources":["apiservices","certificatesigningrequests","clusterrolebindings","clusterroles","componentstatuses","configmaps","controllerrevisions","cronjobs","customresourcedefinitions","daemonsets","deployments","endpoints","ingresses","jobs","leases","limitranges","mutatingwebhookconfigurations","namespaces","networkpolicies","nodes","persistentvolumeclaims","persistentvolumes","poddisruptionbudgets","pods","podsecuritypolicies","podtemplates","priorityclasses","replicasets","replicationcontrollers","resourcequotas","rolebindings","roles","servergroups","serverversion","serviceaccounts","services","statefulsets","storageclasses","validatingwebhookconfigurations","volumeattachments"],"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"LimitSize":"","LimitTime":""}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":10800},"Plugins":[{"name":"a"}],"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"heptio-sonobuoy","WorkerImage":"gcr.io/heptio-images/sonobuoy:v0.14.3","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":""}
 kind: ConfigMap
 metadata:
   labels:
@@ -69,7 +69,7 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: gcr.io/heptio-images/sonobuoy:v0.14.2
+    image: gcr.io/heptio-images/sonobuoy:v0.14.3
     imagePullPolicy: IfNotPresent
     name: kube-sonobuoy
     volumeMounts:
