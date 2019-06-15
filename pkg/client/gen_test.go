@@ -8,8 +8,10 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
+	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -65,7 +67,7 @@ func TestGenerateManifest(t *testing.T) {
 				E2EConfig: &client.E2EConfig{},
 				Config: &config.Config{
 					PluginSelections: []plugin.Selection{
-						plugin.Selection{
+						{
 							Name: "systemd-logs",
 						},
 					},
@@ -73,7 +75,7 @@ func TestGenerateManifest(t *testing.T) {
 			},
 			expected: &config.Config{
 				PluginSelections: []plugin.Selection{
-					plugin.Selection{
+					{
 						Name: "systemd-logs",
 					},
 				},
@@ -143,6 +145,12 @@ func TestGenerateManifestGolden(t *testing.T) {
 	newConfigWithoutUUID := func() *config.Config {
 		c := config.New()
 		c.UUID = ""
+
+		// Make version static so it doesn't have to be updated when we bump versions.
+		// Use `replace` so we are still effectively testing that the version would have
+		// matched the build version.
+		c.Version = strings.Replace(c.Version, buildinfo.Version, "static-version-for-testing", -1)
+		c.WorkerImage = strings.Replace(c.WorkerImage, buildinfo.Version, "static-version-for-testing", -1)
 		return c
 	}
 
@@ -169,7 +177,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				Config: fromConfig(func(c *config.Config) *config.Config {
-					c.PluginSelections = []plugin.Selection{plugin.Selection{Name: "e2e"}}
+					c.PluginSelections = []plugin.Selection{{Name: "e2e"}}
 					return c
 				}),
 			},
@@ -179,7 +187,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				Config: fromConfig(func(c *config.Config) *config.Config {
-					c.PluginSelections = []plugin.Selection{plugin.Selection{Name: "systemd-logs"}}
+					c.PluginSelections = []plugin.Selection{{Name: "systemd-logs"}}
 					return c
 				}),
 			},
@@ -189,7 +197,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				Config: &config.Config{
-					PluginSelections: []plugin.Selection{plugin.Selection{Name: "e2e"}},
+					PluginSelections: []plugin.Selection{{Name: "e2e"}},
 				},
 				SSHKeyPath: filepath.Join("testdata", "test_ssh.key"),
 				SSHUser:    "ssh-user",
@@ -228,7 +236,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				StaticPlugins: []*manifest.Manifest{
-					&manifest.Manifest{
+					{
 						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "foo"},
 					},
 				},
@@ -240,7 +248,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 				E2EConfig:      &client.E2EConfig{},
 				DynamicPlugins: []string{"e2e"},
 				StaticPlugins: []*manifest.Manifest{
-					&manifest.Manifest{
+					{
 						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "foo"},
 					},
 				},
@@ -252,7 +260,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 				E2EConfig:      &client.E2EConfig{},
 				DynamicPlugins: []string{"systemd-logs"},
 				StaticPlugins: []*manifest.Manifest{
-					&manifest.Manifest{
+					{
 						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "foo"},
 					},
 				},
@@ -262,8 +270,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 			name: "Duplicates plugin names fail",
 			inputcm: &client.GenConfig{
 				StaticPlugins: []*manifest.Manifest{
-					&manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
-					&manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
+					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
+					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
 				},
 			},
 			expectErr: "plugin YAML generation: plugin names must be unique, got duplicated plugin name 'a'",
@@ -274,15 +282,15 @@ func TestGenerateManifestGolden(t *testing.T) {
 				E2EConfig: &client.E2EConfig{},
 				Config: fromConfig(func(c *config.Config) *config.Config {
 					c.PluginSelections = []plugin.Selection{
-						plugin.Selection{
+						{
 							Name: "a",
 						},
 					}
 					return c
 				}),
 				StaticPlugins: []*manifest.Manifest{
-					&manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
-					&manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "b"}},
+					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
+					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "b"}},
 				},
 			},
 			goldenFile: filepath.Join("testdata", "plugins-and-pluginSelection.golden"),
@@ -302,7 +310,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 				E2EConfig:      &client.E2EConfig{},
 				DynamicPlugins: []string{"e2e"},
 				PluginEnvOverrides: map[string]map[string]string{
-					"e2e": map[string]string{"E2E_SKIP": "override", "E2E_DRYRUN": "true"},
+					"e2e": {"E2E_SKIP": "override", "E2E_DRYRUN": "true"},
 				},
 			},
 			goldenFile: filepath.Join("testdata", "envoverrides.golden"),
@@ -312,7 +320,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 				E2EConfig:      &client.E2EConfig{},
 				DynamicPlugins: []string{"e2e"},
 				PluginEnvOverrides: map[string]map[string]string{
-					"e2e2": map[string]string{"E2E_SKIP": "override", "E2E_DRYRUN": "true"},
+					"e2e2": {"E2E_SKIP": "override", "E2E_DRYRUN": "true"},
 				},
 			},
 			expectErr: "failed to override env vars for plugin e2e2, no plugin with that name found; have plugins: [e2e]",
