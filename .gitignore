@@ -2,6 +2,7 @@
 /sonobuoy
 build/
 .DS_Store
+.vscode
 
 # we output results to this directory by default
 /archive
