@@ -35,12 +35,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewCmdWorker is the cobra command that acts as the entrypoint for Sonobuoy when running
+// as a sidecar with a plugin. It will wait for a 'done' file then transmit the results to the
+// aggregator pod.
 func NewCmdWorker() *cobra.Command {
-
 	var workerCmd = &cobra.Command{
 		Use:    "worker",
-		Short:  "Gather and send data to the sonobuoy master instance (for internal use)",
-		Run:    runGatherHelp,
+		Short:  "Gather and send data to the sonobuoy aggregator instance (for internal use)",
 		Hidden: true,
 		Args:   cobra.ExactArgs(0),
 	}
@@ -63,10 +64,6 @@ var singleNodeCmd = &cobra.Command{
 	Short: "Submit results scoped to a single node",
 	Run:   runGatherSingleNode,
 	Args:  cobra.ExactArgs(0),
-}
-
-func runGatherHelp(cmd *cobra.Command, args []string) {
-	cmd.Help()
 }
 
 // sigHandler returns a channel that will receive a message after the timeout
@@ -138,12 +135,15 @@ func runGather(global bool) error {
 		return errors.Wrap(err, "getting HTTP client")
 	}
 
-	// A single-node results URL looks like:
-	// http://sonobuoy-master:8080/api/v1/results/by-node/node1/systemd_logs
-	url := cfg.MasterURL + "/" + cfg.NodeName + "/" + cfg.ResultType
+	url := ""
 	if global {
-		// http://sonobuoy-master:8080/api/v1/results/global/systemd_logs
+		// A global results URL looks like:
+		// http://sonobuoy-aggregator:8080/api/v1/results/global/systemd_logs
 		url = cfg.MasterURL + "/" + cfg.ResultType
+	} else {
+		// A single-node results URL looks like:
+		// http://sonobuoy-aggregator:8080/api/v1/results/by-node/node1/systemd_logs
+		url = cfg.MasterURL + "/" + cfg.NodeName + "/" + cfg.ResultType
 	}
 
 	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))

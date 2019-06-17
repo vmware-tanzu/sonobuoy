@@ -248,7 +248,7 @@ func (a *Aggregator) HandleHTTPResult(result *plugin.Result, w http.ResponseWrit
 // Since most plugins submit over HTTP, this method is currently only used to
 // consume an error stream from each plugin's Monitor() function.
 //
-// If we support plugins that are just simple commands that the sonobuoy master
+// If we support plugins that are just simple commands that the Sonobuoy aggregator
 // runs, those plugins can submit results through the same channel.
 func (a *Aggregator) IngestResults(ctx context.Context, resultsCh <-chan *plugin.Result) {
 	for {

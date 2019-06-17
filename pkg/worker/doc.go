@@ -15,6 +15,6 @@ limitations under the License.
 */
 
 // Package worker is responsible for the logic behind submitting results data
-// back to a sonobuoy master.  This is intended for plugins to leverage, to
+// back to a Sonobuoy aggregator.  This is intended for plugins to leverage, to
 // avoid uploading data manually.
 package worker
