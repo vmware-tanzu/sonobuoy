@@ -20,13 +20,17 @@ import (
 	"os"
 
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app"
+	"github.com/heptio/sonobuoy/pkg/errlog"
 )
 
-// main entry point of the program
+// Main entry point of the program. Execute methods historically would log
+// errors and exit manually via os.Exit in which case the error handling
+// here never is invoked. We want to move towards commands that return errors
+// and use this generic log/exit logic.
 func main() {
 	err := app.NewSonobuoyCommand().Execute()
 	if err != nil {
-		// Execute takes care of printing the error
+		errlog.LogError(err)
 		os.Exit(1)
 	}
 }

@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	// DefaultNamespace is the namespace where the master and plugin workers will run (but not necessarily the pods created by the plugin workers).
+	// DefaultNamespace is the namespace where the aggregator and plugin workers will run (but not necessarily the pods created by the plugin workers).
 	DefaultNamespace = "heptio-sonobuoy"
 
 	// DefaultKubeConformanceImageURL is the URL of the docker image to run for the kube conformance tests.
@@ -43,12 +43,12 @@ const (
 	DefaultAggregationServerBindAddress = "0.0.0.0"
 	// DefaultAggregationServerTimeoutSeconds is the default amount of time the aggregation server will wait for all plugins to complete.
 	DefaultAggregationServerTimeoutSeconds = 10800 // 180 min
-	// MasterPodName is the name of the main pod that runs plugins and collects results.
-	MasterPodName = "sonobuoy"
-	// MasterContainerName is the name of the main container in the master pod.
-	MasterContainerName = "kube-sonobuoy"
-	// MasterResultsPath is the location in the main container of the master pod where results will be archived.
-	MasterResultsPath = "/tmp/sonobuoy"
+	// AggregatorPodName is the name of the main pod that runs plugins and collects results.
+	AggregatorPodName = "sonobuoy"
+	// AggregatorContainerName is the name of the main container in the aggregator pod.
+	AggregatorContainerName = "kube-sonobuoy"
+	// AggregatorResultsPath is the location in the main container of the aggregator pod where results will be archived.
+	AggregatorResultsPath = "/tmp/sonobuoy"
 	// DefaultSonobuoyPullPolicy is the default pull policy used in the Sonobuoy config.
 	DefaultSonobuoyPullPolicy = "IfNotPresent"
 	// DefaultQueryQPS is the number of queries per second Sonobuoy will make when gathering data.

@@ -39,7 +39,7 @@ func NewCmdWorker() *cobra.Command {
 
 	var workerCmd = &cobra.Command{
 		Use:    "worker",
-		Short:  "Gather and send data to the sonobuoy master instance (for internal use)",
+		Short:  "Gather and send data to the sonobuoy aggregator instance (for internal use)",
 		Run:    runGather,
 		Hidden: true,
 		Args:   cobra.ExactArgs(0),
@@ -50,8 +50,6 @@ func NewCmdWorker() *cobra.Command {
 
 	return workerCmd
 }
-
-
 
 var globalCmd = &cobra.Command{
 	Use:   "global",
@@ -127,7 +125,7 @@ func runGatherSingleNode(cmd *cobra.Command, args []string) {
 	}
 
 	// A single-node results URL looks like:
-	// http://sonobuoy-master:8080/api/v1/results/by-node/node1/systemd_logs
+	// http://sonobuoy-aggregator:8080/api/v1/results/by-node/node1/systemd_logs
 	url := cfg.MasterURL + "/" + cfg.NodeName + "/" + cfg.ResultType
 
 	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
@@ -151,7 +149,7 @@ func runGatherGlobal(cmd *cobra.Command, args []string) {
 	}
 
 	// A global results URL looks like:
-	// http://sonobuoy-master:8080/api/v1/results/global/systemd_logs
+	// http://sonobuoy-aggregator:8080/api/v1/results/global/systemd_logs
 	url := cfg.MasterURL + "/" + cfg.ResultType
 
 	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))

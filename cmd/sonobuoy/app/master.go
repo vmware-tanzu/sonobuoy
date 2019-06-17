@@ -17,57 +17,63 @@ limitations under the License.
 package app
 
 import (
-	"os"
+	"fmt"
 
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/discovery"
-	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-var noExit bool
-var kubecfg Kubeconfig
+type aggregatorInput struct {
+	noExit  bool
+	kubecfg Kubeconfig
+}
 
-func NewCmdMaster() *cobra.Command {
+// NewCmdAggregator returns the command that runs Sonobuoy as an aggregator. It will
+// load the config, launch plugins, gather results, and query the cluster for data.
+func NewCmdAggregator() *cobra.Command {
+	input := aggregatorInput{}
 	cmd := &cobra.Command{
-		Use:    "master",
-		Short:  "Runs the master/aggregator component (for internal use)",
-		Long:   "Sonobuoy is an introspective kubernetes component that generates reports on cluster conformance, configuration, and more",
-		Run:    runMaster,
+		Use:   "aggregator",
+		Short: "Runs the aggregator component (for internal use)",
+		Long:  "Sonobuoy is an introspective kubernetes component that generates reports on cluster conformance, configuration, and more",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runAggregator(input)
+		},
 		Hidden: true,
 		Args:   cobra.ExactArgs(0),
+
+		// Original command but no longer used. Kept for backward compatibility.
+		Aliases: []string{"master"},
 	}
 	cmd.PersistentFlags().BoolVar(
-		&noExit, "no-exit", false,
+		&input.noExit, "no-exit", false,
 		"Use this if you want sonobuoy to block and not exit. Useful when you want to explicitly grab results.tar.gz",
 	)
-	AddKubeconfigFlag(&kubecfg, cmd.Flags())
+	AddKubeconfigFlag(&input.kubecfg, cmd.Flags())
 	return cmd
 }
 
-func runMaster(cmd *cobra.Command, args []string) {
-
+func runAggregator(input aggregatorInput) error {
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		errlog.LogError(errors.Wrap(err, "error loading sonobuoy configuration"))
-		os.Exit(1)
+		return errors.Wrap(err, "error loading sonobuoy configuration")
 	}
 
-	kcfg, err := kubecfg.Get()
+	kcfg, err := input.kubecfg.Get()
 	if err != nil {
-		errlog.LogError(err)
-		os.Exit(1)
+		return errors.Wrap(err, "getting kubeconfig")
 	}
 
 	// Run Discovery (gather API data, run plugins)
 	errcount := discovery.Run(kcfg, cfg)
 
-	if noExit {
+	if input.noExit {
 		logrus.Info("no-exit was specified, sonobuoy is now blocking")
 		select {}
 	}
 
-	os.Exit(errcount)
+	return fmt.Errorf("%v errors encountered during execution", errcount)
 }

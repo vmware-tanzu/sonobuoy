@@ -37,7 +37,7 @@ var tarCommand = []string{
 	"/usr/bin/env",
 	"bash",
 	"-c",
-	fmt.Sprintf("tar cf - %s/*.tar.gz", config.MasterResultsPath),
+	fmt.Sprintf("tar cf - %s/*.tar.gz", config.AggregatorResultsPath),
 }
 
 func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan error) {
@@ -50,12 +50,12 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 	restClient := client.CoreV1().RESTClient()
 	req := restClient.Post().
 		Resource("pods").
-		Name(config.MasterPodName).
+		Name(config.AggregatorPodName).
 		Namespace(cfg.Namespace).
 		SubResource("exec").
-		Param("container", config.MasterContainerName)
+		Param("container", config.AggregatorContainerName)
 	req.VersionedParams(&corev1.PodExecOptions{
-		Container: config.MasterContainerName,
+		Container: config.AggregatorContainerName,
 		Command:   tarCommand,
 		Stdin:     false,
 		Stdout:    true,

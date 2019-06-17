@@ -35,7 +35,7 @@ func NewSonobuoyCommand() *cobra.Command {
 
 	cmds.ResetFlags()
 
-	cmds.AddCommand(NewCmdMaster())
+	cmds.AddCommand(NewCmdAggregator())
 	cmds.AddCommand(NewCmdDelete())
 	cmds.AddCommand(NewCmdE2E())
 

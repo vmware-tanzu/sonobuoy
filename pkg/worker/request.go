@@ -60,7 +60,7 @@ func DoRequest(url string, client *http.Client, callback func() (io.Reader, stri
 			err = fmt.Errorf("unexpected status code %d", resp.StatusCode)
 		}
 		if err != nil {
-			errlog.LogError(errors.Wrapf(err, "could not send error message to master URL (%s)", url))
+			errlog.LogError(errors.Wrapf(err, "could not send error message to aggregator URL (%s)", url))
 		}
 
 		return errors.WithStack(err)
@@ -68,17 +68,17 @@ func DoRequest(url string, client *http.Client, callback func() (io.Reader, stri
 
 	req, err := http.NewRequest(http.MethodPut, url, input)
 	if err != nil {
-		return errors.Wrapf(err, "error constructing master request to %v", url)
+		return errors.Wrapf(err, "error constructing aggregator request to %v", url)
 	}
 	req.Header.Add("content-type", mimeType)
 
 	resp, err := pesterClient.Do(req)
 	if err != nil {
-		return errors.Wrapf(err, "error encountered dialing master at %v", url)
+		return errors.Wrapf(err, "error encountered dialing aggregator at %v", url)
 	}
 	if resp.StatusCode != http.StatusOK {
 		// TODO: retry logic for something like a 429 or otherwise
-		return errors.Errorf("got a %v response when dialing master to %v", resp.StatusCode, url)
+		return errors.Errorf("got a %v response when dialing aggregator to %v", resp.StatusCode, url)
 	}
 	return nil
 }

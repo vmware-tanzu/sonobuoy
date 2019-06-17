@@ -48,7 +48,7 @@ type Plugin struct {
 var _ plugin.Interface = &Plugin{}
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
-// and sonobuoy master address.
+// and sonobuoy aggregator address.
 func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets string, customAnnotations map[string]string) *Plugin {
 	return &Plugin{
 		driver.Base{

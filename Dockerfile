@@ -18,7 +18,7 @@ MAINTAINER Timothy St. Clair "tstclair@heptio.com"
 CMD1
 
 ADD BINARY /sonobuoy
-ADD scripts/run_master.sh /run_master.sh
+ADD scripts/run_aggregator.sh /run_aggregator.sh
 ADD scripts/run_single_node_worker.sh /run_single_node_worker.sh
 WORKDIR /
-CMD ["/bin/sh", "-c", "/run_master.sh"]
+CMD ["/bin/sh", "-c", "/run_aggregator.sh"]
