@@ -72,6 +72,7 @@ LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 
 WORKDIR ?= /sonobuoy
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
+GO_BUILD ?= CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)
 
 .PHONY: all container push clean test local-test local generate plugins int
 
@@ -127,7 +128,7 @@ container: sonobuoy
 	done
 
 build_sonobuoy:
-	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)'
+	$(DOCKER_BUILD) '$(GO_BUILD)'
 
 sonobuoy:
 	for arch in $(LINUX_ARCH); do \
@@ -184,3 +185,6 @@ deploy_kind:
 	# FIXME: This assumes kind is in cwd; intended to work with our other CI scripts and
 	# is a bit wonky for general use.
 	./kind load docker-image $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) || true
+
+native:
+	$(GO_BUILD)
