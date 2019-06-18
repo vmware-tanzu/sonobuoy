@@ -3,6 +3,15 @@
 # Don't fail silently when a step doesn't succeed
 set -e
 
+# Early detect/fail if deps not correct.
+./dep ensure
+git_status=$(git status -s)
+if [ -n "$git_status" ]; then
+    echo $git_status
+    echo "dep ensure modified the git status; did you need add/remove a dependency?"
+    exit 1
+fi
+
 make container deploy_kind
 
 echo "|---- Creating new Sonobuoy run/waiting for results..."
