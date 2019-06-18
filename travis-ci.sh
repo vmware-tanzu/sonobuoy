@@ -18,8 +18,8 @@ set -e
 
 if [ $e2eCode -ne 0 ]; then
     echo "Error getting results from tarball"
-    sonobuoy status
-    sonobuoy logs
+    ./sonobuoy status
+    ./sonobuoy logs
     mkdir results; tar xzf $outFile -C results
     find results
     find results/plugins -exec cat {} \;
