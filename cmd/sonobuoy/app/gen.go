@@ -19,11 +19,11 @@ package app
 import (
 	"fmt"
 	"os"
-	imagepkg "github.com/heptio/sonobuoy/pkg/image"
 
 	"github.com/heptio/sonobuoy/pkg/client"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/errlog"
+	imagepkg "github.com/heptio/sonobuoy/pkg/image"
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -247,7 +247,7 @@ func (g *genFlags) resolveConfig() *config.Config {
 	// Gate the logic with a nil check because tests may not specify flags and intend the legacy logic.
 	if g.genflags == nil || !g.genflags.Changed("plugin") {
 		// Use legacy logic; conf.SelectedPlugins or mode if not set
-		if conf.PluginSelections == nil{
+		if conf.PluginSelections == nil {
 			modeConfig := g.mode.Get()
 			if modeConfig != nil {
 				conf.PluginSelections = modeConfig.Selectors
@@ -288,19 +288,19 @@ func (g *genFlags) resolveConfig() *config.Config {
 	return conf
 }
 
-func mergeConfigs(dst, src *config.Config){
+func mergeConfigs(dst, src *config.Config) {
 	// Workaround for the fact that an explicitly stated empty slice is still
 	// considered a zero value by mergo. This means that the value given
 	// by the user is not respected. Even a custom transformation can't
 	// get around this. See https://github.com/imdario/mergo/issues/118
-	emptyResources:=false
-	if len(dst.Resources)==0 && dst.Resources!=nil{
-		emptyResources=true
+	emptyResources := false
+	if len(dst.Resources) == 0 && dst.Resources != nil {
+		emptyResources = true
 	}
 
 	// Provide defaults but don't overwrite any customized configuration.
 	mergo.Merge(dst, src)
-	if emptyResources{
-		dst.Resources=[]string{}
+	if emptyResources {
+		dst.Resources = []string{}
 	}
 }
