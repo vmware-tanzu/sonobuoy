@@ -30,8 +30,29 @@ if [ $e2eCode -ne 0 ]; then
     ./sonobuoy status
     ./sonobuoy logs
     mkdir results; tar xzf $outFile -C results
-    find results
-    find results/plugins -exec cat {} \;
+
+    echo "Full contents of tarball:"
+    find results 
+
+    echo "Printing data on the following files:"
+    find results/plugins -type f
+    find results/plugins -type f \
+      -exec echo Printing file info and contents of {} \; \
+      -exec ls -lah {} \; \
+      -exec cat {} \; \
+      -exec echo \; \
+      -exec echo \;
+    echo "[Exit code of find was: $?]"
+
+    echo "Printing data on the following files:"
+    find results/podlogs -type f
+    find results/podlogs -type f \
+      -exec echo Printing file info and contents of {} \; \
+      -exec ls -lah {} \; \
+      -exec cat {} \; \
+      -exec echo \; \
+      -exec echo \;
+    echo "[Exit code of find was: $?]"
     exit $e2eCode
 fi
 
