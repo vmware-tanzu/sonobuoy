@@ -19,12 +19,16 @@ package worker
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"testing"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	testhook "github.com/sirupsen/logrus/hooks/test"
 )
 
 func TestErrorRequestRetry(t *testing.T) {
@@ -90,4 +94,73 @@ func (t *testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("ok!"))
 
 	t.responseCount++
+}
+
+func TestDoRequestLogsMessagesAndRetries(t *testing.T) {
+	testHook := &testhook.Hook{}
+	logrus.AddHook(testHook)
+	logrus.SetOutput(ioutil.Discard)
+
+	callback := func() (io.Reader, string, error) {
+		return strings.NewReader("testReader"), "testString", nil
+	}
+
+	passAfterN := func(i int) http.Handler {
+		count := 0
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			count++
+			if count > i {
+				return
+			}
+			// Only retries certain types of responses/errors. Be careful if you change this code.
+			w.WriteHeader(http.StatusInternalServerError)
+		})
+	}
+
+	testCases := []struct {
+		desc             string
+		handler          http.Handler
+		expectedLogs     int
+		expectFinalError bool
+	}{
+		{
+			desc:    "No errors is OK",
+			handler: passAfterN(0),
+		}, {
+			desc:         "First err leads to one log",
+			handler:      passAfterN(1),
+			expectedLogs: 1,
+		}, {
+			desc:         "Multiple err leads to more logs",
+			handler:      passAfterN(2),
+			expectedLogs: 2,
+		}, {
+			desc:             "Retries stop after 3 failures",
+			handler:          passAfterN(3),
+			expectedLogs:     3,
+			expectFinalError: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			testHook.Reset()
+			ts := httptest.NewServer(tc.handler)
+			defer ts.Close()
+
+			err := DoRequest(ts.URL, ts.Client(), callback)
+			if err != nil && !tc.expectFinalError {
+				t.Errorf("Expected no error to bubble up but got %v", err)
+			} else if err == nil && tc.expectFinalError {
+				t.Error("Expected an error to bubble up but got none")
+			}
+
+			if len(testHook.Entries) != tc.expectedLogs {
+				t.Errorf("Expected %v logs entries but got %v. Logs:", tc.expectedLogs, len(testHook.Entries))
+				for _, v := range testHook.Entries {
+					t.Logf("%v %v %v", v.Time, v.Level, v.Message)
+				}
+			}
+		})
+	}
 }

@@ -38,6 +38,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	// pollingInterval is the time between polls when monitoring the job status.
+	pollingInterval = 10 * time.Second
+)
+
 // Plugin is a plugin driver that dispatches containers to each node,
 // expecting each pod to report to the master.
 type Plugin struct {
@@ -186,7 +191,7 @@ func (p *Plugin) Monitor(ctx context.Context, kubeclient kubernetes.Interface, a
 		select {
 		case <-ctx.Done():
 			return
-		case <-sonotime.After(10 * time.Second):
+		case <-sonotime.After(pollingInterval):
 		}
 
 		done, errResults := p.monitorOnce(kubeclient, availableNodes, podsFound, podsReported)

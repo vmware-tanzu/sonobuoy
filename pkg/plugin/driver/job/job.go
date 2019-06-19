@@ -37,6 +37,11 @@ import (
 	sonotime "github.com/heptio/sonobuoy/pkg/time"
 )
 
+const (
+	// pollingInterval is the time between polls when monitoring the job status.
+	pollingInterval = 10 * time.Second
+)
+
 // Plugin is a plugin driver that dispatches a single pod to the given
 // kubernetes cluster.
 type Plugin struct {
@@ -133,7 +138,7 @@ func (p *Plugin) Monitor(ctx context.Context, kubeclient kubernetes.Interface, _
 		select {
 		case <-ctx.Done():
 			return
-		case <-sonotime.After(10 * time.Second):
+		case <-sonotime.After(pollingInterval):
 		}
 
 		done, errResult := p.monitorOnce(kubeclient, nil)
