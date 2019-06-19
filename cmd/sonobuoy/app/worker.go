@@ -51,8 +51,6 @@ func NewCmdWorker() *cobra.Command {
 	return workerCmd
 }
 
-
-
 var globalCmd = &cobra.Command{
 	Use:   "global",
 	Short: "Submit results scoped to the whole cluster",
