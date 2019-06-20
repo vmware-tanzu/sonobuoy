@@ -21,7 +21,7 @@ toc:
     subfolderitems:
       - page: Customization
         url: /gen
-      - page: Make your own manifests
+      - page: Make your own plugins
         url: /examples
         github: true
       - page: Cut a Release

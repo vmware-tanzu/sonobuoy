@@ -18,13 +18,11 @@ This document describes retrieving the Sonobuoy results tarball, its layout, how
 
 To view the output, copy the output directory from the aggregator Sonobuoy pod to
 your local machine (and save the name of the file to a variable for reference):
-
 ```
 output=$(sonobuoy retrieve)
 ```
 
 The results can be inspected without being extracted. It will list the number of tests failed and their names:
-
 ```
 sonobuoy e2e $output
 ```

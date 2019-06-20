@@ -14,7 +14,7 @@ footer:
   title: Getting Started
   content: To help you get started, see the documentation.
   cta_title:
-  cta_url: /docs/latest
+  cta_url: /docs/v0.14.3
   cta_text: Documentation
   vm-link: http://vmware.github.io/
 
@@ -44,20 +44,55 @@ defaults:
     values:
       layout: "default"
   - scope:
-      path: docs/latest
+      path: docs/master
     values:
-      version: latest
+      version: master
       gh: https://github.com/heptio/sonobuoy/tree/master
+      layout: "docs"
+  - scope:
+      path: docs/v0.14.3
+    values:
+      version: v0.14.3
+      gh: https:/github.com/heptio/sonobuoy/tree/v0.14.3
+      layout: "docs"
+  - scope:
+      path: docs/v0.14.2
+    values:
+      version: v0.14.2
+      gh: https:/github.com/heptio/sonobuoy/tree/v0.14.2
+      layout: "docs"
+  - scope:
+      path: docs/v0.14.1
+    values:
+      version: v0.14.1
+      gh: https:/github.com/heptio/sonobuoy/tree/v0.14.1
+      layout: "docs"
+  - scope:
+      path: docs/v0.14.0
+    values:
+      version: v0.14.0
+      gh: https:/github.com/heptio/sonobuoy/tree/v0.14.0
+      layout: "docs"
+  - scope:
+      path: docs/v0.13.0
+    values:
+      version: v0.13.0
+      gh: https:/github.com/heptio/sonobuoy/tree/v0.13.0
       layout: "docs"
 
 collections:
   - contributors
   - casestudies
 
-versioning: false
-latest: v0.14.2
+versioning: true
+latest: v0.14.3
 versions:
+- master
+- v0.14.3
 - v0.14.2
+- v0.14.1
+- v0.14.0
+- v0.13.0
 
 # Build settings
 permalink: :title/

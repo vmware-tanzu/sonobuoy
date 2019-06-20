@@ -6,9 +6,7 @@
             </button>
             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
             {% assign original_version = page.version | prepend: '/' | append: '/' %}
-            {% assign master_url = page.url | replace: original_version, '/master/' | relative_url %}
             {% assign latest_url = page.url | replace: page.version, site.latest | relative_url %}
-            <a class="dropdown-item" href="{{ master_url }}">master</a>
             
             {% for version in site.versions %}
             {% assign new_version = version | prepend: '/' | append: '/' %}
