@@ -40,13 +40,24 @@ var tarCommand = []string{
 	fmt.Sprintf("tar cf - %s/*.tar.gz", config.MasterResultsPath),
 }
 
-func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan error) {
+// RetrieveResults copies results from a sonobuoy run into a Reader in tar format.
+// It also returns a channel of errors, where any errors encountered when writing results
+// will be sent, and an error in the case where the config validation fails.
+func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan error, error) {
+	if cfg == nil {
+		return nil, nil, errors.New("nil RetrieveConfig provided")
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, nil, errors.Wrap(err, "config validation failed")
+	}
+
 	ec := make(chan error, 1)
 	client, err := c.Client()
 	if err != nil {
-		ec <- err
-		return nil, ec
+		return nil, ec, nil
 	}
+
 	restClient := client.CoreV1().RESTClient()
 	req := restClient.Post().
 		Resource("pods").
@@ -64,7 +75,7 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 	executor, err := remotecommand.NewSPDYExecutor(c.RestConfig, "POST", req.URL())
 	if err != nil {
 		ec <- err
-		return nil, ec
+		return nil, ec, nil
 	}
 	reader, writer := io.Pipe()
 	go func(writer *io.PipeWriter, ec chan error) {
@@ -79,7 +90,7 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 		}
 	}(writer, ec)
 
-	return reader, ec
+	return reader, ec, nil
 }
 
 /** Everything below this marker originally was copy/pasta'd from k8s/k8s. The modification are:

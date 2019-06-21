@@ -57,6 +57,14 @@ type nsGetFunc func(string, metav1.GetOptions) (*apicorev1.Namespace, error)
 
 // PreflightChecks runs all preflight checks in order, returning the first error encountered.
 func (c *SonobuoyClient) PreflightChecks(cfg *PreflightConfig) []error {
+	if cfg == nil {
+		return []error{errors.New("nil PreflightConfig provided")}
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return []error{errors.Wrap(err, "config validation failed")}
+	}
+
 	client, err := c.Client()
 	if err != nil {
 		return []error{err}

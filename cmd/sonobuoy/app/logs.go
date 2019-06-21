@@ -32,8 +32,11 @@ const (
 	bufSize = 2048
 )
 
-var logConfig client.LogConfig
-var logsKubecfg Kubeconfig
+var logFlags struct {
+	namespace  string
+	follow     bool
+	kubeconfig Kubeconfig
+}
 
 func NewCmdLogs() *cobra.Command {
 	cmd := &cobra.Command{
@@ -44,22 +47,26 @@ func NewCmdLogs() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(
-		&logConfig.Follow, "follow", "f", false,
+		&logFlags.follow, "follow", "f", false,
 		"Specify if the logs should be streamed.",
 	)
-	logConfig.Out = os.Stdout
-	AddKubeconfigFlag(&logsKubecfg, cmd.Flags())
-	AddNamespaceFlag(&logConfig.Namespace, cmd.Flags())
+	AddKubeconfigFlag(&logFlags.kubeconfig, cmd.Flags())
+	AddNamespaceFlag(&logFlags.namespace, cmd.Flags())
 	return cmd
 }
 
 func getLogs(cmd *cobra.Command, args []string) {
-	sbc, err := getSonobuoyClientFromKubecfg(logsKubecfg)
+	sbc, err := getSonobuoyClientFromKubecfg(logFlags.kubeconfig)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 		os.Exit(1)
 	}
-	logreader, err := sbc.LogReader(&logConfig)
+
+	logConfig := client.NewLogConfig()
+	logConfig.Namespace = logFlags.namespace
+	logConfig.Follow = logFlags.follow
+
+	logreader, err := sbc.LogReader(logConfig)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not build a log reader"))
 		os.Exit(1)

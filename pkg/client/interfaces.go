@@ -29,6 +29,11 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// ConfigValidator allows the command configurations to be validated.
+type validator interface {
+	Validate() error
+}
+
 // LogConfig are the input options for viewing a Sonobuoy run's logs.
 type LogConfig struct {
 	// Follow determines if the logs should be followed or not (tail -f).
@@ -37,6 +42,15 @@ type LogConfig struct {
 	Namespace string
 	// Out is the writer to write to.
 	Out io.Writer
+}
+
+// Validate checks the config to determine if it is valid.
+func (lc *LogConfig) Validate() error {
+	if lc.Namespace == "" {
+		return errors.New("namespace cannot be empty")
+	}
+
+	return nil
 }
 
 // GenConfig are the input options for generating a Sonobuoy manifest.
@@ -66,6 +80,15 @@ type GenConfig struct {
 	PluginEnvOverrides map[string]map[string]string
 }
 
+// Validate checks the config to determine if it is valid.
+func (gc *GenConfig) Validate() error {
+	if gc.E2EConfig == nil {
+		return errors.New("nil E2EConfig provided")
+	}
+
+	return nil
+}
+
 // E2EConfig is the configuration of the E2E tests.
 type E2EConfig struct {
 	Focus    string
@@ -84,6 +107,12 @@ type RunConfig struct {
 	Wait time.Duration
 }
 
+// Validate checks the config to determine if it is valid.
+func (rc *RunConfig) Validate() error {
+	err := rc.GenConfig.Validate()
+	return errors.Wrap(err, "GenConfig validation failed")
+}
+
 // DeleteConfig are the input options for cleaning up a Sonobuoy run.
 type DeleteConfig struct {
 	Namespace  string
@@ -92,10 +121,28 @@ type DeleteConfig struct {
 	Wait       time.Duration
 }
 
+// Validate checks the config to determine if it is valid.
+func (dc *DeleteConfig) Validate() error {
+	if dc.Namespace == "" {
+		return errors.New("namespace cannot be empty")
+	}
+
+	return nil
+}
+
 // RetrieveConfig are the input options for retrieving a Sonobuoy run's results.
 type RetrieveConfig struct {
 	// Namespace is the namespace the sonobuoy aggregator is running in.
 	Namespace string
+}
+
+// Validate checks the config to determine if it is valid.
+func (rc *RetrieveConfig) Validate() error {
+	if rc.Namespace == "" {
+		return errors.New("namespace cannot be empty")
+	}
+
+	return nil
 }
 
 // StatusConfig is the input options for retrieving a Sonobuoy run's results.
@@ -104,9 +151,27 @@ type StatusConfig struct {
 	Namespace string
 }
 
+// Validate checks the config to determine if it is valid.
+func (sc *StatusConfig) Validate() error {
+	if sc.Namespace == "" {
+		return errors.New("namespace cannot be empty")
+	}
+
+	return nil
+}
+
 // PreflightConfig are the options passed to PreflightChecks.
 type PreflightConfig struct {
 	Namespace string
+}
+
+// Validate checks the config to determine if it is valid.
+func (pfc *PreflightConfig) Validate() error {
+	if pfc.Namespace == "" {
+		return errors.New("namespace cannot be empty")
+	}
+
+	return nil
 }
 
 // SonobuoyKubeAPIClient is the interface Sonobuoy uses to communicate with a kube-apiserver.
@@ -159,7 +224,7 @@ type Interface interface {
 	// GenerateManifest fills in a template with a Sonobuoy config
 	GenerateManifest(cfg *GenConfig) ([]byte, error)
 	// RetrieveResults copies results from a sonobuoy run into a Reader in tar format.
-	RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan error)
+	RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan error, error)
 	// GetStatus determines the status of the sonobuoy run in order to assist the user.
 	GetStatus(cfg *StatusConfig) (*aggregation.Status, error)
 	// LogReader returns a reader that contains a merged stream of sonobuoy logs.

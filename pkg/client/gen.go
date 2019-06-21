@@ -64,6 +64,14 @@ type templateValues struct {
 
 // GenerateManifest fills in a template with a Sonobuoy config
 func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
+	if cfg == nil {
+		return nil, errors.New("nil GenConfig provided")
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, errors.Wrap(err, "config validation failed")
+	}
+
 	// Allow nil cfg.Config but avoid dereference errors.
 	conf := &config.Config{}
 	if cfg.Config != nil {

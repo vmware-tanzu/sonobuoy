@@ -111,10 +111,19 @@ func (r *Reader) Read(p []byte) (int, error) {
 
 // LogReader configures a Reader that provides an io.Reader interface to a merged stream of logs from various containers.
 func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
+	if cfg == nil {
+		return nil, errors.New("nil LogConfig provided")
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, errors.Wrap(err, "config validation failed")
+	}
+
 	client, err := s.Client()
 	if err != nil {
 		return nil, err
 	}
+
 	pods, err := client.CoreV1().Pods(cfg.Namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list pods")

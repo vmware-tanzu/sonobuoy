@@ -17,10 +17,20 @@ limitations under the License.
 package client
 
 import (
+	"github.com/pkg/errors"
+
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 )
 
 func (c *SonobuoyClient) GetStatus(cfg *StatusConfig) (*aggregation.Status, error) {
+	if cfg == nil {
+		return nil, errors.New("nil StatusConfig provided")
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, errors.Wrap(err, "config validation failed")
+	}
+
 	client, err := c.Client()
 	if err != nil {
 		return nil, err

@@ -34,12 +34,12 @@ var (
 	defaultOutDir = "."
 )
 
-type receiveFlags struct {
+type retrieveFlags struct {
 	namespace string
 	kubecfg   Kubeconfig
 }
 
-var rcvFlags receiveFlags
+var rcvFlags retrieveFlags
 
 func NewCmdRetrieve() *cobra.Command {
 	cmd := &cobra.Command{
@@ -68,7 +68,7 @@ func retrieveResults(cmd *cobra.Command, args []string) {
 	}
 
 	// Get a reader that contains the tar output of the results directory.
-	reader, ec := sbc.RetrieveResults(&client.RetrieveConfig{Namespace: rcvFlags.namespace})
+	reader, ec, err := sbc.RetrieveResults(&client.RetrieveConfig{Namespace: rcvFlags.namespace})
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)

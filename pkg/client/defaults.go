@@ -17,6 +17,8 @@ limitations under the License.
 package client
 
 import (
+	"os"
+
 	"github.com/heptio/sonobuoy/pkg/config"
 )
 
@@ -42,7 +44,7 @@ func NewRunConfig() *RunConfig {
 // NewDeleteConfig is a DeleteConfig using default images, RBAC enabled, and DeleteAll enabled.
 func NewDeleteConfig() *DeleteConfig {
 	return &DeleteConfig{
-		Namespace:  config.DefaultImage,
+		Namespace:  config.DefaultNamespace,
 		EnableRBAC: true,
 		DeleteAll:  false,
 	}
@@ -53,5 +55,6 @@ func NewLogConfig() *LogConfig {
 	return &LogConfig{
 		Follow:    false,
 		Namespace: config.DefaultNamespace,
+		Out:       os.Stdout,
 	}
 }
