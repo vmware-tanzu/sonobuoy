@@ -88,6 +88,8 @@ func (r *RegistryList) GetImageConfigs() (map[string]Config, error) {
 			return r.v1_13(), nil
 		case 14:
 			return r.v1_14(), nil
+		case 15:
+			return r.v1_15(), nil
 		}
 	}
 	return map[string]Config{}, fmt.Errorf("No matching configuration for k8s version: %v", r.K8sVersion)
