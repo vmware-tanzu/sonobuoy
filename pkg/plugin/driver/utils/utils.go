@@ -30,7 +30,10 @@ import (
 )
 
 const (
-	terminatedContainerWindow = 1 * time.Minute
+	// terminatedContainerWindow is the amount of time after a plugins main container terminates
+	// that we consider it a failure mode. This handles the situation where the plugin container
+	// exits without returning results.
+	terminatedContainerWindow = 5 * time.Minute
 )
 
 // GetSessionID generates a new session id.
@@ -44,8 +47,6 @@ func GetSessionID() string {
 
 // IsPodFailing returns whether a plugin's pod is failing and isn't likely to
 // succeed.
-// TODO: this may require more revisions as we get more experience with
-// various types of failures that can occur.
 func IsPodFailing(pod *v1.Pod) (bool, string) {
 	// Check if the pod is unschedulable
 	for _, cond := range pod.Status.Conditions {

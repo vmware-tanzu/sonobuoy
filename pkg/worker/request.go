@@ -34,8 +34,27 @@ import (
 // don't result in the server waiting forever for results that will never
 // come.)
 func DoRequest(url string, client *http.Client, callback func() (io.Reader, string, error)) error {
-	input, mimeType, err := callback()
+	// Create a client with retry logic. Manually log each error as they occur rather than
+	// saving them internal to the client. This helps debug issues which may have relied on retries.
 	pesterClient := pester.NewExtendedClient(client)
+	pesterClient.KeepLog = false
+	pesterClient.LogHook = func(e pester.ErrEntry) {
+		var errDetailed error
+		if e.Err != nil {
+			errDetailed = errors.Wrapf(e.Err,
+				"error entry for attempt: %v, verb: %v, time: %v, URL: %v",
+				e.Attempt, e.Verb, e.Time, e.URL,
+			)
+		} else {
+			errDetailed = fmt.Errorf(
+				"error entry for attempt: %v, verb: %v, time: %v, URL: %v",
+				e.Attempt, e.Verb, e.Time, e.URL,
+			)
+		}
+		errlog.LogError(errDetailed)
+	}
+
+	input, mimeType, err := callback()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "error gathering host data"))
 

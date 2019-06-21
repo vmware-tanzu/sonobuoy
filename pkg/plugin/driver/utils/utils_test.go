@@ -71,7 +71,7 @@ func TestPodFailing(t *testing.T) {
 							Reason:     "reason",
 							Message:    "msg",
 							ExitCode:   1,
-							FinishedAt: metav1.Time{Time: time.Now()},
+							FinishedAt: metav1.Time{Time: time.Now().Add(terminatedContainerWindow / -2)},
 						},
 					}},
 				}
@@ -87,7 +87,7 @@ func TestPodFailing(t *testing.T) {
 				t.Errorf("Expected %v but got %v", tc.expectFailing, failing)
 			}
 			if msg != tc.expectMsg {
-				t.Errorf("Expected %v but got %v", tc.expectMsg, msg)
+				t.Errorf("Expected %q but got %q", tc.expectMsg, msg)
 			}
 		})
 	}

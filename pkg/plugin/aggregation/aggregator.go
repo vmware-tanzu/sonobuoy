@@ -38,7 +38,7 @@ import (
 
 const (
 	gzipMimeType       = "application/gzip"
-	defaultRetryWindow = 15 * time.Second
+	defaultRetryWindow = 120 * time.Second
 )
 
 // Aggregator is responsible for taking results from an HTTP server (configured
@@ -261,7 +261,7 @@ func (a *Aggregator) IngestResults(ctx context.Context, resultsCh <-chan *plugin
 		case result, more = <-resultsCh:
 		}
 
-		if !more {
+		if result == nil && !more {
 			return
 		}
 

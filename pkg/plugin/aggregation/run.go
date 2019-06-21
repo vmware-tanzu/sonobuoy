@@ -40,6 +40,9 @@ import (
 const (
 	annotationUpdateFreq = 5 * time.Second
 	jitterFactor         = 1.2
+
+	// pollingInterval is the time between polls when monitoring a plugin.
+	pollingInterval = 10 * time.Second
 )
 
 // Run runs an aggregation server and gathers results, in accordance with the
@@ -224,7 +227,7 @@ func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, p plugin.Interface
 		case <-ctx.Done():
 			cancel()
 			return
-		case <-sonotime.After(10 * time.Second):
+		case <-sonotime.After(pollingInterval):
 		}
 
 		hasResults := a.pluginHasResults(p)
