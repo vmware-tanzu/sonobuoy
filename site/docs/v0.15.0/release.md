@@ -92,5 +92,15 @@
 ### Follow up
 Following the release when the new tag is made, the documentation will need to be updated to include the new version.
 
+The changes for this can almost all be completed by running the command:
+```
+./scripts/update_docs.sh v0.15.0
+```
+
+This will copy the current master docs into the version given and update
+a few of the links in the README to be correct. It will also update
+the website config to add the new version and consider it the newest
+version of the docs.
+
 ### Notes
 1. Before releasing, ensure all parties are available to resolve any issues that come up. If not, just bump the release.

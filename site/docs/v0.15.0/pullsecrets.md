@@ -25,6 +25,7 @@ Sonobuoy does not have built in support for this, but it can be manually achieve
 As an example of how to create the secret you can follow the instructions [here][dockersecret] in order to create a secret in the default namespace.
 
 Then use copy most of its YAML via:
+
 ```
 kubectl get secret <secret name> -o yaml > secret.json
 ```
