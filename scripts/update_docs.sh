@@ -67,6 +67,7 @@ else
         sed -i 's/site\/docs\/master\///g' /root/site/docs/${VERSION}/README.md && \
         sed -i 's/docs\/img/img/g' /root/site/docs/${VERSION}/README.md && \
         sed -i 's/sonobuoy\/tree\/master/sonobuoy\/tree\/${VERSION}/g' /root/site/docs/${VERSION}/README.md && \
+        sed -i 's/sonobuoy.io\/docs\/master/sonobuoy.io\/docs\/${VERSION}/g' /root/site/docs/${VERSION}/README.md && \
         cp /root/site/_data/master-toc.yml /root/site/_data/${TOC_NAME}.yml && \
         perl -i -0pe 's/${CONFIG_VERSION_BLOCK}/${NEW_VERSION_BLOCK}/' /root/site/_config.yml && \
         perl -i -0pe 's/${OLD_SCOPE_BLOCK}/${NEW_SCOPE_BLOCK}/' /root/site/_config.yml && \
