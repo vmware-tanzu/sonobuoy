@@ -88,6 +88,7 @@ sonobuoy logs
 ## More information
 
 [The documentation][docs] provides further information about:
+
  * [conformance tests][conformance]
  * [plugins][plugins]
  * Testing of [air gapped clusters][airgap].
@@ -141,7 +142,7 @@ See [the list of releases][releases] to find out about feature changes.
 [coc]: https://github.com/heptio/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
 [conformance]: conformance-testing.md
-[docs]: https://github.com/heptio/sonobuoy/tree/v0.15.0/docs
+[docs]: https://sonobuoy.io/docs/v0.15.0/
 [e2e]: conformance-testing.md
 [gen]: gen.md
 [gimme]: https://github.com/travis-ci/gimme
