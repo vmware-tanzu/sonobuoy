@@ -1,4 +1,4 @@
-# <img src="docs/img/sonobuoy-logo.png" width="400px" > [![Build Status][status]][travis]
+# <img src="site/docs/master/img/sonobuoy-logo.png" width="400px" > [![Build Status][status]][travis]
 
 ## [Overview][oview]
 
