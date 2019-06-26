@@ -16,6 +16,6 @@
 
 RESULTS_DIR="${RESULTS_DIR:-/tmp/sonobuoy}"
 # It's ok for these env vars to be unbound
-RESULTS_DIR="${RESULTS_DIR}" SONOBUOY_CONFIG="${SONOBUOY_CONFIG}" SONOBUOY_ADVERTISE_IP="${SONOBUOY_ADVERTISE_IP}" /sonobuoy master -v 3 --logtostderr
+RESULTS_DIR="${RESULTS_DIR}" SONOBUOY_CONFIG="${SONOBUOY_CONFIG}" SONOBUOY_ADVERTISE_IP="${SONOBUOY_ADVERTISE_IP}" SONOBUOY_POD_NAME="${SONOBUOY_POD_NAME}" /sonobuoy master -v 3 --logtostderr
 
 echo -n "${RESULTS_DIR}/$(ls -t "${RESULTS_DIR}" | grep -v done | head -n 1)" > "${RESULTS_DIR}"/done

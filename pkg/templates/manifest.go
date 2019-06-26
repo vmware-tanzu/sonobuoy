@@ -130,6 +130,10 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
+    - name: SONOBUOY_POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
     image: {{.SonobuoyImage}}
     imagePullPolicy: {{.ImagePullPolicy}}
     name: kube-sonobuoy

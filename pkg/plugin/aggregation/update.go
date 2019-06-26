@@ -19,6 +19,7 @@ package aggregation
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -31,7 +32,10 @@ import (
 
 const (
 	StatusAnnotationName = "sonobuoy.hept.io/status"
-	StatusPodName        = "sonobuoy"
+)
+
+var (
+	StatusPodName = "sonobuoy"
 )
 
 // node and name uniquely identify a single plugin result
@@ -155,5 +159,15 @@ func GetPatch(annotation string) map[string]interface{} {
 				StatusAnnotationName: annotation,
 			},
 		},
+	}
+}
+
+// Set the sonobuoy pod name
+// If the sonobuoy spec sets the SONOBUOY_POD_NAME env var using the downward API
+// this will pick that up and use it.  If not set, it will fall back to the default
+// pod name of "sonobuoy"
+func SetStatusPodName() {
+	if os.Getenv("SONOBUOY_POD_NAME") != "" {
+		StatusPodName = os.Getenv("SONOBUOY_POD_NAME")
 	}
 }
