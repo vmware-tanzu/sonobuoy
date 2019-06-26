@@ -25,7 +25,11 @@
                 {% endif %}
 
                 <div class="post-single-meta-author-name">
-                  <a href="/tags/{{ page.author_name | urlencode }}">{{ page.author_name }}</a>
+                    {% if page.author_url %}
+                    <a href="{{ page.author_url }}">{{ page.author_name }}</a>
+                    {% else %}
+                    <a href="/tags/{{ page.author_name | urlencode }}">{{ page.author_name }}</a>
+                    {% endif %}
                 </div>
               </div>
 
