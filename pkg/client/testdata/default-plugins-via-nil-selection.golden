@@ -99,6 +99,10 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
+    - name: SONOBUOY_POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
     image: gcr.io/heptio-images/sonobuoy:static-version-for-testing
     imagePullPolicy: IfNotPresent
     name: kube-sonobuoy
