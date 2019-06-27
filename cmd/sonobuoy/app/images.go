@@ -59,6 +59,7 @@ func NewCmdImages() *cobra.Command {
 		Run:   pullImages,
 		Args:  cobra.ExactArgs(0),
 	}
+	AddE2ERegistryConfigFlag(&imagesflags.e2eRegistryConfig, pullCmd.Flags())
 	AddKubeconfigFlag(&imagesflags.kubeconfig, pullCmd.Flags())
 	AddPluginFlag(&imagesflags.plugin, pullCmd.Flags())
 
@@ -166,7 +167,7 @@ func pullImages(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 
-		upstreamImages, err := image.GetImages(defaultE2ERegistries, version)
+		upstreamImages, err := image.GetImages(imagesflags.e2eRegistryConfig, version)
 		if err != nil {
 			errlog.LogError(errors.Wrap(err, "couldn't init upstream registry list"))
 			os.Exit(1)
