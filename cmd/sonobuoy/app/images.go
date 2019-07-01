@@ -182,6 +182,10 @@ func pullImages(cmd *cobra.Command, args []string) {
 			errlog.LogError(err)
 		}
 
+		if len(errs) > 0 {
+			os.Exit(1)
+		}
+
 	default:
 		errlog.LogError(errors.Errorf("Unsupported plugin: %v", imagesflags.plugin))
 		os.Exit(1)
