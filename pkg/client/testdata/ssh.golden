@@ -25,7 +25,7 @@ data:
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"","UUID":"","Version":"","ResultsDir":"","Resources":null,"Filters":{"Namespaces":"","LabelSelector":""},"Limits":{"PodLogs":{"LimitSize":"","LimitTime":""}},"Server":{"bindaddress":"","bindport":0,"advertiseaddress":"","timeoutseconds":0},"Plugins":[{"name":"e2e"}],"PluginSearchPath":null,"Namespace":"","WorkerImage":"","ImagePullPolicy":"","ImagePullSecrets":""}
+    {"Description":"","UUID":"","Version":"","ResultsDir":"","Resources":null,"Filters":{"Namespaces":"","LabelSelector":""},"Limits":{"PodLogs":{"Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null,"LimitSize":"","LimitTime":""}},"Server":{"bindaddress":"","bindport":0,"advertiseaddress":"","timeoutseconds":0},"Plugins":[{"name":"e2e"}],"PluginSearchPath":null,"Namespace":"","WorkerImage":"","ImagePullPolicy":"","ImagePullSecrets":""}
 kind: ConfigMap
 metadata:
   labels:

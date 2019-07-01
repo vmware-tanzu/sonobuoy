@@ -54,7 +54,14 @@ Filters
    - A Kubernetes [label selector][labelselector] which will be added to every query run.
 
 Limits
- - Options for limiting the size of the pod logs (in bytes) or the how far back in time to gather logs (in seconds). These will be passed onto Kubernetes [PodLogOptions][podlogopts]
-
+ - Options for limiting limits the scope of response when getting logs from pods. These will be passed onto Kubernetes [PodLogOptions][podlogopts]
+ - The supported parameters are:
+    - Previous
+    - SinceSeconds
+    - SinceTime
+    - Timestamps
+    - TailLines
+    - LimitBytes
+    
 [labelselector]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 [podlogopts]: https://godoc.org/k8s.io/api/core/v1#PodLogOptions

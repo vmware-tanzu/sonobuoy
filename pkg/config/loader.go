@@ -100,16 +100,22 @@ func LoadConfig() (*Config, error) {
 }
 
 // Validate returns a list of errors for the configuration, if any are found.
-func (cfg *Config) Validate() (errors []error) {
-	if _, defaulted, err := cfg.Limits.PodLogs.sizeLimitBytes(); err != nil && !defaulted {
-		errors = append(errors, err)
+func (cfg *Config) Validate() (errorsList []error) {
+	podLogLimits := &cfg.Limits.PodLogs
+
+	if _, defaulted, err := podLogLimits.sizeLimitBytes(); err != nil && !defaulted {
+		errorsList = append(errorsList, err)
 	}
 
-	if _, defaulted, err := cfg.Limits.PodLogs.timeLimitDuration(); err != nil && !defaulted {
-		errors = append(errors, err)
+	if _, defaulted, err := podLogLimits.timeLimitDuration(); err != nil && !defaulted {
+		errorsList = append(errorsList, err)
 	}
 
-	return errors
+	if podLogLimits.SinceTime != nil && podLogLimits.SinceSeconds != nil {
+		errorsList = append(errorsList, errors.New("Only one of sinceSeconds or sinceTime may be specified."))
+	}
+
+	return errorsList
 }
 
 // loadAllPlugins takes the given sonobuoy configuration and gives back a

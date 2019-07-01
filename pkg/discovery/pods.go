@@ -36,17 +36,29 @@ const (
 	PodLogsLocation = "podlogs"
 )
 
-// Only set values if they have values greater than 0 (as in they user specified).
-func getPodLogOptions(container string, limitBytes, sinceSeconds int64) *v1.PodLogOptions {
+// mapping to k8s.io/api/core/v1/PodLogOptions.
+func getPodLogOptions(cfg *config.Config) *v1.PodLogOptions {
+	podLogLimits := &cfg.Limits.PodLogs
+
 	options := &v1.PodLogOptions{
-		Container: container,
+		Previous: podLogLimits.Previous,
+		SinceSeconds: podLogLimits.SinceSeconds,
+		SinceTime: podLogLimits.SinceTime,
+		Timestamps: podLogLimits.Timestamps,
+		TailLines: podLogLimits.TailLines,
+		LimitBytes: podLogLimits.LimitBytes,
 	}
+
+	// Only set values if they have values greater than 0 (as in they user specified).
+	limitBytes := podLogLimits.SizeLimitBytes(0)
+	sinceSeconds := int64(podLogLimits.TimeLimitDuration(0) / time.Second)
 	if limitBytes > 0 {
 		options.LimitBytes = &limitBytes
 	}
 	if sinceSeconds > 0 {
 		options.SinceSeconds = &sinceSeconds
 	}
+
 	return options
 }
 
@@ -59,8 +71,7 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 	}
 
 	logrus.Infof("Collecting Pod Logs (%v)", ns)
-	limitBytes := cfg.Limits.PodLogs.SizeLimitBytes(0)
-	limitTime := int64(cfg.Limits.PodLogs.TimeLimitDuration(0) / time.Second)
+	podLogOptions := getPodLogOptions(cfg)
 
 	// 2 - Foreach pod, dump each of its containers' logs in a tree in the following location:
 	//   pods/:podname/logs/:containername.txt
@@ -70,8 +81,8 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 			continue
 		}
 		for _, container := range pod.Spec.Containers {
-			options := getPodLogOptions(container.Name, limitBytes, limitTime)
-			body, err := kubeClient.CoreV1().Pods(ns).GetLogs(pod.Name, options).DoRaw()
+			podLogOptions.Container = container.Name
+			body, err := kubeClient.CoreV1().Pods(ns).GetLogs(pod.Name, podLogOptions).DoRaw()
 			if err != nil {
 				return errors.WithStack(err)
 			}

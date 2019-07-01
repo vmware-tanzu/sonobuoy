@@ -24,6 +24,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	uuid "github.com/satori/go.uuid"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -161,15 +162,52 @@ type Config struct {
 	CustomAnnotations map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
 }
 
-// LimitConfig is a configuration on the limits of sizes of various responses.
+// LimitConfig is a configuration on the limits of various responses, such as limits of sizes
 type LimitConfig struct {
-	PodLogs SizeOrTimeLimitConfig `json:"PodLogs" mapstructure:"PodLogs"`
+	PodLogs PodLogLimits `json:"PodLogs" mapstructure:"PodLogs"`
 }
 
-// SizeOrTimeLimitConfig represents configuration that limits the size of
-// something either by a total disk size, or by a length of time.
-type SizeOrTimeLimitConfig struct {
+// PodLogLimits limits the scope of response when getting logs from pods.
+// It exposes a subset of k8s.io/api/core/v1/PodLogOptions.
+type PodLogLimits struct {
+	// Return previous terminated container logs. Defaults to false.
+	// +optional
+	Previous bool `json:"Previous" mapstructure:"Previous"`
+
+	// A relative time in seconds before the current time from which to show logs. If this value
+	// precedes the time a pod was started, only logs since the pod start will be returned.
+	// If this value is in the future, no logs will be returned.
+	// Only one of sinceSeconds or sinceTime may be specified.
+	// +optional
+	SinceSeconds *int64 `json:"SinceSeconds" mapstructure:"SinceSeconds"`
+
+	// An RFC3339 timestamp from which to show logs, e.g. "2019-06-28T00:34:00Z" . If this value
+	// precedes the time a pod was started, only logs since the pod start will be returned.
+	// If this value is in the future, no logs will be returned.
+	// Only one of LimitTime or sinceTime may be specified.
+	// +optional
+	SinceTime *metav1.Time `json:"SinceTime" mapstructure:"SinceTime"`
+
+	// If true, add an RFC3339 or RFC3339Nano timestamp at the beginning of every line
+	// of log output. Defaults to false.
+	// +optional
+	Timestamps bool `json:"Timestamps" mapstructure:"Timestamps"`
+
+	// If set, the number of lines from the end of the logs to show. If not specified,
+	// logs are shown from the creation of the container or sinceSeconds or sinceTime
+	// +optional
+	TailLines *int64 `json:"TailLines" mapstructure:"TailLines"`
+
+	// If set, the number of bytes to read from the server before terminating the
+	// log output. This may not display a complete final line of logging, and may return
+	// slightly more or slightly less than the specified limit.
+	// +optional
+	LimitBytes *int64 `json:"LimitBytes" mapstructure:"LimitBytes"`
+
+	// Deprecated: use LimitBytes instead
 	LimitSize string `json:"LimitSize" mapstructure:"LimitSize"`
+
+	// Deprecated: use SinceSeconds instead
 	LimitTime string `json:"LimitTime" mapstructure:"LimitTime"`
 }
 
@@ -192,9 +230,10 @@ func (cfg *Config) OutputDir() string {
 	return path.Join(cfg.ResultsDir, cfg.UUID)
 }
 
+// Deprecated: use PodLogLimits.LimitBytes instead
 // SizeLimitBytes returns how many bytes the configuration is set to limit,
 // returning defaultVal if not set.
-func (c SizeOrTimeLimitConfig) SizeLimitBytes(defaultVal int64) int64 {
+func (c PodLogLimits) SizeLimitBytes(defaultVal int64) int64 {
 	val, defaulted, err := c.sizeLimitBytes()
 
 	// Ignore error, since we should have already caught it in validation
@@ -205,7 +244,8 @@ func (c SizeOrTimeLimitConfig) SizeLimitBytes(defaultVal int64) int64 {
 	return val
 }
 
-func (c SizeOrTimeLimitConfig) sizeLimitBytes() (val int64, defaulted bool, err error) {
+// Deprecated: use PodLogLimits.LimitBytes instead
+func (c PodLogLimits) sizeLimitBytes() (val int64, defaulted bool, err error) {
 	str := c.LimitSize
 	if str == "" {
 		return 0, true, nil
@@ -216,8 +256,9 @@ func (c SizeOrTimeLimitConfig) sizeLimitBytes() (val int64, defaulted bool, err 
 	return int64(bs.Bytes()), false, err
 }
 
+// Deprecated: use PodLogLimits.SinceSeconds instead
 // TimeLimitDuration returns the duration the configuration is set to limit, returning defaultVal if not set.
-func (c SizeOrTimeLimitConfig) TimeLimitDuration(defaultVal time.Duration) time.Duration {
+func (c PodLogLimits) TimeLimitDuration(defaultVal time.Duration) time.Duration {
 	val, defaulted, err := c.timeLimitDuration()
 
 	// Ignore error, since we should have already caught it in validation
@@ -228,7 +269,8 @@ func (c SizeOrTimeLimitConfig) TimeLimitDuration(defaultVal time.Duration) time.
 	return val
 }
 
-func (c SizeOrTimeLimitConfig) timeLimitDuration() (val time.Duration, defaulted bool, err error) {
+// Deprecated: use PodLogLimits.SinceSeconds instead
+func (c PodLogLimits) timeLimitDuration() (val time.Duration, defaulted bool, err error) {
 	str := c.LimitTime
 	if str == "" {
 		return 0, true, nil
