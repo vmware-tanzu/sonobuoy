@@ -23,6 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 
@@ -31,7 +32,11 @@ import (
 
 const (
 	StatusAnnotationName = "sonobuoy.hept.io/status"
-	StatusPodName        = "sonobuoy"
+	StatusPodLabel       = "run=sonobuoy-master"
+)
+
+var (
+	StatusPodName = "sonobuoy"
 )
 
 // node and name uniquely identify a single plugin result
@@ -155,5 +160,29 @@ func GetPatch(annotation string) map[string]interface{} {
 				StatusAnnotationName: annotation,
 			},
 		},
+	}
+}
+
+// SetStatusPodName sets the sonobuoy master pod name based on it's label.
+func SetStatusPodName(client kubernetes.Interface, namespace string) {
+
+	listOptions := metav1.ListOptions{
+		LabelSelector: StatusPodLabel,
+	}
+
+	podList, err := client.CoreV1().Pods(namespace).List(listOptions)
+	if err != nil {
+		logrus.Errorf("Error listing pods with label '%s': %s", StatusPodLabel, err)
+		return
+	}
+
+	switch {
+	case len(podList.Items) == 0:
+		logrus.Errorf("No pods found with label '%s' in namespace %s, using default pod name 'sonobuoy'", StatusPodLabel, namespace)
+	case len(podList.Items) > 1:
+		logrus.Warningf("Found more than one pod with label '%s'. Using '%s'", StatusPodLabel, podList.Items[0].GetName())
+		StatusPodName = podList.Items[0].GetName()
+	default:
+		StatusPodName = podList.Items[0].GetName()
 	}
 }

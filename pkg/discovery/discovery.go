@@ -96,6 +96,9 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		}
 	}
 
+	// Determine sonobuoy pod name
+	pluginaggregation.SetStatusPodName(kubeClient, cfg.Namespace)
+
 	// Set initial annotation stating the pod is running. Ensures the annotation
 	// exists sooner for user/polling consumption and prevents issues were we try
 	// to patch a non-existant status later.

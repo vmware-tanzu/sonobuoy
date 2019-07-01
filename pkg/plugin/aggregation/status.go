@@ -82,9 +82,12 @@ func GetStatus(client kubernetes.Interface, namespace string) (*Status, error) {
 		return nil, errors.Wrap(err, "sonobuoy namespace does not exist")
 	}
 
+	// Determine sonobuoy pod name
+	SetStatusPodName(client, namespace)
+
 	pod, err := client.CoreV1().Pods(namespace).Get(StatusPodName, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, "could not retrieve sonobuoy pod")
+		return nil, errors.New("could not retrieve sonobuoy pod")
 	}
 
 	if pod.Status.Phase != corev1.PodRunning {
