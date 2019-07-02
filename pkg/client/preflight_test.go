@@ -147,7 +147,7 @@ func TestDNSCheck(t *testing.T) {
 				return &apicorev1.PodList{}, nil
 			},
 			dnsLabels: []string{"foo"},
-			expectErr: "no dns pod tests found",
+			expectErr: "no dns pods found with the labels [foo] in namespace kube-system",
 		}, {
 			desc: "Skipped if no labels required",
 			lister: func(metav1.ListOptions) (*apicorev1.PodList, error) {
