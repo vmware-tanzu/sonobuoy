@@ -18,6 +18,7 @@ package client
 
 import (
 	"fmt"
+	"strings"
 
 	version "github.com/hashicorp/go-version"
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
@@ -110,7 +111,7 @@ func dnsCheck(listPods listFunc, dnsLabels ...string) error {
 	}
 
 	if nPods == 0 {
-		return errors.New("no dns pod tests found")
+		return fmt.Errorf("no dns pods found with the labels [%s] in namespace kube-system", strings.Join(dnsLabels, ", "))
 	}
 
 	return nil
