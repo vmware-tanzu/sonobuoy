@@ -14,7 +14,7 @@ footer:
   title: Getting Started
   content: To help you get started, see the documentation.
   cta_title:
-  cta_url: /docs/v0.15.0
+  cta_url: /docs
   cta_text: Documentation
   vm-link: http://vmware.github.io/
 
