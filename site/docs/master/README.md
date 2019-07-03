@@ -136,26 +136,26 @@ welcome pull requests. Feel free to dig through the [issues][issue] and jump in.
 
 See [the list of releases][releases] to find out about feature changes.
 
-[airgap]: airgap.md
+[airgap]: airgap
 [brew]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
 [coc]: https://github.com/heptio/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
-[conformance]: conformance-testing.md
+[conformance]: conformance-testing
 [docs]: https://sonobuoy.io/docs/master/
-[e2e]: conformance-testing.md
-[gen]: gen.md
+[e2e]: conformance-testing
+[gen]: gen
 [gimme]: https://github.com/travis-ci/gimme
 [issue]: https://github.com/heptio/sonobuoy/issues
 [k8s]: https://github.com/kubernetes/kubernetes
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
 [oview]: https://youtu.be/k-P4hXdruRs?t=9m27s
-[plugins]: plugins.md
+[plugins]: plugins
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
 [releases]: https://github.com/heptio/sonobuoy/releases
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
-[snapshot]:snapshot.md
-[sonobuoyconfig]: sonobuoy-config.md
+[snapshot]:snapshot
+[sonobuoyconfig]: sonobuoy-config
 [status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
 [travis]: https://travis-ci.org/heptio/sonobuoy/#
-[wait]: wait.md
+[wait]: wait
