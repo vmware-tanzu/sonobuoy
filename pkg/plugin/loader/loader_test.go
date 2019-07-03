@@ -100,6 +100,50 @@ func TestLoadValidPlugin(t *testing.T) {
 	}
 }
 
+func TestLoadValidPluginWithSkipCleanup(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		jobDefFileName string
+		expectedValue  bool
+	}{
+		{
+			desc:           "skip-cleanup set to true results in true",
+			jobDefFileName: "testdata/skip-cleanup/set-true.yml",
+			expectedValue:  true,
+		},
+		{
+			desc:           "skip-cleanup set to true results in true",
+			jobDefFileName: "testdata/skip-cleanup/set-false.yml",
+			expectedValue:  false,
+		},
+		{
+			desc:           "skip-cleanup not set defaults to false",
+			jobDefFileName: "testdata/skip-cleanup/not-set.yml",
+			expectedValue:  false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			jobDefFile, err := loadDefinitionFromFile(tc.jobDefFileName)
+			if err != nil {
+				t.Fatalf("Unexpected error reading job plugin: %v", err)
+			}
+
+			jobDef, err := loadDefinition(jobDefFile)
+			if err != nil {
+				t.Fatalf("Unexpected error loading job plugin: %v", err)
+			}
+
+			if jobDef.SonobuoyConfig.SkipCleanup != tc.expectedValue {
+				t.Errorf("expected skip-cleanup to be %v but was %v", tc.expectedValue, jobDef.SonobuoyConfig.SkipCleanup)
+			}
+
+		})
+
+	}
+}
+
 func TestLoadJobPlugin(t *testing.T) {
 	namespace := "loader_test"
 	image := "gcr.io/heptio-images/sonobuoy:latest"

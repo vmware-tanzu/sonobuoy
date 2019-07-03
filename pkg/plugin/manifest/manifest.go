@@ -24,19 +24,21 @@ import (
 
 // SonobuoyConfig is the Sonobuoy metadata that plugins all supply
 type SonobuoyConfig struct {
-	Driver     string `json:"driver"`
-	PluginName string `json:"plugin-name"`
-	ResultType string `json:"result-type"`
+	Driver      string `json:"driver"`
+	PluginName  string `json:"plugin-name"`
+	ResultType  string `json:"result-type"`
+	SkipCleanup bool   `json:"skip-cleanup,omitempty"`
 	objectKind
 }
 
 // DeepCopy makes a deep copy (needed by DeepCopyObject)
 func (s *SonobuoyConfig) DeepCopy() *SonobuoyConfig {
 	return &SonobuoyConfig{
-		Driver:     s.Driver,
-		PluginName: s.PluginName,
-		ResultType: s.ResultType,
-		objectKind: objectKind{s.objectKind.gvk},
+		Driver:      s.Driver,
+		PluginName:  s.PluginName,
+		ResultType:  s.ResultType,
+		SkipCleanup: s.SkipCleanup,
+		objectKind:  objectKind{s.objectKind.gvk},
 	}
 }
 

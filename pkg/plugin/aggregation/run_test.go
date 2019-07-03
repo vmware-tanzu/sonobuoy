@@ -22,6 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
 )
@@ -196,4 +197,88 @@ func getTestCert() (*tls.Certificate, error) {
 		Certificate: [][]byte{certDER},
 		PrivateKey:  privKey,
 	}, nil
+}
+
+type MockCleanupPlugin struct {
+	skipCleanup bool
+	cleanedUp   bool
+}
+
+func (cp *MockCleanupPlugin) Run(_ kubernetes.Interface, _ string, _ *tls.Certificate) error {
+	return nil
+}
+
+func (cp *MockCleanupPlugin) Cleanup(_ kubernetes.Interface) {
+	cp.cleanedUp = true
+}
+
+func (cp *MockCleanupPlugin) Monitor(_ context.Context, _ kubernetes.Interface, _ []corev1.Node, _ chan<- *plugin.Result) {
+	return
+}
+
+func (cp *MockCleanupPlugin) ExpectedResults(_ []corev1.Node) []plugin.ExpectedResult {
+	return []plugin.ExpectedResult{}
+}
+
+func (cp *MockCleanupPlugin) FillTemplate(_ string, _ *tls.Certificate) ([]byte, error) {
+	return []byte{}, nil
+}
+
+func (cp *MockCleanupPlugin) GetResultType() string {
+	return "result-type"
+}
+
+func (cp *MockCleanupPlugin) GetName() string {
+	return "mock-cleanup-plugin"
+}
+
+func (cp *MockCleanupPlugin) SkipCleanup() bool {
+	return cp.skipCleanup
+}
+
+func TestCleanup(t *testing.T) {
+	createPlugin := func(skipCleanup bool) *MockCleanupPlugin {
+		return &MockCleanupPlugin{
+			skipCleanup: skipCleanup,
+			cleanedUp:   false,
+		}
+	}
+
+	testCases := []struct {
+		desc                    string
+		plugins                 []*MockCleanupPlugin
+		expectedCleanedUpValues []bool
+	}{
+		{
+			desc:                    "plugins without skip cleanup are all cleaned up",
+			plugins:                 []*MockCleanupPlugin{createPlugin(false), createPlugin(false)},
+			expectedCleanedUpValues: []bool{true, true},
+		},
+		{
+			desc:                    "plugins with skip cleanup are not cleaned up",
+			plugins:                 []*MockCleanupPlugin{createPlugin(true), createPlugin(false), createPlugin(true)},
+			expectedCleanedUpValues: []bool{false, true, false},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			var plugins []plugin.Interface = make([]plugin.Interface, len(tc.plugins))
+			for i, p := range tc.plugins {
+				plugins[i] = p
+			}
+
+			Cleanup(nil, plugins)
+
+			for i, p := range tc.plugins {
+				if p.cleanedUp != tc.expectedCleanedUpValues[i] {
+					if p.cleanedUp {
+						t.Error("Expected plugin not to be cleaned up")
+					} else {
+						t.Error("Expected plugin to be cleaned up")
+					}
+				}
+			}
+		})
+	}
 }
