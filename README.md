@@ -136,26 +136,25 @@ welcome pull requests. Feel free to dig through the [issues][issue] and jump in.
 
 See [the list of releases][releases] to find out about feature changes.
 
-[airgap]: https://sonobuoy.io/docs/master/airgap
+[airgap]: https://sonobuoy.io/docs/airgap
 [brew]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
 [coc]: https://github.com/heptio/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
-[conformance]: https://sonobuoy.io/docs/master/conformance-testing
-[docs]: https://sonobuoy.io/docs/master/
-[e2e]: https://sonobuoy.io/docs/master/conformance-testing
-[gen]: https://sonobuoy.io/docs/master/gen
+[conformance]: https://sonobuoy.io/docs/conformance-testing
+[docs]: https://sonobuoy.io/docs
+[e2e]: https://sonobuoy.io/docs/conformance-testing
+[gen]: https://sonobuoy.io/docs/gen
 [gimme]: https://github.com/travis-ci/gimme
 [issue]: https://github.com/heptio/sonobuoy/issues
 [k8s]: https://github.com/kubernetes/kubernetes
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
 [oview]: https://youtu.be/k-P4hXdruRs?t=9m27s
-[plugins]: https://sonobuoy.io/docs/master/plugins
+[plugins]: https://sonobuoy.io/docs/plugins
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
 [releases]: https://github.com/heptio/sonobuoy/releases
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
-[snapshot]:https://sonobuoy.io/docs/master/snapshot
-[sonobuoyconfig]: https://sonobuoy.io/docs/master/sonobuoy-config
+[snapshot]:https://sonobuoy.io/docs/snapshot
+[sonobuoyconfig]: https://sonobuoy.io/docs/sonobuoy-config
 [status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
 [travis]: https://travis-ci.org/heptio/sonobuoy/#
-[wait]: https://sonobuoy.io/docs/master/wait
