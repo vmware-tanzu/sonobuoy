@@ -83,3 +83,21 @@ func TestMakeTLSSecret(t *testing.T) {
 		t.Error("cert fingerprint didn't match")
 	}
 }
+
+func TestSkipCleanup(t *testing.T) {
+	b := &Base{
+		Definition: plugin.Definition{
+			SkipCleanup: false,
+		},
+	}
+
+	if b.SkipCleanup() {
+		t.Error("Expected SkipCleanup to be false but was true")
+	}
+
+	b.Definition.SkipCleanup = true
+
+	if !b.SkipCleanup() {
+		t.Error("Expected SkipCleanup to be true but was false")
+	}
+}

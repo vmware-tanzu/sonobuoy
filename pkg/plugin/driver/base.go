@@ -80,6 +80,11 @@ func (b *Base) GetResultType() string {
 	return b.Definition.ResultType
 }
 
+// SkipCleanup returns whether cleanup for this plugin should be skipped or not.
+func (b *Base) SkipCleanup() bool {
+	return b.Definition.SkipCleanup
+}
+
 //GetTemplateData fills a TemplateData struct with the passed in and state variables.
 func (b *Base) GetTemplateData(masterAddress string, cert *tls.Certificate) (*TemplateData, error) {
 

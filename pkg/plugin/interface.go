@@ -51,6 +51,8 @@ type Interface interface {
 	GetResultType() string
 	// GetName returns the name of this plugin
 	GetName() string
+	// SkipCleanup returns whether cleanup for this plugin should be skipped or not.
+	SkipCleanup() bool
 }
 
 // Definition defines a plugin's features, method of launch, and other
@@ -58,6 +60,7 @@ type Interface interface {
 type Definition struct {
 	Name         string
 	ResultType   string
+	SkipCleanup  bool
 	Spec         manifest.Container
 	ExtraVolumes []manifest.Volume
 }

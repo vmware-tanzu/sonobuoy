@@ -199,9 +199,11 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 // Cleanup calls cleanup on all plugins
 func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
-	// Cleanup after each plugin
+	// Cleanup after each plugin unless cleanup is explicitly skipped
 	for _, p := range plugins {
-		p.Cleanup(client)
+		if !p.SkipCleanup() {
+			p.Cleanup(client)
+		}
 	}
 }
 

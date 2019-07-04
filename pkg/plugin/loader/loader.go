@@ -127,6 +127,7 @@ func loadPlugin(def *manifest.Manifest, namespace, sonobuoyImage, imagePullPolic
 	pluginDef := plugin.Definition{
 		Name:         def.SonobuoyConfig.PluginName,
 		ResultType:   def.SonobuoyConfig.ResultType,
+		SkipCleanup:  def.SonobuoyConfig.SkipCleanup,
 		ExtraVolumes: def.ExtraVolumes,
 		Spec:         def.Spec,
 	}
