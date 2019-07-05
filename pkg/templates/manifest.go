@@ -91,11 +91,12 @@ metadata:
   name: sonobuoy-config-cm
   namespace: {{.Namespace}}
 ---
-{{- if .Plugins }}
 apiVersion: v1
+{{- if .Plugins }}
 data:{{- range $i, $v := .Plugins }}
   plugin-{{- $i -}}.yaml: |
     {{ indent 4 $v }}
+{{- end }}
 {{- end }}
 kind: ConfigMap
 metadata:
@@ -103,7 +104,6 @@ metadata:
     component: sonobuoy
   name: sonobuoy-plugins-cm
   namespace: {{.Namespace}}
-{{- end }}
 ---
 apiVersion: v1
 kind: Pod
