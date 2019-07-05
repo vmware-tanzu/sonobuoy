@@ -54,14 +54,45 @@ Filters
    - A Kubernetes [label selector][labelselector] which will be added to every query run.
 
 Limits
- - Options for limiting limits the scope of response when getting logs from pods. These will be passed onto Kubernetes [PodLogOptions][podlogopts]
- - The supported parameters are:
-    - Previous
-    - SinceSeconds
-    - SinceTime
-    - Timestamps
-    - TailLines
-    - LimitBytes
+ - Options for limiting the scope of response.
+ - **Limits.PodLogs** limits the scope when getting logs from pods. The supported parameters are:
+    - **Namespaces**: string
+        - A regular expression for the targeted namespaces. 
+        - Default is empty string
+        - To get logs from all namespaces use ".*"
+    - **SonobuoyNamespace**: bool
+        - If set to true, get pod logs from the namespace Sonobuoy is running in. Can be set along with a `Namespaces` field or on its own.
+        - Default value is true
+    - **FieldSelectors**: []string
+        - A list of field selectors, with OR logic. 
+        - For example, to get logs from two specified namespaces
+        `FieldSelectors = ["metadata.namespace=default","metadata.namespace=heptio-sonobuoy"]` 
+        - Each field selector contains one or more chained operators, with AND logic
+        - For example, to get logs from a specified pod 
+        `FieldSelectors = ["metadata.namespace=default,metadata.name=pod1"]` 
+        - Each field selector follows the same format as
+        `k8s.io/apimachinery/pkg/apis/meta/v1/types/ListOptions/FieldSelector`
+        - Can be set along with a Namespaces/SonobuoyNamespace field or on its own.
+    - **LabelSelector**: string
+        - Filtering candidate pods by their labels
+        - Using the same format as
+        `k8s.io/apimachinery/pkg/apis/meta/v1/types/ListOptions/LabelSelector`
+        - For example:
+        `LabelSelector = "app=nginx,layer in (frontend, backend)"`
+        - When set together with other fields, the scope of pods is defined by:
+            ```
+            (Namespaces OR SonobuoyNamespace OR FieldSelectors) AND LabelSelector
+            ```
+        
+    - For each candidate pod, the format and size of logs is defined by other fields. These will be passed onto Kubernetes [PodLogOptions][podlogopts]
+        - Previous: bool
+        - SinceSeconds: int
+        - SinceTime: string. RFC3339 format.
+        - Timestamps: bool
+        - TailLines: int
+        - LimitBytes: int
     
+
+
 [labelselector]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 [podlogopts]: https://godoc.org/k8s.io/api/core/v1#PodLogOptions

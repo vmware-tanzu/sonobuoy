@@ -63,30 +63,39 @@ func getPodLogOptions(cfg *config.Config) *v1.PodLogOptions {
 }
 
 // gatherPodLogs will loop through collecting pod logs and placing them into a directory tree
-func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListOptions, cfg *config.Config) error {
+// If ns is not provided,  meaning candidate pods can come from all namespaces
+// visitedPods will eliminate duplicate pods when execute overlapping queries,
+// e.g. query by namespaces and query by fieldSelectors
+func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListOptions, cfg *config.Config,
+	visitedPods map[string]struct{}) error {
+
 	// 1 - Collect the list of pods
 	podlist, err := kubeClient.CoreV1().Pods(ns).List(opts)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	logrus.Infof("Collecting Pod Logs (%v)", ns)
 	podLogOptions := getPodLogOptions(cfg)
 
 	// 2 - Foreach pod, dump each of its containers' logs in a tree in the following location:
 	//   pods/:podname/logs/:containername.txt
 	for _, pod := range podlist.Items {
+		if _, ok := visitedPods[pod.SelfLink]; ok {
+			continue // skip visited pods
+		}
+		visitedPods[pod.SelfLink] = struct{}{}
+
 		if pod.Status.Phase == v1.PodFailed && pod.Status.Reason == "Evicted" {
 			logrus.WithField("podName", pod.Name).Info("Skipping evicted pod.")
 			continue
 		}
 		for _, container := range pod.Spec.Containers {
 			podLogOptions.Container = container.Name
-			body, err := kubeClient.CoreV1().Pods(ns).GetLogs(pod.Name, podLogOptions).DoRaw()
+			body, err := kubeClient.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, podLogOptions).DoRaw()
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			outdir := path.Join(cfg.OutputDir(), PodLogsLocation, ns, pod.Name, "logs")
+			outdir := path.Join(cfg.OutputDir(), PodLogsLocation, pod.Namespace, pod.Name, "logs")
 			if err = os.MkdirAll(outdir, 0755); err != nil {
 				return errors.WithStack(err)
 			}

@@ -167,9 +167,6 @@ func QueryResources(
 			opts.LabelSelector = cfg.Filters.LabelSelector
 		}
 	}
-	if ns != nil && len(*ns) > 0 {
-		opts.FieldSelector = "metadata.namespace=" + *ns
-	}
 
 	// 3. Execute the query
 	for _, gvr := range resources {
@@ -260,33 +257,42 @@ func filterResources(gvrs map[schema.GroupVersion][]metav1.APIResource, namespac
 }
 
 // QueryPodLogs gets the pod logs for each pod in the given namespace.
-func QueryPodLogs(kubeClient kubernetes.Interface, recorder *QueryRecorder, ns string, cfg *config.Config) error {
-	// Force podlogs gathering in the namespace Sonobuoy is in. Optional otherwise and
-	// based on the Resources value.
-	if cfg.Resources != nil &&
-		!sliceContains(cfg.Resources, "podlogs") &&
-		ns != cfg.Namespace {
-		logrus.Infof("podlogs not specified in non-nil Resources, only getting podlogs for namespace %v", cfg.Namespace)
-		return nil
-	}
+// If namespace is not provided, get pod logs using field selectors.
+// VisitedPods will eliminate duplicate pods when execute overlapping queries,
+// e.g. query by namespaces and query by fieldSelectors.
+func QueryPodLogs(kubeClient kubernetes.Interface, recorder *QueryRecorder, ns string, cfg *config.Config,
+	visitedPods map[string]struct{}) error {
 
 	start := time.Now()
 
 	opts := metav1.ListOptions{}
-	if len(cfg.Filters.LabelSelector) > 0 {
-		if _, err := labels.Parse(cfg.Filters.LabelSelector); err != nil {
-			logrus.Warningf("Labelselector %v failed to parse with error %v", cfg.Filters.LabelSelector, err)
+	if len(cfg.Limits.PodLogs.LabelSelector) > 0 {
+		if _, err := labels.Parse(cfg.Limits.PodLogs.LabelSelector); err != nil {
+			logrus.Warningf("Labelselector %v failed to parse with error %v", cfg.Limits.PodLogs.LabelSelector, err)
 		} else {
-			opts.LabelSelector = cfg.Filters.LabelSelector
+			opts.LabelSelector = cfg.Limits.PodLogs.LabelSelector
 		}
 	}
 
-	err := gatherPodLogs(kubeClient, ns, opts, cfg)
-	if err != nil {
-		return err
+	if len(ns) > 0 {
+		logrus.Infof("Collecting Pod Logs by namespace (%v)", ns)
+		err := gatherPodLogs(kubeClient, ns, opts, cfg, visitedPods)
+		if err != nil {
+			return err
+		}
+	} else {
+		logrus.Infoln("Collecting Pod Logs by FieldSelectors", cfg.Limits.PodLogs.FieldSelectors)
+		for _, fieldSelector := range cfg.Limits.PodLogs.FieldSelectors {
+			opts.FieldSelector = fieldSelector
+			err := gatherPodLogs(kubeClient, ns, opts, cfg, visitedPods)
+			if err != nil {
+				return err
+			}
+		}
 	}
+
 	duration := time.Since(start)
-	recorder.RecordQuery("PodLogs", ns, duration, err)
+	recorder.RecordQuery("PodLogs", ns, duration, nil)
 	return nil
 }
 

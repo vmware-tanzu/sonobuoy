@@ -298,9 +298,22 @@ func mergeConfigs(dst, src *config.Config) {
 		emptyResources = true
 	}
 
+	// Workaround to differentiate a false value and a nil value
+	// Only override dst.Limits.PodLogs.SonobuoyNamespace when it's nil
+	// See https://github.com/imdario/mergo/issues/89
+	var sonobuoyNamespace *bool
+	if dst.Limits.PodLogs.SonobuoyNamespace != nil {
+		sonobuoyNamespace = new(bool)
+		*sonobuoyNamespace = *dst.Limits.PodLogs.SonobuoyNamespace
+	}
+
 	// Provide defaults but don't overwrite any customized configuration.
 	mergo.Merge(dst, src)
+
 	if emptyResources {
 		dst.Resources = []string{}
+	}
+	if sonobuoyNamespace != nil {
+		dst.Limits.PodLogs.SonobuoyNamespace = sonobuoyNamespace
 	}
 }
