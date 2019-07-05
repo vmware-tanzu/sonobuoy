@@ -127,6 +127,11 @@ func e2es(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Rerunning %d tests:\n", len(testCases))
+
+	// Ensure that we run the failed test cases and don't skip any
+	runCfg.E2EConfig.Focus = client.Focus(testCases)
+	runCfg.E2EConfig.Skip = ""
+
 	if err := sonobuoy.Run(runCfg); err != nil {
 		errlog.LogError(errors.Wrap(err, "error attempting to rerun failed tests"))
 		os.Exit(1)
