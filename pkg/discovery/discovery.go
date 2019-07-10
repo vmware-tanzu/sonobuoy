@@ -110,9 +110,8 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	)
 
 	// 2. Get the list of namespaces and apply the regex filter on the namespace
-	nsfilter := fmt.Sprintf("%s|%s", cfg.Filters.Namespaces, cfg.Namespace)
-	logrus.Infof("Filtering namespaces based on the following regex:%s", nsfilter)
-	nslist, err := FilterNamespaces(kubeClient, nsfilter)
+	logrus.Infof("Filtering namespaces based on the following regex:%s",  cfg.Filters.Namespaces)
+	nslist, err := FilterNamespaces(kubeClient,  cfg.Filters.Namespaces)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not filter namespaces"))
 		return errCount + 1
@@ -151,10 +150,28 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		trackErrorsFor("querying resources under namespace " + ns)(
 			QueryResources(apiHelper, recorder, nsResources, &ns, cfg),
 		)
+	}
 
-		trackErrorsFor("querying pod logs under namespace " + ns)(
-			QueryPodLogs(kubeClient, recorder, ns, cfg),
+	// query pod logs
+	if cfg.Resources == nil || sliceContains(cfg.Resources, "podlogs") {
+
+		// Eliminate duplicate pods when query by namespaces and query by fieldSelectors
+		visitedPods := make(map[string]struct{})
+
+		nsFilter := getPodLogNamespaceFilter(cfg)
+		if len(nsFilter) > 0 {
+			nsListLogs, _ := FilterNamespaces(kubeClient, nsFilter)
+			for _, ns := range nsListLogs {
+				trackErrorsFor("querying pod logs under namespace " + ns)(
+					QueryPodLogs(kubeClient, recorder, ns, cfg, visitedPods),
+				)
+			}
+		}
+		trackErrorsFor("querying pod logs by field selectors")(
+			QueryPodLogs(kubeClient, recorder, "", cfg, visitedPods),
 		)
+	} else {
+		logrus.Infof("podlogs not specified in non-nil Resources, skipping getting podlogs")
 	}
 
 	// 6. Dump the query times
@@ -181,6 +198,20 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	logrus.Infof("Results available at %v", tb)
 
 	return errCount
+}
+
+// Targeted namespaces will be specified by cfg.Limits.PodLogs.Namespaces OR cfg.Limits.PodLogs.SonobuoyNamespace.
+func getPodLogNamespaceFilter(cfg *config.Config) string {
+	nsfilter := cfg.Limits.PodLogs.Namespaces
+
+	if cfg.Limits.PodLogs.SonobuoyNamespace != nil && *cfg.Limits.PodLogs.SonobuoyNamespace {
+		if len(nsfilter) > 0 {
+			nsfilter = fmt.Sprintf("%s|%s", nsfilter, cfg.Namespace)
+		} else {
+			nsfilter = cfg.Namespace
+		}
+	}
+	return nsfilter
 }
 
 // updateStatus changes the summary status of the sonobuoy pod in order to

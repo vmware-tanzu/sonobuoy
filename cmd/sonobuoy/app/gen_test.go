@@ -24,6 +24,10 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 )
 
+const (
+	rawInput = "not nil"
+)
+
 // TestResolveConformanceImage tests the temporary logic of ensuring that given
 // a certain string version, the proper conformance image is used (upstream
 // vs Heptio).
@@ -116,8 +120,7 @@ func TestResolveConfig(t *testing.T) {
 							BindAddress: "10.0.0.1",
 						},
 					},
-					// TODO(chuckha) consider exporting raw or not depending on it.
-					raw: "not nil",
+					raw: rawInput,
 				},
 			},
 			expected: &config.Config{
@@ -276,9 +279,57 @@ func TestResolveConfig(t *testing.T) {
 			if !reflect.DeepEqual(conf.PluginSelections, tc.expected.PluginSelections) {
 				t.Errorf("expected PluginSelections %v but got %v", tc.expected.PluginSelections, conf.PluginSelections)
 			}
+
 			if !reflect.DeepEqual(conf.Resources, tc.expected.Resources) {
 				t.Errorf("expected resources %v but got %v", tc.expected.Resources, conf.Resources)
 			}
 		})
+	}
+}
+
+func TestResolveConfigPodLogLimits(t *testing.T) {
+	defaultSonobuoyNamespace := new(bool)
+	*defaultSonobuoyNamespace = true
+
+	g := &genFlags{
+		sonobuoyConfig: SonobuoyConfig{
+			Config: config.Config{},
+			raw: rawInput,
+		},
+	}
+
+	testCases := []struct {
+		name     string
+		input    config.PodLogLimits
+		expected config.PodLogLimits
+	}{
+		{
+			name:     "Nil config will be overwritten by default value",
+			input:    config.PodLogLimits {
+				SonobuoyNamespace: nil,
+			},
+			expected: config.PodLogLimits{
+				SonobuoyNamespace: defaultSonobuoyNamespace,
+			},
+		},
+		{
+			name:     "Non-nil config should be preserved",
+			input:    config.PodLogLimits {
+				SonobuoyNamespace: &[]bool{false}[0],
+			},
+			expected: config.PodLogLimits{
+				SonobuoyNamespace: &[]bool{false}[0],
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		g.sonobuoyConfig.Limits.PodLogs = tc.input
+		conf := g.resolveConfig()
+
+		if *conf.Limits.PodLogs.SonobuoyNamespace != *tc.expected.SonobuoyNamespace {
+			t.Errorf("Expected Limits.PodLogs.SonobuoyNamespace %v but got %v",
+				*tc.expected.SonobuoyNamespace, *conf.Limits.PodLogs.SonobuoyNamespace )
+		}
 	}
 }

@@ -92,6 +92,7 @@ var (
 		"persistentvolumes",
 		"poddisruptionbudgets",
 		"pods",
+		"podlogs",
 		"podsecuritypolicies",
 		"podtemplates",
 		"priorityclasses",
@@ -168,8 +169,53 @@ type LimitConfig struct {
 }
 
 // PodLogLimits limits the scope of response when getting logs from pods.
-// It exposes a subset of k8s.io/api/core/v1/PodLogOptions.
+// The scope of pods is defined by (Namespaces OR SonobuoyNamespace OR FieldSelectors) AND LabelSelector
+// Then for each pod, the format and size of logs is defined by other fields, e.g. SinceSeconds
 type PodLogLimits struct {
+	// A regular expression for the targeted namespaces, follows the format of Golang Regexp
+	Namespaces string `json:"Namespaces" mapstructure:"Namespaces"`
+
+	// If set to true, take into account the pod logs from Sonobuoy's namespace, i.e. Config.Namespace
+	// Use a pointer here to differentiate an empty input or an input of false.
+	// Default value will be true, empty input could be overwritten by default value
+	SonobuoyNamespace *bool `json:"SonobuoyNamespace" mapstructure:"SonobuoyNamespace"`
+
+	// Filtering candidate pods by their fields
+	// This is an array of FieldSelector, each of them follows the same format as:
+	// k8s.io/apimachinery/pkg/apis/meta/v1/types/ListOptions/FieldSelector
+	//
+	// One field selector contains one or more chained operators, with AND logic
+	// e.g. FieldSelectors = ["status.phase==Running,spec.restartPolicy=Always"] means
+	// status.phase==Running AND spec.restartPolicy=Always
+	//
+	// Multiple field selectors can be provided, with OR logic:
+	// e.g. FieldSelectors = ["status==Pending", "status.phase==Running,spec.restartPolicy=Always"] means
+	// status==Pending OR ( status.phase==Running AND spec.restartPolicy=Always )
+	FieldSelectors []string `json:"FieldSelectors" mapstructure:"FieldSelectors"`
+
+	// Filtering candidate pods by their labels
+	// using the same format as k8s.io/apimachinery/pkg/apis/meta/v1/types/ListOptions/LabelSelector.
+	// The input should follow this form:
+	//
+	//  <selector-syntax>         ::= <requirement> | <requirement> "," <selector-syntax>
+	//  <requirement>             ::= [!] KEY [ <set-based-restriction> | <exact-match-restriction> ]
+	//  <set-based-restriction>   ::= "" | <inclusion-exclusion> <value-set>
+	//  <inclusion-exclusion>     ::= <inclusion> | <exclusion>
+	//  <exclusion>               ::= "notin"
+	//  <inclusion>               ::= "in"
+	//  <value-set>               ::= "(" <values> ")"
+	//  <values>                  ::= VALUE | VALUE "," <values>
+	//  <exact-match-restriction> ::= ["="|"=="|"!="] VALUE
+	//
+	// KEY is a sequence of one or more characters following [ DNS_SUBDOMAIN "/" ] DNS_LABEL. Max length is 63 characters.
+	// VALUE is a sequence of zero or more characters "([A-Za-z0-9_-\.])". Max length is 63 characters.
+	// Delimiter is white space: (' ', '\t')
+	//
+	// Example of valid syntax:
+	//  "x in (foo,,baz),y,z notin ()"
+	//
+	LabelSelector string `json:"LabelSelector" mapstructure:"LabelSelector"`
+
 	// Return previous terminated container logs. Defaults to false.
 	// +optional
 	Previous bool `json:"Previous" mapstructure:"Previous"`
@@ -296,6 +342,9 @@ func New() *Config {
 	cfg.Resources = DefaultResources
 
 	cfg.Namespace = DefaultNamespace
+	cfg.Limits.PodLogs.SonobuoyNamespace = new(bool)
+	*cfg.Limits.PodLogs.SonobuoyNamespace = true
+	cfg.Limits.PodLogs.FieldSelectors = []string{}
 
 	cfg.Aggregation.BindAddress = DefaultAggregationServerBindAddress
 	cfg.Aggregation.BindPort = DefaultAggregationServerBindPort
