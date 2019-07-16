@@ -33,10 +33,7 @@ import (
 const (
 	StatusAnnotationName = "sonobuoy.hept.io/status"
 	StatusPodLabel       = "run=sonobuoy-master"
-)
-
-var (
-	StatusPodName = "sonobuoy"
+	DefaultStatusPodName = "sonobuoy"
 )
 
 // node and name uniquely identify a single plugin result
@@ -120,7 +117,13 @@ func (u *updater) Annotate(results map[string]*plugin.Result) error {
 		return errors.Wrap(err, "couldn't encode patch")
 	}
 
-	_, err = u.client.CoreV1().Pods(u.namespace).Patch(StatusPodName, types.MergePatchType, bytes)
+	// Determine sonobuoy pod name
+	podName, err := GetStatusPodName(u.client, u.namespace)
+	if err != nil {
+		return errors.Wrap(err, "failed to get name of the aggregator pod to annotate")
+	}
+
+	_, err = u.client.CoreV1().Pods(u.namespace).Patch(podName, types.MergePatchType, bytes)
 	return errors.Wrap(err, "couldn't patch pod annotation")
 }
 
@@ -163,26 +166,25 @@ func GetPatch(annotation string) map[string]interface{} {
 	}
 }
 
-// SetStatusPodName sets the sonobuoy master pod name based on it's label.
-func SetStatusPodName(client kubernetes.Interface, namespace string) {
-
+// GetStatusPodName gets the sonobuoy master pod name based on its label.
+func GetStatusPodName(client kubernetes.Interface, namespace string) (string, error) {
 	listOptions := metav1.ListOptions{
 		LabelSelector: StatusPodLabel,
 	}
 
 	podList, err := client.CoreV1().Pods(namespace).List(listOptions)
 	if err != nil {
-		logrus.Errorf("Error listing pods with label '%s': %s", StatusPodLabel, err)
-		return
+		return "", errors.Wrap(err, "unable to list pods with label %q")
 	}
 
 	switch {
 	case len(podList.Items) == 0:
-		logrus.Errorf("No pods found with label '%s' in namespace %s, using default pod name 'sonobuoy'", StatusPodLabel, namespace)
+		logrus.Warningf("No pods found with label %q in namespace %s, using default pod name %q", StatusPodLabel, namespace, DefaultStatusPodName)
+		return DefaultStatusPodName, nil
 	case len(podList.Items) > 1:
-		logrus.Warningf("Found more than one pod with label '%s'. Using '%s'", StatusPodLabel, podList.Items[0].GetName())
-		StatusPodName = podList.Items[0].GetName()
+		logrus.Warningf("Found more than one pod with label %q. Using %q", StatusPodLabel, podList.Items[0].GetName())
+		return podList.Items[0].GetName(), nil
 	default:
-		StatusPodName = podList.Items[0].GetName()
+		return podList.Items[0].GetName(), nil
 	}
 }

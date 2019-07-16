@@ -60,12 +60,15 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 	}
 
 	// Determine sonobuoy pod name
-	pluginaggregation.SetStatusPodName(client, cfg.Namespace)
+	podName, err := pluginaggregation.GetStatusPodName(client, cfg.Namespace)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to get the name of the aggregator pod to fetch results from")
+	}
 
 	restClient := client.CoreV1().RESTClient()
 	req := restClient.Post().
 		Resource("pods").
-		Name(pluginaggregation.StatusPodName).
+		Name(podName).
 		Namespace(cfg.Namespace).
 		SubResource("exec").
 		Param("container", config.MasterContainerName)

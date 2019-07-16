@@ -96,9 +96,6 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		}
 	}
 
-	// Determine sonobuoy pod name
-	pluginaggregation.SetStatusPodName(kubeClient, cfg.Namespace)
-
 	// Set initial annotation stating the pod is running. Ensures the annotation
 	// exists sooner for user/polling consumption and prevents issues were we try
 	// to patch a non-existant status later.
@@ -110,8 +107,8 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	)
 
 	// 2. Get the list of namespaces and apply the regex filter on the namespace
-	logrus.Infof("Filtering namespaces based on the following regex:%s",  cfg.Filters.Namespaces)
-	nslist, err := FilterNamespaces(kubeClient,  cfg.Filters.Namespaces)
+	logrus.Infof("Filtering namespaces based on the following regex:%s", cfg.Filters.Namespaces)
+	nslist, err := FilterNamespaces(kubeClient, cfg.Filters.Namespaces)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not filter namespaces"))
 		return errCount + 1
@@ -243,6 +240,12 @@ func setStatus(client kubernetes.Interface, namespace string, status *pluginaggr
 		return errors.Wrap(err, "failed to marshal the patch")
 	}
 
-	_, err = client.CoreV1().Pods(namespace).Patch(pluginaggregation.StatusPodName, types.MergePatchType, patchBytes)
+	// Determine sonobuoy pod name
+	podName, err := pluginaggregation.GetStatusPodName(client, namespace)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the name of the aggregator pod to set the status on")
+	}
+
+	_, err = client.CoreV1().Pods(namespace).Patch(podName, types.MergePatchType, patchBytes)
 	return err
 }
