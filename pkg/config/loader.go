@@ -27,6 +27,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	pluginloader "github.com/heptio/sonobuoy/pkg/plugin/loader"
 	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -77,6 +78,12 @@ func LoadConfig() (*Config, error) {
 	// Make the results dir overridable with an environment variable
 	if resultsDir, ok := os.LookupEnv("RESULTS_DIR"); ok {
 		cfg.ResultsDir = resultsDir
+	}
+
+	// If the loaded config doesn't have its own UUID, create one
+	if cfg.UUID == "" {
+		cfgUuid, _ := uuid.NewV4()
+		cfg.UUID = cfgUuid.String()
 	}
 
 	// 5 - Load any plugins we have
