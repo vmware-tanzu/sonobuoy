@@ -29,13 +29,15 @@ Sonobuoy supports 3 Kubernetes minor versions: the current release and 2 minor v
 * For some advanced workflows it may be required to have `kubectl` installed. See [installing via Homebrew (MacOS)][brew] or [building
   the binary (Linux)][linux].
 
+* The `sonobuoy images` subcommand requires [Docker](https://www.docker.com) to be installed. See [installing Docker](docker).
+
 ## Installing
 
 Download one of the releases directly from [here][releases].
 
 Alternatively, you can install the CLI by running:
 
-```
+```bash
 go get -u -v github.com/heptio/sonobuoy
 ```
 
@@ -43,20 +45,24 @@ Golang version 1.12 or greater is recommended. Golang can be installed via
 [gimme][gimme].
 
 ## Getting Started
+
 To launch conformance tests (ensuring [CNCF][cncf] conformance) and wait until they are finished run:
-```
+
+```bash
 sonobuoy run --wait
 ```
 
 > Note: Using `--mode quick` will significantly shorten the runtime of Sonobuoy. It runs just a single test, helping to quickly validate your Sonobuoy and Kubernetes configuration.
 
 Get the results from the plugins (e.g. e2e test results):
-```
+
+```bash
 results=$(sonobuoy retrieve)
 ```
 
 Inspect results for test failures.  This will list the number of tests failed and their names:
-```
+
+```bash
 sonobuoy e2e $results
 ```
 
@@ -68,20 +74,23 @@ own namespace.
 Deleting Sonobuoy entails removing it's namespace as well as a few cluster
 scoped resources.
 
-```
+```bash
 sonobuoy delete --wait
 ```
 
 > Note: The --wait option ensures the Kubernetes namespace is deleted, avoiding conflicts if another Sonobuoy run is started quickly.
 
 ### Monitoring Sonobuoy during a run
+
 You can check on the status of each of the plugins running with:
-```
+
+```bash
 sonobuoy status
 ```
 
 You can also inspect the logs of all Sonobuoy containers:
-```
+
+```bash
 sonobuoy logs
 ```
 
@@ -89,11 +98,11 @@ sonobuoy logs
 
 [The documentation][docs] provides further information about:
 
- * [conformance tests][conformance]
- * [plugins][plugins]
- * Testing of [air gapped clusters][airgap].
- * [Customization][gen] of YAML prior to running.
- * The [Sonobuoy config file][sonobuoyconfig] file and how to edit it.
+* [conformance tests][conformance]
+* [plugins][plugins]
+* Testing of [air gapped clusters][airgap].
+* [Customization][gen] of YAML prior to running.
+* The [Sonobuoy config file][sonobuoyconfig] file and how to edit it.
 
 ## Troubleshooting
 
@@ -106,7 +115,8 @@ issue][issue].
 
 There are some Kubernetes e2e tests that may leak resources. Sonobuoy can
 help clean those up as well by deleting all namespaces prefixed with `e2e`:
-```
+
+```bash
 sonobuoy delete --all
 ```
 
@@ -114,7 +124,7 @@ sonobuoy delete --all
 
 Sonobuoy requires admin permissions which won't be automatic if you are running via Google Kubernetes Engine (GKE) cluster. You must first create an admin role for the user under which you run Sonobuoy:
 
-```
+```bash
 kubectl create clusterrolebinding <your-user-cluster-admin-binding> --clusterrole=cluster-admin --user=<your.google.cloud.email@example.org>
 ```
 
@@ -142,6 +152,7 @@ See [the list of releases][releases] to find out about feature changes.
 [coc]: https://github.com/heptio/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
 [conformance]: https://sonobuoy.io/docs/conformance-testing
+[docker]: https://docs.docker.com/install
 [docs]: https://sonobuoy.io/docs
 [e2e]: https://sonobuoy.io/docs/conformance-testing
 [gen]: https://sonobuoy.io/docs/gen
