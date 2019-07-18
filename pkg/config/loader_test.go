@@ -118,16 +118,35 @@ func TestSaveAndLoad(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// And we can't predict what advertise address we'll detect
+	// We can't predict what advertise address we'll detect
 	cfg2.Aggregation.AdvertiseAddress = cfg.Aggregation.AdvertiseAddress
-	// And UUID's won't match either
-	cfg.UUID = ""
-	cfg2.UUID = ""
 
 	if !reflect.DeepEqual(cfg2, cfg) {
 		t.Fatalf("Defaults should match but didn't \n\n%v\n\n%v", cfg2, cfg)
 	}
+}
 
+func TestLoadConfigSetsUUID(t *testing.T) {
+	cfg := New()
+	cfg.UUID = ""
+
+	if blob, err := json.Marshal(&cfg); err == nil {
+		if err = ioutil.WriteFile("./config.json", blob, 0644); err != nil {
+			t.Fatalf("Failed to write default config.json: %v", err)
+		}
+		defer os.Remove("./config.json")
+	} else {
+		t.Fatalf("Failed to serialize %v", err)
+	}
+
+	loadedCfg, err := LoadConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if loadedCfg.UUID == "" {
+		t.Error("loaded config should have a UUID but was empty")
+	}
 }
 
 func TestDefaultResources(t *testing.T) {
