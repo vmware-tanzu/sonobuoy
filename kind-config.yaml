@@ -2,5 +2,7 @@ kind: Cluster
 apiVersion: kind.sigs.k8s.io/v1alpha3
 nodes:
 - role: control-plane
+  image: kindest/node:v1.15.0
 - role: worker
-  replicas: 3
+  replicas: 2
+  image: kindest/node:v1.15.0
