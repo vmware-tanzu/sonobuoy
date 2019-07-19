@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca/authtest"
@@ -104,12 +105,12 @@ func TestStart(t *testing.T) {
 		t.Fatalf("Valid request for %v did not get recorded", expectedResult)
 	}
 
-	expectedResult = "gztest/results"
+	expectedResult = "gztest/results/global"
 
 	// Happy path with gzip
 	res, ok := checkins[expectedResult]
 	if !ok {
-		t.Fatalf("Valid request for %v did not get recorded", expectedResult)
+		t.Fatalf("Valid request for %v did not get recorded; have %v", expectedResult, checkins)
 	}
 	if res.MimeType != gzipMimeType {
 		t.Fatalf("expected mime type %s, got %s", gzipMimeType, res.MimeType)
@@ -138,4 +139,96 @@ func doRequestWithHeaders(t *testing.T, client *http.Client, method, reqURL stri
 
 func doRequest(t *testing.T, client *http.Client, method, reqURL string, body []byte) *http.Response {
 	return doRequestWithHeaders(t, client, method, reqURL, body, http.Header{})
+}
+
+func TestResultFromRequest(t *testing.T) {
+	reqWithHeaders := func(headerMap map[string]string) *http.Request {
+		r, err := http.NewRequest(http.MethodPost, "url", nil)
+		if err != nil {
+			t.Fatalf("Failed to make test request object: %v", err)
+		}
+		for k, v := range headerMap {
+			r.Header.Set(k, v)
+		}
+		return r
+	}
+
+	tcs := []struct {
+		desc     string
+		req      *http.Request
+		vars     map[string]string
+		expected *plugin.Result
+	}{
+		{
+			desc: "Reads vars as expected",
+			vars: map[string]string{
+				"plugin": "pluginvar",
+				"node":   "nodevar",
+			},
+			req: reqWithHeaders(map[string]string{
+				"content-type":        "test-type",
+				"content-disposition": "attachment;filename=foo.txt",
+			}),
+			expected: &plugin.Result{
+				ResultType: "pluginvar",
+				NodeName:   "nodevar",
+				Filename:   "foo.txt",
+				MimeType:   "test-type",
+			},
+		}, {
+			desc: "Defaults node name if not given",
+			vars: map[string]string{
+				"plugin": "pluginvar",
+			},
+			req: reqWithHeaders(map[string]string{
+				"content-type":        "test-type",
+				"content-disposition": "attachment;filename=foo.txt",
+			}),
+			expected: &plugin.Result{
+				ResultType: "pluginvar",
+				NodeName:   "global",
+				Filename:   "foo.txt",
+				MimeType:   "test-type",
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			out := resultFromRequest(tc.req, tc.vars)
+			if !reflect.DeepEqual(out, tc.expected) {
+				t.Errorf("Expected %+v but got %+v", tc.expected, out)
+			}
+		})
+	}
+}
+
+func TestFilenameFromHeader(t *testing.T) {
+	testCases := []struct {
+		desc   string
+		input  string
+		expect string
+	}{
+		{
+			desc:   "No filename leads to default",
+			input:  "attachment",
+			expect: "result",
+		}, {
+			desc:   "Filename in content-disposition is used",
+			input:  "attachment;filename=foo",
+			expect: "foo",
+		}, {
+			desc:   "No header leads to default",
+			input:  "",
+			expect: "result",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			out := filenameFromHeader(tc.input)
+			if out != tc.expect {
+				t.Errorf("Expected %q but got %q", tc.expect, out)
+			}
+		})
+	}
 }

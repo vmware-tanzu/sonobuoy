@@ -17,6 +17,7 @@ limitations under the License.
 package aggregation
 
 import (
+	"mime"
 	"net/http"
 	"net/url"
 
@@ -35,6 +36,10 @@ const (
 	resultsByNode = "/api/v1/results/by-node/{node}/{plugin}"
 	// resultsGlobal is the path for global (non node-specific) results to be PUT
 	resultsGlobal = "/api/v1/results/global/{plugin}"
+
+	// defaultFilename is the name given to the file if no filename is given in the
+	// content-disposition header
+	defaultFilename = "result"
 )
 
 var (
@@ -67,16 +72,26 @@ func NewHandler(resultsCallback func(*plugin.Result, http.ResponseWriter)) http.
 	return handler
 }
 
+func resultFromRequest(r *http.Request, muxVars map[string]string) *plugin.Result {
+	result := &plugin.Result{
+		ResultType: muxVars["plugin"], // will be empty string in global case
+		NodeName:   muxVars["node"],
+		Body:       r.Body,
+		MimeType:   r.Header.Get("content-type"),
+		Filename:   filenameFromHeader(r.Header.Get("content-disposition")),
+	}
+
+	if result.NodeName == "" {
+		result.NodeName = plugin.GlobalResult
+	}
+
+	return result
+}
+
 func (h *Handler) resultsHandler(w http.ResponseWriter, r *http.Request) {
 	logRequest(r)
 	vars := mux.Vars(r)
-
-	result := &plugin.Result{
-		ResultType: vars["plugin"], // will be empty string in global case
-		NodeName:   vars["node"],
-		Body:       r.Body,
-		MimeType:   r.Header.Get("content-type"),
-	}
+	result := resultFromRequest(r, vars)
 
 	// Trigger our callback with this checkin record (which should write the file
 	// out.) The callback is responsible for doing a 409 conflict if results are
@@ -100,7 +115,6 @@ func NodeResultURL(baseURL, nodeName, pluginName string) (string, error) {
 	path.Scheme = base.Scheme
 	path.Host = base.Host
 	return path.String(), nil
-
 }
 
 // GlobalResultURL is the URL that results that are not node-specific. Takes the baseURL (http[s]://hostname:port/,
@@ -119,7 +133,6 @@ func GlobalResultURL(baseURL, pluginName string) (string, error) {
 	// Host includes port
 	path.Host = base.Host
 	return path.String(), nil
-
 }
 
 func logRequest(req *http.Request) {
@@ -132,4 +145,18 @@ func logRequest(req *http.Request) {
 		log = log.WithField("client_cert", req.TLS.PeerCertificates[0].Subject.CommonName)
 	}
 	log.Info("received aggregator request")
+}
+
+// filenameFromHeader gets the filename from a content-disposition of the form:
+// Content-Disposition: attachment; filename=foo.txt
+// If there is an error parsing the string, the empty string is returned.
+func filenameFromHeader(contentDisposition string) string {
+	_, params, err := mime.ParseMediaType(contentDisposition)
+	if err != nil {
+		return defaultFilename
+	}
+	if params["filename"] != "" {
+		return params["filename"]
+	}
+	return defaultFilename
 }

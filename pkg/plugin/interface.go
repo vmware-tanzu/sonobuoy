@@ -27,6 +27,13 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+const (
+	// GlobalResult is used in place of a node name when the results apply
+	// to the entire cluster as opposed to a single node (e.g. when running
+	// a job and not a daemonset).
+	GlobalResult = "global"
+)
+
 // Interface represents what all plugins must implement to be run and have
 // results be aggregated.
 type Interface interface {
@@ -79,6 +86,7 @@ type Result struct {
 	NodeName   string
 	ResultType string
 	MimeType   string
+	Filename   string
 	Body       io.Reader
 	Error      string
 }
@@ -142,9 +150,12 @@ func (er *ExpectedResult) ID() string {
 // ExpectedResultID returns a unique identifier for this result to match it up
 // against an expected result.
 func (r *Result) ExpectedResultID() string {
+	// Jobs should default to stating they are global results, being
+	// safe and doing that defaulting here too.
+	nodeName := r.NodeName
 	if r.NodeName == "" {
-		return r.ResultType
+		nodeName = GlobalResult
 	}
 
-	return r.ResultType + "/" + r.NodeName
+	return r.ResultType + "/" + nodeName
 }

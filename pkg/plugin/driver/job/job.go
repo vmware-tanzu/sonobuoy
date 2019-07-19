@@ -72,12 +72,12 @@ func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage, imagePullPolicy,
 // a Job only launches one pod, only one result type is expected.
 func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	return []plugin.ExpectedResult{
-		{ResultType: p.GetResultType()},
+		{ResultType: p.GetResultType(), NodeName: plugin.GlobalResult},
 	}
 }
 
 func getMasterAddress(hostname string) string {
-	return fmt.Sprintf("https://%s/api/v1/results/global", hostname)
+	return fmt.Sprintf("https://%s/api/v1/results/%v", hostname, plugin.GlobalResult)
 }
 
 //FillTemplate populates the internal Job YAML template with the values for this particular job.
@@ -160,7 +160,7 @@ func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, _ []v1.Node) (done
 	// Make sure there's a pod
 	pod, err := p.findPod(kubeclient)
 	if err != nil {
-		return true, utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{"error": err.Error()}, "")
+		return true, utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{"error": err.Error()}, plugin.GlobalResult)
 	}
 
 	// Make sure the pod isn't failing
@@ -168,7 +168,7 @@ func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, _ []v1.Node) (done
 		return true, utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
 			"error": reason,
 			"pod":   pod,
-		}, "")
+		}, plugin.GlobalResult)
 	}
 
 	return false, nil

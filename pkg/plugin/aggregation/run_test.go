@@ -40,7 +40,7 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 		},
 	}
 	testPluginExpectedResults := []plugin.ExpectedResult{
-		{ResultType: "myPlugin"},
+		{ResultType: "myPlugin", NodeName: "global"},
 	}
 	healthyPod := corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
@@ -156,7 +156,7 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 
 			if tc.forceResults {
 				a.resultsMutex.Lock()
-				a.Results["myPlugin"] = &plugin.Result{}
+				a.Results["myPlugin/global"] = &plugin.Result{}
 				a.resultsMutex.Unlock()
 			}
 

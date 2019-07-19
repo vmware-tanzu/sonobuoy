@@ -40,7 +40,7 @@ func NewCmdWorker() *cobra.Command {
 	var workerCmd = &cobra.Command{
 		Use:    "worker",
 		Short:  "Gather and send data to the sonobuoy master instance (for internal use)",
-		Run:    runGather,
+		Run:    runGatherHelp,
 		Hidden: true,
 		Args:   cobra.ExactArgs(0),
 	}
@@ -65,7 +65,7 @@ var singleNodeCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 }
 
-func runGather(cmd *cobra.Command, args []string) {
+func runGatherHelp(cmd *cobra.Command, args []string) {
 	cmd.Help()
 }
 
@@ -112,23 +112,7 @@ func loadAndValidateConfig() (*plugin.WorkerConfig, error) {
 }
 
 func runGatherSingleNode(cmd *cobra.Command, args []string) {
-	cfg, err := loadAndValidateConfig()
-	if err != nil {
-		errlog.LogError(err)
-		os.Exit(1)
-	}
-
-	client, err := getHTTPClient(cfg)
-	if err != nil {
-		errlog.LogError(err)
-		os.Exit(1)
-	}
-
-	// A single-node results URL looks like:
-	// http://sonobuoy-master:8080/api/v1/results/by-node/node1/systemd_logs
-	url := cfg.MasterURL + "/" + cfg.NodeName + "/" + cfg.ResultType
-
-	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
+	err := runGather(false)
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
@@ -136,27 +120,34 @@ func runGatherSingleNode(cmd *cobra.Command, args []string) {
 }
 
 func runGatherGlobal(cmd *cobra.Command, args []string) {
-	cfg, err := loadAndValidateConfig()
+	err := runGather(true)
 	if err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
+	}
+}
+
+func runGather(global bool) error {
+	cfg, err := loadAndValidateConfig()
+	if err != nil {
+		return errors.Wrap(err, "loading config")
 	}
 
 	client, err := getHTTPClient(cfg)
 	if err != nil {
-		errlog.LogError(err)
-		os.Exit(1)
+		return errors.Wrap(err, "getting HTTP client")
 	}
 
-	// A global results URL looks like:
-	// http://sonobuoy-master:8080/api/v1/results/global/systemd_logs
-	url := cfg.MasterURL + "/" + cfg.ResultType
+	// A single-node results URL looks like:
+	// http://sonobuoy-master:8080/api/v1/results/by-node/node1/systemd_logs
+	url := cfg.MasterURL + "/" + cfg.NodeName + "/" + cfg.ResultType
+	if global {
+		// http://sonobuoy-master:8080/api/v1/results/global/systemd_logs
+		url = cfg.MasterURL + "/" + cfg.ResultType
+	}
 
 	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
-	if err != nil {
-		errlog.LogError(err)
-		os.Exit(1)
-	}
+	return errors.Wrap(err, "gathering results")
 }
 
 func getHTTPClient(cfg *plugin.WorkerConfig) (*http.Client, error) {

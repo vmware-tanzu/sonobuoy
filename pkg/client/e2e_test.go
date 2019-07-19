@@ -35,7 +35,7 @@ func TestGetTests(t *testing.T) {
 			path:      "results/testdata/results-0.10-missing-e2e.tar.gz",
 			show:      "failed",
 			expect:    0,
-			expectErr: `failed to find results file "plugins/e2e/results/junit_01.xml" in archive`,
+			expectErr: `failed to find results file "plugins/e2e/results/global/junit_01.xml" in archive`,
 		}, {
 			desc:      "Errs differently if not a tarfile",
 			path:      "testdata/test_ssh.key",
@@ -104,8 +104,8 @@ func TestString(t *testing.T) {
 		}, {
 			desc: "Should not end with extra new line",
 			cases: PrintableTestCases([]reporters.JUnitTestCase{
-				reporters.JUnitTestCase{Name: "a"},
-				reporters.JUnitTestCase{Name: "b"},
+				{Name: "a"},
+				{Name: "b"},
 			}),
 			expect: "a\nb",
 		},

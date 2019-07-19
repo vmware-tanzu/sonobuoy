@@ -33,7 +33,7 @@ import (
 // error message if the callback fails. (This way, problems gathering data
 // don't result in the server waiting forever for results that will never
 // come.)
-func DoRequest(url string, client *http.Client, callback func() (io.Reader, string, error)) error {
+func DoRequest(url string, client *http.Client, callback func() (io.Reader, string, string, error)) error {
 	// Create a client with retry logic. Manually log each error as they occur rather than
 	// saving them internal to the client. This helps debug issues which may have relied on retries.
 	pesterClient := pester.NewExtendedClient(client)
@@ -54,7 +54,7 @@ func DoRequest(url string, client *http.Client, callback func() (io.Reader, stri
 		errlog.LogError(errDetailed)
 	}
 
-	input, mimeType, err := callback()
+	input, filename, mimeType, err := callback()
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "error gathering host data"))
 
@@ -90,6 +90,11 @@ func DoRequest(url string, client *http.Client, callback func() (io.Reader, stri
 		return errors.Wrapf(err, "error constructing master request to %v", url)
 	}
 	req.Header.Add("content-type", mimeType)
+	if len(filename) > 0 {
+		req.Header.Add("content-disposition", fmt.Sprintf("attachment;filename=%v", filename))
+	} else {
+		req.Header.Add("content-disposition", "attachment")
+	}
 
 	resp, err := pesterClient.Do(req)
 	if err != nil {

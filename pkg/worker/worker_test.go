@@ -66,7 +66,7 @@ func TestRunGlobal(t *testing.T) {
 
 	// Create an expectedResults array
 	expectedResults := []plugin.ExpectedResult{
-		plugin.ExpectedResult{ResultType: "systemd_logs"},
+		{ResultType: "systemd_logs", NodeName: "global"},
 	}
 
 	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator, srv *authtest.Server) {
@@ -92,7 +92,7 @@ func TestRunGlobal_noExtension(t *testing.T) {
 
 	// Create an expectedResults array
 	expectedResults := []plugin.ExpectedResult{
-		plugin.ExpectedResult{ResultType: "systemd_logs"},
+		{ResultType: "systemd_logs", NodeName: "global"},
 	}
 
 	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator, srv *authtest.Server) {
@@ -117,7 +117,7 @@ func TestRunGlobalCleanup(t *testing.T) {
 
 	// Create an expectedResults array
 	expectedResults := []plugin.ExpectedResult{
-		plugin.ExpectedResult{ResultType: "systemd_logs"},
+		{ResultType: "systemd_logs"},
 	}
 	stopc := make(chan struct{}, 1)
 	stopc <- struct{}{}

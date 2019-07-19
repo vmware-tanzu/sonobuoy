@@ -19,6 +19,11 @@ package e2e
 
 const (
 	// ResultsDirectory is the directory where the results will be found
-	ResultsSubdirectory = "e2e/results/"
-	JUnitResultsFile    = "junit_01.xml"
+	ResultsSubdirectory = "e2e/results/global/"
+
+	// LegacyResultsSubdirectory was the directory where e2e results were found before
+	// the global folder was added.
+	LegacyResultsSubdirectory = "e2e/results/"
+
+	JUnitResultsFile = "junit_01.xml"
 )
