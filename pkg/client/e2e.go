@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -75,11 +76,9 @@ func (*SonobuoyClient) GetTests(reader io.Reader, show string) ([]reporters.JUni
 // Focus returns a value to be used in the E2E_FOCUS variable that is
 // representative of the test cases in the struct.
 func Focus(testCases []reporters.JUnitTestCase) string {
-	// YAML doesn't like escaped characters and regex needs escaped characters. Therefore a double escape is necessary.
-	r := strings.NewReplacer("[", `\\[`, "]", `\\]`)
 	testNames := make([]string, len(testCases))
 	for i, tc := range testCases {
-		testNames[i] = r.Replace(tc.Name)
+		testNames[i] = regexp.QuoteMeta(tc.Name)
 	}
 	return strings.Join(testNames, "|")
 }

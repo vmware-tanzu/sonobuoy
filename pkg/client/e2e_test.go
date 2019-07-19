@@ -119,3 +119,47 @@ func TestString(t *testing.T) {
 		})
 	}
 }
+
+func TestFocus(t *testing.T) {
+	testCases := []struct {
+		desc   string
+		cases  PrintableTestCases
+		expect string
+	}{
+		{
+			desc:   "No test should result in an empty string",
+			cases:  []reporters.JUnitTestCase{},
+			expect: "",
+		},
+		{
+			desc: "Single test with no regexp characters is not changed",
+			cases: []reporters.JUnitTestCase{
+				reporters.JUnitTestCase{Name: "this is a test"},
+			},
+			expect: "this is a test",
+		},
+		{
+			desc: "Test with special regexp characters should be escaped",
+			cases: []reporters.JUnitTestCase{
+				reporters.JUnitTestCase{Name: "[sig-apps] test-1 (1.15) [Conformance]"},
+			},
+			expect: `\[sig-apps\] test-1 \(1\.15\) \[Conformance\]`,
+		},
+		{
+			desc: "Multiple tests should be separated with '|'",
+			cases: []reporters.JUnitTestCase{
+				reporters.JUnitTestCase{Name: "[sig-apps] test-1 [Conformance]"},
+				reporters.JUnitTestCase{Name: "[sig-apps] test-2"},
+			},
+			expect: `\[sig-apps\] test-1 \[Conformance\]|\[sig-apps\] test-2`,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			out := Focus(tc.cases)
+			if out != tc.expect {
+				t.Errorf("Expected %q but got %q", tc.expect, out)
+			}
+		})
+	}
+}
