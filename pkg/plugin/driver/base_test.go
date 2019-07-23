@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca"
-	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 )
 
 func TestMakeTLSSecret(t *testing.T) {
@@ -43,8 +43,8 @@ func TestMakeTLSSecret(t *testing.T) {
 
 	driver := &Base{
 		Namespace: expectedNamespace,
-		Definition: plugin.Definition{
-			Name: expectedName,
+		Definition: manifest.Manifest{
+			SonobuoyConfig: manifest.SonobuoyConfig{PluginName: expectedName},
 		},
 		SessionID: sessionID,
 	}
@@ -86,8 +86,8 @@ func TestMakeTLSSecret(t *testing.T) {
 
 func TestSkipCleanup(t *testing.T) {
 	b := &Base{
-		Definition: plugin.Definition{
-			SkipCleanup: false,
+		Definition: manifest.Manifest{
+			SonobuoyConfig: manifest.SonobuoyConfig{SkipCleanup: false},
 		},
 	}
 
@@ -95,7 +95,7 @@ func TestSkipCleanup(t *testing.T) {
 		t.Error("Expected SkipCleanup to be false but was true")
 	}
 
-	b.Definition.SkipCleanup = true
+	b.Definition.SonobuoyConfig.SkipCleanup = true
 
 	if !b.SkipCleanup() {
 		t.Error("Expected SkipCleanup to be true but was false")

@@ -34,6 +34,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	sonotime "github.com/heptio/sonobuoy/pkg/time"
 	"github.com/pkg/errors"
 )
@@ -54,7 +55,7 @@ var _ plugin.Interface = &Plugin{}
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address.
-func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets string, customAnnotations map[string]string) *Plugin {
+func NewPlugin(dfn manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets string, customAnnotations map[string]string) *Plugin {
 	return &Plugin{
 		driver.Base{
 			Definition:        dfn,
@@ -93,11 +94,11 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 
 	tmplData, err := p.GetTemplateData(getMasterAddress(hostname), cert)
 	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't get template data for %q", p.Definition.Name)
+		return nil, errors.Wrapf(err, "couldn't get template data for %q", p.GetName())
 	}
 
 	if err := daemonSetTemplate.Execute(&b, tmplData); err != nil {
-		return nil, errors.Wrapf(err, "couldn't fill template %q", p.Definition.Name)
+		return nil, errors.Wrapf(err, "couldn't fill template %q", p.GetName())
 	}
 	return b.Bytes(), nil
 }
@@ -169,7 +170,7 @@ func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*appsv1.DaemonS
 	}
 
 	if len(dsets.Items) != 1 {
-		return nil, errors.Errorf("expected plugin %v to create 1 daemonset, found %v", p.Definition.Name, len(dsets.Items))
+		return nil, errors.Errorf("expected plugin %v to create 1 daemonset, found %v", p.GetName(), len(dsets.Items))
 	}
 
 	return &dsets.Items[0], nil
@@ -264,7 +265,7 @@ func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, availableNodes []v
 					"No pod was scheduled on node %v within %v. Check tolerations for plugin %v",
 					node.Name,
 					time.Now().Sub(ds.CreationTimestamp.Time),
-					p.Definition.Name,
+					p.GetName(),
 				),
 			}, node.Name))
 		}

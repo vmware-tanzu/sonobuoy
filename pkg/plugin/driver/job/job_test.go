@@ -45,37 +45,40 @@ const (
 )
 
 func TestFillTemplate(t *testing.T) {
-	testJob := NewPlugin(plugin.Definition{
-		Name:       "test-job",
-		ResultType: "test-job-result",
-		Spec: manifest.Container{
-			Container: corev1.Container{
-				Name: "producer-container",
+	testJob := NewPlugin(
+		manifest.Manifest{
+			SonobuoyConfig: manifest.SonobuoyConfig{
+				PluginName: "test-job",
+				ResultType: "test-job-result",
 			},
-		},
-		ExtraVolumes: []manifest.Volume{
-			{
-				Volume: corev1.Volume{
-					Name: "test1",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/var/test",
+			Spec: manifest.Container{
+				Container: corev1.Container{
+					Name: "producer-container",
+				},
+			},
+			ExtraVolumes: []manifest.Volume{
+				{
+					Volume: corev1.Volume{
+						Name: "test1",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/var/test",
+							},
+						},
+					},
+				},
+				{
+					Volume: corev1.Volume{
+						Name: "test2",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/var/test2",
+							},
 						},
 					},
 				},
 			},
-			{
-				Volume: corev1.Volume{
-					Name: "test2",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/var/test2",
-						},
-					},
-				},
-			},
-		},
-	}, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{"key1": "val1", "key2": "val2"})
+		}, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{"key1": "val1", "key2": "val2"})
 
 	auth, err := ca.NewAuthority()
 	if err != nil {
