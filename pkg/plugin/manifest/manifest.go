@@ -24,10 +24,20 @@ import (
 
 // SonobuoyConfig is the Sonobuoy metadata that plugins all supply
 type SonobuoyConfig struct {
-	Driver      string `json:"driver"`
-	PluginName  string `json:"plugin-name"`
-	ResultType  string `json:"result-type"`
-	SkipCleanup bool   `json:"skip-cleanup,omitempty"`
+	// Driver is the way in which this plugin is run. Either 'Job' or 'Daemonset'.
+	Driver string `json:"driver"`
+
+	// Name is the user-facing name for the plugin.
+	PluginName string `json:"plugin-name"`
+
+	// ResultType should uniquely identify the plugin and is used by the aggregator
+	// to track what results should be reported back to it.
+	ResultType string `json:"result-type"`
+
+	// SkipCleanup informs Sonobuoy to leave the pods created for this plugin running,
+	// after the run completes instead of deleting them as part of default, cleanup behavior.
+	SkipCleanup bool `json:"skip-cleanup,omitempty"`
+
 	objectKind
 }
 

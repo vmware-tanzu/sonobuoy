@@ -34,6 +34,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	sonotime "github.com/heptio/sonobuoy/pkg/time"
 )
 
@@ -53,7 +54,7 @@ var _ plugin.Interface = &Plugin{}
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
 // and sonobuoy master address.
-func NewPlugin(dfn plugin.Definition, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets string, customAnnotations map[string]string) *Plugin {
+func NewPlugin(dfn manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets string, customAnnotations map[string]string) *Plugin {
 	return &Plugin{
 		driver.Base{
 			Definition:        dfn,
@@ -86,11 +87,11 @@ func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, e
 
 	tmplData, err := p.GetTemplateData(getMasterAddress(hostname), cert)
 	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't get template data for %q", p.Definition.Name)
+		return nil, errors.Wrapf(err, "couldn't get template data for %q", p.GetName())
 	}
 
 	if err := jobTemplate.Execute(&b, tmplData); err != nil {
-		return nil, errors.Wrapf(err, "couldn't fill template %q", p.Definition.Name)
+		return nil, errors.Wrapf(err, "couldn't fill template %q", p.GetName())
 	}
 
 	return b.Bytes(), nil
@@ -219,7 +220,7 @@ func (p *Plugin) findPod(kubeclient kubernetes.Interface) (*v1.Pod, error) {
 	}
 
 	if len(pods.Items) != 1 {
-		return nil, errors.Errorf("no pods were created by plugin %v", p.Definition.Name)
+		return nil, errors.Errorf("no pods were created by plugin %v", p.GetName())
 	}
 
 	return &pods.Items[0], nil

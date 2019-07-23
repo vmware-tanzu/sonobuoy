@@ -60,7 +60,7 @@ func LoadAllPlugins(namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets 
 		}
 	}
 
-	pluginDefinitions := []*manifest.Manifest{}
+	pluginDefinitions := []manifest.Manifest{}
 	for file := range pluginDefinitionFiles {
 		definitionFile, err := loadDefinitionFromFile(file)
 		if err != nil {
@@ -117,39 +117,31 @@ func loadDefinitionFromFile(file string) ([]byte, error) {
 	return bytes, errors.Wrapf(err, "couldn't open plugin definition %v", file)
 }
 
-func loadDefinition(bytes []byte) (*manifest.Manifest, error) {
+func loadDefinition(bytes []byte) (manifest.Manifest, error) {
 	var def manifest.Manifest
 	err := kuberuntime.DecodeInto(manifest.Decoder, bytes, &def)
-	return &def, errors.Wrap(err, "couldn't decode yaml for plugin definition")
+	return def, errors.Wrap(err, "couldn't decode yaml for plugin definition")
 }
 
-func loadPlugin(def *manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets string, customAnnotations map[string]string) (plugin.Interface, error) {
-	pluginDef := plugin.Definition{
-		Name:         def.SonobuoyConfig.PluginName,
-		ResultType:   def.SonobuoyConfig.ResultType,
-		SkipCleanup:  def.SonobuoyConfig.SkipCleanup,
-		ExtraVolumes: def.ExtraVolumes,
-		Spec:         def.Spec,
-	}
-
+func loadPlugin(def manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets string, customAnnotations map[string]string) (plugin.Interface, error) {
 	switch strings.ToLower(def.SonobuoyConfig.Driver) {
 	case "job":
-		return job.NewPlugin(pluginDef, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets, customAnnotations), nil
+		return job.NewPlugin(def, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets, customAnnotations), nil
 	case "daemonset":
-		return daemonset.NewPlugin(pluginDef, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets, customAnnotations), nil
+		return daemonset.NewPlugin(def, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets, customAnnotations), nil
 	default:
 		return nil, fmt.Errorf("unknown driver %q for plugin %v",
 			def.SonobuoyConfig.Driver, def.SonobuoyConfig.PluginName)
 	}
 }
 
-func filterPluginDef(defs []*manifest.Manifest, selections []plugin.Selection) []*manifest.Manifest {
+func filterPluginDef(defs []manifest.Manifest, selections []plugin.Selection) []manifest.Manifest {
 	m := make(map[string]bool)
 	for _, selection := range selections {
 		m[selection.Name] = true
 	}
 
-	filtered := []*manifest.Manifest{}
+	filtered := []manifest.Manifest{}
 	for _, def := range defs {
 		if m[def.SonobuoyConfig.PluginName] {
 			filtered = append(filtered, def)

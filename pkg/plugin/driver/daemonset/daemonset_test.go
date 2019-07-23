@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca"
-	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 
@@ -43,37 +42,40 @@ const (
 )
 
 func TestFillTemplate(t *testing.T) {
-	testDaemonSet := NewPlugin(plugin.Definition{
-		Name:       "test-plugin",
-		ResultType: "test-plugin-result",
-		Spec: manifest.Container{
-			Container: corev1.Container{
-				Name: "producer-container",
+	testDaemonSet := NewPlugin(
+		manifest.Manifest{
+			SonobuoyConfig: manifest.SonobuoyConfig{
+				PluginName: "test-plugin",
+				ResultType: "test-plugin-result",
 			},
-		},
-		ExtraVolumes: []manifest.Volume{
-			{
-				Volume: corev1.Volume{
-					Name: "test1",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/var/test",
+			Spec: manifest.Container{
+				Container: corev1.Container{
+					Name: "producer-container",
+				},
+			},
+			ExtraVolumes: []manifest.Volume{
+				{
+					Volume: corev1.Volume{
+						Name: "test1",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/var/test",
+							},
+						},
+					},
+				},
+				{
+					Volume: corev1.Volume{
+						Name: "test2",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/var/test2",
+							},
 						},
 					},
 				},
 			},
-			{
-				Volume: corev1.Volume{
-					Name: "test2",
-					VolumeSource: corev1.VolumeSource{
-						HostPath: &corev1.HostPathVolumeSource{
-							Path: "/var/test2",
-						},
-					},
-				},
-			},
-		},
-	}, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{"key1": "val1", "key2": "val2"})
+		}, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{"key1": "val1", "key2": "val2"})
 
 	auth, err := ca.NewAuthority()
 	if err != nil {
@@ -178,7 +180,7 @@ func TestMonitorOnce(t *testing.T) {
 
 	// We will need to be able to grab these items repeatedly and tweak the minor details
 	// so these helpers make the test cases much more readable.
-	testPlugin := &Plugin{Base: driver.Base{Definition: plugin.Definition{Name: "myPlugin"}}}
+	testPlugin := &Plugin{Base: driver.Base{Definition: manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myPlugin"}}}}
 	validDS := appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
 	}

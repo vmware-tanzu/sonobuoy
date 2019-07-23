@@ -22,7 +22,6 @@ import (
 	"io"
 	"path"
 
-	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -60,16 +59,6 @@ type Interface interface {
 	GetName() string
 	// SkipCleanup returns whether cleanup for this plugin should be skipped or not.
 	SkipCleanup() bool
-}
-
-// Definition defines a plugin's features, method of launch, and other
-// metadata about it.
-type Definition struct {
-	Name         string
-	ResultType   string
-	SkipCleanup  bool
-	Spec         manifest.Container
-	ExtraVolumes []manifest.Volume
 }
 
 // ExpectedResult is an expected result that a plugin will submit.  This is so

@@ -147,7 +147,7 @@ func TestLoadValidPluginWithSkipCleanup(t *testing.T) {
 func TestLoadJobPlugin(t *testing.T) {
 	namespace := "loader_test"
 	image := "gcr.io/heptio-images/sonobuoy:latest"
-	jobDef := &manifest.Manifest{
+	jobDef := manifest.Manifest{
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			Driver:     "Job",
 			PluginName: "test-job-plugin",
@@ -170,8 +170,8 @@ func TestLoadJobPlugin(t *testing.T) {
 		t.Fatalf("loaded plugin not a job.Plugin")
 	}
 
-	if jobPlugin.Definition.Name != "test-job-plugin" {
-		t.Errorf("expected plugin name 'test-job-plugin', got '%v'", jobPlugin.Definition.Name)
+	if jobPlugin.GetName() != "test-job-plugin" {
+		t.Errorf("expected plugin name 'test-job-plugin', got '%v'", jobPlugin.GetName())
 	}
 	if jobPlugin.Definition.Spec.Image != "gcr.io/heptio-images/heptio-e2e:master" {
 		t.Errorf("expected plugin name 'gcr.io/heptio-images/heptio-e2e:master', got '%v'", jobPlugin.Definition.Spec.Image)
@@ -187,7 +187,7 @@ func TestLoadJobPlugin(t *testing.T) {
 func TestLoadDaemonSet(t *testing.T) {
 	namespace := "loader_test"
 	image := "gcr.io/heptio-images/sonobuoy:latest"
-	daemonDef := &manifest.Manifest{
+	daemonDef := manifest.Manifest{
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			Driver:     "DaemonSet",
 			PluginName: "test-daemon-set-plugin",
@@ -210,8 +210,8 @@ func TestLoadDaemonSet(t *testing.T) {
 		t.Fatalf("loaded plugin not a daemon.Plugin")
 	}
 
-	if daemonPlugin.Definition.Name != "test-daemon-set-plugin" {
-		t.Errorf("expected plugin name 'test-daemon-set-plugin', got '%v'", daemonPlugin.Definition.Name)
+	if daemonPlugin.GetName() != "test-daemon-set-plugin" {
+		t.Errorf("expected plugin name 'test-daemon-set-plugin', got '%v'", daemonPlugin.GetName())
 	}
 	if daemonPlugin.Definition.Spec.Image != "gcr.io/heptio-images/heptio-e2e:master" {
 		t.Errorf("expected plugin name 'gcr.io/heptio-images/heptio-e2e:master', got '%v'", daemonPlugin.Definition.Spec.Image)
@@ -225,7 +225,7 @@ func TestLoadDaemonSet(t *testing.T) {
 }
 
 func TestFilterList(t *testing.T) {
-	definitions := []*manifest.Manifest{
+	definitions := []manifest.Manifest{
 		{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "test1"}},
 		{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "test2"}},
 	}
@@ -235,7 +235,7 @@ func TestFilterList(t *testing.T) {
 		{Name: "test3"},
 	}
 
-	expected := []*manifest.Manifest{definitions[0]}
+	expected := []manifest.Manifest{definitions[0]}
 	filtered := filterPluginDef(definitions, selections)
 	if !reflect.DeepEqual(filtered, expected) {
 		t.Errorf("expected %+#v, got %+#v", expected, filtered)

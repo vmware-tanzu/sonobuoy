@@ -16,6 +16,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/job"
+	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	sonotime "github.com/heptio/sonobuoy/pkg/time/timetest"
 	"github.com/pkg/errors"
 
@@ -32,9 +33,11 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 	// a job plugin is much simpler to test against.
 	testPlugin := &job.Plugin{
 		Base: driver.Base{
-			Definition: plugin.Definition{
-				Name:       "myPlugin",
-				ResultType: "myPlugin",
+			Definition: manifest.Manifest{
+				SonobuoyConfig: manifest.SonobuoyConfig{
+					PluginName: "myPlugin",
+					ResultType: "myPlugin",
+				},
 			},
 			Namespace: "testNS",
 		},

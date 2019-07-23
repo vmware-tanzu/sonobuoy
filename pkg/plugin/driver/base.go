@@ -23,7 +23,6 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
@@ -33,7 +32,7 @@ import (
 
 // Base is the struct that stores state for plugin drivers and contains helper methods.
 type Base struct {
-	Definition        plugin.Definition
+	Definition        manifest.Manifest
 	SessionID         string
 	Namespace         string
 	SonobuoyImage     string
@@ -67,7 +66,7 @@ func (b *Base) GetSessionID() string {
 
 // GetName returns the name of this Job plugin.
 func (b *Base) GetName() string {
-	return b.Definition.Name
+	return b.Definition.SonobuoyConfig.PluginName
 }
 
 // GetSecretName gets a name for a secret based on the plugin name and session ID.
@@ -77,12 +76,12 @@ func (b *Base) GetSecretName() string {
 
 // GetResultType returns the ResultType for this plugin (to adhere to plugin.Interface).
 func (b *Base) GetResultType() string {
-	return b.Definition.ResultType
+	return b.Definition.SonobuoyConfig.ResultType
 }
 
 // SkipCleanup returns whether cleanup for this plugin should be skipped or not.
 func (b *Base) SkipCleanup() bool {
-	return b.Definition.SkipCleanup
+	return b.Definition.SonobuoyConfig.SkipCleanup
 }
 
 //GetTemplateData fills a TemplateData struct with the passed in and state variables.
@@ -90,7 +89,7 @@ func (b *Base) GetTemplateData(masterAddress string, cert *tls.Certificate) (*Te
 
 	container, err := kuberuntime.Encode(manifest.Encoder, &b.Definition.Spec)
 	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", b.Definition.Name)
+		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", b.Definition.SonobuoyConfig.PluginName)
 	}
 
 	volumes := make([]string, len(b.Definition.ExtraVolumes))
@@ -105,8 +104,8 @@ func (b *Base) GetTemplateData(masterAddress string, cert *tls.Certificate) (*Te
 	cacert := getCACertPEM(cert)
 
 	return &TemplateData{
-		PluginName:        b.Definition.Name,
-		ResultType:        b.Definition.ResultType,
+		PluginName:        b.Definition.SonobuoyConfig.PluginName,
+		ResultType:        b.Definition.SonobuoyConfig.ResultType,
 		SessionID:         b.SessionID,
 		Namespace:         b.Namespace,
 		SonobuoyImage:     b.SonobuoyImage,
