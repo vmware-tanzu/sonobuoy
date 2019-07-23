@@ -34,6 +34,7 @@ type runFlags struct {
 	genFlags
 	skipPreflight bool
 	wait          int
+	waitOutput    WaitOutputMode
 }
 
 var runflags runFlags
@@ -44,6 +45,8 @@ func RunFlagSet(cfg *runFlags) *pflag.FlagSet {
 	runset.AddFlagSet(GenFlagSet(&cfg.genFlags, DetectRBACMode))
 	AddSkipPreflightFlag(&cfg.skipPreflight, runset)
 	AddRunWaitFlag(&cfg.wait, runset)
+	AddWaitOutputFlag(&cfg.waitOutput, runset, SilentOutputMode)
+
 	return runset
 }
 
@@ -53,8 +56,9 @@ func (r *runFlags) Config() (*client.RunConfig, error) {
 		return nil, err
 	}
 	return &client.RunConfig{
-		GenConfig: *gencfg,
-		Wait:      time.Duration(r.wait) * time.Minute,
+		GenConfig:  *gencfg,
+		Wait:       time.Duration(r.wait) * time.Minute,
+		WaitOutput: runflags.waitOutput.String(),
 	}, nil
 }
 
@@ -71,6 +75,7 @@ func NewCmdRun() *cobra.Command {
 }
 
 func submitSonobuoyRun(cmd *cobra.Command, args []string) {
+
 	sbc, err := getSonobuoyClientFromKubecfg(runflags.kubecfg)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
@@ -106,4 +111,5 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
 	}
+
 }

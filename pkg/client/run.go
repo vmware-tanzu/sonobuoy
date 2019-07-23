@@ -20,8 +20,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -36,7 +38,10 @@ import (
 const bufferSize = 4096
 
 var (
-	pollInterval = 20 * time.Second
+	pollInterval                  = 20 * time.Second
+	spinnerType     int           = 14
+	spinnerDuration time.Duration = 2000 * time.Millisecond
+	spinnerColor                  = "red"
 )
 
 func (c *SonobuoyClient) Run(cfg *RunConfig) error {
@@ -120,6 +125,12 @@ func (c *SonobuoyClient) Run(cfg *RunConfig) error {
 			return false, nil
 		}
 
+		if strings.Compare(cfg.WaitOutput, spinnerMode) == 0 {
+			var s *spinner.Spinner
+			s = getSpinnerInstance()
+			s.Start()
+			defer s.Stop()
+		}
 		err := wait.Poll(pollInterval, cfg.Wait, runCondition)
 		if err != nil {
 			return errors.Wrap(err, "waiting for run to finish")
@@ -148,4 +159,10 @@ func handleCreateError(name, namespace, resource string, err error) error {
 		return errors.Wrapf(err, "failed to create API resource %s", name)
 	}
 	return nil
+}
+
+func getSpinnerInstance() *spinner.Spinner {
+	s := spinner.New(spinner.CharSets[spinnerType], spinnerDuration)
+	s.Color(spinnerColor)
+	return s
 }

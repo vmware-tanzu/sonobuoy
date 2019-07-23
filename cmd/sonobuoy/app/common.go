@@ -1,11 +1,18 @@
 package app
 
 import (
+	"time"
 	"github.com/heptio/sonobuoy/pkg/client"
 	sonodynamic "github.com/heptio/sonobuoy/pkg/dynamic"
 
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
+)
+
+var (
+	spinnerType     int           = 14
+	spinnerDuration time.Duration = 2000 * time.Millisecond
+	spinnerColor                  = "red"
 )
 
 func getSonobuoyClient(cfg *rest.Config) (*client.SonobuoyClient, error) {
