@@ -22,11 +22,15 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
+	"github.com/heptio/sonobuoy/pkg/client/results"
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/dynamic"
 	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/heptio/sonobuoy/pkg/plugin"
+	pluginaggregation "github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
@@ -35,8 +39,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+)
 
-	pluginaggregation "github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+const (
+	pluginDefinitionFilename = "defintion.json"
 )
 
 // Run is the main entrypoint for discovery.
@@ -110,8 +116,8 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	)
 
 	// 2. Get the list of namespaces and apply the regex filter on the namespace
-	logrus.Infof("Filtering namespaces based on the following regex:%s",  cfg.Filters.Namespaces)
-	nslist, err := FilterNamespaces(kubeClient,  cfg.Filters.Namespaces)
+	logrus.Infof("Filtering namespaces based on the following regex:%s", cfg.Filters.Namespaces)
+	nslist, err := FilterNamespaces(kubeClient, cfg.Filters.Namespaces)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not filter namespaces"))
 		return errCount + 1
@@ -182,6 +188,13 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// 7. Clean up after the plugins
 	pluginaggregation.Cleanup(kubeClient, cfg.LoadedPlugins)
 
+	// Saving plugin definitions in their respective folders for easy reference.
+	for _, p := range cfg.LoadedPlugins {
+		trackErrorsFor("saving plugin info")(
+			dumpPlugin(p, outpath),
+		)
+	}
+
 	// 8. tarball up results YYYYMMDDHHMM_sonobuoy_UID.tar.gz
 	tb := cfg.ResultsDir + "/" + t.Format("200601021504") + "_sonobuoy_" + cfg.UUID + ".tar.gz"
 	err = tarx.Compress(tb, outpath, &tarx.CompressOptions{Compression: tarx.Gzip})
@@ -198,6 +211,23 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	logrus.Infof("Results available at %v", tb)
 
 	return errCount
+}
+
+// dumpPlugin will marshal the plugin to the appropriate location in the outputDir:
+// plugins/<name>/definition.json. This makes the data more clear for any consumer
+// looking at the tarball about what was.
+func dumpPlugin(p plugin.Interface, outputDir string) error {
+	b, err := json.Marshal(p)
+	if err != nil {
+		return errors.Wrapf(err, "encoding plugin %v definition to yaml", p.GetName())
+	}
+
+	err = ioutil.WriteFile(
+		filepath.Join(outputDir, results.PluginsDir, p.GetName(), pluginDefinitionFilename),
+		b,
+		os.FileMode(0644),
+	)
+	return errors.Wrapf(err, "writing plugin %v definition to yaml", p.GetName())
 }
 
 // Targeted namespaces will be specified by cfg.Limits.PodLogs.Namespaces OR cfg.Limits.PodLogs.SonobuoyNamespace.
