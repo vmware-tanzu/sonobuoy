@@ -332,7 +332,7 @@ func New() *Config {
 	cfgUuid, _ := uuid.NewV4()
 	cfg.UUID = cfgUuid.String()
 	cfg.Description = "DEFAULT"
-	cfg.ResultsDir = "/tmp/sonobuoy"
+	cfg.ResultsDir = MasterResultsPath
 	cfg.Version = buildinfo.Version
 
 	cfg.Filters.Namespaces = ".*"

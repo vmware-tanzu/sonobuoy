@@ -35,10 +35,7 @@ const (
 	clusterRoleFieldValue = "sonobuoy"
 	spinnerMode           = "Spinner"
 	e2eNamespacePrefix    = "e2e-"
-)
-
-var (
-	pollFreq = 5 * time.Second
+	pollFreq              = 5 * time.Second
 )
 
 // Delete removes all the resources that Sonobuoy had created including

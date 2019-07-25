@@ -27,6 +27,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 )
 
+const (
+	kindContainer string = "container"
+	kindVolume    string = "volume"
+	kindManifest  string = "manifest"
+)
+
 // Encoder is a runtime.Encoder for Sonobuoy's manifest objects
 var Encoder kuberuntime.Encoder
 
@@ -79,11 +85,11 @@ func (c *creator) New(kind schema.GroupVersionKind) (kuberuntime.Object, error) 
 		return nil, fmt.Errorf("unrecognised group version %s", kind.GroupVersion().String())
 	}
 	switch kind.Kind {
-	case "container":
+	case kindContainer:
 		return &Container{}, nil
-	case "manifest":
+	case kindManifest:
 		return &Manifest{}, nil
-	case "volume":
+	case kindVolume:
 		return &Volume{}, nil
 	default:
 		return nil, fmt.Errorf("unrecognised kind %v", kind.Kind)
@@ -95,11 +101,11 @@ type typer struct{}
 func (t *typer) ObjectKinds(obj kuberuntime.Object) ([]schema.GroupVersionKind, bool, error) {
 	switch obj.(type) {
 	case (*Container):
-		return []schema.GroupVersionKind{GroupVersion.WithKind("container")}, true, nil
+		return []schema.GroupVersionKind{GroupVersion.WithKind(kindContainer)}, true, nil
 	case (*Manifest):
-		return []schema.GroupVersionKind{GroupVersion.WithKind("manifest")}, true, nil
+		return []schema.GroupVersionKind{GroupVersion.WithKind(kindManifest)}, true, nil
 	case (*Volume):
-		return []schema.GroupVersionKind{GroupVersion.WithKind("volume")}, true, nil
+		return []schema.GroupVersionKind{GroupVersion.WithKind(kindVolume)}, true, nil
 	default:
 		return []schema.GroupVersionKind{}, false, errors.New("no known kind")
 	}
@@ -110,11 +116,11 @@ func (t *typer) Recognizes(kind schema.GroupVersionKind) bool {
 		return false
 	}
 	switch kind.Kind {
-	case "container":
+	case kindContainer:
 		return true
-	case "manifest":
+	case kindManifest:
 		return true
-	case "volume":
+	case kindVolume:
 		return true
 	default:
 		return false
