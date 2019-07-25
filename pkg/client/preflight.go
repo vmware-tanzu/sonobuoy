@@ -23,6 +23,7 @@ import (
 	version "github.com/hashicorp/go-version"
 	"github.com/heptio/sonobuoy/pkg/buildinfo"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	apicorev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -136,11 +137,11 @@ func versionCheck(versionClient discovery.ServerVersionInterface, min, max *vers
 	}
 
 	if serverVersion.LessThan(min) {
-		return fmt.Errorf("minimum kubernetes version is %s, got %s", min.String(), versionInfo.String())
+		return fmt.Errorf("minimum supported Kubernetes version is %s, but the server version is %s", min.String(), versionInfo.String())
 	}
 
 	if serverVersion.GreaterThan(max) {
-		return fmt.Errorf("maximum kubernetes version is %s, got %s", max.String(), versionInfo.String())
+		logrus.Warningf("The maximum supported Kubernetes version is %s, but the server version is %s. Sonobuoy will continue but unexpected results may occur.", max.String(), versionInfo.String())
 	}
 
 	return nil

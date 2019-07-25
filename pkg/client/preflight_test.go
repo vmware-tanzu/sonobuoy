@@ -18,11 +18,14 @@ package client
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"testing"
 
 	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	testhook "github.com/sirupsen/logrus/hooks/test"
 	apicorev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sversion "k8s.io/apimachinery/pkg/version"
@@ -30,6 +33,10 @@ import (
 )
 
 func TestVersionCheck(t *testing.T) {
+	testHook := &testhook.Hook{}
+	logrus.AddHook(testHook)
+	logrus.SetOutput(ioutil.Discard)
+
 	serverAtVersion := func(major, minor, git string) *fakeServerVersionInterface {
 		return &fakeServerVersionInterface{
 			version: k8sversion.Info{
@@ -45,11 +52,12 @@ func TestVersionCheck(t *testing.T) {
 	}
 
 	testCases := []struct {
-		desc      string
-		client    discovery.ServerVersionInterface
-		min       *version.Version
-		max       *version.Version
-		expectErr string
+		desc          string
+		client        discovery.ServerVersionInterface
+		min           *version.Version
+		max           *version.Version
+		expectErr     string
+		expectWarning string
 	}{
 		{
 			desc:   "Simple case",
@@ -67,13 +75,13 @@ func TestVersionCheck(t *testing.T) {
 			client:    serverAtVersion("1", "2", "1.2.3"),
 			min:       version.Must(version.NewVersion("2.0.0")),
 			max:       version.Must(version.NewVersion("3.0.0")),
-			expectErr: "minimum kubernetes version is 2.0.0, got 1.2.3",
+			expectErr: "minimum supported Kubernetes version is 2.0.0, but the server version is 1.2.3",
 		}, {
-			desc:      "Above max version",
-			client:    serverAtVersion("1", "2", "1.2.3"),
-			min:       version.Must(version.NewVersion("1.1.0")),
-			max:       version.Must(version.NewVersion("1.2.0")),
-			expectErr: "maximum kubernetes version is 1.2.0, got 1.2.3",
+			desc:          "Above max version",
+			client:        serverAtVersion("1", "2", "1.2.3"),
+			min:           version.Must(version.NewVersion("1.1.0")),
+			max:           version.Must(version.NewVersion("1.2.0")),
+			expectWarning: "The maximum supported Kubernetes version is 1.2.0, but the server version is 1.2.3. Sonobuoy will continue but unexpected results may occur.",
 		}, {
 			desc:   "Equal to min version",
 			client: serverAtVersion("1", "2", "1.2.3"),
@@ -97,6 +105,16 @@ func TestVersionCheck(t *testing.T) {
 			}
 			if err != nil && fmt.Sprint(err) != tc.expectErr {
 				t.Fatalf("Expected error to be %q but got %q", tc.expectErr, err)
+			}
+			if len(tc.expectWarning) > 0 {
+				last := testHook.LastEntry()
+				if last == nil {
+					t.Errorf("expected warning entry, got nothing")
+				} else if last.Level != logrus.WarnLevel {
+					t.Errorf("expected level %v, got %v", logrus.WarnLevel, last.Level)
+				} else if last.Message != tc.expectWarning {
+					t.Errorf("expected warning message %q, got %q", tc.expectWarning, last.Message)
+				}
 			}
 		})
 	}
