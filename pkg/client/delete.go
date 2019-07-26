@@ -20,6 +20,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/briandowns/spinner"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	kubeerror "k8s.io/apimachinery/pkg/api/errors"
@@ -31,8 +33,8 @@ import (
 const (
 	clusterRoleFieldName  = "component"
 	clusterRoleFieldValue = "sonobuoy"
-
-	e2eNamespacePrefix = "e2e-"
+	spinnerMode           = "Spinner"
+	e2eNamespacePrefix    = "e2e-"
 )
 
 var (
@@ -80,6 +82,7 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 	}
 
 	if cfg.Wait > time.Duration(0) {
+
 		allConditions := func() (bool, error) {
 			for _, condition := range conditions {
 				done, err := condition()
@@ -88,6 +91,13 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 				}
 			}
 			return true, nil
+		}
+
+		if strings.Compare(cfg.WaitOutput, spinnerMode) == 0 {
+			var s *spinner.Spinner
+			s = getSpinnerInstance()
+			s.Start()
+			defer s.Stop()
 		}
 		if err := wait.Poll(pollFreq, cfg.Wait, allConditions); err != nil {
 			return errors.Wrap(err, "waiting for delete conditions to be met")

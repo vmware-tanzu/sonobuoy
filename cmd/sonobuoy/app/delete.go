@@ -32,6 +32,7 @@ var deleteFlags struct {
 	deleteAll  bool
 	wait       int
 	kubeconfig Kubeconfig
+	waitOutput WaitOutputMode
 }
 
 func NewCmdDelete() *cobra.Command {
@@ -47,6 +48,7 @@ func NewCmdDelete() *cobra.Command {
 	AddRBACModeFlags(&deleteFlags.rbacMode, cmd.Flags(), DetectRBACMode)
 	AddDeleteAllFlag(&deleteFlags.deleteAll, cmd.Flags())
 	AddDeleteWaitFlag(&deleteFlags.wait, cmd.Flags())
+	AddWaitOutputFlag(&deleteFlags.waitOutput, cmd.Flags(), SilentOutputMode)
 
 	return cmd
 }
@@ -75,11 +77,11 @@ func deleteSonobuoyRun(cmd *cobra.Command, args []string) {
 		EnableRBAC: rbacEnabled,
 		DeleteAll:  deleteFlags.deleteAll,
 		Wait:       time.Duration(deleteFlags.wait) * time.Minute,
+		WaitOutput: deleteFlags.waitOutput.String(),
 	}
 
 	if err := sbc.Delete(deleteCfg); err != nil {
 		errlog.LogError(errors.Wrap(err, "failed to delete sonobuoy resources"))
 		os.Exit(1)
 	}
-
 }

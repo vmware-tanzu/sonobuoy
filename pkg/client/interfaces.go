@@ -104,7 +104,8 @@ type E2EConfig struct {
 // RunConfig are the input options for running Sonobuoy.
 type RunConfig struct {
 	GenConfig
-	Wait time.Duration
+	Wait       time.Duration
+	WaitOutput string
 }
 
 // Validate checks the config to determine if it is valid.
@@ -119,6 +120,7 @@ type DeleteConfig struct {
 	EnableRBAC bool
 	DeleteAll  bool
 	Wait       time.Duration
+	WaitOutput string
 }
 
 // Validate checks the config to determine if it is valid.

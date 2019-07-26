@@ -39,6 +39,7 @@ const (
 	imagePullPolicyFlag = "image-pull-policy"
 	pluginFlag          = "plugin"
 	timeoutFlag         = "timeout"
+	waitOutputFlag      = "wait-output"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
@@ -260,6 +261,14 @@ func AddTimeoutFlag(flag *int, flags *pflag.FlagSet) {
 		flag, timeoutFlag, config.DefaultAggregationServerTimeoutSeconds,
 		"How long (in seconds) Sonobuoy will wait for plugins to complete before exiting. 0 indicates no timeout.",
 	)
+}
+
+// AddWaitOutputFlag adds a flag for spinner when wait flag is set for Sonobuoy operations.
+func AddWaitOutputFlag(mode *WaitOutputMode, flags *pflag.FlagSet, defaultMode WaitOutputMode) {
+	*mode = defaultMode
+	flags.Var(
+		mode, "wait-output",
+		"Whether to enable spinner on Sonobuoy. Valid modes are Silent and Spinner")
 }
 
 // AddImagePullPolicyFlag adds a boolean flag for deleting everything (including E2E tests).
