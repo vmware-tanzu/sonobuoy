@@ -23,19 +23,26 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
-	goversion "github.com/hashicorp/go-version"
 	"github.com/heptio/sonobuoy/pkg/config"
+
+	goversion "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 )
 
 const (
-	// PluginsDir defines where in the archive the plugin results are.
+	// PluginsDir defines where in the archive directories for plugin results are.
 	PluginsDir = "plugins/"
+
+	// ResultsDir defines where in the archive the plugin results are.
+	// Example: plugins/<name>/results
+	ResultsDir = "results/"
 
 	hostsDir                  = "hosts/"
 	namespacedResourcesDir    = "resources/ns/"
@@ -46,7 +53,13 @@ const (
 	defaultNodesFile          = "Nodes.json"
 	defaultServerVersionFile  = "serverversion.json"
 	defaultServerGroupsFile   = "servergroups.json"
+)
 
+// Versions corresponding to Kubernetes minor version values. We used to
+// roughly version our results tarballs in sync with minor version patches
+// and so checking the server version for one of these prefixes would be
+// sufficient to inform the parser where certain files would be.
+const (
 	// UnknownVersion lets the consumer know if this client can detect the archive version or not.
 	UnknownVersion = "v?.?"
 	VersionEight   = "v0.8"
@@ -59,6 +72,11 @@ var (
 	// v15 is the first version we started used a typed version. Allows more clean comparisons
 	// between versions.
 	v15 = goversion.Must(goversion.NewVersion("v0.15.0"))
+
+	// errStopWalk is a special cased error when using reader.Walk which will stop
+	// processing but will not be bubbled up. Used to prevent reading until EOF when you
+	// want to stop mid-reader.
+	errStopWalk = errors.New("stop")
 )
 
 // Reader holds a reader and a version. It uses the version to know where to
@@ -159,12 +177,17 @@ func (t *tarFileInfo) Sys() interface{} {
 	return t.Reader
 }
 
-// WalkFiles walks all of the files in the archive.
+// WalkFiles walks all of the files in the archive. Processing stops at the
+// first error. The error is returned except in the special case of errStopWalk
+// which will stop processing but nil will be returned.
 func (r *Reader) WalkFiles(walkfn filepath.WalkFunc) error {
 	tr := tar.NewReader(r)
 	var err error
 	var header *tar.Header
 	for {
+		if err != nil {
+			break
+		}
 		header, err = tr.Next()
 		if err == io.EOF {
 			break
@@ -178,7 +201,11 @@ func (r *Reader) WalkFiles(walkfn filepath.WalkFunc) error {
 		}
 		err = walkfn(filepath.Clean(header.Name), info, err)
 	}
-	return nil
+
+	if err == errStopWalk || err == io.EOF {
+		return nil
+	}
+	return err
 }
 
 // Functions to be used within a walkfn.
@@ -294,4 +321,61 @@ func ConfigFile(version string) string {
 	default:
 		return "meta/config.json"
 	}
+}
+
+// PluginResultsItem returns the results file from the given plugin if found, error otherwise.
+func (r *Reader) PluginResultsItem(plugin string) (*Item, error) {
+	resultObj := &Item{}
+
+	reader, err := r.PluginResultsReader(plugin)
+	if err != nil {
+		return nil, err
+	}
+
+	decoder := yaml.NewDecoder(reader)
+	err = decoder.Decode(resultObj)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to decode yaml results for plugin %v", plugin)
+	}
+
+	return resultObj, nil
+}
+
+// PluginResultsReader returns the results file from the given plugin if found, error otherwise.
+func (r *Reader) PluginResultsReader(plugin string) (io.Reader, error) {
+	resultsPath := path.Join(PluginsDir, plugin, PostProcessedResultsFile)
+	return r.FileReader(resultsPath)
+}
+
+// FileReader returns a reader for a file in the archive.
+func (r *Reader) FileReader(filename string) (io.Reader, error) {
+	var returnReader io.Reader
+
+	found := false
+	err := r.WalkFiles(
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil || found == true {
+				return err
+			}
+
+			if path == filename {
+				found = true
+				reader, ok := info.Sys().(io.Reader)
+				if !ok {
+					return errors.New("info.Sys() is not a reader")
+				}
+				returnReader = reader
+				return errStopWalk
+			}
+
+			return nil
+		})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to walk archive for file %v", filename)
+	}
+	if !found {
+		return nil, fmt.Errorf("failed to find file %q in archive", filename)
+	}
+
+	return returnReader, nil
 }

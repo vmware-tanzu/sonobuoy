@@ -84,6 +84,16 @@ func (b *Base) SkipCleanup() bool {
 	return b.Definition.SonobuoyConfig.SkipCleanup
 }
 
+// GetResultFormat returns the ResultFormat of this plugin.
+func (b *Base) GetResultFormat() string {
+	return b.Definition.SonobuoyConfig.ResultFormat
+}
+
+// GetResultFile returns the name of this plugin.
+func (b *Base) GetResultFile() string {
+	return b.Definition.SonobuoyConfig.ResultFile
+}
+
 //GetTemplateData fills a TemplateData struct with the passed in and state variables.
 func (b *Base) GetTemplateData(masterAddress string, cert *tls.Certificate) (*TemplateData, error) {
 

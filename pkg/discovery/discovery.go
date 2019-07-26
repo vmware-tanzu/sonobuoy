@@ -185,6 +185,19 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// 7. Clean up after the plugins
 	pluginaggregation.Cleanup(kubeClient, cfg.LoadedPlugins)
 
+	// Postprocessing before we create the tarball.
+	for _, p := range cfg.LoadedPlugins {
+		item, err := results.PostProcessPlugin(p, outpath)
+		if err != nil {
+			logrus.Errorf("Error processing plugin %v: %v", p.GetName(), err)
+		}
+		if !item.Empty() {
+			if err := results.SaveProcessedResults(p.GetName(), outpath, item); err != nil {
+				logrus.Errorf("Unable to save results for plugin %v: %v", p.GetName(), err)
+			}
+		}
+	}
+
 	// Saving plugin definitions in their respective folders for easy reference.
 	for _, p := range cfg.LoadedPlugins {
 		trackErrorsFor("saving plugin info")(

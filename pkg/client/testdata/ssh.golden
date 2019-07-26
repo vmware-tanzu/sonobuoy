@@ -44,6 +44,7 @@ data:
     sonobuoy-config:
       driver: Job
       plugin-name: e2e
+      result-format: junit
       result-type: e2e
     spec:
       command:

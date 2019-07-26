@@ -17,7 +17,13 @@ limitations under the License.
 package results
 
 import (
+	"encoding/xml"
+	"os"
+	"path/filepath"
+
 	"github.com/onsi/ginkgo/reporters"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // Filter keeps only the tests that match the predicate function.
@@ -51,4 +57,52 @@ func Passed(testCase reporters.JUnitTestCase) bool {
 // Failed returns true if the test failed.
 func Failed(testCase reporters.JUnitTestCase) bool {
 	return testCase.Skipped == nil && testCase.FailureMessage != nil
+}
+
+func processJunitFile(pluginDir, currentFile string) (Item, error) {
+	junitResults := reporters.JUnitTestSuite{}
+	relPath, err := filepath.Rel(pluginDir, currentFile)
+	if err != nil {
+		logrus.Errorf("Error making path %q relative to %q: %v", pluginDir, currentFile, err)
+		relPath = currentFile
+	}
+
+	// Passed unless a failure is encountered for aggregate status.
+	resultObj := Item{
+		Name:     filepath.Base(currentFile),
+		Status:   StatusPassed,
+		Metadata: map[string]string{"file": relPath},
+	}
+
+	infile, err := os.Open(currentFile)
+	if err != nil {
+		resultObj.Status = StatusUnknown
+		resultObj.Metadata["error"] = err.Error()
+		return resultObj, errors.Wrapf(err, "opening file %v", currentFile)
+	}
+	defer infile.Close()
+
+	decoder := xml.NewDecoder(infile)
+	if err := decoder.Decode(&junitResults); err != nil {
+		resultObj.Status = StatusUnknown
+		resultObj.Metadata["error"] = err.Error()
+		return resultObj, errors.Wrap(err, "error decoding json into object")
+	}
+
+	for _, t := range junitResults.TestCases {
+		status := StatusUnknown
+		switch {
+		case Passed(t):
+			status = StatusPassed
+		case Failed(t):
+			resultObj.Status = StatusFailed
+			status = StatusFailed
+		case Skipped(t):
+			status = StatusSkipped
+		}
+
+		resultObj.Items = append(resultObj.Items, Item{Name: t.Name, Status: status})
+	}
+
+	return resultObj, nil
 }

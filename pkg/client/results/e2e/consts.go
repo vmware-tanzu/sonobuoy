@@ -25,5 +25,6 @@ const (
 	// the global folder was added.
 	LegacyResultsSubdirectory = "e2e/results/"
 
+	// JUnitResultsFile is the name of the file which e2e tests emit.
 	JUnitResultsFile = "junit_01.xml"
 )

@@ -38,17 +38,27 @@ type SonobuoyConfig struct {
 	// after the run completes instead of deleting them as part of default, cleanup behavior.
 	SkipCleanup bool `json:"skip-cleanup,omitempty"`
 
+	// ResultFormat specifies the type of results the plugin generates which will inform Sonobuoy what type of
+	// postprocessing to do on the results.
+	ResultFormat string `json:"result-format,omitempty"`
+
+	// ResultFile, if set, will direct postprocessing to only consider files with this name
+	// to avoid automatically targeting other files or failing to target this one due to heuristics.
+	ResultFile string `json:"result-file,omitempty"`
+
 	objectKind
 }
 
 // DeepCopy makes a deep copy (needed by DeepCopyObject)
 func (s *SonobuoyConfig) DeepCopy() *SonobuoyConfig {
 	return &SonobuoyConfig{
-		Driver:      s.Driver,
-		PluginName:  s.PluginName,
-		ResultType:  s.ResultType,
-		SkipCleanup: s.SkipCleanup,
-		objectKind:  objectKind{s.objectKind.gvk},
+		Driver:       s.Driver,
+		PluginName:   s.PluginName,
+		ResultType:   s.ResultType,
+		ResultFormat: s.ResultFormat,
+		ResultFile:   s.ResultFile,
+		SkipCleanup:  s.SkipCleanup,
+		objectKind:   objectKind{s.objectKind.gvk},
 	}
 }
 
