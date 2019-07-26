@@ -35,9 +35,8 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-const bufferSize = 4096
-
-var (
+const (
+	bufferSize                    = 4096
 	pollInterval                  = 20 * time.Second
 	spinnerType     int           = 14
 	spinnerDuration time.Duration = 2000 * time.Millisecond
