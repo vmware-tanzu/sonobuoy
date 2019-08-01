@@ -119,6 +119,9 @@ func PostProcessPlugin(p plugin.Interface, dir string) (Item, error) {
 	case ResultFormatRaw:
 		i, err = processPluginWithProcessor(p, dir, processRawFile, fileOrAny(p.GetResultFile()))
 	default:
+		// Default to raw format so that consumers can still expect the aggregate file to exist and
+		// can navigate the output of the plugin more easily.
+		i, err = processPluginWithProcessor(p, dir, processRawFile, fileOrAny(p.GetResultFile()))
 	}
 
 	i.Status = aggregateStatus(i.Items...)
