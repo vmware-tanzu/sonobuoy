@@ -44,7 +44,7 @@ type SonobuoyConfig struct {
 
 	// ResultFile, if set, will direct postprocessing to only consider files with this name
 	// to avoid automatically targeting other files or failing to target this one due to heuristics.
-	ResultFile string `json:"result-file,omitempty"`
+	ResultFiles []string `json:"result-files,omitempty"`
 
 	objectKind
 }
@@ -56,7 +56,7 @@ func (s *SonobuoyConfig) DeepCopy() *SonobuoyConfig {
 		PluginName:   s.PluginName,
 		ResultType:   s.ResultType,
 		ResultFormat: s.ResultFormat,
-		ResultFile:   s.ResultFile,
+		ResultFiles:  s.ResultFiles,
 		SkipCleanup:  s.SkipCleanup,
 		objectKind:   objectKind{s.objectKind.gvk},
 	}

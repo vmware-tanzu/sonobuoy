@@ -115,13 +115,13 @@ func PostProcessPlugin(p plugin.Interface, dir string) (Item, error) {
 
 	switch p.GetResultFormat() {
 	case ResultFormatJunit, ResultFormatE2E:
-		i, err = processPluginWithProcessor(p, dir, processJunitFile, fileOrExtension(p.GetResultFile(), ".xml"))
+		i, err = processPluginWithProcessor(p, dir, processJunitFile, fileOrExtension(p.GetResultFiles(), ".xml"))
 	case ResultFormatRaw:
-		i, err = processPluginWithProcessor(p, dir, processRawFile, fileOrAny(p.GetResultFile()))
+		i, err = processPluginWithProcessor(p, dir, processRawFile, fileOrAny(p.GetResultFiles()))
 	default:
 		// Default to raw format so that consumers can still expect the aggregate file to exist and
 		// can navigate the output of the plugin more easily.
-		i, err = processPluginWithProcessor(p, dir, processRawFile, fileOrAny(p.GetResultFile()))
+		i, err = processPluginWithProcessor(p, dir, processRawFile, fileOrAny(p.GetResultFiles()))
 	}
 
 	i.Status = aggregateStatus(i.Items...)
@@ -191,24 +191,33 @@ func processDir(p plugin.Interface, pluginDir, dir string, processor postProcess
 	return results, err
 }
 
+func sliceContains(set []string, val string) bool {
+	for _, v := range set {
+		if v == val {
+			return true
+		}
+	}
+	return false
+}
+
 // fileOrExtension returns a function which will return true for files
 // which have the exact name of the file given or the given extension (if
 // no file is given). If the filename given is empty, it will be ignored
 // and the extension matching will be used. If "*" is passed as the extension
 // all files will match.
-func fileOrExtension(file, ext string) fileSelector {
+func fileOrExtension(files []string, ext string) fileSelector {
 	return func(fPath string, info os.FileInfo) bool {
 		if info == nil || info.IsDir() {
 			return false
 		}
 
-		if len(file) > 0 {
-			return filepath.Base(fPath) == file
+		if len(files) > 0 {
+			return sliceContains(files, filepath.Base(fPath))
 		}
 		return ext == "*" || strings.HasSuffix(fPath, ext)
 	}
 }
 
-func fileOrAny(file string) func(fPath string, info os.FileInfo) bool {
-	return fileOrExtension(file, "*")
+func fileOrAny(files []string) func(fPath string, info os.FileInfo) bool {
+	return fileOrExtension(files, "*")
 }

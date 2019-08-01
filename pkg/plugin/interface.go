@@ -62,9 +62,9 @@ type Interface interface {
 	// GetResultFormat states the type of results this plugin generates and facilates post-processing
 	// those results.
 	GetResultFormat() string
-	// GetResultFile returns the specific file to target for post-processing. If empty, each
+	// GetResultFiles returns the specific files to target for post-processing. If empty, each
 	// result format specifies its own heuristic for determining those files.
-	GetResultFile() string
+	GetResultFiles() []string
 }
 
 // ExpectedResult is an expected result that a plugin will submit.  This is so

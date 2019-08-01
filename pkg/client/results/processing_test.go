@@ -38,7 +38,7 @@ var update = flag.Bool("update", false, "update golden files")
 // of options: (job|daemonset)+(raw|junit)+(specify a specific file or not)
 // and confirms the resulting Item is accurate.
 func TestPostProcessPlugin(t *testing.T) {
-	getPlugin := func(key, pluginDriver, format, outputFile string) plugin.Interface {
+	getPlugin := func(key, pluginDriver, format string, outputFiles []string) plugin.Interface {
 		switch pluginDriver {
 		case "job":
 			return &job.Plugin{Base: driver.Base{
@@ -46,7 +46,7 @@ func TestPostProcessPlugin(t *testing.T) {
 					SonobuoyConfig: manifest.SonobuoyConfig{
 						PluginName:   key,
 						ResultFormat: format,
-						ResultFile:   outputFile,
+						ResultFiles:  outputFiles,
 					},
 				},
 			}}
@@ -56,7 +56,7 @@ func TestPostProcessPlugin(t *testing.T) {
 					SonobuoyConfig: manifest.SonobuoyConfig{
 						PluginName:   key,
 						ResultFormat: format,
-						ResultFile:   outputFile,
+						ResultFiles:  outputFiles,
 					},
 				},
 			}}
@@ -82,45 +82,61 @@ func TestPostProcessPlugin(t *testing.T) {
 		key string
 	}{
 		{
-			desc:   "Job junit 2 files",
+			desc:   "Job junit with 2 files, all processed",
 			key:    "job-junit-02",
-			plugin: getPlugin("job-junit-02", "job", "junit", ""),
+			plugin: getPlugin("job-junit-02", "job", "junit", []string{}),
 		}, {
-			desc:   "Job junit 1 file, others ignored",
+			desc:   "Job junit with 1 file processed, others ignored",
 			key:    "job-junit-01",
-			plugin: getPlugin("job-junit-01", "job", "junit", "output.xml"),
+			plugin: getPlugin("job-junit-01", "job", "junit", []string{"output.xml"}),
 		}, {
-			desc:   "Daemonset junit 2 files",
+			desc:   "Job junit with 2 files processed, others ignored",
+			key:    "job-junit-03",
+			plugin: getPlugin("job-junit-03", "job", "junit", []string{"output.xml", "output2.xml"}),
+		}, {
+			desc:   "Daemonset junit with 2 files, all processed",
 			key:    "ds-junit-02",
-			plugin: getPlugin("ds-junit-02", "daemonset", "junit", ""),
+			plugin: getPlugin("ds-junit-02", "daemonset", "junit", []string{}),
 		}, {
-			desc:   "Daemonset junit 1 file, others ignored",
+			desc:   "Daemonset junit with 1 file processed, others ignored",
 			key:    "ds-junit-01",
-			plugin: getPlugin("ds-junit-01", "daemonset", "junit", "output.xml"),
+			plugin: getPlugin("ds-junit-01", "daemonset", "junit", []string{"output.xml"}),
 		}, {
-			desc:   "Job raw 2 files",
+			desc:   "Daemonset junit with 2 files processed, others ignored",
+			key:    "ds-junit-03",
+			plugin: getPlugin("ds-junit-03", "daemonset", "junit", []string{"output.xml", "output2.xml"}),
+		}, {
+			desc:   "Job raw with 2 files, all processed",
 			key:    "job-raw-02",
-			plugin: getPlugin("job-raw-02", "job", "raw", ""),
+			plugin: getPlugin("job-raw-02", "job", "raw", []string{}),
 		}, {
-			desc:   "Job raw 1 file, others ignored",
+			desc:   "Job raw with 1 file processed, others ignored",
 			key:    "job-raw-01",
-			plugin: getPlugin("job-raw-01", "job", "raw", "output.xml"),
+			plugin: getPlugin("job-raw-01", "job", "raw", []string{"output.xml"}),
 		}, {
-			desc:   "Job default 2 files",
+			desc:   "Job raw with 2 files processed, others ignored",
+			key:    "job-raw-03",
+			plugin: getPlugin("job-raw-03", "job", "raw", []string{"output.xml", "output2.xml"}),
+		}, {
+			desc:   "Job default with 2 files, all processed",
 			key:    "job-default-02",
-			plugin: getPlugin("job-default-02", "job", "", ""),
+			plugin: getPlugin("job-default-02", "job", "", []string{}),
 		}, {
-			desc:   "Job default 1 file, others ignored",
+			desc:   "Job default with 1 file processed, others ignored",
 			key:    "job-default-01",
-			plugin: getPlugin("job-default-01", "job", "", "output.xml"),
+			plugin: getPlugin("job-default-01", "job", "", []string{"output.xml"}),
 		}, {
-			desc:   "Daemonset raw 2 files",
+			desc:   "Daemonset raw with 2 files, all processed",
 			key:    "ds-raw-02",
-			plugin: getPlugin("ds-raw-02", "daemonset", "raw", ""),
+			plugin: getPlugin("ds-raw-02", "daemonset", "raw", []string{}),
 		}, {
-			desc:   "Daemonset raw 1 file, others ignored",
+			desc:   "Daemonset raw with 1 file processed, others ignored",
 			key:    "ds-raw-01",
-			plugin: getPlugin("ds-raw-01", "daemonset", "raw", "output.xml"),
+			plugin: getPlugin("ds-raw-01", "daemonset", "raw", []string{"output.xml"}),
+		}, {
+			desc:   "Daemonset raw with 2 files processed, others ignored",
+			key:    "ds-raw-03",
+			plugin: getPlugin("ds-raw-03", "daemonset", "raw", []string{"output.xml", "output2.xml"}),
 		},
 	}
 	for _, tc := range testCases {
