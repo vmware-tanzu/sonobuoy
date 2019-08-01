@@ -38,6 +38,7 @@ data:
     sonobuoy-config:
       driver: DaemonSet
       plugin-name: systemd-logs
+      result-format: raw
       result-type: systemd-logs
     spec:
       command:

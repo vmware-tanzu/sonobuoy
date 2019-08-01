@@ -239,6 +239,14 @@ func (cp *MockCleanupPlugin) SkipCleanup() bool {
 	return cp.skipCleanup
 }
 
+func (cp *MockCleanupPlugin) GetResultFormat() string {
+	return ""
+}
+
+func (cp *MockCleanupPlugin) GetResultFile() string {
+	return ""
+}
+
 func TestCleanup(t *testing.T) {
 	createPlugin := func(skipCleanup bool) *MockCleanupPlugin {
 		return &MockCleanupPlugin{
