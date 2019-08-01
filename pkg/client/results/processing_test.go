@@ -106,6 +106,14 @@ func TestPostProcessPlugin(t *testing.T) {
 			key:    "job-raw-01",
 			plugin: getPlugin("job-raw-01", "job", "raw", "output.xml"),
 		}, {
+			desc:   "Job default 2 files",
+			key:    "job-default-02",
+			plugin: getPlugin("job-default-02", "job", "", ""),
+		}, {
+			desc:   "Job default 1 file, others ignored",
+			key:    "job-default-01",
+			plugin: getPlugin("job-default-01", "job", "", "output.xml"),
+		}, {
 			desc:   "Daemonset raw 2 files",
 			key:    "ds-raw-02",
 			plugin: getPlugin("ds-raw-02", "daemonset", "raw", ""),
