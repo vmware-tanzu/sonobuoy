@@ -1,0 +1,1 @@
+{"name":"ds-raw-03","status":"passed","items":[{"name":"global","status":"passed","items":[{"name":"output.xml","status":"passed","meta":{"file":"results/global/output.xml"}},{"name":"output2.xml","status":"passed","meta":{"file":"results/global/output2.xml"}}]}]}

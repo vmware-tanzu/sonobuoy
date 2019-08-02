@@ -243,8 +243,8 @@ func (cp *MockCleanupPlugin) GetResultFormat() string {
 	return ""
 }
 
-func (cp *MockCleanupPlugin) GetResultFile() string {
-	return ""
+func (cp *MockCleanupPlugin) GetResultFiles() []string {
+	return []string{}
 }
 
 func TestCleanup(t *testing.T) {

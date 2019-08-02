@@ -89,9 +89,9 @@ func (b *Base) GetResultFormat() string {
 	return b.Definition.SonobuoyConfig.ResultFormat
 }
 
-// GetResultFile returns the name of this plugin.
-func (b *Base) GetResultFile() string {
-	return b.Definition.SonobuoyConfig.ResultFile
+// GetResultFiles returns the files to be post-processed for this plugin.
+func (b *Base) GetResultFiles() []string {
+	return b.Definition.SonobuoyConfig.ResultFiles
 }
 
 //GetTemplateData fills a TemplateData struct with the passed in and state variables.
