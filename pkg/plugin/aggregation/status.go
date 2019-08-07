@@ -19,6 +19,7 @@ package aggregation
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
@@ -45,6 +46,9 @@ type PluginStatus struct {
 	Plugin string `json:"plugin"`
 	Node   string `json:"node"`
 	Status string `json:"status"`
+
+	ResultStatus       string         `json:"result-status"`
+	ResultStatusCounts map[string]int `json:"result-counts"`
 }
 
 // Status represents the current status of a Sonobuoy run.
@@ -52,6 +56,16 @@ type PluginStatus struct {
 type Status struct {
 	Plugins []PluginStatus `json:"plugins"`
 	Status  string         `json:"status"`
+	Tarball TarInfo        `json:"tar-info,omitempty"`
+}
+
+// TarInfo is the type that contains information regarding the tarball
+// that a user would get after running `sonobuoy retrieve`.
+type TarInfo struct {
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created"`
+	SHA256    string    `json:"sha256"`
+	Size      int64     `json:"size"`
 }
 
 func (s *Status) updateStatus() error {

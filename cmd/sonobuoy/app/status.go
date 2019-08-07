@@ -17,10 +17,12 @@ limitations under the License.
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/pkg/errors"
@@ -35,6 +37,29 @@ var statusFlags struct {
 	namespace string
 	kubecfg   Kubeconfig
 	showAll   bool
+	json      bool
+}
+
+type pluginSummaries []pluginSummary
+
+type pluginSummary struct {
+	plugin string
+	status string
+	result string
+	count  int
+}
+
+// For sort.Interface
+func (p pluginSummaries) Len() int { return len(p) }
+func (p pluginSummaries) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+func (p pluginSummaries) Less(i, j int) bool {
+	pi, pj := p[i], p[j]
+	if pi.plugin == pj.plugin {
+		return pi.status < pj.status
+	}
+	return pi.plugin < pj.plugin
 }
 
 func NewCmdStatus() *cobra.Command {
@@ -50,7 +75,11 @@ func NewCmdStatus() *cobra.Command {
 	AddKubeconfigFlag(&statusFlags.kubecfg, flags)
 	flags.BoolVar(
 		&statusFlags.showAll, "show-all", false,
-		"Don't summarize plugin statuses, show all individually",
+		"Don't summarize plugin statuses, show results for each node",
+	)
+	flags.BoolVar(
+		&statusFlags.json, "json", false,
+		"Print the status object as json",
 	)
 
 	return cmd
@@ -73,9 +102,12 @@ func getStatus(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	if statusFlags.showAll {
+	switch {
+	case statusFlags.showAll:
 		err = printAll(os.Stdout, status)
-	} else {
+	case statusFlags.json:
+		err = printJSON(os.Stdout, status)
+	default:
 		err = printSummary(os.Stdout, status)
 	}
 
@@ -110,12 +142,17 @@ func humanReadableStatus(str string) string {
 	}
 }
 
-func printAll(w io.Writer, status *aggregation.Status) error {
-	tw := tabwriter.NewWriter(w, 1, 8, 1, '\t', tabwriter.AlignRight)
+func printJSON(w io.Writer, status *aggregation.Status) error {
+	enc := json.NewEncoder(w)
+	return enc.Encode(status)
+}
 
-	fmt.Fprintf(tw, "PLUGIN\tNODE\tSTATUS\n")
+func printAll(w io.Writer, status *aggregation.Status) error {
+	tw := defaultTabWriter(w)
+
+	fmt.Fprintf(tw, "PLUGIN\tNODE\tSTATUS\tRESULT\t\n")
 	for _, pluginStatus := range status.Plugins {
-		fmt.Fprintf(tw, "%s\t%s\t%s\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status)
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status, pluginStatus.ResultStatus)
 	}
 
 	if err := tw.Flush(); err != nil {
@@ -127,30 +164,38 @@ func printAll(w io.Writer, status *aggregation.Status) error {
 }
 
 func printSummary(w io.Writer, status *aggregation.Status) error {
-	tw := tabwriter.NewWriter(w, 1, 8, 1, '\t', tabwriter.AlignRight)
+	tw := defaultTabWriter(w)
 	totals := map[string]map[string]int{}
-	for _, plugin := range status.Plugins {
-		if _, ok := totals[plugin.Plugin]; !ok {
-			totals[plugin.Plugin] = make(map[string]int)
-		}
-		totals[plugin.Plugin][plugin.Status]++
+
+	// Effectively making a pivot chart to count the unique combinations of status/result.
+	statusResultKey := func(p aggregation.PluginStatus) string {
+		return p.Status + ":" + p.ResultStatus
 	}
 
-	// sort everything nicely
+	for _, pStatus := range status.Plugins {
+		if _, ok := totals[pStatus.Plugin]; !ok {
+			totals[pStatus.Plugin] = make(map[string]int)
+		}
+		totals[pStatus.Plugin][statusResultKey(pStatus)]++
+	}
+
+	// Sort everything nicely
 	summaries := make(pluginSummaries, 0)
 	for pluginName, pluginStats := range totals {
-		for status, count := range pluginStats {
+		for statusAndResult, count := range pluginStats {
 			summaries = append(summaries, pluginSummary{
 				plugin: pluginName,
-				status: status,
+				status: strings.Split(statusAndResult, ":")[0],
+				result: strings.Split(statusAndResult, ":")[1],
 				count:  count,
 			})
+
 		}
 	}
 	sort.Sort(summaries)
-	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tCOUNT\n")
+	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tRESULT\tCOUNT\t\n")
 	for _, summary := range summaries {
-		fmt.Fprintf(tw, "%s\t%s\t%d\n", summary.plugin, summary.status, summary.count)
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t\n", summary.plugin, summary.status, summary.result, summary.count)
 	}
 
 	if err := tw.Flush(); err != nil {
@@ -161,23 +206,6 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 	return nil
 }
 
-type pluginSummaries []pluginSummary
-
-type pluginSummary struct {
-	plugin string
-	status string
-	count  int
-}
-
-// For sort.Interface
-func (p pluginSummaries) Len() int { return len(p) }
-func (p pluginSummaries) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-func (p pluginSummaries) Less(i, j int) bool {
-	pi, pj := p[i], p[j]
-	if pi.plugin == pj.plugin {
-		return pi.status < pj.status
-	}
-	return pi.plugin < pj.plugin
+func defaultTabWriter(w io.Writer) *tabwriter.Writer {
+	return tabwriter.NewWriter(w, 0, 2, 3, ' ', tabwriter.AlignRight)
 }
