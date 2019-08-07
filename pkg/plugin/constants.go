@@ -19,4 +19,7 @@ package plugin
 const (
 	// GracefulShutdownPeriod is how long plugins have to cleanly finish before they are terminated.
 	GracefulShutdownPeriod = 60
+
+	// ResultsDir is the directory where results will be available in Sonobuoy plugin containers.
+	ResultsDir = "/tmp/results"
 )

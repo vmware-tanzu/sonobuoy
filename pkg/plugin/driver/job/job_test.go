@@ -35,7 +35,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/kubernetes/scheme"
 	k8stesting "k8s.io/client-go/testing"
 )
 
@@ -44,7 +43,7 @@ const (
 	expectedNamespace = "test-namespace"
 )
 
-func TestFillTemplate(t *testing.T) {
+func TestCreatePodDefinition(t *testing.T) {
 	testJob := NewPlugin(
 		manifest.Manifest{
 			SonobuoyConfig: manifest.SonobuoyConfig{
@@ -84,22 +83,13 @@ func TestFillTemplate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("couldn't make CA Authority %v", err)
 	}
+
 	clientCert, err := auth.ClientKeyPair("test-job")
 	if err != nil {
 		t.Fatalf("couldn't make client certificate %v", err)
 	}
 
-	var pod corev1.Pod
-	b, err := testJob.FillTemplate("", clientCert)
-	if err != nil {
-		t.Fatalf("Failed to fill template: %v", err)
-	}
-
-	t.Logf("%s", b)
-
-	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &pod); err != nil {
-		t.Fatalf("Failed to decode template to pod: %v", err)
-	}
+	pod := testJob.createPodDefinition("", clientCert)
 
 	expectedName := fmt.Sprintf("sonobuoy-test-job-job-%v", testJob.SessionID)
 	if pod.Name != expectedName {

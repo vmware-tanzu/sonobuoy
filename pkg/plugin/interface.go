@@ -50,8 +50,6 @@ type Interface interface {
 	// ExpectedResults is an array of Result objects that a plugin should
 	// expect to submit.
 	ExpectedResults(nodes []v1.Node) []ExpectedResult
-	// FillTemplate fills the driver's internal template so it can be presented to users
-	FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error)
 	// GetResultType returns the type of results for this plugin, typically
 	// the same as the plugin name.
 	GetResultType() string

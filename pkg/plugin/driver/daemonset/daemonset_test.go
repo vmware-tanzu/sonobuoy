@@ -32,7 +32,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/kubernetes/scheme"
 	k8stesting "k8s.io/client-go/testing"
 )
 
@@ -41,7 +40,7 @@ const (
 	expectedNamespace = "test-namespace"
 )
 
-func TestFillTemplate(t *testing.T) {
+func TestCreateDaemonSetDefintion(t *testing.T) {
 	testDaemonSet := NewPlugin(
 		manifest.Manifest{
 			SonobuoyConfig: manifest.SonobuoyConfig{
@@ -86,17 +85,7 @@ func TestFillTemplate(t *testing.T) {
 		t.Fatalf("couldn't make client certificate %v", err)
 	}
 
-	var daemonSet appsv1.DaemonSet
-	b, err := testDaemonSet.FillTemplate("", clientCert)
-	if err != nil {
-		t.Fatalf("Failed to fill template: %v", err)
-	}
-
-	t.Logf("%s", b)
-
-	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &daemonSet); err != nil {
-		t.Fatalf("Failed to decode template to daemonSet: %v", err)
-	}
+	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert)
 
 	expectedName := fmt.Sprintf("sonobuoy-test-plugin-daemon-set-%v", testDaemonSet.SessionID)
 	if daemonSet.Name != expectedName {
@@ -152,7 +141,7 @@ func TestFillTemplate(t *testing.T) {
 	}
 
 	if len(daemonSet.Spec.Template.Spec.Volumes) != 4 {
-		t.Errorf("Expected 2 volumes defined, got %d", len(daemonSet.Spec.Template.Spec.Volumes))
+		t.Errorf("Expected 4 volumes defined, got %d", len(daemonSet.Spec.Template.Spec.Volumes))
 	}
 
 	pullSecrets := daemonSet.Spec.Template.Spec.ImagePullSecrets
