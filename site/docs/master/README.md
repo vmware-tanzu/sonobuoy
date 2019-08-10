@@ -153,7 +153,7 @@ See [the list of releases][releases] to find out about feature changes.
 [contrib]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
 [conformance]: conformance-testing
 [docker]: https://docs.docker.com/install
-[docs]: https://sonobuoy.io/docs/master/
+[docs]: https://sonobuoy.io/docs/master
 [e2e]: conformance-testing
 [gen]: gen
 [gimme]: https://github.com/travis-ci/gimme
@@ -169,4 +169,3 @@ See [the list of releases][releases] to find out about feature changes.
 [sonobuoyconfig]: sonobuoy-config
 [status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
 [travis]: https://travis-ci.org/heptio/sonobuoy/#
-[wait]: wait
