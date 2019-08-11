@@ -2,9 +2,12 @@
 title: Sonobuoy
 email:
 author: Sonobuoy Authors
-description:
-url:
+description: Validate your Kubernetes configuration
+url: sonobuoy.io
 logo: Sonobuoy.svg
+twitter:
+  username: projectsonobuoy
+  card: summary
 vm_logo: vm-logo.png
 gh_repo: https://github.com/heptio/sonobuoy
 markdown: redcarpet
@@ -130,7 +133,7 @@ plugins:
   - jekyll-titles-from-headings # pull the page title from the first Markdown heading when none is specified.
   - jekyll-paginate # pagination object for collections (e.g. posts)
   - jekyll-redirect-from
-
+  - jekyll-seo-tag
 
 # Include these subdirectories
 include:
