@@ -1,6 +1,7 @@
 ---
 layout: page
 title: Resources
+description: Sonobuoy Resources
 id: resources
 ---
 Here you will find external resources about Sonobuoy, such as videos, podcasts, and community articles.

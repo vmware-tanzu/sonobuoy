@@ -1,6 +1,7 @@
 ---
 layout: page
 title: Community
+description: Sonobuoy Community
 id: community
 ---
 Do you want to help build Sonobuoy?
