@@ -88,7 +88,7 @@ func getMasterAddress(hostname string) string {
 func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificate) appsv1.DaemonSet {
 	ds := appsv1.DaemonSet{}
 	annotations := map[string]string{
-		"sonobuoy-driver":      "DaemonSet",
+		"sonobuoy-driver":      p.GetDriver(),
 		"sonobuoy-plugin":      p.GetName(),
 		"sonobuoy-result-type": p.GetResultType(),
 	}
@@ -117,51 +117,36 @@ func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificat
 	ds.Spec.Template.ObjectMeta.Labels = labels
 	ds.Spec.Template.ObjectMeta.Annotations = p.CustomAnnotations
 
-	ds.Spec.Template.Spec.Containers = []v1.Container{
+	var podSpec v1.PodSpec
+	if p.Definition.PodSpec != nil {
+		podSpec = p.Definition.PodSpec.PodSpec
+	} else {
+		podSpec = driver.DefaultPodSpec(p.GetDriver())
+	}
+
+	podSpec.Containers = append(podSpec.Containers,
 		p.Definition.Spec.Container,
 		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/run_single_node_worker.sh"}, []string{}),
-	}
+	)
 
 	if len(p.ImagePullSecrets) > 0 {
-		ds.Spec.Template.Spec.ImagePullSecrets = []v1.LocalObjectReference{
-			{
-				Name: p.ImagePullSecrets,
-			},
-		}
+		podSpec.ImagePullSecrets = append(podSpec.ImagePullSecrets, v1.LocalObjectReference{
+			Name: p.ImagePullSecrets,
+		})
 	}
 
-	ds.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
-	ds.Spec.Template.Spec.HostIPC = true
-	ds.Spec.Template.Spec.HostPID = true
-	ds.Spec.Template.Spec.HostNetwork = true
-	ds.Spec.Template.Spec.ServiceAccountName = "sonobuoy-serviceaccount"
-	ds.Spec.Template.Spec.Tolerations = []v1.Toleration{
-		{
-			Operator: v1.TolerationOpExists,
+	podSpec.Volumes = append(podSpec.Volumes, v1.Volume{
+		Name: "results",
+		VolumeSource: v1.VolumeSource{
+			EmptyDir: &v1.EmptyDirVolumeSource{},
 		},
-	}
-
-	ds.Spec.Template.Spec.Volumes = []v1.Volume{
-		{
-			Name: "results",
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
-			},
-		},
-		{
-			Name: "root",
-			VolumeSource: v1.VolumeSource{
-				HostPath: &v1.HostPathVolumeSource{
-					Path: "/",
-				},
-			},
-		},
-	}
+	})
 
 	for _, v := range p.Definition.ExtraVolumes {
-		ds.Spec.Template.Spec.Volumes = append(ds.Spec.Template.Spec.Volumes, v.Volume)
+		podSpec.Volumes = append(podSpec.Volumes, v.Volume)
 	}
 
+	ds.Spec.Template.Spec = podSpec
 	return ds
 }
 

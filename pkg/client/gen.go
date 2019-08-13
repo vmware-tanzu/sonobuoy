@@ -29,6 +29,7 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/config"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/heptio/sonobuoy/pkg/templates"
 
@@ -159,6 +160,11 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 
 	pluginYAML := []string{}
 	for _, v := range plugins {
+		if cfg.ShowDefaultPodSpec && v.PodSpec == nil {
+			v.PodSpec = &manifest.PodSpec{
+				PodSpec: driver.DefaultPodSpec(v.SonobuoyConfig.Driver),
+			}
+		}
 		yaml, err := kuberuntime.Encode(manifest.Encoder, v)
 		if err != nil {
 			return nil, errors.Wrapf(err, "serializing plugin %v as YAML", v.SonobuoyConfig.PluginName)

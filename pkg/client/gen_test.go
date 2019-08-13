@@ -325,6 +325,26 @@ func TestGenerateManifestGolden(t *testing.T) {
 				},
 			},
 			expectErr: "failed to override env vars for plugin e2e2, no plugin with that name found; have plugins: [e2e]",
+		}, {
+			name: "Default pod spec is included if requested and no other pod spec provided",
+			inputcm: &client.GenConfig{
+				E2EConfig:          &client.E2EConfig{},
+				ShowDefaultPodSpec: true,
+			},
+			goldenFile: filepath.Join("testdata", "default-pod-spec.golden"),
+		}, {
+			name: "Existing pod spec is not modified if default pod spec is requested",
+			inputcm: &client.GenConfig{
+				E2EConfig:          &client.E2EConfig{},
+				ShowDefaultPodSpec: true,
+				StaticPlugins: []*manifest.Manifest{
+					{
+						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"},
+						PodSpec:        &manifest.PodSpec{},
+					},
+				},
+			},
+			goldenFile: filepath.Join("testdata", "use-existing-pod-spec.golden"),
 		},
 	}
 

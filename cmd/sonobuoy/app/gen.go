@@ -46,6 +46,7 @@ type genFlags struct {
 	imagePullPolicy             ImagePullPolicy
 	e2eRepoList                 string
 	timeoutSeconds              int
+	showDefaultPodSpec          bool
 
 	// plugins will keep a list of the plugins we want. Custom type for
 	// flag support.
@@ -74,6 +75,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddRBACModeFlags(&cfg.rbacMode, genset, rbac)
 	AddImagePullPolicyFlag(&cfg.imagePullPolicy, genset)
 	AddTimeoutFlag(&cfg.timeoutSeconds, genset)
+	AddShowDefaultPodSpecFlag(&cfg.showDefaultPodSpec, genset)
 
 	AddNamespaceFlag(&cfg.namespace, genset)
 	AddSonobuoyImage(&cfg.sonobuoyImage, genset)
@@ -149,6 +151,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		DynamicPlugins:       g.plugins.DynamicPlugins,
 		StaticPlugins:        g.plugins.StaticPlugins,
 		PluginEnvOverrides:   g.pluginEnvs,
+		ShowDefaultPodSpec:   g.showDefaultPodSpec,
 	}, nil
 }
 

@@ -67,6 +67,7 @@ type Manifest struct {
 	SonobuoyConfig SonobuoyConfig `json:"sonobuoy-config"`
 	Spec           Container      `json:"spec"`
 	ExtraVolumes   []Volume       `json:"extra-volumes,omitempty"`
+	PodSpec        *PodSpec       `json:"podSpec,omitempty"`
 	objectKind
 }
 
@@ -75,6 +76,7 @@ func (m *Manifest) DeepCopyObject() kuberuntime.Object {
 	return &Manifest{
 		SonobuoyConfig: *m.SonobuoyConfig.DeepCopy(),
 		Spec:           *m.Spec.DeepCopy(),
+		PodSpec:        m.PodSpec.DeepCopy(),
 		objectKind:     objectKind{m.gvk},
 	}
 }
@@ -121,3 +123,23 @@ func (v *Volume) DeepCopyObject() kuberuntime.Object { return v.DeepCopy() }
 
 // GetObjectKind returns the underlying objectKind, needed for runtime.Object
 func (v *Volume) GetObjectKind() schema.ObjectKind { return v }
+
+// PodSpec is a thin wrapper around coreV1.PodSpec that supplies DeepCopyObject and GetObjectKind
+type PodSpec struct {
+	corev1.PodSpec
+	objectKind
+}
+
+// DeepCopy wraps PodSpec.DeepCopy, copying the objectKind as well.
+func (ps *PodSpec) DeepCopy() *PodSpec {
+	return &PodSpec{
+		PodSpec:    *ps.PodSpec.DeepCopy(),
+		objectKind: objectKind{ps.gvk},
+	}
+}
+
+// DeepCopyObject is just DeepCopy, needed for runtime.Object
+func (ps *PodSpec) DeepCopyObject() kuberuntime.Object { return ps.DeepCopy() }
+
+// GetObjectKind returns the underlying objectKind, needed for runtime.Object
+func (ps *PodSpec) GetObjectKind() schema.ObjectKind { return ps }

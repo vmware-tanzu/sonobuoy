@@ -1,0 +1,17 @@
+podSpec:
+  containers: []
+  restartPolicy: Never
+  serviceAccountName: sonobuoy-serviceaccount
+  tolerations:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+    operator: Exists
+  - key: CriticalAddonsOnly
+    operator: Exists
+sonobuoy-config:
+  driver: ""
+  plugin-name: "n"
+  result-type: "n"
+spec:
+  name: ""
+  resources: {}

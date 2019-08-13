@@ -22,9 +22,11 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/driver"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	v1 "k8s.io/api/core/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
@@ -47,6 +49,9 @@ type GenPluginDefConfig struct {
 	// driver holds the values that will be parsed into the plugin driver.
 	// Allows validation during flag parsing by having a custom type.
 	driver pluginDriver
+
+	// If set, the default pod spec used by Sonobuoy will be included in the output
+	showDefaultPodSpec bool
 }
 
 // NewCmdGenPluginDef ...
@@ -64,38 +69,43 @@ func NewCmdGenPluginDef() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	cmd.Flags().StringVarP(
+	genPluginSet := pflag.NewFlagSet("generate plugin", pflag.ExitOnError)
+
+	genPluginSet.StringVarP(
 		&genPluginOpts.def.SonobuoyConfig.PluginName, "name", "n", "",
 		"Plugin name",
 	)
-	cmd.MarkFlagRequired("name")
 
-	cmd.Flags().VarP(
+	genPluginSet.VarP(
 		&genPluginOpts.driver, "type", "t",
 		"Plugin Driver (job or daemonset)",
 	)
 
-	cmd.Flags().StringVarP(
+	genPluginSet.StringVarP(
 		&genPluginOpts.def.Spec.Image, "image", "i", "",
 		"Plugin image",
 	)
-	cmd.MarkFlagRequired("image")
 
-	cmd.Flags().StringArrayVarP(
+	genPluginSet.StringArrayVarP(
 		&genPluginOpts.def.Spec.Command, "cmd", "c", []string{"./run.sh"},
 		`Command to run when starting the plugin's container. Can be set multiple times (e.g. --cmd /bin/sh -c "-c")`,
 	)
 
-	cmd.Flags().VarP(
+	genPluginSet.VarP(
 		&genPluginOpts.env, "env", "e",
 		"Env var values to set on the plugin (e.g. --env FOO=bar)",
 	)
 
-	cmd.Flags().StringArrayVarP(
+	genPluginSet.StringArrayVarP(
 		&genPluginOpts.def.Spec.Args, "arg", "a", []string{},
 		"Arg values to set on the plugin. Can be set multiple times (e.g. --arg 'arg 1' --arg arg2)",
 	)
 
+	AddShowDefaultPodSpecFlag(&genPluginOpts.showDefaultPodSpec, genPluginSet)
+
+	cmd.Flags().AddFlagSet(genPluginSet)
+	cmd.MarkFlagRequired("name")
+	cmd.MarkFlagRequired("image")
 	return cmd
 }
 
@@ -145,6 +155,12 @@ func genPluginDef(cfg *GenPluginDefConfig) ([]byte, error) {
 			Name:  k,
 			Value: v,
 		})
+	}
+
+	if cfg.showDefaultPodSpec {
+		cfg.def.PodSpec = &manifest.PodSpec{
+			PodSpec: driver.DefaultPodSpec(cfg.def.SonobuoyConfig.Driver),
+		}
 	}
 
 	yaml, err := kuberuntime.Encode(manifest.Encoder, &cfg.def)

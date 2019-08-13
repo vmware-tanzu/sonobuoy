@@ -22,6 +22,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"strings"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
@@ -60,6 +61,11 @@ func (b *Base) GetSecretName() string {
 // GetResultType returns the ResultType for this plugin (to adhere to plugin.Interface).
 func (b *Base) GetResultType() string {
 	return b.Definition.SonobuoyConfig.ResultType
+}
+
+// GetDriver returns the Driver for this plugin.
+func (b *Base) GetDriver() string {
+	return b.Definition.SonobuoyConfig.Driver
 }
 
 // SkipCleanup returns whether cleanup for this plugin should be skipped or not.
@@ -210,4 +216,63 @@ func (b *Base) CreateWorkerContainerDefintion(hostname string, cert *tls.Certifi
 		},
 	}
 	return container
+}
+
+// defaultDaemonSetPodSpec returns the default PodSpec used by DaemonSet plugins
+func defaultDaemonSetPodSpec() v1.PodSpec {
+	podSpec := v1.PodSpec{
+		Containers:         []v1.Container{},
+		DNSPolicy:          v1.DNSClusterFirstWithHostNet,
+		HostIPC:            true,
+		HostPID:            true,
+		HostNetwork:        true,
+		ServiceAccountName: "sonobuoy-serviceaccount",
+		Tolerations: []v1.Toleration{
+			{
+				Operator: v1.TolerationOpExists,
+			},
+		},
+		Volumes: []v1.Volume{
+			{
+				Name: "root",
+				VolumeSource: v1.VolumeSource{
+					HostPath: &v1.HostPathVolumeSource{
+						Path: "/",
+					},
+				},
+			},
+		},
+	}
+	return podSpec
+}
+
+// defaultJobPodSpec returns the default PodSpec used by Job plugins
+func defaultJobPodSpec() v1.PodSpec {
+	return v1.PodSpec{
+		Containers:         []v1.Container{},
+		RestartPolicy:      v1.RestartPolicyNever,
+		ServiceAccountName: "sonobuoy-serviceaccount",
+		Tolerations: []v1.Toleration{
+			{
+				Key:      "node-role.kubernetes.io/master",
+				Operator: v1.TolerationOpExists,
+				Effect:   v1.TaintEffectNoSchedule,
+			},
+			{
+				Key:      "CriticalAddonsOnly",
+				Operator: v1.TolerationOpExists,
+			},
+		},
+		Volumes: []v1.Volume{},
+	}
+}
+
+// DefaultPodSpec returns the default pod spec used for the given plugin driver type.
+func DefaultPodSpec(d string) v1.PodSpec {
+	switch strings.ToLower(d) {
+	case "daemonset":
+		return defaultDaemonSetPodSpec()
+	default:
+		return defaultJobPodSpec()
+	}
 }

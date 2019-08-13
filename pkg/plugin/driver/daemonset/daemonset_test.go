@@ -18,6 +18,7 @@ package daemonset
 
 import (
 	"crypto/sha1"
+	"crypto/tls"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -40,10 +41,24 @@ const (
 	expectedNamespace = "test-namespace"
 )
 
+func createClientCertificate(name string) (*tls.Certificate, error) {
+	auth, err := ca.NewAuthority()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't make CA Authority %v", err)
+	}
+
+	clientCert, err := auth.ClientKeyPair("test-job")
+	if err != nil {
+		return nil, fmt.Errorf("couldn't make client certificate %v", err)
+	}
+	return clientCert, nil
+}
+
 func TestCreateDaemonSetDefintion(t *testing.T) {
 	testDaemonSet := NewPlugin(
 		manifest.Manifest{
 			SonobuoyConfig: manifest.SonobuoyConfig{
+				Driver:     "DaemonSet",
 				PluginName: "test-plugin",
 				ResultType: "test-plugin-result",
 			},
@@ -160,6 +175,129 @@ func TestCreateDaemonSetDefintion(t *testing.T) {
 	if daemonSet.Spec.Template.Annotations["key1"] != "val1" ||
 		daemonSet.Spec.Template.Annotations["key2"] != "val2" {
 		t.Errorf("Expected annotations key1:val1 and key2:val2 to be set, but got %v", daemonSet.Spec.Template.Annotations)
+	}
+}
+
+func TestCreateDaemonSetDefintionUsesDefaultPodSpec(t *testing.T) {
+	testDaemonSet := NewPlugin(
+		manifest.Manifest{
+			SonobuoyConfig: manifest.SonobuoyConfig{
+				Driver:     "DaemonSet",
+				PluginName: "test-plugin",
+				ResultType: "test-plugin-result",
+			},
+			Spec: manifest.Container{
+				Container: corev1.Container{
+					Name: "producer-container",
+				},
+			},
+		}, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{"key1": "val1", "key2": "val2"})
+
+	clientCert, err := createClientCertificate("test-job")
+	if err != nil {
+		t.Fatalf("couldn't create client certificate: %v", err)
+	}
+
+	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert)
+	podSpec := daemonSet.Spec.Template.Spec
+
+	expectedServiceAccount := "sonobuoy-serviceaccount"
+
+	if podSpec.ServiceAccountName != expectedServiceAccount {
+		t.Errorf("expected pod spec to have default service account name %q, got %q", expectedServiceAccount, podSpec.ServiceAccountName)
+
+	}
+
+	// Check something specific to the daemonset default pod spec
+	expectedNumTolerations := 1
+	actualNumTolerations := len(podSpec.Tolerations)
+	if actualNumTolerations != expectedNumTolerations {
+		t.Errorf("expected pod spec to %v tolerations, got %v", expectedNumTolerations, actualNumTolerations)
+	}
+}
+
+func TestCreateDaemonSetDefintionUsesProvidedPodSpec(t *testing.T) {
+	expectedServiceAccountName := "test-serviceaccount"
+	testDaemonSet := NewPlugin(
+		manifest.Manifest{
+			SonobuoyConfig: manifest.SonobuoyConfig{
+				Driver:     "DaemonSet",
+				PluginName: "test-plugin",
+				ResultType: "test-plugin-result",
+			},
+			Spec: manifest.Container{
+				Container: corev1.Container{
+					Name: "producer-container",
+				},
+			},
+			PodSpec: &manifest.PodSpec{
+				PodSpec: corev1.PodSpec{ServiceAccountName: expectedServiceAccountName},
+			},
+		}, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
+
+	clientCert, err := createClientCertificate("test-job")
+	if err != nil {
+		t.Fatalf("couldn't create client certificate: %v", err)
+	}
+
+	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert)
+	podSpec := daemonSet.Spec.Template.Spec
+
+	if podSpec.ServiceAccountName != expectedServiceAccountName {
+		t.Errorf("expected pod spec to have provided service account name %q, got %q", expectedServiceAccountName, podSpec.ServiceAccountName)
+	}
+}
+
+func TestCreateDaemonSetDefinitionAddsToExistingResourcesInPodSpec(t *testing.T) {
+	m := manifest.Manifest{
+		SonobuoyConfig: manifest.SonobuoyConfig{
+			Driver:     "DaemonSet",
+			PluginName: "test-job",
+			ResultType: "test-job-result",
+		},
+		Spec: manifest.Container{
+			Container: corev1.Container{
+				Name: "producer-container",
+			},
+		},
+		ExtraVolumes: []manifest.Volume{{Volume: corev1.Volume{Name: "test1"}}},
+		PodSpec: &manifest.PodSpec{
+			PodSpec: corev1.PodSpec{
+				Containers:       []corev1.Container{corev1.Container{}},
+				ImagePullSecrets: []corev1.LocalObjectReference{corev1.LocalObjectReference{}},
+				Volumes:          []corev1.Volume{corev1.Volume{}},
+			},
+		},
+	}
+	testJob := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
+
+	clientCert, err := createClientCertificate("test-job")
+	if err != nil {
+		t.Fatalf("couldn't create client certificate: %v", err)
+	}
+
+	daemonSet := testJob.createDaemonSetDefinition("", clientCert)
+	podSpec := daemonSet.Spec.Template.Spec
+
+	// Existing container in pod spec, plus 2 added by Sonobuoy
+	expectedNumContainers := 3
+	actualNumContainers := len(podSpec.Containers)
+	if expectedNumContainers != actualNumContainers {
+		t.Errorf("expected pod spec to have %v containers, got %v", expectedNumContainers, actualNumContainers)
+	}
+
+	// Existing image pull secret in pod spec, plus 1 added by Sonobuoy
+	expectedNumImagePullSecrets := 2
+	actualNumImagePullSecrets := len(podSpec.ImagePullSecrets)
+	if expectedNumImagePullSecrets != actualNumImagePullSecrets {
+		t.Errorf("expected pod spec to have %v image pull secrets, got %v", expectedNumImagePullSecrets, actualNumImagePullSecrets)
+	}
+
+	// Existing volume in pod spec, plus 1 extra volume, plus 1 added by Sonobuoy
+	expectedNumVolumes := 3
+	actualNumVolumes := len(podSpec.Volumes)
+	if expectedNumVolumes != actualNumVolumes {
+		t.Errorf("expected pod spec to have %v volumes, got %v", expectedNumVolumes, actualNumVolumes)
 	}
 }
 

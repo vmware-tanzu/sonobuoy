@@ -81,7 +81,7 @@ func getMasterAddress(hostname string) string {
 func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate) v1.Pod {
 	pod := v1.Pod{}
 	annotations := map[string]string{
-		"sonobuoy-driver":      "Job",
+		"sonobuoy-driver":      p.GetDriver(),
 		"sonobuoy-plugin":      p.GetName(),
 		"sonobuoy-result-type": p.GetResultType(),
 	}
@@ -101,47 +101,36 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate) v1.
 		Annotations: annotations,
 	}
 
-	pod.Spec.Containers = []v1.Container{
+	var podSpec v1.PodSpec
+	if p.Definition.PodSpec != nil {
+		podSpec = p.Definition.PodSpec.PodSpec
+	} else {
+		podSpec = driver.DefaultPodSpec(p.GetDriver())
+	}
+
+	podSpec.Containers = append(podSpec.Containers,
 		p.Definition.Spec.Container,
 		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/sonobuoy"}, []string{"worker", "global", "-v", "5", "--logtostderr"}),
-	}
+	)
 
 	if len(p.ImagePullSecrets) > 0 {
-		pod.Spec.ImagePullSecrets = []v1.LocalObjectReference{
-			{
-				Name: p.ImagePullSecrets,
-			},
-		}
+		podSpec.ImagePullSecrets = append(podSpec.ImagePullSecrets, v1.LocalObjectReference{
+			Name: p.ImagePullSecrets,
+		})
 	}
 
-	pod.Spec.RestartPolicy = v1.RestartPolicyNever
-	pod.Spec.ServiceAccountName = "sonobuoy-serviceaccount"
-
-	pod.Spec.Tolerations = []v1.Toleration{
-		{
-			Key:      "node-role.kubernetes.io/master",
-			Operator: v1.TolerationOpExists,
-			Effect:   v1.TaintEffectNoSchedule,
+	podSpec.Volumes = append(podSpec.Volumes, v1.Volume{
+		Name: "results",
+		VolumeSource: v1.VolumeSource{
+			EmptyDir: &v1.EmptyDirVolumeSource{},
 		},
-		{
-			Key:      "CriticalAddonsOnly",
-			Operator: v1.TolerationOpExists,
-		},
-	}
-
-	pod.Spec.Volumes = []v1.Volume{
-		{
-			Name: "results",
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{},
-			},
-		},
-	}
+	})
 
 	for _, v := range p.Definition.ExtraVolumes {
-		pod.Spec.Volumes = append(pod.Spec.Volumes, v.Volume)
+		podSpec.Volumes = append(podSpec.Volumes, v.Volume)
 	}
 
+	pod.Spec = podSpec
 	return pod
 }
 
