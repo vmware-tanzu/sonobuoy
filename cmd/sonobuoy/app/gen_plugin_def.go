@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -32,7 +33,6 @@ import (
 const (
 	defaultPluginName    = "plugin"
 	defaultPluginDriver  = "Job"
-	defaultMountPath     = "/tmp/results"
 	defaultMountName     = "results"
 	defaultMountReadOnly = false
 )
@@ -107,7 +107,7 @@ func defaultManifest() manifest.Manifest {
 	m.SonobuoyConfig.Driver = defaultPluginDriver
 	m.Spec.VolumeMounts = []v1.VolumeMount{
 		v1.VolumeMount{
-			MountPath: defaultMountPath,
+			MountPath: plugin.ResultsDir,
 			Name:      defaultMountName,
 			ReadOnly:  defaultMountReadOnly,
 		},

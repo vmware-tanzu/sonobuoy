@@ -25,7 +25,7 @@ import (
 )
 
 func setConfigDefaults(ac *plugin.WorkerConfig) {
-	ac.ResultsDir = "/tmp/results"
+	ac.ResultsDir = plugin.ResultsDir
 }
 
 // LoadConfig loads the configuration for the sonobuoy worker from environment

@@ -37,9 +37,8 @@ import (
 )
 
 const (
-	e2ePluginName    = "e2e"
-	systemdLogsName  = "systemd-logs"
-	pluginResultsDir = "/tmp/results"
+	e2ePluginName   = "e2e"
+	systemdLogsName = "systemd-logs"
 )
 
 // templateValues are used for direct template substitution for manifest generation.
@@ -257,7 +256,7 @@ func systemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 				ImagePullPolicy: corev1.PullPolicy(cfg.ImagePullPolicy),
 				Env: []corev1.EnvVar{
 					{Name: "CHROOT_DIR", Value: "/node"},
-					{Name: "RESULTS_DIR", Value: pluginResultsDir},
+					{Name: "RESULTS_DIR", Value: plugin.ResultsDir},
 					{Name: "NODE_NAME",
 						ValueFrom: &corev1.EnvVarSource{
 							FieldRef: &corev1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
@@ -271,7 +270,7 @@ func systemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 					{
 						ReadOnly:  false,
 						Name:      "results",
-						MountPath: pluginResultsDir,
+						MountPath: plugin.ResultsDir,
 					}, {
 						ReadOnly:  false,
 						Name:      "root",
@@ -306,7 +305,7 @@ func e2eManifest(cfg *GenConfig) *manifest.Manifest {
 					{
 						ReadOnly:  false,
 						Name:      "results",
-						MountPath: pluginResultsDir,
+						MountPath: plugin.ResultsDir,
 					},
 				},
 			},

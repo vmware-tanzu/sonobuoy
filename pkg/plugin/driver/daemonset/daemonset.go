@@ -17,7 +17,6 @@ limitations under the License.
 package daemonset
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -26,9 +25,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -88,32 +85,89 @@ func getMasterAddress(hostname string) string {
 	return fmt.Sprintf("https://%s/api/v1/results/by-node", hostname)
 }
 
-//FillTemplate populates the internal Job YAML template with the values for this particular daemonset.
-func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error) {
-	var b bytes.Buffer
-
-	tmplData, err := p.GetTemplateData(getMasterAddress(hostname), cert)
-	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't get template data for %q", p.GetName())
+func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificate) appsv1.DaemonSet {
+	ds := appsv1.DaemonSet{}
+	annotations := map[string]string{
+		"sonobuoy-driver":      "DaemonSet",
+		"sonobuoy-plugin":      p.GetName(),
+		"sonobuoy-result-type": p.GetResultType(),
+	}
+	for k, v := range p.CustomAnnotations {
+		annotations[k] = v
+	}
+	labels := map[string]string{
+		"component":    "sonobuoy",
+		"tier":         "analysis",
+		"sonobuoy-run": p.SessionID,
 	}
 
-	if err := daemonSetTemplate.Execute(&b, tmplData); err != nil {
-		return nil, errors.Wrapf(err, "couldn't fill template %q", p.GetName())
+	ds.ObjectMeta = metav1.ObjectMeta{
+		Name:        fmt.Sprintf("sonobuoy-%s-daemon-set-%s", p.GetName(), p.SessionID),
+		Namespace:   p.Namespace,
+		Labels:      labels,
+		Annotations: annotations,
 	}
-	return b.Bytes(), nil
+
+	ds.Spec.Selector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"sonobuoy-run": p.SessionID,
+		},
+	}
+
+	ds.Spec.Template.ObjectMeta.Labels = labels
+	ds.Spec.Template.ObjectMeta.Annotations = p.CustomAnnotations
+
+	ds.Spec.Template.Spec.Containers = []v1.Container{
+		p.Definition.Spec.Container,
+		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/run_single_node_worker.sh"}, []string{}),
+	}
+
+	if len(p.ImagePullSecrets) > 0 {
+		ds.Spec.Template.Spec.ImagePullSecrets = []v1.LocalObjectReference{
+			{
+				Name: p.ImagePullSecrets,
+			},
+		}
+	}
+
+	ds.Spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+	ds.Spec.Template.Spec.HostIPC = true
+	ds.Spec.Template.Spec.HostPID = true
+	ds.Spec.Template.Spec.HostNetwork = true
+	ds.Spec.Template.Spec.ServiceAccountName = "sonobuoy-serviceaccount"
+	ds.Spec.Template.Spec.Tolerations = []v1.Toleration{
+		{
+			Operator: v1.TolerationOpExists,
+		},
+	}
+
+	ds.Spec.Template.Spec.Volumes = []v1.Volume{
+		{
+			Name: "results",
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		},
+		{
+			Name: "root",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "/",
+				},
+			},
+		},
+	}
+
+	for _, v := range p.Definition.ExtraVolumes {
+		ds.Spec.Template.Spec.Volumes = append(ds.Spec.Template.Spec.Volumes, v.Volume)
+	}
+
+	return ds
 }
 
 // Run dispatches worker pods according to the DaemonSet's configuration.
 func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate) error {
-	var daemonSet appsv1.DaemonSet
-
-	b, err := p.FillTemplate(hostname, cert)
-	if err != nil {
-		return errors.Wrap(err, "couldn't fill template")
-	}
-	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &daemonSet); err != nil {
-		return errors.Wrapf(err, "could not decode the executed template into a daemonset. Plugin name: %v", p.GetName())
-	}
+	daemonSet := p.createDaemonSetDefinition(getMasterAddress(hostname), cert)
 
 	secret, err := p.MakeTLSSecret(cert)
 	if err != nil {
@@ -124,7 +178,6 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 		return errors.Wrapf(err, "couldn't create TLS secret for daemonset plugin %v", p.GetName())
 	}
 
-	// TODO(EKF): Move to v1 in 1.11
 	if _, err := kubeclient.AppsV1().DaemonSets(p.Namespace).Create(&daemonSet); err != nil {
 		return errors.Wrapf(err, "could not create DaemonSet for daemonset plugin %v", p.GetName())
 	}

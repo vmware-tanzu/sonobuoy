@@ -23,11 +23,11 @@ import (
 	"encoding/pem"
 	"fmt"
 
+	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 )
 
 // Base is the struct that stores state for plugin drivers and contains helper methods.
@@ -40,23 +40,6 @@ type Base struct {
 	ImagePullPolicy   string
 	ImagePullSecrets  string
 	CustomAnnotations map[string]string
-}
-
-// TemplateData is all the fields available to plugin driver templates.
-type TemplateData struct {
-	PluginName        string
-	ResultType        string
-	SessionID         string
-	Namespace         string
-	SonobuoyImage     string
-	ImagePullPolicy   string
-	ImagePullSecrets  string
-	CustomAnnotations map[string]string
-	ProducerContainer string
-	MasterAddress     string
-	CACert            string
-	SecretName        string
-	ExtraVolumes      []string
 }
 
 // GetSessionID returns the session id associated with the plugin.
@@ -92,42 +75,6 @@ func (b *Base) GetResultFormat() string {
 // GetResultFiles returns the files to be post-processed for this plugin.
 func (b *Base) GetResultFiles() []string {
 	return b.Definition.SonobuoyConfig.ResultFiles
-}
-
-//GetTemplateData fills a TemplateData struct with the passed in and state variables.
-func (b *Base) GetTemplateData(masterAddress string, cert *tls.Certificate) (*TemplateData, error) {
-
-	container, err := kuberuntime.Encode(manifest.Encoder, &b.Definition.Spec)
-	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't reserialize container for job %q", b.Definition.SonobuoyConfig.PluginName)
-	}
-
-	volumes := make([]string, len(b.Definition.ExtraVolumes))
-	for i, volume := range b.Definition.ExtraVolumes {
-		enc, err := kuberuntime.Encode(manifest.Encoder, &volume)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't serialize extra volume")
-		}
-		volumes[i] = string(enc)
-	}
-
-	cacert := getCACertPEM(cert)
-
-	return &TemplateData{
-		PluginName:        b.Definition.SonobuoyConfig.PluginName,
-		ResultType:        b.Definition.SonobuoyConfig.ResultType,
-		SessionID:         b.SessionID,
-		Namespace:         b.Namespace,
-		SonobuoyImage:     b.SonobuoyImage,
-		ImagePullPolicy:   b.ImagePullPolicy,
-		ImagePullSecrets:  b.ImagePullSecrets,
-		CustomAnnotations: b.CustomAnnotations,
-		ProducerContainer: string(container),
-		MasterAddress:     masterAddress,
-		CACert:            cacert,
-		SecretName:        b.GetSecretName(),
-		ExtraVolumes:      volumes,
-	}, nil
 }
 
 // MakeTLSSecret makes a Kubernetes secret object for the given TLS certificate.
@@ -191,4 +138,76 @@ func getKeyPEM(key *ecdsa.PrivateKey) ([]byte, error) {
 		Type:  "EC PRIVATE KEY",
 		Bytes: derKEY,
 	}), nil
+}
+
+func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate) []v1.EnvVar {
+	envVars := []v1.EnvVar{
+		{
+			Name: "NODE_NAME",
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					FieldPath: "spec.nodeName",
+				},
+			},
+		},
+		{
+			Name:  "RESULTS_DIR",
+			Value: plugin.ResultsDir,
+		},
+		{
+			Name:  "RESULT_TYPE",
+			Value: b.GetResultType(),
+		},
+		{
+			Name:  "MASTER_URL",
+			Value: hostname,
+		},
+		{
+			Name:  "CA_CERT",
+			Value: getCACertPEM(cert),
+		},
+		{
+			Name: "CLIENT_CERT",
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: b.GetSecretName(),
+					},
+					Key: "tls.crt",
+				},
+			},
+		},
+		{
+			Name: "CLIENT_KEY",
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: b.GetSecretName(),
+					},
+					Key: "tls.key",
+				},
+			},
+		},
+	}
+	return envVars
+}
+
+// CreateWorkerContainerDefintion creates the container definition to run the Sonobuoy worker for a plugin.
+func (b *Base) CreateWorkerContainerDefintion(hostname string, cert *tls.Certificate, command, args []string) v1.Container {
+	container := v1.Container{
+		Name:            "sonobuoy-worker",
+		Image:           b.SonobuoyImage,
+		Command:         command,
+		Args:            args,
+		Env:             b.workerEnvironment(hostname, cert),
+		ImagePullPolicy: v1.PullPolicy(b.ImagePullPolicy),
+		VolumeMounts: []v1.VolumeMount{
+			{
+				Name:      "results",
+				ReadOnly:  false,
+				MountPath: plugin.ResultsDir,
+			},
+		},
+	}
+	return container
 }

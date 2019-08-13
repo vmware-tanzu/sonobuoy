@@ -17,7 +17,6 @@ limitations under the License.
 package job
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -26,9 +25,7 @@ import (
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -81,35 +78,76 @@ func getMasterAddress(hostname string) string {
 	return fmt.Sprintf("https://%s/api/v1/results/%v", hostname, plugin.GlobalResult)
 }
 
-//FillTemplate populates the internal Job YAML template with the values for this particular job.
-func (p *Plugin) FillTemplate(hostname string, cert *tls.Certificate) ([]byte, error) {
-	var b bytes.Buffer
-
-	tmplData, err := p.GetTemplateData(getMasterAddress(hostname), cert)
-	if err != nil {
-		return nil, errors.Wrapf(err, "couldn't get template data for %q", p.GetName())
+func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate) v1.Pod {
+	pod := v1.Pod{}
+	annotations := map[string]string{
+		"sonobuoy-driver":      "Job",
+		"sonobuoy-plugin":      p.GetName(),
+		"sonobuoy-result-type": p.GetResultType(),
+	}
+	for k, v := range p.CustomAnnotations {
+		annotations[k] = v
+	}
+	labels := map[string]string{
+		"component":    "sonobuoy",
+		"tier":         "analysis",
+		"sonobuoy-run": p.SessionID,
 	}
 
-	if err := jobTemplate.Execute(&b, tmplData); err != nil {
-		return nil, errors.Wrapf(err, "couldn't fill template %q", p.GetName())
+	pod.ObjectMeta = metav1.ObjectMeta{
+		Name:        fmt.Sprintf("sonobuoy-%s-job-%s", p.GetName(), p.SessionID),
+		Namespace:   p.Namespace,
+		Labels:      labels,
+		Annotations: annotations,
 	}
 
-	return b.Bytes(), nil
+	pod.Spec.Containers = []v1.Container{
+		p.Definition.Spec.Container,
+		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/sonobuoy"}, []string{"worker", "global", "-v", "5", "--logtostderr"}),
+	}
+
+	if len(p.ImagePullSecrets) > 0 {
+		pod.Spec.ImagePullSecrets = []v1.LocalObjectReference{
+			{
+				Name: p.ImagePullSecrets,
+			},
+		}
+	}
+
+	pod.Spec.RestartPolicy = v1.RestartPolicyNever
+	pod.Spec.ServiceAccountName = "sonobuoy-serviceaccount"
+
+	pod.Spec.Tolerations = []v1.Toleration{
+		{
+			Key:      "node-role.kubernetes.io/master",
+			Operator: v1.TolerationOpExists,
+			Effect:   v1.TaintEffectNoSchedule,
+		},
+		{
+			Key:      "CriticalAddonsOnly",
+			Operator: v1.TolerationOpExists,
+		},
+	}
+
+	pod.Spec.Volumes = []v1.Volume{
+		{
+			Name: "results",
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		},
+	}
+
+	for _, v := range p.Definition.ExtraVolumes {
+		pod.Spec.Volumes = append(pod.Spec.Volumes, v.Volume)
+	}
+
+	return pod
 }
 
 // Run dispatches worker pods according to the Job's configuration.
 func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate) error {
-	var job v1.Pod
-
-	b, err := p.FillTemplate(hostname, cert)
-	if err != nil {
-		// Already wrapped sufficiently by FillTemplate
-		return errors.Wrapf(err, "failed to fill Job template for plugin %v", p.GetName())
-	}
-
-	if err := kuberuntime.DecodeInto(scheme.Codecs.UniversalDecoder(), b, &job); err != nil {
-		return errors.Wrapf(err, "could not decode executed template into a Job for plugin %v", p.GetName())
-	}
+	job := p.createPodDefinition(getMasterAddress(hostname), cert)
 
 	secret, err := p.MakeTLSSecret(cert)
 	if err != nil {
