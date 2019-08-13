@@ -12,6 +12,14 @@ if [ -n "$git_status" ]; then
     exit 1
 fi
 
+./scripts/sync_readme.sh
+git_status=$(git status -s)
+if [ -n "$git_status" ]; then
+    echo $git_status
+    echo "scripts/sync_readme.sh modified the git status. If updating the README.md, update the root README.md and run that script."
+    exit 1
+fi
+
 make container deploy_kind
 
 echo "|---- Creating new Sonobuoy run/waiting for results..."
