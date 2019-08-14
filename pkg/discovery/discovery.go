@@ -17,8 +17,10 @@ limitations under the License.
 package discovery
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -195,6 +197,11 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 			if err := results.SaveProcessedResults(p.GetName(), outpath, item); err != nil {
 				logrus.Errorf("Unable to save results for plugin %v: %v", p.GetName(), err)
 			}
+
+			// Update the plugin status with this post-processed information.
+			statusInfo := map[string]int{}
+			statusCounts(&item, statusInfo)
+			updatePluginStatus(kubeClient, cfg.Namespace, p.GetResultType(), item.Status, statusInfo)
 		}
 	}
 
@@ -213,14 +220,62 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	}
 	trackErrorsFor("assembling results tarball")(err)
 
+	tarInfo, err := getFileInfo(tb)
+	trackErrorsFor("recording tarball info")(err)
+
 	// 9. Mark final annotation stating the results are available and status is completed.
 	trackErrorsFor("updating pod status")(
-		updateStatus(kubeClient, cfg.Namespace, pluginaggregation.CompleteStatus),
+		updateStatus(
+			kubeClient,
+			cfg.Namespace,
+			pluginaggregation.CompleteStatus,
+			&tarInfo,
+		),
 	)
 
 	logrus.Infof("Results available at %v", tb)
 
 	return errCount
+}
+
+func statusCounts(item *results.Item, startingCounts map[string]int) {
+	if item == nil {
+		return
+	}
+
+	if len(item.Items) > 0 {
+		for _, v := range item.Items {
+			statusCounts(&v, startingCounts)
+		}
+		return
+	}
+	startingCounts[item.Status]++
+	return
+}
+
+func getFileInfo(path string) (pluginaggregation.TarInfo, error) {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return pluginaggregation.TarInfo{}, err
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return pluginaggregation.TarInfo{}, err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return pluginaggregation.TarInfo{}, err
+	}
+
+	return pluginaggregation.TarInfo{
+		Name:      filepath.Base(path),
+		Size:      fi.Size(),
+		SHA256:    fmt.Sprintf("%x", h.Sum(nil)),
+		CreatedAt: time.Now(),
+	}, nil
 }
 
 // dumpPlugin will marshal the plugin to the appropriate location in the outputDir:
@@ -255,9 +310,9 @@ func getPodLogNamespaceFilter(cfg *config.Config) string {
 }
 
 // updateStatus changes the summary status of the sonobuoy pod in order to
-// effect the finalized status the user sees. This does not change the status
-// of individual plugins.
-func updateStatus(client kubernetes.Interface, namespace string, status string) error {
+// effect the finalized status the user sees. This does not change the
+// status of individual plugins.
+func updateStatus(client kubernetes.Interface, namespace string, status string, tarInfo *pluginaggregation.TarInfo) error {
 	podStatus, err := pluginaggregation.GetStatus(client, namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the existing status")
@@ -265,6 +320,25 @@ func updateStatus(client kubernetes.Interface, namespace string, status string) 
 
 	// Update status
 	podStatus.Status = status
+	if tarInfo != nil {
+		podStatus.Tarball = *tarInfo
+	}
+	return setStatus(client, namespace, podStatus)
+}
+
+func updatePluginStatus(client kubernetes.Interface, namespace string, pluginType string, pluginResultStatus string, pluginResultCounts map[string]int) error {
+	podStatus, err := pluginaggregation.GetStatus(client, namespace)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the existing status")
+	}
+
+	for i := range podStatus.Plugins {
+		if podStatus.Plugins[i].Plugin == pluginType {
+			podStatus.Plugins[i].ResultStatus = pluginResultStatus
+			podStatus.Plugins[i].ResultStatusCounts = pluginResultCounts
+			break
+		}
+	}
 	return setStatus(client, namespace, podStatus)
 }
 

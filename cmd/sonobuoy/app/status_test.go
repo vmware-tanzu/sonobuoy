@@ -24,19 +24,18 @@ import (
 	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 )
 
-var expectedSummary = `PLUGIN		STATUS		COUNT
-e2e		complete	1
-systemd_logs	complete	1
-systemd_logs	running		2
+var expectedSummary = `         PLUGIN     STATUS   RESULT   COUNT
+            e2e   complete   passed       1
+   systemd_logs   complete   failed       1
+   systemd_logs    running                2
 
 Sonobuoy is still running. Runs can take up to 60 minutes.
 `
-
-var expectedShowAll = `PLUGIN		NODE	STATUS
-e2e			complete
-systemd_logs	node01	running
-systemd_logs	node02	complete
-systemd_logs	node03	running
+var expectedShowAll = `         PLUGIN     NODE     STATUS   RESULT
+            e2e            complete   passed
+   systemd_logs   node01    running         
+   systemd_logs   node02   complete   failed
+   systemd_logs   node03    running         
 
 Sonobuoy is still running. Runs can take up to 60 minutes.
 `
@@ -45,9 +44,10 @@ var exampleStatus = aggregation.Status{
 	Status: "running",
 	Plugins: []aggregation.PluginStatus{
 		{
-			Plugin: "e2e",
-			Node:   "",
-			Status: "complete",
+			Plugin:       "e2e",
+			Node:         "",
+			Status:       "complete",
+			ResultStatus: "passed",
 		},
 		{
 			Plugin: "systemd_logs",
@@ -55,9 +55,10 @@ var exampleStatus = aggregation.Status{
 			Status: "running",
 		},
 		{
-			Plugin: "systemd_logs",
-			Node:   "node02",
-			Status: "complete",
+			Plugin:       "systemd_logs",
+			Node:         "node02",
+			Status:       "complete",
+			ResultStatus: "failed",
 		},
 		{
 			Plugin: "systemd_logs",
@@ -94,7 +95,7 @@ func TestPrintStatus(t *testing.T) {
 			}
 
 			if b.String() != test.expected {
-				t.Errorf("expected output to be %q, got %q", test.expected, b.String())
+				t.Errorf("expected output to be \n%v, got \n%v", test.expected, b.String())
 			}
 		})
 	}
