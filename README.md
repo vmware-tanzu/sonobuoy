@@ -169,3 +169,4 @@ See [the list of releases][releases] to find out about feature changes.
 [sonobuoyconfig]: https://sonobuoy.io/docs/sonobuoy-config
 [status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
 [travis]: https://travis-ci.org/heptio/sonobuoy/#
+[foo]: bar
