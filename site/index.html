@@ -72,7 +72,7 @@ secondary_ctas:
             <figure>
               <img src="{{ page.hero.promo1.icon }}" alt="{{ page.hero.promo1.title }}" />
             </figure>
-            {% if page.hero.promo1.url | size > 0 %}
+            {% if page.hero.promo1.url.size > 0 %}
             <h5><a href="{{ page.hero.promo1.url }}" class="dark">{{ page.hero.promo1.title }}</a></h5>
             {% else %}
             <h5>{{ page.hero.promo1.title }}</h5>
@@ -87,7 +87,7 @@ secondary_ctas:
             <figure>
               <img src="{{ page.hero.promo2.icon }}" alt="{{ page.hero.promo2.title }}" />
             </figure>
-            {% if page.hero.promo2.url | size > 0 %}
+            {% if page.hero.promo2.url.size > 0 %}
             <h5><a href="{{ page.hero.promo2.url }}" class="dark">{{ page.hero.promo2.title }}</a></h5>
             {% else %}
             <h5>{{ page.hero.promo2.title }}</h5>
@@ -102,7 +102,7 @@ secondary_ctas:
             <figure>
               <img src="{{ page.hero.promo3.icon }}" alt="{{ page.hero.promo3.title }}" />
             </figure>
-            {% if page.hero.promo3.url  | size > 0 %}
+            {% if page.hero.promo3.url.size > 0 %}
             <h5><a href="{{ page.hero.promo3.url }}" class="dark">{{ page.hero.promo3.title }}</a></h5>
             {% else %}
             <h5>{{ page.hero.promo3.title }}</h5>
