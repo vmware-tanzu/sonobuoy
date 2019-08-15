@@ -19,6 +19,7 @@ package job
 import (
 	"context"
 	"crypto/sha1"
+	"crypto/tls"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -42,6 +43,19 @@ const (
 	expectedImageName = "gcr.io/heptio-image/sonobuoy:master"
 	expectedNamespace = "test-namespace"
 )
+
+func createClientCertificate(name string) (*tls.Certificate, error) {
+	auth, err := ca.NewAuthority()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't make CA Authority %v", err)
+	}
+
+	clientCert, err := auth.ClientKeyPair("test-job")
+	if err != nil {
+		return nil, fmt.Errorf("couldn't make client certificate %v", err)
+	}
+	return clientCert, nil
+}
 
 func TestCreatePodDefinition(t *testing.T) {
 	testJob := NewPlugin(
@@ -159,7 +173,123 @@ func TestCreatePodDefinition(t *testing.T) {
 		pod.Annotations["key2"] != "val2" {
 		t.Errorf("Expected annotations key1:val1 and key2:val2 to be set, but got %v", pod.Annotations)
 	}
+}
 
+func TestCreatePodDefinitionUsesDefaultPodSpec(t *testing.T) {
+	m := manifest.Manifest{
+		SonobuoyConfig: manifest.SonobuoyConfig{
+			PluginName: "test-job",
+			ResultType: "test-job-result",
+		},
+		Spec: manifest.Container{
+			Container: corev1.Container{
+				Name: "producer-container",
+			},
+		},
+	}
+	testJob := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
+
+	clientCert, err := createClientCertificate("test-job")
+	if err != nil {
+		t.Fatalf("couldn't create client certificate: %v", err)
+	}
+
+	pod := testJob.createPodDefinition("", clientCert)
+
+	expectedServiceAccount := "sonobuoy-serviceaccount"
+	if pod.Spec.ServiceAccountName != expectedServiceAccount {
+		t.Errorf("expected pod spec to have default service account name %q, got %q", expectedServiceAccount, pod.Spec.ServiceAccountName)
+
+	}
+
+	// Check something specific to the job default pod spec
+	expectedNumTolerations := 2
+	actualNumTolerations := len(pod.Spec.Tolerations)
+	if actualNumTolerations != expectedNumTolerations {
+		t.Errorf("expected pod spec to %v tolerations, got %v", expectedNumTolerations, actualNumTolerations)
+	}
+}
+
+func TestCreatePodDefinitionUsesProvidedPodSpec(t *testing.T) {
+	expectedServiceAccountName := "test-serviceaccount"
+	m := manifest.Manifest{
+		SonobuoyConfig: manifest.SonobuoyConfig{
+			PluginName: "test-job",
+			ResultType: "test-job-result",
+		},
+		Spec: manifest.Container{
+			Container: corev1.Container{
+				Name: "producer-container",
+			},
+		},
+		PodSpec: &manifest.PodSpec{
+			PodSpec: corev1.PodSpec{ServiceAccountName: expectedServiceAccountName},
+		},
+	}
+	testJob := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
+
+	clientCert, err := createClientCertificate("test-job")
+	if err != nil {
+		t.Fatalf("couldn't create client certificate: %v", err)
+	}
+
+	pod := testJob.createPodDefinition("", clientCert)
+
+	if pod.Spec.ServiceAccountName != expectedServiceAccountName {
+		t.Errorf("expected pod spec to have provided service account name %q, got %q", expectedServiceAccountName, pod.Spec.ServiceAccountName)
+
+	}
+}
+
+func TestCreatePodDefinitionAddsToExistingResourcesInPodSpec(t *testing.T) {
+	m := manifest.Manifest{
+		SonobuoyConfig: manifest.SonobuoyConfig{
+			PluginName: "test-job",
+			ResultType: "test-job-result",
+		},
+		Spec: manifest.Container{
+			Container: corev1.Container{
+				Name: "producer-container",
+			},
+		},
+		ExtraVolumes: []manifest.Volume{{Volume: corev1.Volume{Name: "test1"}}},
+		PodSpec: &manifest.PodSpec{
+			PodSpec: corev1.PodSpec{
+				Containers:       []corev1.Container{corev1.Container{}},
+				ImagePullSecrets: []corev1.LocalObjectReference{corev1.LocalObjectReference{}},
+				Volumes:          []corev1.Volume{corev1.Volume{}},
+			},
+		},
+	}
+	testJob := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
+
+	clientCert, err := createClientCertificate("test-job")
+	if err != nil {
+		t.Fatalf("couldn't create client certificate: %v", err)
+	}
+
+	pod := testJob.createPodDefinition("", clientCert)
+
+	// Existing container in pod spec, plus 2 added by Sonobuoy
+	expectedNumContainers := 3
+	actualNumContainers := len(pod.Spec.Containers)
+	if expectedNumContainers != actualNumContainers {
+		t.Errorf("expected pod spec to have %v containers, got %v", expectedNumContainers, actualNumContainers)
+	}
+
+	// Existing image pull secret in pod spec, plus 1 added by Sonobuoy
+	expectedNumImagePullSecrets := 2
+	actualNumImagePullSecrets := len(pod.Spec.ImagePullSecrets)
+	if expectedNumImagePullSecrets != actualNumImagePullSecrets {
+		t.Errorf("expected pod spec to have %v image pull secrets, got %v", expectedNumImagePullSecrets, actualNumImagePullSecrets)
+	}
+
+	// Existing volume in pod spec, plus 1 extra volume, plus 1 added by Sonobuoy
+	expectedNumVolumes := 3
+	actualNumVolumes := len(pod.Spec.Volumes)
+	if expectedNumVolumes != actualNumVolumes {
+		t.Errorf("expected pod spec to have %v volumes, got %v", expectedNumVolumes, actualNumVolumes)
+	}
 }
 
 func TestMonitorOnce(t *testing.T) {

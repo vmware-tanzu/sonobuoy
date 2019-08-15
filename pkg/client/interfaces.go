@@ -78,6 +78,10 @@ type GenConfig struct {
 	// out of band from the plugins because of how the dynamic plugins are not
 	// yet able to be manipulated in this way.
 	PluginEnvOverrides map[string]map[string]string
+
+	// ShowDefaultPodSpec determines whether or not the default pod spec for
+	// the plugin should be incuded in the output.
+	ShowDefaultPodSpec bool
 }
 
 // Validate checks the config to determine if it is valid.

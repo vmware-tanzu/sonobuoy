@@ -263,6 +263,15 @@ func AddTimeoutFlag(flag *int, flags *pflag.FlagSet) {
 	)
 }
 
+// AddShowDefaultPodSpecFlag adds an bool flag for determining whether or not to include the default pod spec
+// used by Sonobuoy in the output
+func AddShowDefaultPodSpecFlag(flag *bool, flags *pflag.FlagSet) {
+	flags.BoolVar(
+		flag, "show-default-podspec", false,
+		"If true, include the default pod spec used for plugins in the output",
+	)
+}
+
 // AddWaitOutputFlag adds a flag for spinner when wait flag is set for Sonobuoy operations.
 func AddWaitOutputFlag(mode *WaitOutputMode, flags *pflag.FlagSet, defaultMode WaitOutputMode) {
 	*mode = defaultMode

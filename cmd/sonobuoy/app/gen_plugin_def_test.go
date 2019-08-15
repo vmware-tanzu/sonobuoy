@@ -89,6 +89,18 @@ func TestPluginGenDef(t *testing.T) {
 				env: map[string]string{"FOO": "- bar"},
 			},
 			expectFile: "testdata/pluginDef-quotes.golden",
+		}, {
+			desc: "default PodSpec is included if requested",
+			cfg: GenPluginDefConfig{
+				showDefaultPodSpec: true,
+				def: manifest.Manifest{
+					SonobuoyConfig: manifest.SonobuoyConfig{
+						PluginName: "n",
+					},
+					Spec: manifest.Container{},
+				},
+			},
+			expectFile: "testdata/pluginDef-default-podspec.golden",
 		},
 	}
 	for _, tC := range testCases {
