@@ -10,6 +10,7 @@ of user configuration is in green, all boilerplate required by Sonobuoy is in
 red.
 
 ```diff
+{% raw %}
 - ---
 - apiVersion: v1
 - kind: Pod
@@ -66,6 +67,7 @@ red.
 -   volumes:
 -   - emptyDir: {}
 -     name: results
+{% endraw %}
 ```
 
 ## Summary
@@ -115,6 +117,7 @@ This will be merged into a larger Pod document provided by the Sonobuoy YAML
 driver
 
 ```yaml
+{% raw %}
 ---
 apiVersion: v1
 kind: Pod
@@ -165,6 +168,7 @@ spec:
   volumes:
   - emptyDir: {}
    name: results
+{% endraw %}
 ```
 
 #### Advantages:
@@ -179,6 +183,7 @@ spec:
 
 In this scenario, the user provides a (templated) valid Kubernetes API Document.
 
+{% raw %}
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -199,6 +204,7 @@ spec:
   - {{.SonobuoyConsumer}}
   {{.SonobuySpecExtras}}
 ```
+{% endraw %}
 
 Then, at runtime, the template would be filled with values by the plugin driver.
 These could be based on several templates themselves, or created at runtime out
