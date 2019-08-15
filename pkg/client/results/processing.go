@@ -87,8 +87,15 @@ func (i Item) Empty() bool {
 }
 
 // aggregateStatus defines the aggregation rules for status. Failures bubble
-// up and otherwise the status is assumed to pass.
+// up and otherwise the status is assumed to pass as long as there are >=1 result.
+// If 0 items are aggregated, StatusUnknown is returned.
 func aggregateStatus(items ...Item) string {
+	// Avoid the situation where we get 0 results (because the plugin partially failed to run)
+	// but we report it as passed.
+	if len(items) == 0 {
+		return StatusUnknown
+	}
+
 	for i := range items {
 		// Branches should just aggregate their leaves and return the result.
 		if len(items[i].Items) > 0 {
@@ -164,12 +171,10 @@ func processPluginWithProcessor(p plugin.Interface, baseDir string, processor po
 		if err != nil {
 			logrus.Warningf("Error processing results entries for plugin %v: %v", p.GetName(), err)
 		}
-		// I think logging is correct here, but then why return an error at all and we can't test those paths
-		// as easily...
 		results.Items = items
-		results.Status = aggregateStatus(results.Items...)
 	}
 
+	results.Status = aggregateStatus(results.Items...)
 	return results, nil
 }
 
