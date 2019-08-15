@@ -183,8 +183,8 @@ func TestAggregateStatus(t *testing.T) {
 		expectedItems []Item
 	}{
 		{
-			desc:     "Empty defaults to passed",
-			expected: StatusPassed,
+			desc:     "Empty defaults to unknown",
+			expected: StatusUnknown,
 		}, {
 			desc:          "Single pass passes",
 			input:         []Item{{Status: StatusPassed}},
