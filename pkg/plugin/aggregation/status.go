@@ -97,7 +97,7 @@ func GetStatus(client kubernetes.Interface, namespace string) (*Status, error) {
 	}
 
 	// Determine sonobuoy pod name
-	podName, err := GetStatusPodName(client, namespace)
+	podName, err := GetAggregatorPodName(client, namespace)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get the name of the aggregator pod to get the status from")
 	}

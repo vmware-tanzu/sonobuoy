@@ -85,7 +85,7 @@ func getMasterAddress(hostname string) string {
 	return fmt.Sprintf("https://%s/api/v1/results/by-node", hostname)
 }
 
-func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificate) appsv1.DaemonSet {
+func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificate, ownerPod *v1.Pod) appsv1.DaemonSet {
 	ds := appsv1.DaemonSet{}
 	annotations := map[string]string{
 		"sonobuoy-driver":      p.GetDriver(),
@@ -106,6 +106,14 @@ func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificat
 		Namespace:   p.Namespace,
 		Labels:      labels,
 		Annotations: annotations,
+		OwnerReferences: []metav1.OwnerReference{
+			metav1.OwnerReference{
+				APIVersion: "v1",
+				Kind:       "Pod",
+				Name:       ownerPod.GetName(),
+				UID:        ownerPod.GetUID(),
+			},
+		},
 	}
 
 	ds.Spec.Selector = &metav1.LabelSelector{
@@ -151,8 +159,8 @@ func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificat
 }
 
 // Run dispatches worker pods according to the DaemonSet's configuration.
-func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate) error {
-	daemonSet := p.createDaemonSetDefinition(getMasterAddress(hostname), cert)
+func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod) error {
+	daemonSet := p.createDaemonSetDefinition(getMasterAddress(hostname), cert, ownerPod)
 
 	secret, err := p.MakeTLSSecret(cert)
 	if err != nil {

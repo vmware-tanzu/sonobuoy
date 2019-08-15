@@ -58,7 +58,7 @@ func createClientCertificate(name string) (*tls.Certificate, error) {
 }
 
 func TestCreatePodDefinition(t *testing.T) {
-	testJob := NewPlugin(
+	testPlugin := NewPlugin(
 		manifest.Manifest{
 			SonobuoyConfig: manifest.SonobuoyConfig{
 				PluginName: "test-job",
@@ -103,9 +103,9 @@ func TestCreatePodDefinition(t *testing.T) {
 		t.Fatalf("couldn't make client certificate %v", err)
 	}
 
-	pod := testJob.createPodDefinition("", clientCert)
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{})
 
-	expectedName := fmt.Sprintf("sonobuoy-test-job-job-%v", testJob.SessionID)
+	expectedName := fmt.Sprintf("sonobuoy-test-job-job-%v", testPlugin.SessionID)
 	if pod.Name != expectedName {
 		t.Errorf("Expected pod name %v, got %v", expectedName, pod.Name)
 	}
@@ -187,14 +187,14 @@ func TestCreatePodDefinitionUsesDefaultPodSpec(t *testing.T) {
 			},
 		},
 	}
-	testJob := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
+	testPlugin := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
 
 	clientCert, err := createClientCertificate("test-job")
 	if err != nil {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	pod := testJob.createPodDefinition("", clientCert)
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{})
 
 	expectedServiceAccount := "sonobuoy-serviceaccount"
 	if pod.Spec.ServiceAccountName != expectedServiceAccount {
@@ -226,14 +226,14 @@ func TestCreatePodDefinitionUsesProvidedPodSpec(t *testing.T) {
 			PodSpec: corev1.PodSpec{ServiceAccountName: expectedServiceAccountName},
 		},
 	}
-	testJob := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
+	testPlugin := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
 
 	clientCert, err := createClientCertificate("test-job")
 	if err != nil {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	pod := testJob.createPodDefinition("", clientCert)
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{})
 
 	if pod.Spec.ServiceAccountName != expectedServiceAccountName {
 		t.Errorf("expected pod spec to have provided service account name %q, got %q", expectedServiceAccountName, pod.Spec.ServiceAccountName)
@@ -261,14 +261,14 @@ func TestCreatePodDefinitionAddsToExistingResourcesInPodSpec(t *testing.T) {
 			},
 		},
 	}
-	testJob := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
+	testPlugin := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
 
 	clientCert, err := createClientCertificate("test-job")
 	if err != nil {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	pod := testJob.createPodDefinition("", clientCert)
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{})
 
 	// Existing container in pod spec, plus 2 added by Sonobuoy
 	expectedNumContainers := 3
@@ -289,6 +289,69 @@ func TestCreatePodDefinitionAddsToExistingResourcesInPodSpec(t *testing.T) {
 	actualNumVolumes := len(pod.Spec.Volumes)
 	if expectedNumVolumes != actualNumVolumes {
 		t.Errorf("expected pod spec to have %v volumes, got %v", expectedNumVolumes, actualNumVolumes)
+	}
+}
+
+func TestCreatePodDefinitionSetsOwnerReference(t *testing.T) {
+	m := manifest.Manifest{
+		SonobuoyConfig: manifest.SonobuoyConfig{
+			PluginName: "test-job",
+			ResultType: "test-job-result",
+		},
+		Spec: manifest.Container{Container: corev1.Container{}},
+	}
+	testPlugin := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
+
+	clientCert, err := createClientCertificate("test-job")
+	if err != nil {
+		t.Fatalf("couldn't create client certificate: %v", err)
+	}
+
+	aggregatorPod := corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "sonobuoy-aggregator",
+			UID:  "123456-abcdef",
+		},
+	}
+
+	pod := testPlugin.createPodDefinition("", clientCert, &aggregatorPod)
+	ownerReferences := pod.ObjectMeta.OwnerReferences
+
+	if len(ownerReferences) != 1 {
+		t.Fatalf("Expected 1 owner reference, got %v", len(ownerReferences))
+	}
+
+	testCases := []struct {
+		field string
+		want  string
+		got   string
+	}{
+		{
+			field: "APIVersion",
+			want:  "v1",
+			got:   ownerReferences[0].APIVersion,
+		},
+		{
+			field: "Kind",
+			want:  "Pod",
+			got:   ownerReferences[0].Kind,
+		},
+		{
+			field: "Name",
+			want:  aggregatorPod.ObjectMeta.Name,
+			got:   ownerReferences[0].Name,
+		},
+		{
+			field: "UID",
+			want:  string(aggregatorPod.ObjectMeta.UID),
+			got:   string(ownerReferences[0].UID),
+		},
+	}
+
+	for _, tc := range testCases {
+		if tc.got != tc.want {
+			t.Errorf("Expected ownerReference %v to be %q, got %q", tc.field, tc.want, tc.got)
+		}
 	}
 }
 

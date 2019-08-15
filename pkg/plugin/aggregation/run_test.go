@@ -153,7 +153,7 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 			}
 
 			go func() {
-				a.RunAndMonitorPlugin(ctx, tc.plugin, fclient, nil, "testname", testCert)
+				a.RunAndMonitorPlugin(ctx, tc.plugin, fclient, nil, "testname", testCert, &corev1.Pod{})
 				doneCh <- struct{}{}
 			}()
 
@@ -207,7 +207,7 @@ type MockCleanupPlugin struct {
 	cleanedUp   bool
 }
 
-func (cp *MockCleanupPlugin) Run(_ kubernetes.Interface, _ string, _ *tls.Certificate) error {
+func (cp *MockCleanupPlugin) Run(_ kubernetes.Interface, _ string, _ *tls.Certificate, _ *corev1.Pod) error {
 	return nil
 }
 

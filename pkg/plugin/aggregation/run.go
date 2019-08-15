@@ -165,9 +165,15 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		certs[p.GetName()] = cert
 	}
 
+	// Get a reference to the aggregator pod to set up owner references correctly for each started plugin
+	aggregatorPod, err := GetAggregatorPod(client, namespace)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't get aggregator pod")
+	}
+
 	for _, p := range plugins {
 		logrus.WithField("plugin", p.GetName()).Info("Running plugin")
-		go aggr.RunAndMonitorPlugin(ctx, p, client, nodes.Items, cfg.AdvertiseAddress, certs[p.GetName()])
+		go aggr.RunAndMonitorPlugin(ctx, p, client, nodes.Items, cfg.AdvertiseAddress, certs[p.GetName()], aggregatorPod)
 	}
 
 	// Give the plugins a chance to cleanup before a hard timeout occurs
@@ -209,11 +215,11 @@ func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
 
 // RunAndMonitorPlugin will start a plugin then monitor it for errors starting/running.
 // Errors detected will be handled by saving an error result in the aggregator.Results.
-func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, p plugin.Interface, client kubernetes.Interface, nodes []corev1.Node, address string, cert *tls.Certificate) {
+func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, p plugin.Interface, client kubernetes.Interface, nodes []corev1.Node, address string, cert *tls.Certificate, aggregatorPod *corev1.Pod) {
 	monitorCh := make(chan *plugin.Result, 1)
 	pCtx, cancel := context.WithCancel(ctx)
 
-	if err := p.Run(client, address, cert); err != nil {
+	if err := p.Run(client, address, cert, aggregatorPod); err != nil {
 		err := errors.Wrapf(err, "error running plugin %v", p.GetName())
 		logrus.Error(err)
 		monitorCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{"error": err.Error()}, "")

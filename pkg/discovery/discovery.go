@@ -358,7 +358,7 @@ func setStatus(client kubernetes.Interface, namespace string, status *pluginaggr
 	}
 
 	// Determine sonobuoy pod name
-	podName, err := pluginaggregation.GetStatusPodName(client, namespace)
+	podName, err := pluginaggregation.GetAggregatorPodName(client, namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the name of the aggregator pod to set the status on")
 	}

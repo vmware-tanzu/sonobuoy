@@ -38,7 +38,7 @@ const (
 type Interface interface {
 	// Run runs a plugin, declaring all resources it needs, and then
 	// returns.  It does not block and wait until the plugin has finished.
-	Run(kubeClient kubernetes.Interface, hostname string, cert *tls.Certificate) error
+	Run(kubeClient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod) error
 	// Cleanup cleans up all resources created by the plugin
 	Cleanup(kubeClient kubernetes.Interface)
 	// Monitor continually checks for problems in the resources created by a
