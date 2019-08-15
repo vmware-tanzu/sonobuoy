@@ -26,6 +26,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	// JunitStdoutKey is the key in the Items.Details map for the system-out output.
+	JunitStdoutKey = "system-out"
+
+	// JunitFailureKey is the key in the Items.Details map for the failure output.
+	JunitFailureKey = "failure"
+)
+
 // Filter keeps only the tests that match the predicate function.
 func Filter(predicate func(testCase reporters.JUnitTestCase) bool, testSuite reporters.JUnitTestSuite) []reporters.JUnitTestCase {
 	out := make([]reporters.JUnitTestCase, 0)
@@ -100,8 +108,20 @@ func processJunitFile(pluginDir, currentFile string) (Item, error) {
 		case Skipped(t):
 			status = StatusSkipped
 		}
+		testItem := Item{Name: t.Name, Status: status}
 
-		resultObj.Items = append(resultObj.Items, Item{Name: t.Name, Status: status})
+		hasFailureMsg := (t.FailureMessage != nil && t.FailureMessage.Message != "")
+		if hasFailureMsg || t.SystemOut != "" {
+			testItem.Details = map[string]string{}
+		}
+		if hasFailureMsg {
+			testItem.Details[JunitFailureKey] = t.FailureMessage.Message
+		}
+		if t.SystemOut != "" {
+			testItem.Details[JunitStdoutKey] = t.SystemOut
+		}
+
+		resultObj.Items = append(resultObj.Items, testItem)
 	}
 
 	return resultObj, nil

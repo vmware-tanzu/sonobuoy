@@ -74,6 +74,7 @@ type Item struct {
 	Name     string            `json:"name" yaml:"name"`
 	Status   string            `json:"status" yaml:"status"`
 	Metadata map[string]string `json:"meta,omitempty" yaml:"meta,omitempty"`
+	Details  map[string]string `json:"details,omitempty" yaml:"details,omitempty"`
 	Items    []Item            `json:"items,omitempty" yaml:"items,omitempty"`
 }
 

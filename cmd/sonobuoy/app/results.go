@@ -32,9 +32,16 @@ import (
 )
 
 const (
-	resultModeReport   = "report"
+	// resultModeReport prints a human-readable summary of the results to stdout.
+	resultModeReport = "report"
+
+	// resultModeDetailed will dump each leaf node (e.g. test) as a json object. If the results
+	// are just references to files (like systemd-logs) then it will print the file for each
+	// leaf node, prefixed with the path.
 	resultModeDetailed = "detailed"
-	resultModeDump     = "dump"
+
+	// resultModeDump will just copy the post-processed yaml file to stdout.
+	resultModeDump = "dump"
 )
 
 type resultsInput struct {
