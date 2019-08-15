@@ -168,6 +168,10 @@ func QueryResources(
 		}
 	}
 
+	if ns != nil && len(*ns) > 0 {
+		opts.FieldSelector = "metadata.namespace=" + *ns
+	}
+
 	// 3. Execute the query
 	for _, gvr := range resources {
 		lister := func() (*unstructured.UnstructuredList, error) {
