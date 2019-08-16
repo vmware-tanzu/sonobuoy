@@ -9,6 +9,7 @@ By way of illustration, here is the current `heptio-e2e` plugin file. Every part
 of user configuration is in green, all boilerplate required by Sonobuoy is in
 red.
 
+{% raw %}
 ```diff
 - ---
 - apiVersion: v1
@@ -67,6 +68,7 @@ red.
 -   - emptyDir: {}
 -     name: results
 ```
+{% endraw %}
 
 ## Summary
 
@@ -114,6 +116,7 @@ spec:
 This will be merged into a larger Pod document provided by the Sonobuoy YAML
 driver
 
+{% raw %}
 ```yaml
 ---
 apiVersion: v1
@@ -166,6 +169,7 @@ spec:
   - emptyDir: {}
    name: results
 ```
+{% endraw %}
 
 #### Advantages:
 * Simple substitution
@@ -179,6 +183,7 @@ spec:
 
 In this scenario, the user provides a (templated) valid Kubernetes API Document.
 
+{% raw %}
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -199,6 +204,7 @@ spec:
   - {{.SonobuoyConsumer}}
   {{.SonobuySpecExtras}}
 ```
+{% endraw %}
 
 Then, at runtime, the template would be filled with values by the plugin driver.
 These could be based on several templates themselves, or created at runtime out
