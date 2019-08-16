@@ -23,6 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -35,6 +36,13 @@ const (
 	StatusPodLabel       = "run=sonobuoy-master"
 	DefaultStatusPodName = "sonobuoy"
 )
+
+// NoPodWithLabelError represents an error encountered when a pod with a given label can't be found
+type NoPodWithLabelError string
+
+func (n NoPodWithLabelError) Error() string {
+	return string(n)
+}
 
 // node and name uniquely identify a single plugin result
 type key struct {
@@ -118,7 +126,7 @@ func (u *updater) Annotate(results map[string]*plugin.Result) error {
 	}
 
 	// Determine sonobuoy pod name
-	podName, err := GetStatusPodName(u.client, u.namespace)
+	podName, err := GetAggregatorPodName(u.client, u.namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to get name of the aggregator pod to annotate")
 	}
@@ -166,25 +174,45 @@ func GetPatch(annotation string) map[string]interface{} {
 	}
 }
 
-// GetStatusPodName gets the sonobuoy master pod name based on its label.
-func GetStatusPodName(client kubernetes.Interface, namespace string) (string, error) {
+// GetAggregatorPod gets the sonobuoy aggregator pod based on its label.
+// It returns NoPodWithLabelError in the case where a pod with sonobuoy aggregator label could not be found.
+func GetAggregatorPod(client kubernetes.Interface, namespace string) (*v1.Pod, error) {
 	listOptions := metav1.ListOptions{
 		LabelSelector: StatusPodLabel,
 	}
 
 	podList, err := client.CoreV1().Pods(namespace).List(listOptions)
 	if err != nil {
-		return "", errors.Wrap(err, "unable to list pods with label %q")
+		return nil, errors.Wrapf(err, "unable to list pods with label %q", StatusPodLabel)
 	}
 
 	switch {
 	case len(podList.Items) == 0:
-		logrus.Warningf("No pods found with label %q in namespace %s, using default pod name %q", StatusPodLabel, namespace, DefaultStatusPodName)
-		return DefaultStatusPodName, nil
+		logrus.Warningf("no pods found with label %q in namespace %s", StatusPodLabel, namespace)
+		return nil, NoPodWithLabelError(fmt.Sprintf("no pods found with label %q in namespace %s", StatusPodLabel, namespace))
+
 	case len(podList.Items) > 1:
-		logrus.Warningf("Found more than one pod with label %q. Using %q", StatusPodLabel, podList.Items[0].GetName())
-		return podList.Items[0].GetName(), nil
+		logrus.Warningf("Found more than one pod with label %q. Using pod with name %q", StatusPodLabel, podList.Items[0].GetName())
+		return &podList.Items[0], nil
 	default:
-		return podList.Items[0].GetName(), nil
+		return &podList.Items[0], nil
 	}
+}
+
+// GetAggregatorPodName gets the sonobuoy aggregator pod name. It returns the default pod name
+// if the pod cannot be found.
+func GetAggregatorPodName(client kubernetes.Interface, namespace string) (string, error) {
+	ap, err := GetAggregatorPod(client, namespace)
+
+	if err != nil {
+		switch err.(type) {
+		case NoPodWithLabelError:
+			logrus.Warningf("Aggregator pod not found, using default pod name %q: %v", DefaultStatusPodName, err)
+			return DefaultStatusPodName, nil
+		default:
+			return "", errors.Wrap(err, "failed to get aggregator pod")
+		}
+	}
+
+	return ap.GetName(), nil
 }

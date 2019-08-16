@@ -60,7 +60,7 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 	}
 
 	// Determine sonobuoy pod name
-	podName, err := pluginaggregation.GetStatusPodName(client, cfg.Namespace)
+	podName, err := pluginaggregation.GetAggregatorPodName(client, cfg.Namespace)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get the name of the aggregator pod to fetch results from")
 	}

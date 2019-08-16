@@ -41,6 +41,8 @@ const (
 	expectedNamespace = "test-namespace"
 )
 
+var aggregatorPod corev1.Pod
+
 func createClientCertificate(name string) (*tls.Certificate, error) {
 	auth, err := ca.NewAuthority()
 	if err != nil {
@@ -100,7 +102,7 @@ func TestCreateDaemonSetDefintion(t *testing.T) {
 		t.Fatalf("couldn't make client certificate %v", err)
 	}
 
-	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert)
+	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert, &corev1.Pod{})
 
 	expectedName := fmt.Sprintf("sonobuoy-test-plugin-daemon-set-%v", testDaemonSet.SessionID)
 	if daemonSet.Name != expectedName {
@@ -198,7 +200,7 @@ func TestCreateDaemonSetDefintionUsesDefaultPodSpec(t *testing.T) {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert)
+	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert, &corev1.Pod{})
 	podSpec := daemonSet.Spec.Template.Spec
 
 	expectedServiceAccount := "sonobuoy-serviceaccount"
@@ -240,7 +242,7 @@ func TestCreateDaemonSetDefintionUsesProvidedPodSpec(t *testing.T) {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert)
+	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert, &corev1.Pod{})
 	podSpec := daemonSet.Spec.Template.Spec
 
 	if podSpec.ServiceAccountName != expectedServiceAccountName {
@@ -269,14 +271,14 @@ func TestCreateDaemonSetDefinitionAddsToExistingResourcesInPodSpec(t *testing.T)
 			},
 		},
 	}
-	testJob := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
+	testPlugin := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
 
 	clientCert, err := createClientCertificate("test-job")
 	if err != nil {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	daemonSet := testJob.createDaemonSetDefinition("", clientCert)
+	daemonSet := testPlugin.createDaemonSetDefinition("", clientCert, &corev1.Pod{})
 	podSpec := daemonSet.Spec.Template.Spec
 
 	// Existing container in pod spec, plus 2 added by Sonobuoy
@@ -298,6 +300,70 @@ func TestCreateDaemonSetDefinitionAddsToExistingResourcesInPodSpec(t *testing.T)
 	actualNumVolumes := len(podSpec.Volumes)
 	if expectedNumVolumes != actualNumVolumes {
 		t.Errorf("expected pod spec to have %v volumes, got %v", expectedNumVolumes, actualNumVolumes)
+	}
+}
+
+func TestCreateDaemonSetDefinitionSetsOwnerReference(t *testing.T) {
+	m := manifest.Manifest{
+		SonobuoyConfig: manifest.SonobuoyConfig{
+			Driver:     "DaemonSet",
+			PluginName: "test-job",
+			ResultType: "test-job-result",
+		},
+		Spec: manifest.Container{Container: corev1.Container{}},
+	}
+	testPlugin := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
+
+	clientCert, err := createClientCertificate("test-job")
+	if err != nil {
+		t.Fatalf("couldn't create client certificate: %v", err)
+	}
+
+	aggregatorPod := corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "sonobuoy-aggregator",
+			UID:  "123456-abcdef",
+		},
+	}
+
+	daemonSet := testPlugin.createDaemonSetDefinition("", clientCert, &aggregatorPod)
+	ownerReferences := daemonSet.ObjectMeta.OwnerReferences
+
+	if len(ownerReferences) != 1 {
+		t.Fatalf("Expected 1 owner reference, got %v", len(ownerReferences))
+	}
+
+	testCases := []struct {
+		field string
+		want  string
+		got   string
+	}{
+		{
+			field: "APIVersion",
+			want:  "v1",
+			got:   ownerReferences[0].APIVersion,
+		},
+		{
+			field: "Kind",
+			want:  "Pod",
+			got:   ownerReferences[0].Kind,
+		},
+		{
+			field: "Name",
+			want:  aggregatorPod.ObjectMeta.Name,
+			got:   ownerReferences[0].Name,
+		},
+		{
+			field: "UID",
+			want:  string(aggregatorPod.ObjectMeta.UID),
+			got:   string(ownerReferences[0].UID),
+		},
+	}
+
+	for _, tc := range testCases {
+		if tc.got != tc.want {
+			t.Errorf("Expected ownerReference %v to be %q, got %q", tc.field, tc.want, tc.got)
+		}
 	}
 }
 

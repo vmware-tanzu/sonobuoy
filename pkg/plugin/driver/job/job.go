@@ -78,7 +78,7 @@ func getMasterAddress(hostname string) string {
 	return fmt.Sprintf("https://%s/api/v1/results/%v", hostname, plugin.GlobalResult)
 }
 
-func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate) v1.Pod {
+func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, ownerPod *v1.Pod) v1.Pod {
 	pod := v1.Pod{}
 	annotations := map[string]string{
 		"sonobuoy-driver":      p.GetDriver(),
@@ -99,6 +99,14 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate) v1.
 		Namespace:   p.Namespace,
 		Labels:      labels,
 		Annotations: annotations,
+		OwnerReferences: []metav1.OwnerReference{
+			metav1.OwnerReference{
+				APIVersion: "v1",
+				Kind:       "Pod",
+				Name:       ownerPod.GetName(),
+				UID:        ownerPod.GetUID(),
+			},
+		},
 	}
 
 	var podSpec v1.PodSpec
@@ -135,8 +143,8 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate) v1.
 }
 
 // Run dispatches worker pods according to the Job's configuration.
-func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate) error {
-	job := p.createPodDefinition(getMasterAddress(hostname), cert)
+func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod) error {
+	job := p.createPodDefinition(getMasterAddress(hostname), cert, ownerPod)
 
 	secret, err := p.MakeTLSSecret(cert)
 	if err != nil {
