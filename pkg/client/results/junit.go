@@ -18,25 +18,108 @@ package results
 
 import (
 	"encoding/xml"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
-	"github.com/onsi/ginkgo/reporters"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	// JunitStdoutKey is the key in the Items.Details map for the system-out output.
-	JunitStdoutKey = "system-out"
+	// JUnitStdoutKey is the key in the Items.Details map for the system-out output.
+	JUnitStdoutKey = "system-out"
 
-	// JunitFailureKey is the key in the Items.Details map for the failure output.
-	JunitFailureKey = "failure"
+	// JUnitStderrKey is the key in the Items.Details map for the system-out output.
+	JUnitStderrKey = "system-err"
+
+	// JUnitFailureKey is the key in the Items.Details map for the failure output.
+	JUnitFailureKey = "failure"
 )
 
-// Filter keeps only the tests that match the predicate function.
-func Filter(predicate func(testCase reporters.JUnitTestCase) bool, testSuite reporters.JUnitTestSuite) []reporters.JUnitTestCase {
-	out := make([]reporters.JUnitTestCase, 0)
+// junitResult is a wrapper around the suite[s] which enable results to
+// be either a single suite or a collection of suites. For instance,
+// e2e tests (which use the onsi/ginkgo reporter) report a single, top-level
+// testsuite whereas other tools report a top-level testsuites object
+// which may have 1+ testsuite children. Only one of the fields should be
+// set, not both.
+type junitResult struct {
+	suites JUnitTestSuites
+}
+
+// UnmarshalXML will unmarshal the document into either the 'Suites'
+// field of the JUnitResult. If a single testsuite is found (instead of a testsuites object)
+// it is unmarshalled and then added into the set of JUnitResult.Suites.Suites
+func (j *junitResult) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	var returnErr error
+	if start.Name.Local == "testsuites" {
+		returnErr = d.DecodeElement(&j.suites, &start)
+	} else {
+		var s JUnitTestSuite
+		returnErr = d.DecodeElement(&s, &start)
+		j.suites = JUnitTestSuites{Suites: []JUnitTestSuite{s}}
+	}
+	for i := range j.suites.Suites {
+		if j.suites.Suites[i].Name == "" {
+			j.suites.Suites[i].Name = fmt.Sprintf("testsuite-%03d", i+1)
+		}
+	}
+	return returnErr
+}
+
+// JUnitTestSuites is a collection of JUnit test suites.
+type JUnitTestSuites struct {
+	XMLName xml.Name         `xml:"testsuites"`
+	Suites  []JUnitTestSuite `xml:"testsuite"`
+}
+
+// JUnitTestSuite is a single JUnit test suite which may contain many
+// testcases.
+type JUnitTestSuite struct {
+	XMLName    xml.Name        `xml:"testsuite"`
+	Tests      int             `xml:"tests,attr"`
+	Failures   int             `xml:"failures,attr"`
+	Time       float64         `xml:"time,attr"`
+	Name       string          `xml:"name,attr"`
+	Properties []JUnitProperty `xml:"properties>property,omitempty"`
+	TestCases  []JUnitTestCase `xml:"testcase"`
+}
+
+// JUnitTestCase is a single test case with its result.
+type JUnitTestCase struct {
+	XMLName     xml.Name             `xml:"testcase"`
+	Classname   string               `xml:"classname,attr"`
+	Name        string               `xml:"name,attr"`
+	Time        string               `xml:"time,attr"`
+	SkipMessage *JUnitSkipMessage    `xml:"skipped,omitempty"`
+	Failure     *JUnitFailureMessage `xml:"failure,omitempty"`
+	SystemOut   string               `xml:"system-out,omitempty"`
+	SystemErr   string               `xml:"system-err,omitempty"`
+}
+
+// JUnitSkipMessage contains the reason why a testcase was skipped.
+type JUnitSkipMessage struct {
+	Message string `xml:"message,attr"`
+}
+
+// JUnitFailureMessage contains data related to a failed test.
+type JUnitFailureMessage struct {
+	Message  string `xml:"message,attr"`
+	Type     string `xml:"type,attr"`
+	Contents string `xml:",chardata"`
+}
+
+// JUnitProperty represents a key/value pair used to define properties.
+type JUnitProperty struct {
+	Name  string `xml:"name,attr"`
+	Value string `xml:"value,attr"`
+}
+
+// JUnitFilter keeps only the tests that match the predicate function.
+func JUnitFilter(predicate func(testCase JUnitTestCase) bool, testSuite JUnitTestSuite) []JUnitTestCase {
+	out := make([]JUnitTestCase, 0)
 	for _, tc := range testSuite.TestCases {
 		if predicate(tc) {
 			out = append(out, tc)
@@ -45,84 +128,126 @@ func Filter(predicate func(testCase reporters.JUnitTestCase) bool, testSuite rep
 	return out
 }
 
-// AlphabetizedTestCases implements Sort over the list of testCases.
-type AlphabetizedTestCases []reporters.JUnitTestCase
+// JUnitAlphabetizedTestCases implements Sort over the list of testCases.
+type JUnitAlphabetizedTestCases []JUnitTestCase
 
-func (a AlphabetizedTestCases) Len() int           { return len(a) }
-func (a AlphabetizedTestCases) Less(i, j int) bool { return a[i].Name < a[j].Name }
-func (a AlphabetizedTestCases) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a JUnitAlphabetizedTestCases) Len() int           { return len(a) }
+func (a JUnitAlphabetizedTestCases) Less(i, j int) bool { return a[i].Name < a[j].Name }
+func (a JUnitAlphabetizedTestCases) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 
 // predicate functions
 
-// Skipped returns true if the test was skipped.
-func Skipped(testCase reporters.JUnitTestCase) bool { return testCase.Skipped != nil }
+// JUnitSkipped returns true if the test was skipped.
+func JUnitSkipped(testCase JUnitTestCase) bool { return testCase.SkipMessage != nil }
 
-// Passed returns true if the test passed.
-func Passed(testCase reporters.JUnitTestCase) bool {
-	return testCase.Skipped == nil && testCase.FailureMessage == nil
+// JUnitPassed returns true if the test passed.
+func JUnitPassed(testCase JUnitTestCase) bool {
+	return testCase.SkipMessage == nil && testCase.Failure == nil
 }
 
-// Failed returns true if the test failed.
-func Failed(testCase reporters.JUnitTestCase) bool {
-	return testCase.Skipped == nil && testCase.FailureMessage != nil
+// JUnitFailed returns true if the test failed.
+func JUnitFailed(testCase JUnitTestCase) bool {
+	return testCase.SkipMessage == nil && testCase.Failure != nil
 }
 
-func processJunitFile(pluginDir, currentFile string) (Item, error) {
-	junitResults := reporters.JUnitTestSuite{}
+func junitProcessFile(pluginDir, currentFile string) (Item, error) {
 	relPath, err := filepath.Rel(pluginDir, currentFile)
 	if err != nil {
 		logrus.Errorf("Error making path %q relative to %q: %v", pluginDir, currentFile, err)
 		relPath = currentFile
 	}
 
-	// Passed unless a failure is encountered for aggregate status.
 	resultObj := Item{
 		Name:     filepath.Base(currentFile),
-		Status:   StatusPassed,
+		Status:   StatusUnknown,
 		Metadata: map[string]string{"file": relPath},
 	}
 
 	infile, err := os.Open(currentFile)
 	if err != nil {
-		resultObj.Status = StatusUnknown
 		resultObj.Metadata["error"] = err.Error()
+		resultObj.Status = StatusUnknown
+
 		return resultObj, errors.Wrapf(err, "opening file %v", currentFile)
 	}
 	defer infile.Close()
 
-	decoder := xml.NewDecoder(infile)
-	if err := decoder.Decode(&junitResults); err != nil {
-		resultObj.Status = StatusUnknown
-		resultObj.Metadata["error"] = err.Error()
-		return resultObj, errors.Wrap(err, "error decoding json into object")
-	}
-
-	for _, t := range junitResults.TestCases {
-		status := StatusUnknown
-		switch {
-		case Passed(t):
-			status = StatusPassed
-		case Failed(t):
-			resultObj.Status = StatusFailed
-			status = StatusFailed
-		case Skipped(t):
-			status = StatusSkipped
-		}
-		testItem := Item{Name: t.Name, Status: status}
-
-		hasFailureMsg := (t.FailureMessage != nil && t.FailureMessage.Message != "")
-		if hasFailureMsg || t.SystemOut != "" {
-			testItem.Details = map[string]string{}
-		}
-		if hasFailureMsg {
-			testItem.Details[JunitFailureKey] = t.FailureMessage.Message
-		}
-		if t.SystemOut != "" {
-			testItem.Details[JunitStdoutKey] = t.SystemOut
-		}
-
-		resultObj.Items = append(resultObj.Items, testItem)
+	resultObj, err = junitProcessReader(
+		infile,
+		resultObj.Name,
+		resultObj.Metadata,
+	)
+	if err != nil {
+		return resultObj, errors.Wrap(err, "error processing junit")
 	}
 
 	return resultObj, nil
+}
+
+func junitProcessReader(r io.Reader, name string, metadata map[string]string) (Item, error) {
+	rootItem := Item{
+		Name:     name,
+		Status:   StatusPassed,
+		Metadata: metadata,
+	}
+
+	if r == nil {
+		rootItem.Status = StatusUnknown
+		if rootItem.Metadata == nil {
+			rootItem.Metadata = map[string]string{}
+		}
+		rootItem.Metadata["error"] = "no data source for junit"
+		return rootItem, errors.New("no data source for junit")
+	}
+
+	decoder := xml.NewDecoder(r)
+	junitResults := junitResult{}
+	if err := decoder.Decode(&junitResults); err != nil {
+		rootItem.Status = StatusUnknown
+		if rootItem.Metadata == nil {
+			rootItem.Metadata = map[string]string{}
+		}
+		rootItem.Metadata["error"] = err.Error()
+		return rootItem, errors.Wrap(err, "decoding junit")
+	}
+
+	for _, ts := range junitResults.suites.Suites {
+		suiteItem := Item{
+			Name:   ts.Name,
+			Status: StatusPassed,
+		}
+		for _, t := range ts.TestCases {
+			status := StatusUnknown
+			switch {
+			case JUnitPassed(t):
+				status = StatusPassed
+			case JUnitFailed(t):
+				rootItem.Status = StatusFailed
+				suiteItem.Status = StatusFailed
+				status = StatusFailed
+			case JUnitSkipped(t):
+				status = StatusSkipped
+			}
+			testItem := Item{Name: t.Name, Status: status, Details: map[string]string{}, Metadata: map[string]string{}}
+
+			// Different JUnit implementations build the objects in slightly different ways.
+			// Some will only use contents, some only the message attribute. Here we just concat
+			// the values, separated with a space.
+			hasFailureContents := (t.Failure != nil && (t.Failure.Message != "" || t.Failure.Contents != ""))
+			if hasFailureContents {
+				testItem.Details[JUnitFailureKey] = strings.TrimSpace(t.Failure.Message + " " + t.Failure.Contents)
+			}
+			if t.SystemOut != "" {
+				testItem.Details[JUnitStdoutKey] = t.SystemOut
+			}
+			if t.SystemErr != "" {
+				testItem.Details[JUnitStderrKey] = t.SystemErr
+			}
+
+			suiteItem.Items = append(suiteItem.Items, testItem)
+		}
+		rootItem.Items = append(rootItem.Items, suiteItem)
+	}
+
+	return rootItem, nil
 }
