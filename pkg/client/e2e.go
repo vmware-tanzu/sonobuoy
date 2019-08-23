@@ -27,16 +27,15 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/client/results"
 	"github.com/heptio/sonobuoy/pkg/client/results/e2e"
-	"github.com/onsi/ginkgo/reporters"
 	"github.com/pkg/errors"
 )
 
 // GetTests extracts the junit results from a sonobuoy archive and returns the requested tests.
-func (*SonobuoyClient) GetTests(reader io.Reader, show string) ([]reporters.JUnitTestCase, error) {
+func (*SonobuoyClient) GetTests(reader io.Reader, show string) ([]results.JUnitTestCase, error) {
 	read := results.NewReaderWithVersion(reader, "irrelevant")
-	junitResults := reporters.JUnitTestSuite{}
-	e2eJunitPath := path.Join(results.PluginsDir, e2e.ResultsSubdirectory, e2e.JUnitResultsFile)
-	legacye2eJunitPath := path.Join(results.PluginsDir, e2e.LegacyResultsSubdirectory, e2e.JUnitResultsFile)
+	junitResults := results.JUnitTestSuite{}
+	e2eJUnitPath := path.Join(results.PluginsDir, e2e.ResultsSubdirectory, e2e.JUnitResultsFile)
+	legacye2eJUnitPath := path.Join(results.PluginsDir, e2e.LegacyResultsSubdirectory, e2e.JUnitResultsFile)
 
 	found := false
 	err := read.WalkFiles(
@@ -46,7 +45,7 @@ func (*SonobuoyClient) GetTests(reader io.Reader, show string) ([]reporters.JUni
 			}
 			// TODO(chuckha) consider reusing this function for any generic e2e-esque plugin results.
 			// TODO(chuckha) consider using path.Join()
-			if path == e2eJunitPath || path == legacye2eJunitPath {
+			if path == e2eJUnitPath || path == legacye2eJUnitPath {
 				found = true
 				return results.ExtractFileIntoStruct(path, path, info, &junitResults)
 			}
@@ -57,26 +56,26 @@ func (*SonobuoyClient) GetTests(reader io.Reader, show string) ([]reporters.JUni
 	}
 
 	if !found {
-		return nil, fmt.Errorf("failed to find results file %q in archive", e2eJunitPath)
+		return nil, fmt.Errorf("failed to find results file %q in archive", e2eJUnitPath)
 	}
 
-	out := make([]reporters.JUnitTestCase, 0)
+	out := make([]results.JUnitTestCase, 0)
 	if show == "passed" || show == "all" {
-		out = append(out, results.Filter(results.Passed, junitResults)...)
+		out = append(out, results.JUnitFilter(results.JUnitPassed, junitResults)...)
 	}
 	if show == "failed" || show == "all" {
-		out = append(out, results.Filter(results.Failed, junitResults)...)
+		out = append(out, results.JUnitFilter(results.JUnitFailed, junitResults)...)
 	}
 	if show == "skipped" || show == "all" {
-		out = append(out, results.Filter(results.Skipped, junitResults)...)
+		out = append(out, results.JUnitFilter(results.JUnitSkipped, junitResults)...)
 	}
-	sort.Sort(results.AlphabetizedTestCases(out))
+	sort.Sort(results.JUnitAlphabetizedTestCases(out))
 	return out, nil
 }
 
 // Focus returns a value to be used in the E2E_FOCUS variable that is
 // representative of the test cases in the struct.
-func Focus(testCases []reporters.JUnitTestCase) string {
+func Focus(testCases []results.JUnitTestCase) string {
 	testNames := make([]string, len(testCases))
 	for i, tc := range testCases {
 		testNames[i] = regexp.QuoteMeta(tc.Name)
@@ -84,8 +83,8 @@ func Focus(testCases []reporters.JUnitTestCase) string {
 	return strings.Join(testNames, "|")
 }
 
-// PrintableTestCases nicely strings a []reporters.JunitTestCase
-type PrintableTestCases []reporters.JUnitTestCase
+// PrintableTestCases nicely strings a []results.JUnitTestCase
+type PrintableTestCases []results.JUnitTestCase
 
 func (p PrintableTestCases) String() string {
 	if len(p) == 0 {

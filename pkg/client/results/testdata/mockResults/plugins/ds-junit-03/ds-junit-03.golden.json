@@ -14,6 +14,10 @@
 },
 "items": [
 {
+"name": "testsuite-001",
+"status": "passed",
+"items": [
+{
 "name": "[k8s.io] Pods should be submitted and removed [NodeConformance] [Conformance]",
 "status": "passed"
 },
@@ -34,6 +38,8 @@
 "status": "skipped"
 }
 ]
+}
+]
 },
 {
 "name": "output2.xml",
@@ -41,6 +47,10 @@
 "meta": {
 "file": "results/global/output2.xml"
 },
+"items": [
+{
+"name": "testsuite-001",
+"status": "failed",
 "items": [
 {
 "name": "[k8s.io] Pods should be submitted and removed [NodeConformance] [Conformance]",
@@ -61,6 +71,8 @@
 {
 "name": "[sig-storage] In-tree Volumes [Driver: rbd][Feature:Volumes] [Testpattern: Pre-provisioned PV (default fs)] subPath should support restarting containers using file as subpath [Slow]",
 "status": "skipped"
+}
+]
 }
 ]
 }

@@ -8,7 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/onsi/ginkgo/reporters"
+	"github.com/heptio/sonobuoy/pkg/client/results"
+
 	"k8s.io/client-go/rest"
 )
 
@@ -95,7 +96,7 @@ func TestString(t *testing.T) {
 	}{
 		{
 			desc:   "No tests should report empty string",
-			cases:  PrintableTestCases([]reporters.JUnitTestCase{}),
+			cases:  PrintableTestCases([]results.JUnitTestCase{}),
 			expect: "",
 		}, {
 			desc:   "Nil tests should report empty string",
@@ -103,7 +104,7 @@ func TestString(t *testing.T) {
 			expect: "",
 		}, {
 			desc: "Should not end with extra new line",
-			cases: PrintableTestCases([]reporters.JUnitTestCase{
+			cases: PrintableTestCases([]results.JUnitTestCase{
 				{Name: "a"},
 				{Name: "b"},
 			}),
@@ -128,28 +129,28 @@ func TestFocus(t *testing.T) {
 	}{
 		{
 			desc:   "No test should result in an empty string",
-			cases:  []reporters.JUnitTestCase{},
+			cases:  []results.JUnitTestCase{},
 			expect: "",
 		},
 		{
 			desc: "Single test with no regexp characters is not changed",
-			cases: []reporters.JUnitTestCase{
-				reporters.JUnitTestCase{Name: "this is a test"},
+			cases: []results.JUnitTestCase{
+				{Name: "this is a test"},
 			},
 			expect: "this is a test",
 		},
 		{
 			desc: "Test with special regexp characters should be escaped",
-			cases: []reporters.JUnitTestCase{
-				reporters.JUnitTestCase{Name: "[sig-apps] test-1 (1.15) [Conformance]"},
+			cases: []results.JUnitTestCase{
+				{Name: "[sig-apps] test-1 (1.15) [Conformance]"},
 			},
 			expect: `\[sig-apps\] test-1 \(1\.15\) \[Conformance\]`,
 		},
 		{
 			desc: "Multiple tests should be separated with '|'",
-			cases: []reporters.JUnitTestCase{
-				reporters.JUnitTestCase{Name: "[sig-apps] test-1 [Conformance]"},
-				reporters.JUnitTestCase{Name: "[sig-apps] test-2"},
+			cases: []results.JUnitTestCase{
+				{Name: "[sig-apps] test-1 [Conformance]"},
+				{Name: "[sig-apps] test-2"},
 			},
 			expect: `\[sig-apps\] test-1 \[Conformance\]|\[sig-apps\] test-2`,
 		},

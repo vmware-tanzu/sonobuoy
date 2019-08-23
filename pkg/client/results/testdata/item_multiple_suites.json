@@ -1,0 +1,26 @@
+{
+"name": "",
+"status": "passed",
+"items": [
+{
+"name": "cis-kubernetes-benchmark",
+"status": "passed",
+"items": [
+{
+"name": "cis-kubernetes-benchmark-2.2.7",
+"status": "skipped"
+}
+]
+},
+{
+"name": "cis-kubernetes-benchmark the sequal",
+"status": "passed",
+"items": [
+{
+"name": "cis-kubernetes-benchmark-2.2.7 the sequal",
+"status": "skipped"
+}
+]
+}
+]
+}

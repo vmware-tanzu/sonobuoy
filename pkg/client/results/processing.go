@@ -25,6 +25,7 @@ import (
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver/daemonset"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -53,7 +54,7 @@ const (
 // ResultFormat constants are the supported values for the resultFormat field
 // which enables post processing.
 const (
-	ResultFormatJunit = "junit"
+	ResultFormatJUnit = "junit"
 	ResultFormatE2E   = "e2e"
 	ResultFormatRaw   = "raw"
 )
@@ -122,14 +123,14 @@ func PostProcessPlugin(p plugin.Interface, dir string) (Item, error) {
 	var err error
 
 	switch p.GetResultFormat() {
-	case ResultFormatJunit, ResultFormatE2E:
-		i, err = processPluginWithProcessor(p, dir, processJunitFile, fileOrExtension(p.GetResultFiles(), ".xml"))
+	case ResultFormatE2E, ResultFormatJUnit:
+		i, err = processPluginWithProcessor(p, dir, junitProcessFile, fileOrExtension(p.GetResultFiles(), ".xml"))
 	case ResultFormatRaw:
-		i, err = processPluginWithProcessor(p, dir, processRawFile, fileOrAny(p.GetResultFiles()))
+		i, err = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
 	default:
 		// Default to raw format so that consumers can still expect the aggregate file to exist and
 		// can navigate the output of the plugin more easily.
-		i, err = processPluginWithProcessor(p, dir, processRawFile, fileOrAny(p.GetResultFiles()))
+		i, err = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
 	}
 
 	i.Status = aggregateStatus(i.Items...)

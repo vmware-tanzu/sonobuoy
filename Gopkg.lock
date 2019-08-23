@@ -329,19 +329,6 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:2fbaaf0da25955483492807f6dc96995f61f8bda296b243c74e6c4ecc274b91b"
-  name = "github.com/onsi/ginkgo"
-  packages = [
-    "config",
-    "reporters",
-    "reporters/stenographer",
-    "types",
-  ]
-  pruneopts = "UT"
-  revision = "eea6ad008b96acdaa524f5b409513bf062b500ad"
-  version = "v1.8.0"
-
-[[projects]]
   digest = "1:93131d8002d7025da13582877c32d1fc302486775a1b06f62241741006428c5e"
   name = "github.com/pelletier/go-toml"
   packages = ["."]
@@ -927,7 +914,6 @@
     "github.com/hashicorp/go-version",
     "github.com/imdario/mergo",
     "github.com/kylelemons/godebug/pretty",
-    "github.com/onsi/ginkgo/reporters",
     "github.com/pkg/errors",
     "github.com/rifflock/lfshook",
     "github.com/satori/go.uuid",
