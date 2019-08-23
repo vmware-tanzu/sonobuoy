@@ -58,11 +58,6 @@ func (b *Base) GetSecretName() string {
 	return fmt.Sprintf("sonobuoy-plugin-%s-%s", b.GetName(), b.GetSessionID())
 }
 
-// GetResultType returns the ResultType for this plugin (to adhere to plugin.Interface).
-func (b *Base) GetResultType() string {
-	return b.Definition.SonobuoyConfig.ResultType
-}
-
 // GetDriver returns the Driver for this plugin.
 func (b *Base) GetDriver() string {
 	return b.Definition.SonobuoyConfig.Driver
@@ -162,7 +157,7 @@ func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate) []v1.En
 		},
 		{
 			Name:  "RESULT_TYPE",
-			Value: b.GetResultType(),
+			Value: b.GetName(),
 		},
 		{
 			Name:  "MASTER_URL",

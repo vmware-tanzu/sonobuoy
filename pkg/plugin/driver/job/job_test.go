@@ -62,7 +62,6 @@ func TestCreatePodDefinition(t *testing.T) {
 		manifest.Manifest{
 			SonobuoyConfig: manifest.SonobuoyConfig{
 				PluginName: "test-job",
-				ResultType: "test-job-result",
 			},
 			Spec: manifest.Container{
 				Container: corev1.Container{
@@ -179,7 +178,6 @@ func TestCreatePodDefinitionUsesDefaultPodSpec(t *testing.T) {
 	m := manifest.Manifest{
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			PluginName: "test-job",
-			ResultType: "test-job-result",
 		},
 		Spec: manifest.Container{
 			Container: corev1.Container{
@@ -215,7 +213,6 @@ func TestCreatePodDefinitionUsesProvidedPodSpec(t *testing.T) {
 	m := manifest.Manifest{
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			PluginName: "test-job",
-			ResultType: "test-job-result",
 		},
 		Spec: manifest.Container{
 			Container: corev1.Container{
@@ -245,7 +242,6 @@ func TestCreatePodDefinitionAddsToExistingResourcesInPodSpec(t *testing.T) {
 	m := manifest.Manifest{
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			PluginName: "test-job",
-			ResultType: "test-job-result",
 		},
 		Spec: manifest.Container{
 			Container: corev1.Container{
@@ -255,9 +251,9 @@ func TestCreatePodDefinitionAddsToExistingResourcesInPodSpec(t *testing.T) {
 		ExtraVolumes: []manifest.Volume{{Volume: corev1.Volume{Name: "test1"}}},
 		PodSpec: &manifest.PodSpec{
 			PodSpec: corev1.PodSpec{
-				Containers:       []corev1.Container{corev1.Container{}},
-				ImagePullSecrets: []corev1.LocalObjectReference{corev1.LocalObjectReference{}},
-				Volumes:          []corev1.Volume{corev1.Volume{}},
+				Containers:       []corev1.Container{{}},
+				ImagePullSecrets: []corev1.LocalObjectReference{{}},
+				Volumes:          []corev1.Volume{{}},
 			},
 		},
 	}
@@ -296,7 +292,6 @@ func TestCreatePodDefinitionSetsOwnerReference(t *testing.T) {
 	m := manifest.Manifest{
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			PluginName: "test-job",
-			ResultType: "test-job-result",
 		},
 		Spec: manifest.Container{Container: corev1.Container{}},
 	}

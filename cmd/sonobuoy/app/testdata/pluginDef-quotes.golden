@@ -1,7 +1,6 @@
 sonobuoy-config:
   driver: ""
   plugin-name: "n"
-  result-type: "n"
 spec:
   command:
   - /bin/sh

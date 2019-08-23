@@ -30,7 +30,6 @@ data:
     sonobuoy-config:
       driver: ""
       plugin-name: foo
-      result-type: ""
     spec:
       name: ""
       resources: {}
@@ -39,7 +38,6 @@ data:
       driver: DaemonSet
       plugin-name: systemd-logs
       result-format: raw
-      result-type: systemd-logs
     spec:
       command:
       - /bin/sh

@@ -31,7 +31,6 @@ data:
       driver: Job
       plugin-name: e2e
       result-format: junit
-      result-type: e2e
     spec:
       command:
       - /run_e2e.sh
@@ -49,7 +48,6 @@ data:
       driver: DaemonSet
       plugin-name: systemd-logs
       result-format: raw
-      result-type: systemd-logs
     spec:
       command:
       - /bin/sh

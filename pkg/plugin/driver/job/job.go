@@ -70,7 +70,7 @@ func NewPlugin(dfn manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy,
 // a Job only launches one pod, only one result type is expected.
 func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	return []plugin.ExpectedResult{
-		{ResultType: p.GetResultType(), NodeName: plugin.GlobalResult},
+		{ResultType: p.GetName(), NodeName: plugin.GlobalResult},
 	}
 }
 
@@ -81,9 +81,8 @@ func getAggregatorAddress(hostname string) string {
 func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, ownerPod *v1.Pod) v1.Pod {
 	pod := v1.Pod{}
 	annotations := map[string]string{
-		"sonobuoy-driver":      p.GetDriver(),
-		"sonobuoy-plugin":      p.GetName(),
-		"sonobuoy-result-type": p.GetResultType(),
+		"sonobuoy-driver": p.GetDriver(),
+		"sonobuoy-plugin": p.GetName(),
 	}
 	for k, v := range p.CustomAnnotations {
 		annotations[k] = v
@@ -196,12 +195,12 @@ func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, _ []v1.Node) (done
 	// Make sure there's a pod
 	pod, err := p.findPod(kubeclient)
 	if err != nil {
-		return true, utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{"error": err.Error()}, plugin.GlobalResult)
+		return true, utils.MakeErrorResult(p.GetName(), map[string]interface{}{"error": err.Error()}, plugin.GlobalResult)
 	}
 
 	// Make sure the pod isn't failing
 	if isFailing, reason := utils.IsPodFailing(pod); isFailing {
-		return true, utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
+		return true, utils.MakeErrorResult(p.GetName(), map[string]interface{}{
 			"error": reason,
 			"pod":   pod,
 		}, plugin.GlobalResult)

@@ -71,7 +71,6 @@ func TestUnmarshallWithExtraVolumes(t *testing.T) {
 		SonobuoyConfig: SonobuoyConfig{
 			Driver:     "Job",
 			PluginName: "e2e",
-			ResultType: "e2e",
 		},
 		Spec: Container{
 			Container: v1.Container{

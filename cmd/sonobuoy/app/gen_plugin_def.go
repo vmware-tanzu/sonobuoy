@@ -116,7 +116,7 @@ func defaultManifest() manifest.Manifest {
 	m.Spec.Name = defaultPluginName
 	m.SonobuoyConfig.Driver = defaultPluginDriver
 	m.Spec.VolumeMounts = []v1.VolumeMount{
-		v1.VolumeMount{
+		{
 			MountPath: plugin.ResultsDir,
 			Name:      defaultMountName,
 			ReadOnly:  defaultMountReadOnly,
@@ -142,9 +142,6 @@ func genPluginDefWrapper(cfg *GenPluginDefConfig) func(cmd *cobra.Command, args 
 // genPluginDef returns the YAML for the plugin which Sonobuoy would expect as
 // a configMap in order to run/gen a typical run.
 func genPluginDef(cfg *GenPluginDefConfig) ([]byte, error) {
-	// Result type just duplicates the name in most cases.
-	cfg.def.SonobuoyConfig.ResultType = cfg.def.SonobuoyConfig.PluginName
-
 	// Copy the validated value to the actual field.
 	cfg.def.SonobuoyConfig.Driver = cfg.driver.String()
 

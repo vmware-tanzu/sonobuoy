@@ -62,7 +62,6 @@ func TestCreateDaemonSetDefintion(t *testing.T) {
 			SonobuoyConfig: manifest.SonobuoyConfig{
 				Driver:     "DaemonSet",
 				PluginName: "test-plugin",
-				ResultType: "test-plugin-result",
 			},
 			Spec: manifest.Container{
 				Container: corev1.Container{
@@ -186,7 +185,6 @@ func TestCreateDaemonSetDefintionUsesDefaultPodSpec(t *testing.T) {
 			SonobuoyConfig: manifest.SonobuoyConfig{
 				Driver:     "DaemonSet",
 				PluginName: "test-plugin",
-				ResultType: "test-plugin-result",
 			},
 			Spec: manifest.Container{
 				Container: corev1.Container{
@@ -225,7 +223,6 @@ func TestCreateDaemonSetDefintionUsesProvidedPodSpec(t *testing.T) {
 			SonobuoyConfig: manifest.SonobuoyConfig{
 				Driver:     "DaemonSet",
 				PluginName: "test-plugin",
-				ResultType: "test-plugin-result",
 			},
 			Spec: manifest.Container{
 				Container: corev1.Container{
@@ -255,7 +252,6 @@ func TestCreateDaemonSetDefinitionAddsToExistingResourcesInPodSpec(t *testing.T)
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			Driver:     "DaemonSet",
 			PluginName: "test-job",
-			ResultType: "test-job-result",
 		},
 		Spec: manifest.Container{
 			Container: corev1.Container{
@@ -265,9 +261,9 @@ func TestCreateDaemonSetDefinitionAddsToExistingResourcesInPodSpec(t *testing.T)
 		ExtraVolumes: []manifest.Volume{{Volume: corev1.Volume{Name: "test1"}}},
 		PodSpec: &manifest.PodSpec{
 			PodSpec: corev1.PodSpec{
-				Containers:       []corev1.Container{corev1.Container{}},
-				ImagePullSecrets: []corev1.LocalObjectReference{corev1.LocalObjectReference{}},
-				Volumes:          []corev1.Volume{corev1.Volume{}},
+				Containers:       []corev1.Container{{}},
+				ImagePullSecrets: []corev1.LocalObjectReference{{}},
+				Volumes:          []corev1.Volume{{}},
 			},
 		},
 	}
@@ -308,7 +304,6 @@ func TestCreateDaemonSetDefinitionSetsOwnerReference(t *testing.T) {
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			Driver:     "DaemonSet",
 			PluginName: "test-job",
-			ResultType: "test-job-result",
 		},
 		Spec: manifest.Container{Container: corev1.Container{}},
 	}
