@@ -147,7 +147,7 @@ func TestPostProcessPlugin(t *testing.T) {
 			}
 			if *update {
 				// Update all the golden files instead of actually testing against them.
-				itemBytes, err := json.Marshal(item)
+				itemBytes, err := json.MarshalIndent(item, "", "")
 				if err != nil {
 					t.Fatalf("Failed to marshal item: %v", err)
 				}

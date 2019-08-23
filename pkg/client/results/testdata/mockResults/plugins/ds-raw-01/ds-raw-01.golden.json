@@ -1,1 +1,19 @@
-{"name":"ds-raw-01","status":"passed","items":[{"name":"global","status":"passed","items":[{"name":"output.xml","status":"passed","meta":{"file":"results/global/output.xml"}}]}]}
+{
+"name": "ds-raw-01",
+"status": "passed",
+"items": [
+{
+"name": "global",
+"status": "passed",
+"items": [
+{
+"name": "output.xml",
+"status": "passed",
+"meta": {
+"file": "results/global/output.xml"
+}
+}
+]
+}
+]
+}

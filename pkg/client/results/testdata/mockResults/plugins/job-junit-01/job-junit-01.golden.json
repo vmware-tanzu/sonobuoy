@@ -1,1 +1,35 @@
-{"name":"job-junit-01","status":"passed","items":[{"name":"output.xml","status":"passed","meta":{"file":"results/global/output.xml"},"items":[{"name":"[k8s.io] Pods should be submitted and removed [NodeConformance] [Conformance]","status":"passed"},{"name":"[sig-node] ConfigMap should fail to create ConfigMap with empty key [Conformance]","status":"passed"},{"name":"[sig-storage] Downward API volume should set DefaultMode on files [LinuxOnly] [NodeConformance] [Conformance]","status":"passed"},{"name":"[sig-storage] In-tree Volumes [Driver: local][LocalVolumeType: dir-link-bindmounted] [Testpattern: Dynamic PV (default fs)] subPath should support existing directories when readOnly specified in the volumeSource","status":"skipped"},{"name":"[sig-storage] In-tree Volumes [Driver: rbd][Feature:Volumes] [Testpattern: Pre-provisioned PV (default fs)] subPath should support restarting containers using file as subpath [Slow]","status":"skipped"}]}]}
+{
+"name": "job-junit-01",
+"status": "passed",
+"items": [
+{
+"name": "output.xml",
+"status": "passed",
+"meta": {
+"file": "results/global/output.xml"
+},
+"items": [
+{
+"name": "[k8s.io] Pods should be submitted and removed [NodeConformance] [Conformance]",
+"status": "passed"
+},
+{
+"name": "[sig-node] ConfigMap should fail to create ConfigMap with empty key [Conformance]",
+"status": "passed"
+},
+{
+"name": "[sig-storage] Downward API volume should set DefaultMode on files [LinuxOnly] [NodeConformance] [Conformance]",
+"status": "passed"
+},
+{
+"name": "[sig-storage] In-tree Volumes [Driver: local][LocalVolumeType: dir-link-bindmounted] [Testpattern: Dynamic PV (default fs)] subPath should support existing directories when readOnly specified in the volumeSource",
+"status": "skipped"
+},
+{
+"name": "[sig-storage] In-tree Volumes [Driver: rbd][Feature:Volumes] [Testpattern: Pre-provisioned PV (default fs)] subPath should support restarting containers using file as subpath [Slow]",
+"status": "skipped"
+}
+]
+}
+]
+}
