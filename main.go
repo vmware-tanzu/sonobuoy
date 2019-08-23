@@ -22,7 +22,6 @@ import (
 	"github.com/heptio/sonobuoy/cmd/sonobuoy/app"
 )
 
-// main entry point of the program
 func main() {
 	err := app.NewSonobuoyCommand().Execute()
 	if err != nil {

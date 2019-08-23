@@ -17,7 +17,7 @@
 
 ## How it works now 
 
-Sonobuoy uses a worker-master model, where a master delegates tasks to worker
+Sonobuoy uses a worker-master model, where an aggregator delegates tasks to worker
 pods. When those pods have finished, they need to report the results of their
 work back to the master. Presently this is done over an ill-defined, ad hoc
 REST-ish client/server model embedded in the server.

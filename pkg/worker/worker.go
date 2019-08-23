@@ -38,7 +38,7 @@ func init() {
 //
 // 1. Output data will be placed into an agreed upon results directory.
 // 2. The Job will wait for a done file
-// 3. The done file contains a single string of the results to be sent to the master
+// 3. The done file contains a single string of the results to be sent to the aggregator
 func GatherResults(waitfile string, url string, client *http.Client, stopc <-chan struct{}) error {
 	logrus.WithField("waitfile", waitfile).Info("Waiting for waitfile")
 	ticker := time.Tick(1 * time.Second)

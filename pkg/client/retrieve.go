@@ -38,7 +38,7 @@ var tarCommand = []string{
 	"/usr/bin/env",
 	"bash",
 	"-c",
-	fmt.Sprintf("tar cf - %s/*.tar.gz", config.MasterResultsPath),
+	fmt.Sprintf("tar cf - %s/*.tar.gz", config.AggregatorResultsPath),
 }
 
 // RetrieveResults copies results from a sonobuoy run into a Reader in tar format.
@@ -71,9 +71,9 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 		Name(podName).
 		Namespace(cfg.Namespace).
 		SubResource("exec").
-		Param("container", config.MasterContainerName)
+		Param("container", config.AggregatorContainerName)
 	req.VersionedParams(&corev1.PodExecOptions{
-		Container: config.MasterContainerName,
+		Container: config.AggregatorContainerName,
 		Command:   tarCommand,
 		Stdin:     false,
 		Stdout:    true,

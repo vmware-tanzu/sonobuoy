@@ -50,7 +50,7 @@ type Plugin struct {
 var _ plugin.Interface = &Plugin{}
 
 // NewPlugin creates a new DaemonSet plugin from the given Plugin Definition
-// and sonobuoy master address.
+// and sonobuoy aggregator address.
 func NewPlugin(dfn manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets string, customAnnotations map[string]string) *Plugin {
 	return &Plugin{
 		driver.Base{
@@ -74,7 +74,7 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	}
 }
 
-func getMasterAddress(hostname string) string {
+func getAggregatorAddress(hostname string) string {
 	return fmt.Sprintf("https://%s/api/v1/results/%v", hostname, plugin.GlobalResult)
 }
 
@@ -100,7 +100,7 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, own
 		Labels:      labels,
 		Annotations: annotations,
 		OwnerReferences: []metav1.OwnerReference{
-			metav1.OwnerReference{
+			{
 				APIVersion: "v1",
 				Kind:       "Pod",
 				Name:       ownerPod.GetName(),
@@ -144,7 +144,7 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, own
 
 // Run dispatches worker pods according to the Job's configuration.
 func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod) error {
-	job := p.createPodDefinition(getMasterAddress(hostname), cert, ownerPod)
+	job := p.createPodDefinition(getAggregatorAddress(hostname), cert, ownerPod)
 
 	secret, err := p.MakeTLSSecret(cert)
 	if err != nil {
