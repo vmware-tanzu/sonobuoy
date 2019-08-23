@@ -1,1 +1,64 @@
-{"name":"job-junit-02","status":"failed","items":[{"name":"output.xml","status":"passed","meta":{"file":"results/global/output.xml"},"items":[{"name":"[k8s.io] Pods should be submitted and removed [NodeConformance] [Conformance]","status":"passed"},{"name":"[sig-node] ConfigMap should fail to create ConfigMap with empty key [Conformance]","status":"passed"},{"name":"[sig-storage] Downward API volume should set DefaultMode on files [LinuxOnly] [NodeConformance] [Conformance]","status":"passed"},{"name":"[sig-storage] In-tree Volumes [Driver: local][LocalVolumeType: dir-link-bindmounted] [Testpattern: Dynamic PV (default fs)] subPath should support existing directories when readOnly specified in the volumeSource","status":"skipped"},{"name":"[sig-storage] In-tree Volumes [Driver: rbd][Feature:Volumes] [Testpattern: Pre-provisioned PV (default fs)] subPath should support restarting containers using file as subpath [Slow]","status":"skipped"}]},{"name":"output2.xml","status":"failed","meta":{"file":"results/global/output2.xml"},"items":[{"name":"[k8s.io] Pods should be submitted and removed [NodeConformance] [Conformance]","status":"passed"},{"name":"[sig-apps] Daemon set [Serial] should rollback without unnecessary restarts [Conformance]","status":"failed","details":{"failure":"/go/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:696\nConformance test suite needs a cluster with at least 2 nodes.\nExpected\n    \u003cint\u003e: 1\nto be \u003e\n    \u003cint\u003e: 1\n/go/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/apps/daemon_set.go:385","system-out":"[BeforeEach] ..."}},{"name":"[sig-storage] In-tree Volumes [Driver: local][LocalVolumeType: dir-link-bindmounted] [Testpattern: Dynamic PV (default fs)] subPath should support existing directories when readOnly specified in the volumeSource","status":"skipped"},{"name":"[sig-storage] In-tree Volumes [Driver: rbd][Feature:Volumes] [Testpattern: Pre-provisioned PV (default fs)] subPath should support restarting containers using file as subpath [Slow]","status":"skipped"}]}]}
+{
+"name": "job-junit-02",
+"status": "failed",
+"items": [
+{
+"name": "output.xml",
+"status": "passed",
+"meta": {
+"file": "results/global/output.xml"
+},
+"items": [
+{
+"name": "[k8s.io] Pods should be submitted and removed [NodeConformance] [Conformance]",
+"status": "passed"
+},
+{
+"name": "[sig-node] ConfigMap should fail to create ConfigMap with empty key [Conformance]",
+"status": "passed"
+},
+{
+"name": "[sig-storage] Downward API volume should set DefaultMode on files [LinuxOnly] [NodeConformance] [Conformance]",
+"status": "passed"
+},
+{
+"name": "[sig-storage] In-tree Volumes [Driver: local][LocalVolumeType: dir-link-bindmounted] [Testpattern: Dynamic PV (default fs)] subPath should support existing directories when readOnly specified in the volumeSource",
+"status": "skipped"
+},
+{
+"name": "[sig-storage] In-tree Volumes [Driver: rbd][Feature:Volumes] [Testpattern: Pre-provisioned PV (default fs)] subPath should support restarting containers using file as subpath [Slow]",
+"status": "skipped"
+}
+]
+},
+{
+"name": "output2.xml",
+"status": "failed",
+"meta": {
+"file": "results/global/output2.xml"
+},
+"items": [
+{
+"name": "[k8s.io] Pods should be submitted and removed [NodeConformance] [Conformance]",
+"status": "passed"
+},
+{
+"name": "[sig-apps] Daemon set [Serial] should rollback without unnecessary restarts [Conformance]",
+"status": "failed",
+"details": {
+"failure": "/go/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/framework/framework.go:696\nConformance test suite needs a cluster with at least 2 nodes.\nExpected\n    \u003cint\u003e: 1\nto be \u003e\n    \u003cint\u003e: 1\n/go/src/k8s.io/kubernetes/_output/dockerized/go/src/k8s.io/kubernetes/test/e2e/apps/daemon_set.go:385",
+"system-out": "[BeforeEach] ..."
+}
+},
+{
+"name": "[sig-storage] In-tree Volumes [Driver: local][LocalVolumeType: dir-link-bindmounted] [Testpattern: Dynamic PV (default fs)] subPath should support existing directories when readOnly specified in the volumeSource",
+"status": "skipped"
+},
+{
+"name": "[sig-storage] In-tree Volumes [Driver: rbd][Feature:Volumes] [Testpattern: Pre-provisioned PV (default fs)] subPath should support restarting containers using file as subpath [Slow]",
+"status": "skipped"
+}
+]
+}
+]
+}
