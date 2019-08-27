@@ -8,6 +8,7 @@
         - [Writing your own plugin](#writing-your-own-plugin)
             - [The plugin definition file](#the-plugin-definition-file)
             - [Contract](#contract)
+        - [Customizing PodSpec options](#customizing-podspec-options)
     - [Available Plugins](#available-plugins)
 
 <!-- markdown-toc end -->
@@ -105,6 +106,69 @@ If you want to prevent one of those plugins from  being run, simply remove that 
 
 In either case, you use the sonobuoy [gen][gen] flow to edit the YAML and start the run with `kubectl`.
 
+### Customizing PodSpec options
+
+By default, Sonobuoy will determine how to create and run the resources required for your plugin.
+When creating your own plugins however, you may want additional control over how the plugin is run within your cluster.
+To enable this, you can customize the [PodSpec][kubernetes-podspecs] used by Sonobuoy when creating the plugin's Pods or DaemonSets by supplying a `podSpec` object within your plugin defition.
+The `podSpec` object corresponds directly to a Kubernetes [PodSpec][kubernetes-podspecs] so any fields that are available there can be set by your plugins.
+
+If a `podSpec` is provided, Sonobuoy will use it as is, only adding what is necessary for Sonobuoy to run your plugin (such as a Sonobuoy worker container).
+Sonobuoy will only ever _add_ to your `podSpec` definition, it will not remove or override settings within it.
+If you don't need to provide any additional settings, you can omit this object and Sonobuoy will use the defaults.
+
+#### Providing your own PodSpec
+We recommend starting with the default `podSpec` used by Sonobuoy and then making any necessary modifications.
+To view the default `podSpec`, you can use the flag `--show-default-podspec` with the `gen` and `gen plugin` commands.
+
+When creating a new plugin, you can include the default `podSpec` in the generated definition as follows:
+
+```
+sonobuoy gen plugin --show-default-podspec -n my-plugin -i my-plugin:latest
+```
+
+This will produce the following plugin definition:
+
+```yaml
+podSpec:
+  containers: []
+  restartPolicy: Never
+  serviceAccountName: sonobuoy-serviceaccount
+  tolerations:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+    operator: Exists
+  - key: CriticalAddonsOnly
+    operator: Exists
+sonobuoy-config:
+  driver: Job
+  plugin-name: my-plugin
+  result-type: my-plugin
+spec:
+  command:
+  - ./run.sh
+  image: my-plugin:latest
+  name: plugin
+  resources: {}
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
+```
+
+You are then free to make modifications to the `podSpec` object as necessary.
+
+If you already have an existing plugin which you would like to customize, you can take the default `podSpec`, add it to your plugin definition and use it as the basis for customization.
+
+> **NOTE:** The default `podSpec` differs for Job and DaemonSet plugins.
+To be sure you are using the appropriate defaults as your starting point, be sure to provide the `--type` flag when using `sonobuoy gen plugin`.
+
+You can also modify the `podSpec` from within a Sonobuoy manifest.
+By providing the flag `--show-default-podspec` to `sonobuoy gen`, the default `podSpec` for each plugin will be included within the `sonobuoy-plugins-cm` ConfigMap in the manifest.
+
+> **NOTE:** Modifications to the `podSpec` are only persisted within that generated manifest.
+If you generate a new manifest by running `sonobuoy gen` again, you will need to reapply any changes made.
+We recommend adding your desired customizations to the plugin definition itself.
+
 ## Available Plugins
 
 The default Sonobuoy plugins are available in the `examples/plugins.d` directory in this repository.
@@ -126,3 +190,4 @@ Here's the current list:
 [guide]: conformance-testing.md#integration-with-sonobuoy 
 [bulkhead]: https://github.com/bgeesaman/sonobuoy-plugin-bulkhead/blob/master/examples/benchmark.yml
 [bench]: https://github.com/bgeesaman/sonobuoy-plugin-bulkhead
+[kubernetes-podspecs]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core
