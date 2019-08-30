@@ -4,6 +4,7 @@
 
 1. Update the version defined in the code to the new version number.
    As of the time of writing, the version is defined in `pkg/buildinfo/version.go`.
+1. Generate a new set of [versioned docs][gendocs] for this release.
 1. If the new release corresponds to a new Kubernetes release, the following steps must be performed:
    * Add the new list of E2E test images.
      For an example of the outcome of this process, see the [change corresponding to the Kubernetes v1.14 release](https://github.com/heptio/sonobuoy/commit/68f15a260e60a288f91bc40347c817b382a3d45c).
@@ -32,6 +33,9 @@
     ```
     git tag -a v0.x.y -m "Release v0.x.y"
     ```
+
+    > NOTE: Tag the new tip of master, not the branch you just merged.
+
 1. Push the tag to the [`github.com/heptio/sonobuoy`](https://github.com/heptio/sonobuoy/) repository.
    * To ensure that the tag is pushed to the correct repository, check which remote corresponds to that repository using the following command:
      ```
@@ -67,13 +71,11 @@
      > By pushing an empty `src` to the remote `dst`, it makes the destination ref empty, effectively deleting it.
      > For more details, see the [`git push` documentation](https://git-scm.com/docs/git-push) or [this concise explanation on Stack Overflow](https://stackoverflow.com/a/7303710).
 
-1. Open a browser tab and go to: https://travis-ci.org/heptio/sonobuoy/builds and verify go releaser for tag v0.x.y completes successfully.
-1. Upon successful completion of build job above, check the [releases tab of Sonobuoy](https://github.com/heptio/sonobuoy/releases) and verify the artifacts and changelog were published correctly.
-1. Run the [Jenkins job](https://jenkins.hepti.center/job/build-image-heptio-sonobuoy-release/build?delay=0sec) for pushing release images, specifying the release tag `v0.x.y` and confirm that the images get pushed correctly.
-2. Update the release notes if desired on GitHub by editing the newly created release.
 
 ## Validation
-1. Run the following command to make sure the image was pushed correctly:
+1. Open a browser tab and go to: https://travis-ci.org/heptio/sonobuoy/builds and verify go releaser for tag v0.x.y completes successfully.
+1. Upon successful completion of build job above, check the [releases tab of Sonobuoy](https://github.com/heptio/sonobuoy/releases) and verify the artifacts and changelog were published correctly.
+1. Run the following command to make sure the image was pushed correctly to [gcr.io][gcr]:
    ```
    docker run -it gcr.io/heptio-images/sonobuoy:v0.x.y /sonobuoy version
    ```
@@ -88,13 +90,12 @@
       ```
       and verify that the server version matches the intended Kubernetes version.
     - you can run `sonobuoy images` and get a list of test images as expected
+2. Update the release notes if desired on GitHub by editing the newly created release.
 
-### Follow up
-Following the release when the new tag is made, the documentation will need to be updated to include the new version.
-
+### Generating a new set of versioned docs
 The changes for this can almost all be completed by running the command:
 ```
-./scripts/update_docs.sh v0.15.0
+./scripts/update_docs.sh v0.x.y
 ```
 
 This will copy the current master docs into the version given and update
@@ -104,3 +105,6 @@ version of the docs.
 
 ### Notes
 1. Before releasing, ensure all parties are available to resolve any issues that come up. If not, just bump the release.
+
+[gendocs]: #generating-a-new-set-of-versioned-docs
+[gcr]: https://console.cloud.google.com/gcr/images/heptio-images/GLOBAL
