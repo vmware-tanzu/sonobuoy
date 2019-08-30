@@ -27,12 +27,9 @@ type SonobuoyConfig struct {
 	// Driver is the way in which this plugin is run. Either 'Job' or 'Daemonset'.
 	Driver string `json:"driver"`
 
-	// Name is the user-facing name for the plugin.
+	// Name is the user-facing name for the plugin. It should uniquely identify
+	// the plugin and is used by the aggregator to track what results should be reported back to it.
 	PluginName string `json:"plugin-name"`
-
-	// ResultType should uniquely identify the plugin and is used by the aggregator
-	// to track what results should be reported back to it.
-	ResultType string `json:"result-type"`
 
 	// SkipCleanup informs Sonobuoy to leave the pods created for this plugin running,
 	// after the run completes instead of deleting them as part of default, cleanup behavior.
@@ -54,7 +51,6 @@ func (s *SonobuoyConfig) DeepCopy() *SonobuoyConfig {
 	return &SonobuoyConfig{
 		Driver:       s.Driver,
 		PluginName:   s.PluginName,
-		ResultType:   s.ResultType,
 		ResultFormat: s.ResultFormat,
 		ResultFiles:  s.ResultFiles,
 		SkipCleanup:  s.SkipCleanup,

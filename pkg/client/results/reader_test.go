@@ -76,9 +76,9 @@ func MustGetReader(path string, t *testing.T) *results.Reader {
 }
 
 var versions = []*version{
-	&version{0, 8},
-	&version{0, 9},
-	&version{0, 10},
+	{0, 8},
+	{0, 9},
+	{0, 10},
 }
 
 func TestServerGroup(t *testing.T) {

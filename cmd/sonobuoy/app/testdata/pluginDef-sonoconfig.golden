@@ -1,7 +1,6 @@
 sonobuoy-config:
   driver: Job
   plugin-name: "n"
-  result-type: "n"
 spec:
   name: ""
   resources: {}

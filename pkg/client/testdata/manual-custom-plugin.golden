@@ -30,7 +30,6 @@ data:
     sonobuoy-config:
       driver: ""
       plugin-name: foo
-      result-type: ""
     spec:
       name: ""
       resources: {}

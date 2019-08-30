@@ -36,7 +36,6 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 			Definition: manifest.Manifest{
 				SonobuoyConfig: manifest.SonobuoyConfig{
 					PluginName: "myPlugin",
-					ResultType: "myPlugin",
 				},
 			},
 			Namespace: "testNS",
@@ -225,10 +224,6 @@ func (cp *MockCleanupPlugin) ExpectedResults(_ []corev1.Node) []plugin.ExpectedR
 
 func (cp *MockCleanupPlugin) FillTemplate(_ string, _ *tls.Certificate) ([]byte, error) {
 	return []byte{}, nil
-}
-
-func (cp *MockCleanupPlugin) GetResultType() string {
-	return "result-type"
 }
 
 func (cp *MockCleanupPlugin) GetName() string {

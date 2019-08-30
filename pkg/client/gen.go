@@ -251,7 +251,6 @@ func systemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			PluginName:   "systemd-logs",
 			Driver:       "DaemonSet",
-			ResultType:   "systemd-logs",
 			ResultFormat: "raw",
 		},
 		Spec: manifest.Container{
@@ -293,7 +292,6 @@ func e2eManifest(cfg *GenConfig) *manifest.Manifest {
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			PluginName:   "e2e",
 			Driver:       "Job",
-			ResultType:   "e2e",
 			ResultFormat: "junit",
 		},
 		Spec: manifest.Container{

@@ -50,9 +50,6 @@ type Interface interface {
 	// ExpectedResults is an array of Result objects that a plugin should
 	// expect to submit.
 	ExpectedResults(nodes []v1.Node) []ExpectedResult
-	// GetResultType returns the type of results for this plugin, typically
-	// the same as the plugin name.
-	GetResultType() string
 	// GetName returns the name of this plugin
 	GetName() string
 	// SkipCleanup returns whether cleanup for this plugin should be skipped or not.

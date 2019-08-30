@@ -125,7 +125,6 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 		Definition: manifest.Manifest{
 			SonobuoyConfig: manifest.SonobuoyConfig{
 				PluginName: "test-plugin",
-				ResultType: "test-plugin",
 			},
 		},
 		SonobuoyImage:   "sonobuoy:v1",
@@ -170,7 +169,7 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 			},
 			{
 				Name:  "RESULT_TYPE",
-				Value: b.GetResultType(),
+				Value: b.GetName(),
 			},
 			{
 				Name:  "MASTER_URL",

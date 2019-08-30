@@ -201,7 +201,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 			// Update the plugin status with this post-processed information.
 			statusInfo := map[string]int{}
 			statusCounts(&item, statusInfo)
-			updatePluginStatus(kubeClient, cfg.Namespace, p.GetResultType(), item.Status, statusInfo)
+			updatePluginStatus(kubeClient, cfg.Namespace, p.GetName(), item.Status, statusInfo)
 		}
 	}
 

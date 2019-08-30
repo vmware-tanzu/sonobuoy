@@ -74,7 +74,7 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	for _, node := range nodes {
 		ret = append(ret, plugin.ExpectedResult{
 			NodeName:   node.Name,
-			ResultType: p.GetResultType(),
+			ResultType: p.GetName(),
 		})
 	}
 
@@ -88,9 +88,8 @@ func getAggregatorAddress(hostname string) string {
 func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificate, ownerPod *v1.Pod) appsv1.DaemonSet {
 	ds := appsv1.DaemonSet{}
 	annotations := map[string]string{
-		"sonobuoy-driver":      p.GetDriver(),
-		"sonobuoy-plugin":      p.GetName(),
-		"sonobuoy-result-type": p.GetResultType(),
+		"sonobuoy-driver": p.GetDriver(),
+		"sonobuoy-plugin": p.GetName(),
 	}
 	for k, v := range p.CustomAnnotations {
 		annotations[k] = v
@@ -291,7 +290,7 @@ func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, availableNodes []v
 		if isFailing, reason := utils.IsPodFailing(&pod); isFailing {
 			podsReported[nodeName] = true
 
-			retErrs = append(retErrs, utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
+			retErrs = append(retErrs, utils.MakeErrorResult(p.GetName(), map[string]interface{}{
 				"error": reason,
 				"pod":   pod,
 			}, nodeName))
@@ -306,7 +305,7 @@ func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, availableNodes []v
 	for _, node := range availableNodes {
 		if !podsFound[node.Name] && !podsReported[node.Name] {
 			podsReported[node.Name] = true
-			retErrs = append(retErrs, utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{
+			retErrs = append(retErrs, utils.MakeErrorResult(p.GetName(), map[string]interface{}{
 				"error": fmt.Sprintf(
 					"No pod was scheduled on node %v within %v. Check tolerations for plugin %v",
 					node.Name,

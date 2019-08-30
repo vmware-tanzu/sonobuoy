@@ -222,7 +222,7 @@ func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, p plugin.Interface
 	if err := p.Run(client, address, cert, aggregatorPod); err != nil {
 		err := errors.Wrapf(err, "error running plugin %v", p.GetName())
 		logrus.Error(err)
-		monitorCh <- utils.MakeErrorResult(p.GetResultType(), map[string]interface{}{"error": err.Error()}, "")
+		monitorCh <- utils.MakeErrorResult(p.GetName(), map[string]interface{}{"error": err.Error()}, "")
 	}
 
 	go p.Monitor(pCtx, client, nodes, monitorCh)
@@ -252,7 +252,7 @@ func (a *Aggregator) pluginHasResults(p plugin.Interface) bool {
 	a.resultsMutex.Lock()
 	defer a.resultsMutex.Unlock()
 
-	targetType := p.GetResultType()
+	targetType := p.GetName()
 	for expResultID, expResult := range a.ExpectedResults {
 		if expResult.ResultType != targetType {
 			continue
