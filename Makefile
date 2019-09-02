@@ -56,8 +56,11 @@ TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
 TEST_CMD = go test $(TESTARGS)
 TEST = $(TEST_CMD) $(COVERARGS) $(TEST_PKGS)
 
-INT_TEST_PKGS ?= $(GOTARGET)/test/...
-INT_TEST= $(TEST_CMD) $(INT_TEST_PKGS)
+INT_TEST_PKGS ?= $(GOTARGET)/test/integration/...
+INT_TEST= $(TEST_CMD) $(INT_TEST_PKGS) -tags=integration
+
+STRESS_TEST_PKGS ?= $(GOTARGET)/test/stress/...
+STRESS_TEST= $(TEST_CMD) $(STRESS_TEST_PKGS)
 
 VET = go vet $(TEST_PKGS)
 
@@ -79,6 +82,10 @@ local-test:
 # Unit tests
 test: sonobuoy vet
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(TEST)'
+
+# Stress tests
+stress: sonobuoy
+	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(STRESS_TEST)'
 
 # Integration tests
 int: sonobuoy
