@@ -177,17 +177,16 @@ Here's the current list:
 | Plugin                    | Overview                                                                                     | Source Code Repository                              | Env Variables (Config)                                                                                    |
 | ---                       | ---                                                                                          | ---                                                 | ---                                                                                                       |
 | [`systemd_logs`][systemd] | Gather the latest system logs from each node, using systemd's `journalctl` command.          | [heptio/sonobuoy-plugin-systemd-logs][systemd-repo] | (1) `RESULTS_DIR`<br>(2)`CHROOT_DIR`<br>(3)`LOG_MINUTES`                                                  |
-| [`e2e`][e2e]              | Run Kubernetes end-to-end tests (e.g. conformance) and gather the results.                   | [heptio/kube-conformance][conformance]              | `E2E_*` variables configure the end-to-end tests. See the [conformance testing guide][guide] for details. |
+| [`e2e`][e2e]              | Run Kubernetes end-to-end tests (e.g. conformance) and gather the results.                   | [kubernetes/kubernetes][conformance]              | `E2E_*` variables configure the end-to-end tests. See the [conformance testing guide][guide] for details. |
 | [`bulkhead`][bulkhead]    | Perform CIS Benchmark scans from each node using Aqua Security's [`kube-bench`][bench] tool. | [bgeesaman/sonobuoy-plugin-bulkhead][bulkhead]      | (1) `RESULTS_DIR`                                                                                         |
 
 
 
 [gen]: gen.md
-[systemd]: https://github.com/heptio/sonobuoy/examples/plugins.d/systemd_logs.yaml
+[systemd]: https://github.com/heptio/sonobuoy/blob/master/examples/plugins.d/systemd_logs.yaml
 [systemd-repo]: https://github.com/heptio/sonobuoy-plugin-systemd-logs
-[e2e]: https://github.com/heptio/sonobuoy/examples/plugins.d/heptio-e2e.yaml
-[conformance]: https://github.com/heptio/kube-conformance
+[e2e]: https://github.com/heptio/sonobuoy/blob/master/examples/plugins.d/heptio-e2e.yaml
+[conformance]: https://github.com/kubernetes/kubernetes/tree/master/cluster/images/conformance
 [guide]: conformance-testing.md#integration-with-sonobuoy 
 [bulkhead]: https://github.com/bgeesaman/sonobuoy-plugin-bulkhead/blob/master/examples/benchmark.yml
 [bench]: https://github.com/bgeesaman/sonobuoy-plugin-bulkhead
-[kubernetes-podspecs]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core
