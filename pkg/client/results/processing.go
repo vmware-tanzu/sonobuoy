@@ -97,6 +97,7 @@ func aggregateStatus(items ...Item) string {
 		return StatusUnknown
 	}
 
+	unknownFound := false
 	for i := range items {
 		// Branches should just aggregate their leaves and return the result.
 		if len(items[i].Items) > 0 {
@@ -107,6 +108,14 @@ func aggregateStatus(items ...Item) string {
 		if items[i].Status == StatusFailed {
 			return StatusFailed
 		}
+
+		if items[i].Status == StatusUnknown {
+			unknownFound = true
+		}
+	}
+
+	if unknownFound {
+		return StatusUnknown
 	}
 
 	// Only pass if no failures found.
