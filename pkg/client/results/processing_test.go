@@ -196,6 +196,11 @@ func TestAggregateStatus(t *testing.T) {
 			expectedItems: []Item{{Status: StatusFailed}},
 			expected:      StatusFailed,
 		}, {
+			desc:          "Single unknown is unknown",
+			input:         []Item{{Status: StatusUnknown}},
+			expectedItems: []Item{{Status: StatusUnknown}},
+			expected:      StatusUnknown,
+		}, {
 			desc:          "Misc other values pass",
 			input:         []Item{{Status: "foobar"}},
 			expectedItems: []Item{{Status: "foobar"}},
@@ -208,6 +213,30 @@ func TestAggregateStatus(t *testing.T) {
 			},
 			expectedItems: []Item{
 				{Status: StatusPassed},
+				{Status: StatusFailed},
+			},
+			expected: StatusFailed,
+		}, {
+			desc: "Single unknown in group causes unknown",
+			input: []Item{
+				{Status: StatusPassed},
+				{Status: StatusUnknown},
+			},
+			expectedItems: []Item{
+				{Status: StatusPassed},
+				{Status: StatusUnknown},
+			},
+			expected: StatusUnknown,
+		}, {
+			desc: "Failure takes priority over unknown",
+			input: []Item{
+				{Status: StatusPassed},
+				{Status: StatusUnknown},
+				{Status: StatusFailed},
+			},
+			expectedItems: []Item{
+				{Status: StatusPassed},
+				{Status: StatusUnknown},
 				{Status: StatusFailed},
 			},
 			expected: StatusFailed,
@@ -232,6 +261,27 @@ func TestAggregateStatus(t *testing.T) {
 				{Status: StatusPassed},
 			},
 			expected: StatusFailed,
+		}, {
+			desc: "Nested unknown causes unknown",
+			input: []Item{
+				{
+					Status: StatusPassed,
+					Items: []Item{
+						{Status: StatusUnknown},
+					},
+				},
+				{Status: StatusPassed},
+			},
+			expectedItems: []Item{
+				{
+					Status: StatusUnknown,
+					Items: []Item{
+						{Status: StatusUnknown},
+					},
+				},
+				{Status: StatusPassed},
+			},
+			expected: StatusUnknown,
 		}, {
 			desc: "Deep branches should aggregate their items and return if failure",
 			input: []Item{
@@ -301,6 +351,75 @@ func TestAggregateStatus(t *testing.T) {
 				},
 			},
 			expected: StatusFailed,
+		}, {
+			desc: "Deep branches should aggregate their items and return if unknown",
+			input: []Item{
+				{
+					Name:   "top of a branch",
+					Status: StatusPassed,
+					Items: []Item{
+						{
+							Name: "passing node",
+							Items: []Item{
+								{
+									Name:   "first leaf passes",
+									Status: StatusPassed,
+								},
+							},
+						},
+						{
+							Name: "unknown node",
+							Items: []Item{
+								{
+									Name:   "first leaf passes",
+									Status: StatusPassed,
+								}, {
+									Name:   "second leaf unknown and should cause branch to be unknown",
+									Status: StatusUnknown,
+								}, {
+									Name:   "third leaf passes as well",
+									Status: StatusPassed,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedItems: []Item{
+				{
+					Name:   "top of a branch",
+					Status: StatusUnknown,
+					Items: []Item{
+						{
+							Name:   "passing node",
+							Status: StatusPassed,
+							Items: []Item{
+								{
+									Name:   "first leaf passes",
+									Status: StatusPassed,
+								},
+							},
+						},
+						{
+							Name:   "unknown node",
+							Status: StatusUnknown,
+							Items: []Item{
+								{
+									Name:   "first leaf passes",
+									Status: StatusPassed,
+								}, {
+									Name:   "second leaf unknown and should cause branch to be unknown",
+									Status: StatusUnknown,
+								}, {
+									Name:   "third leaf passes as well",
+									Status: StatusPassed,
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: StatusUnknown,
 		},
 	}
 
