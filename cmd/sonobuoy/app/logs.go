@@ -35,6 +35,7 @@ const (
 var logFlags struct {
 	namespace  string
 	follow     bool
+	plugin     string
 	kubeconfig Kubeconfig
 }
 
@@ -52,6 +53,7 @@ func NewCmdLogs() *cobra.Command {
 	)
 	AddKubeconfigFlag(&logFlags.kubeconfig, cmd.Flags())
 	AddNamespaceFlag(&logFlags.namespace, cmd.Flags())
+	cmd.Flags().StringVarP(&logFlags.plugin, pluginFlag, "p", "", "Show logs for a specific plugin")
 	return cmd
 }
 
@@ -65,6 +67,7 @@ func getLogs(cmd *cobra.Command, args []string) {
 	logConfig := client.NewLogConfig()
 	logConfig.Namespace = logFlags.namespace
 	logConfig.Follow = logFlags.follow
+	logConfig.Plugin = logFlags.plugin
 
 	logreader, err := sbc.LogReader(logConfig)
 	if err != nil {

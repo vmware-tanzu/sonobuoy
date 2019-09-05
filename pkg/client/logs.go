@@ -22,6 +22,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -109,6 +110,32 @@ func (r *Reader) Read(p []byte) (int, error) {
 	return len(data), nil
 }
 
+// getPodsForLogs retrieves the pods to stream logs from. If a plugin name has been provided, retrieve the pods with
+// only the plugin label matching that plugin name. If no pods are found, or no plugin has been specified, retrieve
+// all pods within the namespace.
+func getPodsForLogs(client kubernetes.Interface, cfg *LogConfig) (*v1.PodList, error) {
+	if cfg.Plugin != "" {
+		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, "sonobuoy-plugin", cfg.Plugin)
+		options := metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)}
+		pods, err := client.CoreV1().Pods(cfg.Namespace).List(options)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to list pods")
+		}
+
+		if len(pods.Items) != 0 {
+			return pods, nil
+		}
+
+		logrus.Warningf("failed to find pods for plugin %q, defaulting to all pods", cfg.Plugin)
+	}
+
+	pods, err := client.CoreV1().Pods(cfg.Namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list pods")
+	}
+	return pods, nil
+}
+
 // LogReader configures a Reader that provides an io.Reader interface to a merged stream of logs from various containers.
 func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
 	if cfg == nil {
@@ -124,9 +151,9 @@ func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
 		return nil, err
 	}
 
-	pods, err := client.CoreV1().Pods(cfg.Namespace).List(metav1.ListOptions{})
+	pods, err := getPodsForLogs(client, cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to list pods")
+		return nil, err
 	}
 
 	// We must make sure the error channel has capacity enough so that it never blocks

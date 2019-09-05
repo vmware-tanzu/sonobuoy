@@ -84,9 +84,10 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, own
 		annotations[k] = v
 	}
 	labels := map[string]string{
-		"component":    "sonobuoy",
-		"tier":         "analysis",
-		"sonobuoy-run": p.SessionID,
+		"component":       "sonobuoy",
+		"tier":            "analysis",
+		"sonobuoy-run":    p.SessionID,
+		"sonobuoy-plugin": p.GetName(),
 	}
 
 	pod.ObjectMeta = metav1.ObjectMeta{
