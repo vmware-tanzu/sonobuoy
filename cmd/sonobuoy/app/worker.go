@@ -21,14 +21,17 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
+	"path"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
 	"github.com/heptio/sonobuoy/pkg/worker"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -135,18 +138,22 @@ func runGather(global bool) error {
 		return errors.Wrap(err, "getting HTTP client")
 	}
 
-	url := ""
+	resultURL, err := url.Parse(cfg.MasterURL)
+	if err != nil {
+		return errors.Wrap(err, "parsing MasterURL")
+	}
+
 	if global {
 		// A global results URL looks like:
 		// http://sonobuoy-aggregator:8080/api/v1/results/global/systemd_logs
-		url = cfg.MasterURL + "/" + cfg.ResultType
+		resultURL.Path = path.Join(aggregation.PathResultsGlobal, cfg.ResultType)
 	} else {
 		// A single-node results URL looks like:
 		// http://sonobuoy-aggregator:8080/api/v1/results/by-node/node1/systemd_logs
-		url = cfg.MasterURL + "/" + cfg.NodeName + "/" + cfg.ResultType
+		resultURL.Path = path.Join(aggregation.PathResultsByNode, cfg.NodeName, cfg.ResultType)
 	}
 
-	err = worker.GatherResults(cfg.ResultsDir+"/done", url, client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
+	err = worker.GatherResults(cfg.ResultsDir+"/done", resultURL.String(), client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
 	return errors.Wrap(err, "gathering results")
 }
 

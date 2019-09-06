@@ -32,10 +32,19 @@ const (
 	// have an /api/v2 later we'll figure out a good strategy for splitting up the
 	// handling.
 
+	// PathResultsByNode is the path for node-specific results to be PUT to. Callers should
+	// add two path elements as a suffix to this to specify the node and plugin (e.g. `<path>/node/plugin`)
+	PathResultsByNode = "/api/v1/results/by-node"
+
+	// PathResultsGlobal is the path for global (non-node-specific) results to be PUT to. Callers should
+	// add one path elements as a suffix to this to specify the plugin name (e.g. `<path>/plugin`)
+	PathResultsGlobal = "/api/v1/results/global"
+
 	// resultsGlobal is the path for node-specific results to be PUT
-	resultsByNode = "/api/v1/results/by-node/{node}/{plugin}"
-	// resultsGlobal is the path for global (non node-specific) results to be PUT
-	resultsGlobal = "/api/v1/results/global/{plugin}"
+	resultsByNode = PathResultsByNode + "/{node}/{plugin}"
+
+	// resultsGlobal is the path for global (non-node-specific) results to be PUT
+	resultsGlobal = PathResultsGlobal + "/{plugin}"
 
 	// defaultFilename is the name given to the file if no filename is given in the
 	// content-disposition header

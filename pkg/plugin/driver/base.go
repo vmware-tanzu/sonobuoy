@@ -190,6 +190,7 @@ func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate) []v1.En
 			},
 		},
 	}
+
 	return envVars
 }
 
