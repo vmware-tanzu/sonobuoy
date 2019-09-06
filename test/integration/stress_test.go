@@ -58,7 +58,7 @@ func TestStress(t *testing.T) {
 
 	// Launch the aggregator and server
 	aggr := aggregation.NewAggregator(dir+"/results", expected)
-	handler := aggregation.NewHandler(aggr.HandleHTTPResult)
+	handler := aggregation.NewHandler(aggr.HandleHTTPResult, aggr.HandleHTTPProgressUpdate)
 	srv := authtest.NewTLSServer(handler, t)
 
 	stopCh := make(chan bool)

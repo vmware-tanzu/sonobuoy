@@ -24,8 +24,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	defaultProgressUpdatesPort = "8099"
+)
+
 func setConfigDefaults(ac *plugin.WorkerConfig) {
 	ac.ResultsDir = plugin.ResultsDir
+	ac.ProgressUpdatesPort = defaultProgressUpdatesPort
 }
 
 // LoadConfig loads the configuration for the sonobuoy worker from environment
@@ -52,6 +57,7 @@ func LoadConfig() (*plugin.WorkerConfig, error) {
 	viper.BindEnv("cacert", "CA_CERT")
 	viper.BindEnv("clientcert", "CLIENT_CERT")
 	viper.BindEnv("clientkey", "CLIENT_KEY")
+	viper.BindEnv("progressport", "SONOBUOY_PROGRESS_PORT")
 
 	setConfigDefaults(config)
 

@@ -56,6 +56,8 @@ const (
 	DefaultQueryQPS = 30
 	// DefaultQueryBurst is the peak number of queries per second Sonobuoy will make when gathering data.
 	DefaultQueryBurst = 50
+	// DefaultProgressUpdatesPort is the port on which the Sonobuoy worker will listen for status updates from its plugin.
+	DefaultProgressUpdatesPort = "8099"
 )
 
 var (
@@ -161,6 +163,9 @@ type Config struct {
 	ImagePullPolicy   string            `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
 	ImagePullSecrets  string            `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
 	CustomAnnotations map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
+
+	// ProgressUpdatesPort is the port on which the Sonobuoy worker will listen for status updates from its plugin.
+	ProgressUpdatesPort string `json:"ProgressUpdatesPort,omitempty" mapstructure:"ProgressUpdatesPort"`
 }
 
 // LimitConfig is a configuration on the limits of various responses, such as limits of sizes
@@ -358,6 +363,8 @@ func New() *Config {
 
 	cfg.WorkerImage = DefaultImage
 	cfg.ImagePullPolicy = DefaultSonobuoyPullPolicy
+
+	cfg.ProgressUpdatesPort = DefaultProgressUpdatesPort
 
 	return &cfg
 }

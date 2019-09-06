@@ -74,7 +74,7 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	}
 }
 
-func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, ownerPod *v1.Pod) v1.Pod {
+func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, ownerPod *v1.Pod, progressPort string) v1.Pod {
 	pod := v1.Pod{}
 	annotations := map[string]string{
 		"sonobuoy-driver": p.GetDriver(),
@@ -114,7 +114,7 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, own
 
 	podSpec.Containers = append(podSpec.Containers,
 		p.Definition.Spec.Container,
-		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/sonobuoy"}, []string{"worker", "global", "-v", "5", "--logtostderr"}),
+		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/sonobuoy"}, []string{"worker", "global", "-v", "5", "--logtostderr"}, progressPort),
 	)
 
 	if len(p.ImagePullSecrets) > 0 {
@@ -139,8 +139,8 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, own
 }
 
 // Run dispatches worker pods according to the Job's configuration.
-func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod) error {
-	job := p.createPodDefinition(fmt.Sprintf("https://%s", hostname), cert, ownerPod)
+func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod, progressPort string) error {
+	job := p.createPodDefinition(fmt.Sprintf("https://%s", hostname), cert, ownerPod, progressPort)
 
 	secret, err := p.MakeTLSSecret(cert)
 	if err != nil {

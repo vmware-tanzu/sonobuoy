@@ -102,6 +102,9 @@ func loadAndValidateConfig() (*plugin.WorkerConfig, error) {
 	if cfg.ResultType == "" {
 		errlst = append(errlst, "ResultsType not set")
 	}
+	if cfg.ProgressUpdatesPort == "" {
+		errlst = append(errlst, "ProgressUpdatesPort not set")
+	}
 
 	if len(errlst) > 0 {
 		joinedErrs := strings.Join(errlst, ", ")
@@ -142,18 +145,26 @@ func runGather(global bool) error {
 	if err != nil {
 		return errors.Wrap(err, "parsing MasterURL")
 	}
+	progressURL, err := url.Parse(cfg.MasterURL)
+	if err != nil {
+		return errors.Wrap(err, "parsing MasterURL")
+	}
 
 	if global {
 		// A global results URL looks like:
 		// http://sonobuoy-aggregator:8080/api/v1/results/global/systemd_logs
 		resultURL.Path = path.Join(aggregation.PathResultsGlobal, cfg.ResultType)
+		progressURL.Path = path.Join(aggregation.PathProgressGlobal, cfg.ResultType)
 	} else {
 		// A single-node results URL looks like:
 		// http://sonobuoy-aggregator:8080/api/v1/results/by-node/node1/systemd_logs
 		resultURL.Path = path.Join(aggregation.PathResultsByNode, cfg.NodeName, cfg.ResultType)
+		progressURL.Path = path.Join(aggregation.PathProgressByNode, cfg.NodeName, cfg.ResultType)
 	}
 
+	go worker.RelayProgressUpdates(cfg.ProgressUpdatesPort, progressURL.String(), client)
 	err = worker.GatherResults(cfg.ResultsDir+"/done", resultURL.String(), client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
+
 	return errors.Wrap(err, "gathering results")
 }
 

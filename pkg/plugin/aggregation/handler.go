@@ -17,9 +17,11 @@ limitations under the License.
 package aggregation
 
 import (
+	"encoding/json"
 	"mime"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/heptio/sonobuoy/pkg/plugin"
@@ -37,14 +39,28 @@ const (
 	PathResultsByNode = "/api/v1/results/by-node"
 
 	// PathResultsGlobal is the path for global (non-node-specific) results to be PUT to. Callers should
-	// add one path elements as a suffix to this to specify the plugin name (e.g. `<path>/plugin`)
+	// add one path element as a suffix to this to specify the plugin name (e.g. `<path>/plugin`)
 	PathResultsGlobal = "/api/v1/results/global"
+
+	// PathProgressByNode is the path for node-specific progress updates to be POSTed to. Callers should
+	// add two path elements as a suffix to this to specify the node and plugin (e.g. `<path>/node/plugin`)
+	PathProgressByNode = "api/v1/progress/by-node"
+
+	// PathProgressGlobal is the path for progress updates to be POSTed to for global (non node-specific) plugins.
+	// Callers should add one path element as a suffix to this to specify the plugin name (e.g. `<path>/plugin`)
+	PathProgressGlobal = "/api/v1/progress/global"
 
 	// resultsGlobal is the path for node-specific results to be PUT
 	resultsByNode = PathResultsByNode + "/{node}/{plugin}"
 
 	// resultsGlobal is the path for global (non-node-specific) results to be PUT
 	resultsGlobal = PathResultsGlobal + "/{plugin}"
+
+	// progressByNode is the path for progress updates to be POSTed to for node-specific plugins
+	progressByNode = PathProgressByNode + "/{node}/{plugin}"
+
+	// progressGlobal is the path for progress updates to be POSTed to for global (non node-specific) plugins
+	progressGlobal = PathProgressGlobal + "/{plugin}"
 
 	// defaultFilename is the name given to the file if no filename is given in the
 	// content-disposition header
@@ -53,31 +69,44 @@ const (
 
 var (
 	// Only used for route reversals
-	r           = mux.NewRouter()
-	nodeRoute   = r.Path(resultsByNode).BuildOnly()
-	globalRoute = r.Path(resultsGlobal).BuildOnly()
+	r                   = mux.NewRouter()
+	nodeRoute           = r.Path(resultsByNode).BuildOnly()
+	globalRoute         = r.Path(resultsGlobal).BuildOnly()
+	progressRouteByNode = r.Path(progressByNode).BuildOnly()
+	progressRouteGlobal = r.Path(progressGlobal).BuildOnly()
 )
 
 // Handler is a net/http Handler that can handle API requests for aggregation of
 // results from nodes, calling the provided callback with the results
 type Handler struct {
 	mux.Router
+
 	// ResultsCallback is the function that is called when a result is checked in.
 	ResultsCallback func(*plugin.Result, http.ResponseWriter)
+
+	// ProgressCallback is the function that is called when a progress update is checked in.
+	ProgressCallback func(plugin.ProgressUpdate, http.ResponseWriter)
 }
 
 // NewHandler constructs a new aggregation handler which will handler results
 // and pass them to the given results callback.
-func NewHandler(resultsCallback func(*plugin.Result, http.ResponseWriter)) http.Handler {
+func NewHandler(
+	resultsCallback func(*plugin.Result, http.ResponseWriter),
+	progressCallback func(plugin.ProgressUpdate, http.ResponseWriter),
+) http.Handler {
 	handler := &Handler{
-		Router:          *mux.NewRouter(),
-		ResultsCallback: resultsCallback,
+		Router:           *mux.NewRouter(),
+		ResultsCallback:  resultsCallback,
+		ProgressCallback: progressCallback,
 	}
 	// We accept PUT because the client is specifying the resource identifier via
 	// the HTTP path. (As opposed to POST, where typically the clients would post
 	// to a base URL and the server picks the final resource path.)
 	handler.HandleFunc(resultsByNode, handler.resultsHandler).Methods("PUT")
 	handler.HandleFunc(resultsGlobal, handler.resultsHandler).Methods("PUT")
+
+	handler.HandleFunc(progressByNode, handler.progressHandler).Methods("POST")
+	handler.HandleFunc(progressGlobal, handler.progressHandler).Methods("POST")
 	return handler
 }
 
@@ -97,6 +126,19 @@ func resultFromRequest(r *http.Request, muxVars map[string]string) *plugin.Resul
 	return result
 }
 
+func progressFromRequest(r *http.Request, muxVars map[string]string) (plugin.ProgressUpdate, error) {
+	var update plugin.ProgressUpdate
+	dec := json.NewDecoder(r.Body)
+	err := dec.Decode(&update)
+	update.Node = muxVars["node"]
+	if update.Node == "" {
+		update.Node = plugin.GlobalResult
+	}
+	update.PluginName = muxVars["plugin"]
+	update.Timestamp = time.Now()
+	return update, errors.Wrap(err, "unable to decode body")
+}
+
 func (h *Handler) resultsHandler(w http.ResponseWriter, r *http.Request) {
 	logRequest(r)
 	vars := mux.Vars(r)
@@ -106,6 +148,23 @@ func (h *Handler) resultsHandler(w http.ResponseWriter, r *http.Request) {
 	// out.) The callback is responsible for doing a 409 conflict if results are
 	// given twice for the same node, etc.
 	h.ResultsCallback(result, w)
+	r.Body.Close()
+}
+
+func (h *Handler) progressHandler(w http.ResponseWriter, r *http.Request) {
+	logRequest(r)
+	vars := mux.Vars(r)
+	update, err := progressFromRequest(r, vars)
+	if err != nil {
+		logrus.Errorf("Failed to get progress update from request: %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Trigger our callback with this checkin record (which should write the file
+	// out.) The callback is responsible for doing a 409 conflict if results are
+	// given twice for the same node, etc.
+	h.ProgressCallback(update, w)
 	r.Body.Close()
 }
 

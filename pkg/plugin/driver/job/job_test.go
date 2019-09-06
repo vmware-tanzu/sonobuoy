@@ -103,7 +103,7 @@ func TestCreatePodDefinition(t *testing.T) {
 		t.Fatalf("couldn't make client certificate %v", err)
 	}
 
-	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{})
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "")
 
 	expectedName := fmt.Sprintf("sonobuoy-%v-job-%v", pluginName, testPlugin.SessionID)
 	if pod.Name != expectedName {
@@ -198,7 +198,7 @@ func TestCreatePodDefinitionUsesDefaultPodSpec(t *testing.T) {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{})
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "")
 
 	expectedServiceAccount := "sonobuoy-serviceaccount"
 	if pod.Spec.ServiceAccountName != expectedServiceAccount {
@@ -236,7 +236,7 @@ func TestCreatePodDefinitionUsesProvidedPodSpec(t *testing.T) {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{})
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "")
 
 	if pod.Spec.ServiceAccountName != expectedServiceAccountName {
 		t.Errorf("expected pod spec to have provided service account name %q, got %q", expectedServiceAccountName, pod.Spec.ServiceAccountName)
@@ -270,7 +270,7 @@ func TestCreatePodDefinitionAddsToExistingResourcesInPodSpec(t *testing.T) {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{})
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "")
 
 	// Existing container in pod spec, plus 2 added by Sonobuoy
 	expectedNumContainers := 3
@@ -315,7 +315,7 @@ func TestCreatePodDefinitionSetsOwnerReference(t *testing.T) {
 		},
 	}
 
-	pod := testPlugin.createPodDefinition("", clientCert, &aggregatorPod)
+	pod := testPlugin.createPodDefinition("", clientCert, &aggregatorPod, "")
 	ownerReferences := pod.ObjectMeta.OwnerReferences
 
 	if len(ownerReferences) != 1 {

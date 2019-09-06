@@ -21,11 +21,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
+	"github.com/heptio/sonobuoy/pkg/plugin"
 
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -49,6 +50,8 @@ type PluginStatus struct {
 
 	ResultStatus       string         `json:"result-status"`
 	ResultStatusCounts map[string]int `json:"result-counts"`
+
+	Progress *plugin.ProgressUpdate `json:"progress,omitempty"`
 }
 
 // Status represents the current status of a Sonobuoy run.
@@ -68,6 +71,18 @@ type TarInfo struct {
 	Size      int64     `json:"size"`
 }
 
+// Key returns a unique identifier for the plugin that these status values
+// correspond to.
+func (p PluginStatus) Key() string {
+	nodeName := p.Node
+	if p.Node == "" {
+		nodeName = plugin.GlobalResult
+	}
+
+	return p.Plugin + "/" + nodeName
+}
+
+// updateStatus sets the overall status field based on the values of all of the plugins' status.
 func (s *Status) updateStatus() error {
 	status := PostProcessingStatus
 	for _, plugin := range s.Plugins {
