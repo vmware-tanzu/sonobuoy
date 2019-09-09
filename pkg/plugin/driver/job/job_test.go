@@ -58,10 +58,11 @@ func createClientCertificate(name string) (*tls.Certificate, error) {
 }
 
 func TestCreatePodDefinition(t *testing.T) {
+	pluginName := "test-job"
 	testPlugin := NewPlugin(
 		manifest.Manifest{
 			SonobuoyConfig: manifest.SonobuoyConfig{
-				PluginName: "test-job",
+				PluginName: pluginName,
 			},
 			Spec: manifest.Container{
 				Container: corev1.Container{
@@ -97,20 +98,25 @@ func TestCreatePodDefinition(t *testing.T) {
 		t.Fatalf("couldn't make CA Authority %v", err)
 	}
 
-	clientCert, err := auth.ClientKeyPair("test-job")
+	clientCert, err := auth.ClientKeyPair(pluginName)
 	if err != nil {
 		t.Fatalf("couldn't make client certificate %v", err)
 	}
 
 	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{})
 
-	expectedName := fmt.Sprintf("sonobuoy-test-job-job-%v", testPlugin.SessionID)
+	expectedName := fmt.Sprintf("sonobuoy-%v-job-%v", pluginName, testPlugin.SessionID)
 	if pod.Name != expectedName {
 		t.Errorf("Expected pod name %v, got %v", expectedName, pod.Name)
 	}
 
 	if pod.Namespace != expectedNamespace {
 		t.Errorf("Expected pod namespace %v, got %v", expectedNamespace, pod.Namespace)
+	}
+
+	pluginLabel := "sonobuoy-plugin"
+	if pod.Labels[pluginLabel] != pluginName {
+		t.Errorf("Expected pod to have label %q with value %q, but had value %q", pluginLabel, pluginName, pod.Labels[pluginLabel])
 	}
 
 	expectedContainers := 2

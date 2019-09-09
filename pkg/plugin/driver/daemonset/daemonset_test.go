@@ -57,11 +57,12 @@ func createClientCertificate(name string) (*tls.Certificate, error) {
 }
 
 func TestCreateDaemonSetDefintion(t *testing.T) {
+	pluginName := "test-plugin"
 	testDaemonSet := NewPlugin(
 		manifest.Manifest{
 			SonobuoyConfig: manifest.SonobuoyConfig{
 				Driver:     "DaemonSet",
-				PluginName: "test-plugin",
+				PluginName: pluginName,
 			},
 			Spec: manifest.Container{
 				Container: corev1.Container{
@@ -96,14 +97,14 @@ func TestCreateDaemonSetDefintion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("couldn't make CA Authority %v", err)
 	}
-	clientCert, err := auth.ClientKeyPair("test-job")
+	clientCert, err := auth.ClientKeyPair(pluginName)
 	if err != nil {
 		t.Fatalf("couldn't make client certificate %v", err)
 	}
 
 	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert, &corev1.Pod{})
 
-	expectedName := fmt.Sprintf("sonobuoy-test-plugin-daemon-set-%v", testDaemonSet.SessionID)
+	expectedName := fmt.Sprintf("sonobuoy-%v-daemon-set-%v", pluginName, testDaemonSet.SessionID)
 	if daemonSet.Name != expectedName {
 		t.Errorf("Expected daemonSet name %v, got %v", expectedName, daemonSet.Name)
 	}
@@ -112,6 +113,10 @@ func TestCreateDaemonSetDefintion(t *testing.T) {
 		t.Errorf("Expected daemonSet namespace %v, got %v", expectedNamespace, daemonSet.Namespace)
 	}
 
+	pluginLabel := "sonobuoy-plugin"
+	if daemonSet.Labels[pluginLabel] != pluginName {
+		t.Errorf("Expected daemonSet to have label %q with value %q, but had value %q", pluginLabel, pluginName, daemonSet.Labels[pluginLabel])
+	}
 	containers := daemonSet.Spec.Template.Spec.Containers
 
 	expectedContainers := 2

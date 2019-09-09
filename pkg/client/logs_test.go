@@ -21,6 +21,11 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/fake"
+	k8stesting "k8s.io/client-go/testing"
 )
 
 func TestLateErrors(t *testing.T) {
@@ -242,5 +247,108 @@ func TestLogReaderInvalidConfig(t *testing.T) {
 				t.Errorf("Expected error to contain %q, got %q", tc.expectedErrorMsg, err.Error())
 			}
 		}
+	}
+}
+
+func TestPodsForLogs(t *testing.T) {
+	pluginName := "my-plugin"
+	pluginPod := corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels: map[string]string{
+				"sonobuoy-plugin": pluginName,
+			},
+		},
+	}
+	allPods := &corev1.PodList{Items: []corev1.Pod{pluginPod, corev1.Pod{}}}
+	testCases := []struct {
+		desc                   string
+		pluginName             string
+		expectedCallCount      int
+		expectedLabelSelectors []string
+		podListErrors          []error
+		expectedPodCount       int
+		expectedError          error
+	}{
+		{
+			desc:                   "No plugin specified results in all pods being fetched once",
+			pluginName:             "",
+			expectedCallCount:      1,
+			expectedLabelSelectors: []string{""},
+			podListErrors:          []error{nil},
+			expectedPodCount:       2,
+			expectedError:          nil,
+		},
+		{
+			desc:                   "Plugin specified results in plugin pods being fetched once",
+			pluginName:             pluginName,
+			expectedCallCount:      1,
+			expectedLabelSelectors: []string{"sonobuoy-plugin=my-plugin"},
+			podListErrors:          []error{nil},
+			expectedPodCount:       1,
+			expectedError:          nil,
+		},
+		{
+			desc:                   "Error when fetching plugin pods results in error being returned",
+			pluginName:             pluginName,
+			expectedCallCount:      1,
+			expectedLabelSelectors: []string{"sonobuoy-plugin=my-plugin"},
+			podListErrors:          []error{errors.New("error")},
+			expectedPodCount:       1,
+			expectedError:          errors.New("failed to list pods: error"),
+		},
+		{
+			desc:                   "Unknown plugin specified results in plugin pods being fetched, then retry with all pods fetched",
+			pluginName:             "unknown-plugin",
+			expectedCallCount:      2,
+			expectedLabelSelectors: []string{"sonobuoy-plugin=unknown-plugin", ""},
+			podListErrors:          []error{nil, nil},
+			expectedPodCount:       2,
+			expectedError:          nil,
+		},
+		{
+			desc:                   "Error when fetching plugin pods on retry results in error being returned",
+			pluginName:             "unknown-plugin",
+			expectedCallCount:      2,
+			expectedLabelSelectors: []string{"sonobuoy-plugin=unknown-plugin", ""},
+			podListErrors:          []error{nil, errors.New("error")},
+			expectedPodCount:       2,
+			expectedError:          errors.New("failed to list pods: error"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			cfg := &LogConfig{Plugin: tc.pluginName}
+
+			callCount := 0
+			fclient := fake.NewSimpleClientset()
+			fclient.PrependReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				if callCount >= tc.expectedCallCount {
+					t.Fatal("Unexpected call to list pods")
+				}
+
+				listAction := action.(k8stesting.ListAction)
+				labelSelector := listAction.GetListRestrictions().Labels.String()
+				if labelSelector != tc.expectedLabelSelectors[callCount] {
+					t.Errorf("expected label selector to be %q, got %q", tc.expectedLabelSelectors[callCount], labelSelector)
+				}
+				err := tc.podListErrors[callCount]
+				callCount++
+				return true, allPods, err
+			})
+
+			pods, err := getPodsForLogs(fclient, cfg)
+			if tc.expectedError != nil {
+				if err.Error() != tc.expectedError.Error() {
+					t.Errorf("Unexpected error result, expected %q, got %q", tc.expectedError, err)
+				}
+
+			} else {
+				if len(pods.Items) != tc.expectedPodCount {
+					t.Errorf("Unexpected number of pods returned, expected %d, got %d", tc.expectedPodCount, len(pods.Items))
+				}
+			}
+
+		})
 	}
 }

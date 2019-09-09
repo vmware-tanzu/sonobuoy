@@ -40,6 +40,8 @@ type LogConfig struct {
 	Follow bool
 	// Namespace is the namespace the sonobuoy aggregator is running in.
 	Namespace string
+	// Plugin is the name of the plugin to show the logs of.
+	Plugin string
 	// Out is the writer to write to.
 	Out io.Writer
 }
