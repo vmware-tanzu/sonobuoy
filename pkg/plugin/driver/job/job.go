@@ -74,10 +74,6 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	}
 }
 
-func getAggregatorAddress(hostname string) string {
-	return fmt.Sprintf("https://%s/api/v1/results/%v", hostname, plugin.GlobalResult)
-}
-
 func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, ownerPod *v1.Pod) v1.Pod {
 	pod := v1.Pod{}
 	annotations := map[string]string{
@@ -143,7 +139,7 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, own
 
 // Run dispatches worker pods according to the Job's configuration.
 func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod) error {
-	job := p.createPodDefinition(getAggregatorAddress(hostname), cert, ownerPod)
+	job := p.createPodDefinition(fmt.Sprintf("https://%s", hostname), cert, ownerPod)
 
 	secret, err := p.MakeTLSSecret(cert)
 	if err != nil {
