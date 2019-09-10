@@ -41,7 +41,7 @@ Alternatively, you can install the CLI by running:
 go get -u -v github.com/heptio/sonobuoy
 ```
 
-Golang version 1.12 or greater is recommended. Golang can be installed via
+Golang version 1.13 or greater is recommended. Golang can be installed via
 [gimme][gimme].
 
 ## Getting Started
