@@ -38,7 +38,7 @@ func TestCreateUpdater(t *testing.T) {
 
 	updater := newUpdater(
 		expected,
-		"heptio-sonobuoy-test",
+		"sonobuoy-test",
 		nil,
 	)
 

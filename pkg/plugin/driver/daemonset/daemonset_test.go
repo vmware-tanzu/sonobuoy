@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	expectedImageName = "gcr.io/heptio-image/sonobuoy:master"
+	expectedImageName = "gcr.io/org/sonobuoy:master"
 	expectedNamespace = "test-namespace"
 )
 

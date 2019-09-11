@@ -29,7 +29,7 @@ import (
 
 const (
 	// DefaultNamespace is the namespace where the aggregator and plugin workers will run (but not necessarily the pods created by the plugin workers).
-	DefaultNamespace = "heptio-sonobuoy"
+	DefaultNamespace = "sonobuoy"
 
 	// DefaultKubeConformanceImageURL is the URL of the docker image to run for the kube conformance tests.
 	DefaultKubeConformanceImageURL = "gcr.io/heptio-images/kube-conformance"

@@ -40,10 +40,10 @@ const (
 
 var (
 	pkixName = pkix.Name{
-		Organization:       []string{"Heptio"},
-		OrganizationalUnit: []string{"sonobuoy"},
+		Organization:       []string{"VMware"},
+		OrganizationalUnit: []string{"Sonobuoy"},
 		Country:            []string{"USA"},
-		Locality:           []string{"Seattle"},
+		Locality:           []string{"Palo Alto, CA"},
 	}
 
 	randReader = rand.Reader

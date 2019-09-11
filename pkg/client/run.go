@@ -103,7 +103,7 @@ func (c *SonobuoyClient) Run(cfg *RunConfig) error {
 		// polling attempts know if the status has been present yet.
 		seenStatus := false
 		runCondition := func() (bool, error) {
-			// Get the heptio pod and check if its status is completed or terminated.
+			// Get the Aggregator pod and check if its status is completed or terminated.
 			status, err := c.GetStatus(&StatusConfig{cfg.Config.Namespace})
 			switch {
 			case err != nil && seenStatus:

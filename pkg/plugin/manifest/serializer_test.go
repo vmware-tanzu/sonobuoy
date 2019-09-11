@@ -30,7 +30,7 @@ import (
 func TestContainerToYAML(t *testing.T) {
 	var (
 		expectedName  = "test-container"
-		expectedImage = "gcr.io/heptio/test-image:master"
+		expectedImage = "gcr.io/org/test-image:master"
 		expectedCmd   = []string{"echo", "Hello world!"}
 	)
 	container := &Container{
@@ -80,7 +80,7 @@ func TestUnmarshallWithExtraVolumes(t *testing.T) {
 						Value: "Pods should be submitted and removed",
 					},
 				},
-				Image:           "gcr.io/heptio-images/kube-conformance:latest",
+				Image:           "gcr.io/org/kube-conformance:latest",
 				ImagePullPolicy: v1.PullAlways,
 				Name:            "e2e",
 				VolumeMounts: []v1.VolumeMount{

@@ -99,7 +99,7 @@ func TestResolveConfig(t *testing.T) {
 				sonobuoyConfig: SonobuoyConfig{},
 			},
 			expected: &config.Config{
-				Namespace:       "heptio-sonobuoy",
+				Namespace:       "sonobuoy",
 				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
@@ -124,7 +124,7 @@ func TestResolveConfig(t *testing.T) {
 				},
 			},
 			expected: &config.Config{
-				Namespace:       "heptio-sonobuoy",
+				Namespace:       "sonobuoy",
 				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
@@ -152,7 +152,7 @@ func TestResolveConfig(t *testing.T) {
 				},
 			},
 			expected: &config.Config{
-				Namespace:       "heptio-sonobuoy",
+				Namespace:       "sonobuoy",
 				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
@@ -223,7 +223,7 @@ func TestResolveConfig(t *testing.T) {
 			input:    &genFlags{},
 			cliInput: "--plugin e2e",
 			expected: &config.Config{
-				Namespace:        "heptio-sonobuoy",
+				Namespace:        "sonobuoy",
 				WorkerImage:      "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy:  "IfNotPresent",
 				PluginSelections: nil,
@@ -236,7 +236,7 @@ func TestResolveConfig(t *testing.T) {
 			input:    &genFlags{},
 			cliInput: "--config testdata/emptyQueryAndPlugins.conf",
 			expected: &config.Config{
-				Namespace:        "heptio-sonobuoy",
+				Namespace:        "sonobuoy",
 				WorkerImage:      "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy:  "IfNotPresent",
 				PluginSearchPath: defaultPluginSearchPath,
@@ -294,7 +294,7 @@ func TestResolveConfigPodLogLimits(t *testing.T) {
 	g := &genFlags{
 		sonobuoyConfig: SonobuoyConfig{
 			Config: config.Config{},
-			raw: rawInput,
+			raw:    rawInput,
 		},
 	}
 
@@ -304,8 +304,8 @@ func TestResolveConfigPodLogLimits(t *testing.T) {
 		expected config.PodLogLimits
 	}{
 		{
-			name:     "Nil config will be overwritten by default value",
-			input:    config.PodLogLimits {
+			name: "Nil config will be overwritten by default value",
+			input: config.PodLogLimits{
 				SonobuoyNamespace: nil,
 			},
 			expected: config.PodLogLimits{
@@ -313,8 +313,8 @@ func TestResolveConfigPodLogLimits(t *testing.T) {
 			},
 		},
 		{
-			name:     "Non-nil config should be preserved",
-			input:    config.PodLogLimits {
+			name: "Non-nil config should be preserved",
+			input: config.PodLogLimits{
 				SonobuoyNamespace: &[]bool{false}[0],
 			},
 			expected: config.PodLogLimits{
@@ -329,7 +329,7 @@ func TestResolveConfigPodLogLimits(t *testing.T) {
 
 		if *conf.Limits.PodLogs.SonobuoyNamespace != *tc.expected.SonobuoyNamespace {
 			t.Errorf("Expected Limits.PodLogs.SonobuoyNamespace %v but got %v",
-				*tc.expected.SonobuoyNamespace, *conf.Limits.PodLogs.SonobuoyNamespace )
+				*tc.expected.SonobuoyNamespace, *conf.Limits.PodLogs.SonobuoyNamespace)
 		}
 	}
 }
