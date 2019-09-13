@@ -207,7 +207,7 @@ func TestCreatePodDefinitionUsesDefaultPodSpec(t *testing.T) {
 	}
 
 	// Check something specific to the job default pod spec
-	expectedNumTolerations := 2
+	expectedNumTolerations := 3
 	actualNumTolerations := len(pod.Spec.Tolerations)
 	if actualNumTolerations != expectedNumTolerations {
 		t.Errorf("expected pod spec to %v tolerations, got %v", expectedNumTolerations, actualNumTolerations)

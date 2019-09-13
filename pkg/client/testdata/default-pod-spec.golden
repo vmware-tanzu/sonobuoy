@@ -37,6 +37,8 @@ data:
         operator: Exists
       - key: CriticalAddonsOnly
         operator: Exists
+      - key: kubernetes.io/e2e-evict-taint-key
+        operator: Exists
     sonobuoy-config:
       driver: Job
       plugin-name: e2e
@@ -134,6 +136,9 @@ spec:
       name: output-volume
   restartPolicy: Never
   serviceAccountName: sonobuoy-serviceaccount
+  tolerations:
+  - key: "kubernetes.io/e2e-evict-taint-key"
+    operator: "Exists"
   volumes:
   - configMap:
       name: sonobuoy-config-cm

@@ -8,6 +8,8 @@ podSpec:
     operator: Exists
   - key: CriticalAddonsOnly
     operator: Exists
+  - key: kubernetes.io/e2e-evict-taint-key
+    operator: Exists
 sonobuoy-config:
   driver: ""
   plugin-name: "n"
