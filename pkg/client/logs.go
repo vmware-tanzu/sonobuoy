@@ -24,7 +24,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -84,6 +84,11 @@ func (r *Reader) Read(p []byte) (int, error) {
 		return n, nil
 	}
 
+	select {
+	case r.err = <-r.errc:
+		return 0, r.err
+	}
+
 	data, ok := <-r.bytestream
 	// If the bytestream is done then save the error for future calls to Read.
 	if !ok {
@@ -111,51 +116,46 @@ func (r *Reader) Read(p []byte) (int, error) {
 	return len(data), nil
 }
 
-<<<<<<< HEAD
-// getPodsForLogs retrieves the pods to stream logs from. If a plugin name has been provided, retrieve the pods with
+// getPodsToStreamLogs retrieves the pods to stream logs from. If a plugin name has been provided, retrieve the pods with
 // only the plugin label matching that plugin name. If no pods are found, or no plugin has been specified, retrieve
 // all pods within the namespace.
-func getPodsForLogs(client kubernetes.Interface, cfg *LogConfig) (*v1.PodList, error) {
-	if cfg.Plugin != "" {
-		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, "sonobuoy-plugin", cfg.Plugin)
-		options := metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)}
-		pods, err := client.CoreV1().Pods(cfg.Namespace).List(options)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to list pods")
-		}
-
-		if len(pods.Items) != 0 {
-			return pods, nil
-		}
-
-		logrus.Warningf("failed to find pods for plugin %q, defaulting to all pods", cfg.Plugin)
-	}
-
-	pods, err := client.CoreV1().Pods(cfg.Namespace).List(metav1.ListOptions{})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to list pods")
-	}
-	return pods, nil
-=======
-func getPodsInNamespace(client kubernetes.Interface, ns string, stop chan bool, podListChan chan v1.PodList, errc chan error) {
+func getPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, stop chan bool, podListChan chan v1.PodList, errc chan error) {
 	for {
 		select {
 		default:
-			pods, err := client.CoreV1().Pods(ns).List(metav1.ListOptions{})
+			if cfg.Plugin != "" {
+				selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, "sonobuoy-plugin", cfg.Plugin)
+				options := metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)}
+				pods, err := client.CoreV1().Pods(cfg.Namespace).List(options)
+				if err != nil {
+					errc <- errors.Wrapf(err, "failed to list pods in namespace %q", cfg.Namespace)
+					podListChan <- v1.PodList{
+						Items: nil,
+					}
+				}
+
+				if len(pods.Items) != 0 {
+					podListChan <- *pods
+					continue
+				}
+
+				logrus.Warningf("failed to find pods for plugin %q, defaulting to all pods", cfg.Plugin)
+			}
+			pods, err := client.CoreV1().Pods(cfg.Namespace).List(metav1.ListOptions{})
 			if err != nil {
-				errc <- errors.Wrapf(err, "failed to list pods in namespace %q", ns)
+				errc <- errors.Wrapf(err, "failed to list pods in namespace %q", cfg.Namespace)
 				podListChan <- v1.PodList{
 					Items: nil,
 				}
 			}
 			podListChan <- *pods
-			time.Sleep(1 * time.Second)
 		case <-stop:
 			close(podListChan)
+			close(errc)
 			return
 		}
+		time.Sleep(1 * time.Second)
 	}
->>>>>>> fetch logs from new pods in the log streaming namespace.
 }
 
 // LogReader configures a Reader that provides an io.Reader interface to a merged stream of logs from various containers.
@@ -172,57 +172,21 @@ func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
 	if err != nil {
 		return nil, err
 	}
-<<<<<<< HEAD
-
-	pods, err := getPodsForLogs(client, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	// We must make sure the error channel has capacity enough so that it never blocks
-	// in case of early exits.
-	numContainers := 0
-	for _, pod := range pods.Items {
-		numContainers += len(pod.Spec.Containers)
-	}
-=======
 	stopPodFetch := make(chan bool)
 	podListChan := make(chan v1.PodList)
 	podsFetchError := make(chan error)
-	go getPodsInNamespace(client, cfg.Namespace, stopPodFetch, podListChan, podsFetchError)
->>>>>>> fetch logs from new pods in the log streaming namespace.
+	go getPodsToStreamLogs(client, cfg, stopPodFetch, podListChan, podsFetchError)
 
-	errc := make(chan error, numContainers)
+	errc := make(chan error, 5)
 	agg := make(chan *message)
 	var wg sync.WaitGroup
 	streamingContainers := make(map[string]bool)
 
-	// Avoid chan leak, should getPodsInNamespace fail.
-	// TODO(ashish-amarnath) Find a less ugly way to do this.
-	defer func() {
-		_, open := <-stopPodFetch
-		if open {
-			close(stopPodFetch)
-		}
-		_, open = <-podListChan
-		if open {
-			close(podListChan)
-		}
-		_, open = <-errc
-		if open {
-			close(errc)
-		}
-		_, open = <-agg
-		if open {
-			close(agg)
-		}
-	}()
-
 	go func() {
 		for pods := range podListChan {
 			if pods.Items == nil {
-				// TODO(ashish-amarnath): this error has to be returned or logged
 				err = <-podsFetchError
+				errc <- err
 				return
 			}
 			// TODO(chuckha) if we get an error back that the container is still creating maybe we could retry?
