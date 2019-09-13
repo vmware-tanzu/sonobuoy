@@ -22,8 +22,10 @@ import (
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	kubernetes "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
 )
@@ -348,7 +350,79 @@ func TestPodsForLogs(t *testing.T) {
 					t.Errorf("Unexpected number of pods returned, expected %d, got %d", tc.expectedPodCount, len(pods.Items))
 				}
 			}
+		})
+	}
+}
 
+func getFakeKubernetesClientSet() kubernetes.Interface {
+	// TODO(ashish-amarnath): figure out how to fake this
+	return nil
+}
+
+func contains(s []string, k string) bool {
+	found := false
+	for _, v := range s {
+		if v == k {
+			found = true
+			break
+		}
+	}
+	return found
+}
+
+func TestGetPodsInNamespace(t *testing.T) {
+	testCases := []struct {
+		name           string
+		inputClient    kubernetes.Interface
+		inputNamespace string
+		stopChan       chan bool
+		podListChan    chan v1.PodList
+		expectedPods   []string
+	}{
+		/* TODO(ashish-amarnath): uncomment after fixing getFakeKubernetesClientSet
+		{
+			name:           "should return expected pod list and return when stopped",
+			inputClient:    getFakeKubernetesClientSet(),
+			inputNamespace: "foo",
+			stopChan:       make(chan bool),
+			podListChan:    make(chan v1.PodList),
+			expectedPods:   []string{},
+		},
+		{
+			name:           "should return pod list with nill Items on failure to get pods",
+			inputClient:    nil,
+			inputNamespace: "foo",
+			stopChan:       make(chan bool),
+			podListChan:    make(chan v1.PodList),
+			expectedPods:   nil,
+		},*/
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			go getPodsInNamespace(tc.inputClient, tc.inputNamespace, tc.stopChan, tc.podListChan)
+			actualPodList := <-tc.podListChan
+			if tc.expectedPods == nil && actualPodList.Items != nil {
+				t.Fatalf("getPodsInNamespace failed, Want nil pod list, Got non-nil pod list")
+			}
+			if tc.expectedPods == nil {
+				return
+			}
+			actualPods := []string{}
+			for _, ap := range actualPodList.Items {
+				actualPods = append(actualPods, ap.Name)
+			}
+
+			if len(tc.expectedPods) != len(actualPods) {
+				t.Fatalf("getPodsInNamespace failed, unexpected number of pods in namespace [%s] Want [%d], Got [%d]",
+					tc.inputNamespace, len(tc.expectedPods), len(actualPods))
+			}
+
+			for _, ep := range tc.expectedPods {
+				if !contains(actualPods, ep) {
+					t.Fatalf("getPodsInNamespace failed, Expected pod [%s/%s] not found", tc.inputNamespace, ep)
+				}
+			}
 		})
 	}
 }
