@@ -146,6 +146,9 @@ spec:
   {{- end }}
   restartPolicy: Never
   serviceAccountName: sonobuoy-serviceaccount
+  tolerations:
+  - key: "kubernetes.io/e2e-evict-taint-key"
+    operator: "Exists"
   volumes:
   - configMap:
       name: sonobuoy-config-cm

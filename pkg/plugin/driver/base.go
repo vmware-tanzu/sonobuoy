@@ -258,6 +258,10 @@ func defaultJobPodSpec() v1.PodSpec {
 				Key:      "CriticalAddonsOnly",
 				Operator: v1.TolerationOpExists,
 			},
+			{
+				Key:      "kubernetes.io/e2e-evict-taint-key",
+				Operator: v1.TolerationOpExists,
+			},
 		},
 		Volumes: []v1.Volume{},
 	}
