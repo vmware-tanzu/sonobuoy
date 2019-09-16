@@ -127,7 +127,6 @@ cat sonobuoy-output/podlogs/heptio-sonobuoy/sonobuoy-customized-pod-spec-job-ee3
 32708 ?        00:00:00 ps
 ```
 
-
 ## Adapting Existing Plug-ins
 
 If you already have an existing plug-in, you can take the default PodSpec for your plug-in type and add it to your definition, or you can generate a Sonobuoy manifest, specifying your plug-in and the flag `--show-default-podspec`, and then edit the resulting YAML code:
