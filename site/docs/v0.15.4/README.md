@@ -41,7 +41,7 @@ Alternatively, you can install the CLI by running:
 go get -u -v github.com/heptio/sonobuoy
 ```
 
-Golang version 1.12 or greater is recommended. Golang can be installed via
+Golang version 1.13 or greater is recommended. Golang can be installed via
 [gimme][gimme].
 
 ## Getting Started
@@ -153,7 +153,7 @@ See [the list of releases][releases] to find out about feature changes.
 [contrib]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
 [conformance]: conformance-testing
 [docker]: https://docs.docker.com/install
-[docs]: https://sonobuoy.io/docs/v0.15.2/
+[docs]: https://sonobuoy.io/docs/v0.15.4/
 [e2e]: conformance-testing
 [gen]: gen
 [gimme]: https://github.com/travis-ci/gimme
