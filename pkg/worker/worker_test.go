@@ -17,11 +17,14 @@ limitations under the License.
 package worker
 
 import (
+	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca/authtest"
@@ -136,6 +139,55 @@ func TestRunGlobalCleanup(t *testing.T) {
 	})
 }
 
+func TestRelayProgress(t *testing.T) {
+	tcs := []struct {
+		desc           string
+		input          io.Reader
+		expected       string
+		expectedStatus int
+
+		serverStatus int
+	}{
+		{
+			desc:           "Copies body to new request",
+			input:          strings.NewReader("Hello"),
+			expected:       "Hello",
+			expectedStatus: http.StatusOK,
+		}, {
+			desc:           "Copies HTTP status to response",
+			serverStatus:   http.StatusTeapot,
+			expectedStatus: http.StatusTeapot,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			handler := func(w http.ResponseWriter, r *http.Request) {
+				if tc.serverStatus != 0 {
+					w.WriteHeader(tc.serverStatus)
+				}
+				b, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					t.Fatalf("Failed to ready body: %v", err)
+				}
+				if string(b) != tc.expected {
+					t.Errorf("Expected %q but got %q on the server", tc.expected, string(b))
+				}
+			}
+			testingServer := httptest.NewServer(http.HandlerFunc(handler))
+			relayer := relayProgress(testingServer.URL, testingServer.Client())
+			relayServer := httptest.NewServer(http.HandlerFunc(relayer))
+			resp, err := http.Post(relayServer.URL, "application/text", tc.input)
+			if err != nil {
+				t.Fatalf("Failed to post to relay server: %v", err)
+			}
+			if resp.StatusCode != tc.expectedStatus {
+				t.Errorf("Expected status %v but got %v", tc.expectedStatus, resp.StatusCode)
+			}
+		})
+	}
+}
+
 func ensureExists(t *testing.T, filepath string) {
 	if _, err := os.Stat(filepath); err != nil && os.IsNotExist(err) {
 		t.Logf("Plugin agent ran, but couldn't find expected results at %v:", filepath)
@@ -163,7 +215,7 @@ func withAggregator(t *testing.T, expectedResults []plugin.ExpectedResult, callb
 
 		// Configure the aggregator
 		aggr := aggregation.NewAggregator(tmpdir, expectedResults)
-		handler := aggregation.NewHandler(aggr.HandleHTTPResult)
+		handler := aggregation.NewHandler(aggr.HandleHTTPResult, aggr.HandleHTTPProgressUpdate)
 		srv := authtest.NewTLSServer(handler, t)
 		defer srv.Close()
 

@@ -55,6 +55,10 @@ type Aggregator struct {
 	// ExpectedResults stores a map of results the server should expect
 	ExpectedResults map[string]*plugin.ExpectedResult
 
+	// LatestProgressUpdates is the map that saves the most recent progress update sent by
+	// each plugin.
+	LatestProgressUpdates map[string]*plugin.ProgressUpdate
+
 	// FailedResults is a map to track which plugin results were received
 	// but returned errors during processing. This enables us to retry results
 	// that failed to process if the client tries, as opposed to rejecting
@@ -69,6 +73,9 @@ type Aggregator struct {
 	// resultsMutex prevents race conditions if two identical results
 	// come in at the same time.
 	resultsMutex sync.Mutex
+
+	// progressMutex prevents race conditions between plugins updating their progresses.
+	progressMutex sync.Mutex
 
 	// retryWindow is the duration which the server will continue to block during
 	// Wait() after a FailedResult has been reported, even if all expected results
@@ -97,16 +104,23 @@ func (e *httpError) Error() string {
 	return e.err.Error()
 }
 
+// keyer interface is for type swhich can generate a unique key for their type
+// based on their data (e.g. what you'd use for a map key of lookups)
+type keyer interface {
+	Key() string
+}
+
 // NewAggregator constructs a new Aggregator object to write the given result
 // set out to the given output directory.
 func NewAggregator(outputDir string, expected []plugin.ExpectedResult) *Aggregator {
 	aggr := &Aggregator{
-		OutputDir:       outputDir,
-		Results:         make(map[string]*plugin.Result, len(expected)),
-		ExpectedResults: make(map[string]*plugin.ExpectedResult, len(expected)),
-		FailedResults:   make(map[string]time.Time, len(expected)),
-		resultEvents:    make(chan *plugin.Result, len(expected)),
-		retryWindow:     defaultRetryWindow,
+		OutputDir:             outputDir,
+		Results:               make(map[string]*plugin.Result, len(expected)),
+		ExpectedResults:       make(map[string]*plugin.ExpectedResult, len(expected)),
+		FailedResults:         make(map[string]time.Time, len(expected)),
+		LatestProgressUpdates: make(map[string]*plugin.ProgressUpdate, len(expected)),
+		resultEvents:          make(chan *plugin.Result, len(expected)),
+		retryWindow:           defaultRetryWindow,
 	}
 
 	for i, expResult := range expected {
@@ -157,13 +171,13 @@ func (a *Aggregator) isComplete() bool {
 	return true
 }
 
-func (a *Aggregator) isResultExpected(result *plugin.Result) bool {
-	_, ok := a.ExpectedResults[result.ExpectedResultID()]
+func (a *Aggregator) isExpected(obj keyer) bool {
+	_, ok := a.ExpectedResults[obj.Key()]
 	return ok
 }
 
 func (a *Aggregator) isResultDuplicate(result *plugin.Result) bool {
-	_, ok := a.Results[result.ExpectedResultID()]
+	_, ok := a.Results[result.Key()]
 	return ok
 }
 
@@ -175,10 +189,10 @@ func (a *Aggregator) processResult(result *plugin.Result) error {
 	a.resultsMutex.Lock()
 	defer a.resultsMutex.Unlock()
 
-	resultID := result.ExpectedResultID()
+	resultID := result.Key()
 
 	// Make sure we were expecting this result
-	if !a.isResultExpected(result) {
+	if !a.isExpected(result) {
 		return &httpError{
 			err:  fmt.Errorf("result %v unexpected", resultID),
 			code: http.StatusForbidden,
@@ -198,13 +212,13 @@ func (a *Aggregator) processResult(result *plugin.Result) error {
 	// Send an event that we got this result even if we get an error, so
 	// that Wait() doesn't hang forever on problems.
 	defer func() {
-		a.Results[result.ExpectedResultID()] = result
+		a.Results[result.Key()] = result
 		a.resultEvents <- result
 	}()
 
 	if err := a.handleResult(result); err != nil {
 		// Drop a breadcrumb so that we reconsider new results from this result.
-		a.FailedResults[result.ExpectedResultID()] = time.Now()
+		a.FailedResults[result.Key()] = time.Now()
 		return &httpError{
 			err:  fmt.Errorf("error handling result %v: %v", resultID, err),
 			code: http.StatusInternalServerError,
@@ -212,7 +226,31 @@ func (a *Aggregator) processResult(result *plugin.Result) error {
 	}
 
 	// Upon success, we no longer want to keep processing duplicate results.
-	delete(a.FailedResults, result.ExpectedResultID())
+	delete(a.FailedResults, result.Key())
+
+	return nil
+}
+
+// processProgressUpdate is the main aggregator logic for handling the progress updates from plugins.
+// We first
+func (a *Aggregator) processProgressUpdate(progress plugin.ProgressUpdate) error {
+	a.resultsMutex.Lock()
+	expected := a.isExpected(progress)
+	a.resultsMutex.Unlock()
+
+	// Make sure we were expecting this result
+	if !expected {
+		return &httpError{
+			err:  fmt.Errorf("progress update for %v unexpected", progress.Key()),
+			code: http.StatusForbidden,
+		}
+	}
+
+	// Set this as the most recent progress update. Another routine is responsible for updating the
+	// aggregator status annotation with that information.
+	a.progressMutex.Lock()
+	a.LatestProgressUpdates[progress.Key()] = &progress
+	a.progressMutex.Unlock()
 
 	return nil
 }
@@ -235,6 +273,30 @@ func (a *Aggregator) HandleHTTPResult(result *plugin.Result, w http.ResponseWrit
 			)
 		default:
 			logrus.Errorf("Result processing error (%v): %v", http.StatusInternalServerError, t.Error())
+			http.Error(
+				w,
+				err.Error(),
+				http.StatusInternalServerError,
+			)
+		}
+	}
+}
+
+// HandleHTTPProgressUpdate wraps the aggregators processProgressUpdate method in such a way as to respond
+// with appropriate logging and HTTP codes.
+func (a *Aggregator) HandleHTTPProgressUpdate(progress plugin.ProgressUpdate, w http.ResponseWriter) {
+	err := a.processProgressUpdate(progress)
+	if err != nil {
+		switch t := err.(type) {
+		case *httpError:
+			logrus.Errorf("Progress update error (%v): %v", t.HttpCode(), t.Error())
+			http.Error(
+				w,
+				t.Error(),
+				t.HttpCode(),
+			)
+		default:
+			logrus.Errorf("Progress update error (%v): %v", http.StatusInternalServerError, t.Error())
 			http.Error(
 				w,
 				err.Error(),

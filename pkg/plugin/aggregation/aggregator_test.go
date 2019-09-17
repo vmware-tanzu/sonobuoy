@@ -19,6 +19,7 @@ package aggregation
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -34,6 +35,7 @@ import (
 	"github.com/heptio/sonobuoy/pkg/backplane/ca/authtest"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	pluginutils "github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/kylelemons/godebug/pretty"
 	"github.com/viniciuschiele/tarx"
 )
 
@@ -350,6 +352,101 @@ func TestAggregation_errors(t *testing.T) {
 	})
 }
 
+func TestProcessProgressUpdates(t *testing.T) {
+	defaultExpectedResults := []plugin.ExpectedResult{
+		{ResultType: "type1", NodeName: "global"},
+		{ResultType: "type2", NodeName: "node1"},
+		{ResultType: "type2", NodeName: "node2"},
+	}
+
+	type singleProgressEvent struct {
+		progressUpdate          plugin.ProgressUpdate
+		expectedErr             string
+		expectedHTTPCode        int
+		expectedProgressUpdates map[string]plugin.ProgressUpdate
+	}
+
+	testCases := []struct {
+		desc            string
+		expectedResults []plugin.ExpectedResult
+
+		// each test run will loop through processing a series of updates
+		events []singleProgressEvent
+	}{
+		{
+			desc:            "Unexpected progress update results in Forbidden",
+			expectedResults: defaultExpectedResults,
+			events: []singleProgressEvent{
+				{
+					progressUpdate:   plugin.ProgressUpdate{PluginName: "foo", Node: "bar"},
+					expectedHTTPCode: http.StatusForbidden,
+					expectedErr:      "progress update for foo/bar unexpected",
+				},
+			},
+		}, {
+			desc:            "Latest updates get updated even with errors before and after",
+			expectedResults: defaultExpectedResults,
+			events: []singleProgressEvent{
+				{
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "type1", Node: "global", Message: "hi"},
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "hi"}},
+				},
+				{
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "foo", Node: "bar"},
+					expectedHTTPCode:        http.StatusForbidden,
+					expectedErr:             "progress update for foo/bar unexpected",
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "hi"}},
+				},
+				{
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "type1", Node: "global", Message: "bye"},
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "bye"}},
+				},
+				{
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "foo", Node: "bar"},
+					expectedHTTPCode:        http.StatusForbidden,
+					expectedErr:             "progress update for foo/bar unexpected",
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "bye"}},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			withAggregator(t, tc.expectedResults, func(agg *Aggregator, srv *authtest.Server) {
+				for _, v := range tc.events {
+					err := agg.processProgressUpdate(v.progressUpdate)
+					// Check error string
+					if err != nil && len(v.expectedErr) == 0 {
+						t.Fatalf("Expected nil error but got %q", err)
+					}
+					if err == nil && len(v.expectedErr) > 0 {
+						t.Fatalf("Expected error %q but got nil", v.expectedErr)
+					}
+					if err != nil && fmt.Sprint(err) != v.expectedErr {
+						t.Fatalf("Expected error to be %q but got %q", v.expectedErr, err)
+					}
+
+					// Check http status of the call
+					if v.expectedHTTPCode > 0 {
+						herr, ok := err.(*httpError)
+						if !ok {
+							t.Errorf("Expected HTTP error with status %v but got a type %T: %v", v.expectedHTTPCode, err, err)
+						} else if herr.HttpCode() != v.expectedHTTPCode {
+							t.Errorf("Expected error with HTTP code %v but got %v", v.expectedHTTPCode, herr.HttpCode())
+						}
+					}
+
+					// Check the result of the update
+					if diff := pretty.Compare(agg.LatestProgressUpdates, v.expectedProgressUpdates); diff != "" {
+						t.Errorf("Unexpected difference in the LatestProgressUpdates:\n\n%s\n", diff)
+					}
+				}
+			})
+		})
+	}
+}
+
 func withAggregator(t *testing.T, expected []plugin.ExpectedResult, callback func(*Aggregator, *authtest.Server)) {
 	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
 	if err != nil {
@@ -359,7 +456,7 @@ func withAggregator(t *testing.T, expected []plugin.ExpectedResult, callback fun
 	defer os.RemoveAll(dir)
 
 	agg := NewAggregator(dir, expected)
-	handler := NewHandler(agg.HandleHTTPResult)
+	handler := NewHandler(agg.HandleHTTPResult, agg.HandleHTTPProgressUpdate)
 	srv := authtest.NewTLSServer(handler, t)
 	defer srv.Close()
 

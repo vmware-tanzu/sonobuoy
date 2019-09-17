@@ -29,8 +29,48 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	localProgressURLPath = "/progress"
+)
+
 func init() {
 	mime.AddExtensionType(".gz", "application/gzip")
+}
+
+// RelayProgressUpdates start listening to the given port and will use the client to post progressUpdates
+// to the aggregatorURL.
+func RelayProgressUpdates(port string, aggregatorURL string, client *http.Client) {
+	http.HandleFunc(localProgressURLPath, relayProgress(aggregatorURL, client))
+	logrus.Infof("Starting to listen on port %v for progress updates and will relay them to %v", port, aggregatorURL)
+	err := http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		logrus.Errorf("Error listening on port %q: %v", port, err)
+	}
+}
+
+// relayProgress returns a closure which is an http.Handler which is capable of relaying the
+// progress updates it gets to the aggregatorURL.
+func relayProgress(aggregatorURL string, client *http.Client) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req, err := http.NewRequest(http.MethodPost, aggregatorURL, r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			logrus.Errorf("Failed to create progress update request for the aggregator: %v", err)
+			return
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			logrus.Errorf("Failed to send progress update to aggregator: %v", err)
+			return
+		}
+		w.WriteHeader(resp.StatusCode)
+		_, err = io.Copy(w, resp.Body)
+		if err != nil {
+			logrus.Errorf("Failed to copy aggregator response to plugin progress: %v", err)
+			return
+		}
+	}
 }
 
 // GatherResults is the consumer of a co-scheduled container that agrees on the following

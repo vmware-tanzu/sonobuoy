@@ -44,15 +44,10 @@ func (n NoPodWithLabelError) Error() string {
 	return string(n)
 }
 
-// node and name uniquely identify a single plugin result
-type key struct {
-	node, name string
-}
-
 // updater manages setting the Aggregator annotation with the current status
 type updater struct {
 	sync.RWMutex
-	positionLookup map[key]*PluginStatus
+	positionLookup map[string]*PluginStatus
 	status         Status
 	namespace      string
 	client         kubernetes.Interface
@@ -61,7 +56,7 @@ type updater struct {
 // newUpdater creates an an updater that expects ExpectedResult.
 func newUpdater(expected []plugin.ExpectedResult, namespace string, client kubernetes.Interface) *updater {
 	u := &updater{
-		positionLookup: make(map[key]*PluginStatus),
+		positionLookup: make(map[string]*PluginStatus),
 		status: Status{
 			Plugins: make([]PluginStatus, len(expected)),
 			Status:  RunningStatus,
@@ -77,28 +72,57 @@ func newUpdater(expected []plugin.ExpectedResult, namespace string, client kuber
 			Status: RunningStatus,
 		}
 
-		u.positionLookup[expectedToKey(result)] = &u.status.Plugins[i]
+		u.positionLookup[result.ID()] = &u.status.Plugins[i]
 	}
 
 	return u
 }
 
-func expectedToKey(result plugin.ExpectedResult) key {
-	return key{node: result.NodeName, name: result.ResultType}
-}
-
-// Receive updates an individual plugin's status.
+// Receive updates the updater's internal status of an individual plugin.
 func (u *updater) Receive(update *PluginStatus) error {
 	u.Lock()
 	defer u.Unlock()
-	k := key{node: update.Node, name: update.Plugin}
-	status, ok := u.positionLookup[k]
+
+	status, ok := u.positionLookup[update.Key()]
 	if !ok {
-		return fmt.Errorf("couldn't find key for %v", k)
+		return fmt.Errorf("couldn't find key for %v", update.Key())
 	}
 
-	status.Status = update.Status
+	// Updating status updates the u.status object.
+	deepCopyPluginStatus(status, update)
 	return u.status.updateStatus()
+}
+
+func deepCopyPluginStatus(dst, src *PluginStatus) {
+	dst.Plugin = src.Plugin
+	dst.Node = src.Node
+	dst.Status = src.Status
+	dst.ResultStatus = src.ResultStatus
+
+	if src.ResultStatusCounts != nil {
+		dst.ResultStatusCounts = map[string]int{}
+		for k, v := range src.ResultStatusCounts {
+			dst.ResultStatusCounts[k] = v
+		}
+	}
+	if src.Progress != nil {
+		dst.Progress = &plugin.ProgressUpdate{
+			PluginName: src.Progress.PluginName,
+			Node:       src.Progress.Node,
+			Timestamp:  src.Progress.Timestamp,
+			Message:    src.Progress.Message,
+			Total:      src.Progress.Total,
+			Completed:  src.Progress.Completed,
+		}
+		if src.Progress.Errors != nil {
+			dst.Progress.Errors = make([]string, len(src.Progress.Errors))
+			copy(dst.Progress.Errors, src.Progress.Errors)
+		}
+		if src.Progress.Failures != nil {
+			dst.Progress.Failures = make([]string, len(src.Progress.Failures))
+			copy(dst.Progress.Failures, src.Progress.Failures)
+		}
+	}
 }
 
 // Serialize json-encodes the status object.
@@ -109,11 +133,12 @@ func (u *updater) Serialize() (string, error) {
 	return string(bytes), errors.Wrap(err, "couldn't marshall status")
 }
 
-// Annotate serialises the status json, then annotates the aggregator pod with the status.
-func (u *updater) Annotate(results map[string]*plugin.Result) error {
-	u.ReceiveAll(results)
+// Annotate serializes the status json, then annotates the aggregator pod with the status.
+func (u *updater) Annotate(results map[string]*plugin.Result, progressUpdates map[string]*plugin.ProgressUpdate) error {
+	u.ReceiveAll(results, progressUpdates)
 	u.RLock()
 	defer u.RUnlock()
+
 	str, err := u.Serialize()
 	if err != nil {
 		return errors.Wrap(err, "couldn't serialize status")
@@ -136,26 +161,44 @@ func (u *updater) Annotate(results map[string]*plugin.Result) error {
 }
 
 // TODO (tstclair): Evaluate if this should be exported.
-// ReceiveAll takes a map of plugin.Result and calls Receive on all of them.
-func (u *updater) ReceiveAll(results map[string]*plugin.Result) {
+// ReceiveAll takes a map of plugin.Result and plugin.ProgressUpdates and uses Recieve to turn
+// update the updater's status.
+func (u *updater) ReceiveAll(results map[string]*plugin.Result, progressUpdates map[string]*plugin.ProgressUpdate) {
+	// With the addition of progress updates we have two maps of data; iterate once to get all the keys then once to process.
+	keys := map[string]struct{}{}
+	for k := range results {
+		keys[k] = struct{}{}
+	}
+	for k := range progressUpdates {
+		keys[k] = struct{}{}
+	}
+
 	// Could have race conditions, but will be eventually consistent
-	for _, result := range results {
-		state := "complete"
-		if result.Error != "" {
-			state = "failed"
-		}
-		update := PluginStatus{
-			Node:   result.NodeName,
-			Plugin: result.ResultType,
-			Status: state,
+	for k := range keys {
+		update := PluginStatus{}
+		result, hasResult := results[k]
+		switch {
+		case !hasResult:
+			update.Status = "running"
+			update.Plugin = progressUpdates[k].PluginName
+			update.Node = progressUpdates[k].Node
+		case result.Error != "":
+			update.Status = "failed"
+			update.Plugin = results[k].ResultType
+			update.Node = results[k].NodeName
+		default:
+			update.Status = "complete"
+			update.Plugin = results[k].ResultType
+			update.Node = results[k].NodeName
 		}
 
+		update.Progress = progressUpdates[k]
 		if err := u.Receive(&update); err != nil {
 			logrus.WithFields(
 				logrus.Fields{
 					"node":   update.Node,
 					"plugin": update.Plugin,
-					"status": state,
+					"status": update.Status,
 				},
 			).WithError(err).Info("couldn't update plugin")
 		}

@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"io"
 	"path"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -38,7 +39,7 @@ const (
 type Interface interface {
 	// Run runs a plugin, declaring all resources it needs, and then
 	// returns.  It does not block and wait until the plugin has finished.
-	Run(kubeClient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod) error
+	Run(kubeClient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod, progressPort string) error
 	// Cleanup cleans up all resources created by the plugin
 	Cleanup(kubeClient kubernetes.Interface)
 	// Monitor continually checks for problems in the resources created by a
@@ -81,6 +82,22 @@ type Result struct {
 	Error      string
 }
 
+// ProgressUpdate is the structure that the Sonobuoy worker sends to the aggregator
+// to inform it of plugin progress. More TBD.
+type ProgressUpdate struct {
+	PluginName string    `json:"name"`
+	Node       string    `json:"node"`
+	Timestamp  time.Time `json:"timestamp"`
+
+	Message string `json:"msg"`
+
+	Total     int64 `json:"total"`
+	Completed int64 `json:"completed"`
+
+	Errors   []string `json:"errors,omitempty"`
+	Failures []string `json:"failures,omitempty"`
+}
+
 // IsSuccess returns whether the Result represents a successful plugin result,
 // versus one that was unsuccessful (for instance, from a dispatched plugin not
 // being able to launch.)
@@ -115,13 +132,21 @@ type AggregationConfig struct {
 type WorkerConfig struct {
 	// MasterURL is the URL we talk to the aggregator pod on for submitting results
 	MasterURL string `json:"masterurl,omitempty" mapstructure:"masterurl"`
+
 	// NodeName is the node name we should call ourselves when sending results
 	NodeName string `json:"nodename,omitempty" mapstructure:"nodename"`
+
 	// ResultsDir is the directory that's expected to contain the host's root filesystem
 	ResultsDir string `json:"resultsdir,omitempty" mapstructure:"resultsdir"`
+
 	// ResultType is the type of result (to be put in the HTTP URL's path) to be
 	// sent back to sonobuoy.
 	ResultType string `json:"resulttype,omitempty" mapstructure:"resulttype"`
+
+	// ProgressUpdatesPort is the port on which the Sonobuoy worker will listen for progress
+	// updates from the plugin.
+	ProgressUpdatesPort string `json:"progressport"  mapstructure:"progressport"`
+
 	CACert     string `json:"cacert,omitempty" mapstructure:"cacert"`
 	ClientCert string `json:"clientcert,omitempty" mapstructure:"clientcert"`
 	ClientKey  string `json:"clientkey,omitempty" mapstructure:"clientkey"`
@@ -137,9 +162,9 @@ func (er *ExpectedResult) ID() string {
 	return er.ResultType + "/" + er.NodeName
 }
 
-// ExpectedResultID returns a unique identifier for this result to match it up
+// Key returns a unique identifier for this result to match it up
 // against an expected result.
-func (r *Result) ExpectedResultID() string {
+func (r *Result) Key() string {
 	// Jobs should default to stating they are global results, being
 	// safe and doing that defaulting here too.
 	nodeName := r.NodeName
@@ -148,4 +173,17 @@ func (r *Result) ExpectedResultID() string {
 	}
 
 	return r.ResultType + "/" + nodeName
+}
+
+// Key returns a unique identifier for this ProgressUpdate to match it up
+// against an known plugins running.
+func (s ProgressUpdate) Key() string {
+	// Jobs should default to stating they are global results, being
+	// safe and doing that defaulting here too.
+	nodeName := s.Node
+	if s.Node == "" {
+		nodeName = GlobalResult
+	}
+
+	return s.PluginName + "/" + nodeName
 }

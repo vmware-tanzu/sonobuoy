@@ -132,7 +132,7 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 		SessionID:       "sessionID",
 	}
 
-	wc := b.CreateWorkerContainerDefintion(aggregatorURL, cert, command, args)
+	wc := b.CreateWorkerContainerDefintion(aggregatorURL, cert, command, args, "")
 
 	checkFields := func(container v1.Container) error {
 		if container.Name != "sonobuoy-worker" {

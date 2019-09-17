@@ -58,7 +58,7 @@ const (
 // 4. Hook the shared monitoring channel up to aggr's IngestResults() function
 // 5. Block until aggr shows all results accounted for (results come in through
 //    the HTTP callback), stopping the HTTP server on completion
-func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, namespace, outdir string) error {
+func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, progressPort, namespace, outdir string) error {
 	// Construct a list of things we'll need to dispatch
 	if len(plugins) == 0 {
 		logrus.Info("Skipping host data gathering: no plugins defined")
@@ -111,7 +111,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// 2. Launch the aggregation servers
 	srv := &http.Server{
 		Addr:      fmt.Sprintf("%s:%d", cfg.BindAddress, cfg.BindPort),
-		Handler:   NewHandler(aggr.HandleHTTPResult),
+		Handler:   NewHandler(aggr.HandleHTTPResult, aggr.HandleHTTPProgressUpdate),
 		TLSConfig: tlsCfg,
 	}
 
@@ -134,7 +134,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 			// 1. Stop the annotation updater
 			cancel()
 			// 2. Try one last time to get an update out on exit
-			if err := updater.Annotate(aggr.Results); err != nil {
+			if err := updater.Annotate(aggr.Results, aggr.LatestProgressUpdates); err != nil {
 				logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
 			}
 		}
@@ -145,7 +145,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	go func() {
 		wait.JitterUntil(func() {
 			pluginsdone = aggr.isComplete()
-			if err := updater.Annotate(aggr.Results); err != nil {
+			if err := updater.Annotate(aggr.Results, aggr.LatestProgressUpdates); err != nil {
 				logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
 			}
 			if pluginsdone {
@@ -173,7 +173,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 	for _, p := range plugins {
 		logrus.WithField("plugin", p.GetName()).Info("Running plugin")
-		go aggr.RunAndMonitorPlugin(ctx, p, client, nodes.Items, cfg.AdvertiseAddress, certs[p.GetName()], aggregatorPod)
+		go aggr.RunAndMonitorPlugin(ctx, p, client, nodes.Items, cfg.AdvertiseAddress, certs[p.GetName()], aggregatorPod, progressPort)
 	}
 
 	// Give the plugins a chance to cleanup before a hard timeout occurs
@@ -215,11 +215,11 @@ func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
 
 // RunAndMonitorPlugin will start a plugin then monitor it for errors starting/running.
 // Errors detected will be handled by saving an error result in the aggregator.Results.
-func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, p plugin.Interface, client kubernetes.Interface, nodes []corev1.Node, address string, cert *tls.Certificate, aggregatorPod *corev1.Pod) {
+func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, p plugin.Interface, client kubernetes.Interface, nodes []corev1.Node, address string, cert *tls.Certificate, aggregatorPod *corev1.Pod, progressPort string) {
 	monitorCh := make(chan *plugin.Result, 1)
 	pCtx, cancel := context.WithCancel(ctx)
 
-	if err := p.Run(client, address, cert, aggregatorPod); err != nil {
+	if err := p.Run(client, address, cert, aggregatorPod, progressPort); err != nil {
 		err := errors.Wrapf(err, "error running plugin %v", p.GetName())
 		logrus.Error(err)
 		monitorCh <- utils.MakeErrorResult(p.GetName(), map[string]interface{}{"error": err.Error()}, "")

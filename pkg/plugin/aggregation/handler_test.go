@@ -18,14 +18,19 @@ package aggregation
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/heptio/sonobuoy/pkg/backplane/ca/authtest"
 	"github.com/heptio/sonobuoy/pkg/plugin"
+
+	"github.com/kylelemons/godebug/pretty"
 )
 
 func TestStart(t *testing.T) {
@@ -45,6 +50,8 @@ func TestStart(t *testing.T) {
 	h := NewHandler(func(checkin *plugin.Result, w http.ResponseWriter) {
 		// Just take note of what we've received
 		checkins[checkin.Path()] = checkin
+	}, func(status plugin.ProgressUpdate, w http.ResponseWriter) {
+		return
 	})
 
 	srv := authtest.NewTLSServer(h, t)
@@ -228,6 +235,82 @@ func TestFilenameFromHeader(t *testing.T) {
 			out := filenameFromHeader(tc.input)
 			if out != tc.expect {
 				t.Errorf("Expected %q but got %q", tc.expect, out)
+			}
+		})
+	}
+}
+
+func TestProgressFromRequest(t *testing.T) {
+	tcs := []struct {
+		desc        string
+		input       io.Reader
+		vars        map[string]string
+		expected    *plugin.ProgressUpdate
+		expectedErr string
+	}{
+		{
+			desc:  "Handles body and muxvars",
+			input: strings.NewReader(`{"msg":"foo"}`),
+			vars: map[string]string{
+				"node":   "nodename",
+				"plugin": "pluginname",
+			},
+			expected: &plugin.ProgressUpdate{
+				Message:    "foo",
+				PluginName: "pluginname",
+				Node:       "nodename",
+			},
+		}, {
+			desc:  "Missing node treated as global",
+			input: strings.NewReader(`{"msg":"foo"}`),
+			vars: map[string]string{
+				"plugin": "pluginname",
+			},
+			expected: &plugin.ProgressUpdate{
+				Message:    "foo",
+				PluginName: "pluginname",
+				Node:       "global",
+			},
+		}, {
+			desc:  "Failure to decode value reported",
+			input: strings.NewReader(``),
+			vars: map[string]string{
+				"plugin": "pluginname",
+			},
+			expected: &plugin.ProgressUpdate{
+				PluginName: "pluginname",
+				Node:       "global",
+			},
+			expectedErr: "unable to decode body: EOF",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, "www.example.com", tc.input)
+			if err != nil {
+				t.Fatalf("Failed to create request: %v", err)
+			}
+			update, err := progressFromRequest(req, tc.vars)
+			if len(tc.expectedErr) == 0 && err != nil {
+				t.Fatalf("Expected no error, got: %v", err)
+			}
+			if len(tc.expectedErr) > 0 {
+				if err == nil {
+					t.Errorf("Expected error %v but got no error", tc.expectedErr)
+				} else if !strings.Contains(err.Error(), tc.expectedErr) {
+					t.Errorf("Expected error to contain '%v', got '%v'", tc.expectedErr, err.Error())
+				}
+			}
+
+			// Can't predict timestamps; just make sure its non-zero and empty it.
+			if update.Timestamp.IsZero() {
+				t.Errorf("Expected non-zero time to be set but got %v", update.Timestamp)
+			}
+			update.Timestamp = time.Time{}
+
+			if diff := pretty.Compare(tc.expected, update); diff != "" {
+				t.Fatalf("\n\n%s\n", diff)
 			}
 		})
 	}

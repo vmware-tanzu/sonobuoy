@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/pkg/errors"
 
+	"github.com/kylelemons/godebug/pretty"
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
@@ -206,6 +207,124 @@ func TestGetAggregatorPodName(t *testing.T) {
 			}
 			if podName != tc.expectedPodName {
 				t.Errorf("Incorrect pod name returned, expected %q but got %q", tc.expectedPodName, podName)
+			}
+		})
+	}
+}
+
+func TestReceive(t *testing.T) {
+	expectedResults := []plugin.ExpectedResult{
+		{NodeName: "node1", ResultType: "type1"},
+		{NodeName: "node2", ResultType: "type1"},
+		{NodeName: "global", ResultType: "type2"},
+	}
+	tcs := []struct {
+		desc     string
+		results  map[string]*plugin.Result
+		updates  map[string]*plugin.ProgressUpdate
+		expected *Status
+	}{
+		{
+			desc: "No results or updates",
+			expected: &Status{
+				Plugins: []PluginStatus{
+					{Node: "node1", Plugin: "type1", Status: "running"},
+					{Node: "node2", Plugin: "type1", Status: "running"},
+					{Node: "global", Plugin: "type2", Status: "running"},
+				},
+				Status: "running",
+			},
+		}, {
+			desc: "Status updates without results",
+			expected: &Status{
+				Plugins: []PluginStatus{
+					{
+						Node: "node1", Plugin: "type1", Status: "running",
+						Progress: &plugin.ProgressUpdate{
+							PluginName: "type1", Node: "node1", Message: "new status",
+							Failures: []string{"f1", "f2"},
+							Errors:   []string{"err1", "err2"},
+						},
+					},
+					{Node: "node2", Plugin: "type1", Status: "running"},
+					{Node: "global", Plugin: "type2", Status: "running"},
+				},
+				Status: "running",
+			},
+			updates: map[string]*plugin.ProgressUpdate{
+				"type1/node1": {
+					PluginName: "type1", Node: "node1", Message: "new status",
+					Failures: []string{"f1", "f2"},
+					Errors:   []string{"err1", "err2"},
+				},
+			},
+		}, {
+			desc: "Results (passing and failing) without status updates",
+			expected: &Status{
+				Plugins: []PluginStatus{
+					{
+						Node: "node1", Plugin: "type1", Status: "complete",
+					},
+					{Node: "node2", Plugin: "type1", Status: "failed"},
+					{Node: "global", Plugin: "type2", Status: "running"},
+				},
+				Status: "failed",
+			},
+			results: map[string]*plugin.Result{
+				"type1/node1": {NodeName: "node1", ResultType: "type1"},
+				"type1/node2": {NodeName: "node2", ResultType: "type1", Error: "errmsg"},
+			},
+		}, {
+			desc: "Overlapping status updates and results",
+			expected: &Status{
+				Plugins: []PluginStatus{
+					{
+						Node: "node1", Plugin: "type1", Status: "complete",
+						Progress: &plugin.ProgressUpdate{
+							PluginName: "type1", Node: "node1", Message: "new status",
+						},
+					},
+					{Node: "node2", Plugin: "type1", Status: "running"},
+					{Node: "global", Plugin: "type2", Status: "running"},
+				},
+				Status: "running",
+			},
+			results: map[string]*plugin.Result{
+				"type1/node1": {NodeName: "node1", ResultType: "type1"},
+			},
+			updates: map[string]*plugin.ProgressUpdate{
+				"type1/node1": {PluginName: "type1", Node: "node1", Message: "new status"},
+			},
+		}, {
+			desc: "Non-overlapping updates and results",
+			expected: &Status{
+				Plugins: []PluginStatus{
+					{Node: "node1", Plugin: "type1", Status: "complete"},
+					{Node: "node2", Plugin: "type1", Status: "running"},
+					{
+						Node: "global", Plugin: "type2", Status: "running",
+						Progress: &plugin.ProgressUpdate{
+							PluginName: "type2", Node: "global", Message: "new status",
+						},
+					},
+				},
+				Status: "running",
+			},
+			results: map[string]*plugin.Result{
+				"type1/node1": {NodeName: "node1", ResultType: "type1"},
+			},
+			updates: map[string]*plugin.ProgressUpdate{
+				"type2/global": {PluginName: "type2", Node: "global", Message: "new status"},
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			u := newUpdater(expectedResults, "testns", nil)
+			u.ReceiveAll(tc.results, tc.updates)
+			if diff := pretty.Compare(tc.expected, u.status); diff != "" {
+				t.Fatalf("\n\n%s\n", diff)
 			}
 		})
 	}

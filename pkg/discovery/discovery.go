@@ -108,7 +108,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// exists sooner for user/polling consumption and prevents issues were we try
 	// to patch a non-existant status later.
 	trackErrorsFor("setting initial pod status")(
-		setStatus(kubeClient, cfg.Namespace,
+		setPodStatusAnnotation(kubeClient, cfg.Namespace,
 			&pluginaggregation.Status{
 				Status: pluginaggregation.RunningStatus,
 			}),
@@ -132,7 +132,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 
 	// 4. Run the plugin aggregator
 	trackErrorsFor("running plugins")(
-		pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.Namespace, outpath),
+		pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.Namespace, outpath),
 	)
 
 	// 5. Run the queries
@@ -323,7 +323,7 @@ func updateStatus(client kubernetes.Interface, namespace string, status string, 
 	if tarInfo != nil {
 		podStatus.Tarball = *tarInfo
 	}
-	return setStatus(client, namespace, podStatus)
+	return setPodStatusAnnotation(client, namespace, podStatus)
 }
 
 func updatePluginStatus(client kubernetes.Interface, namespace string, pluginType string, pluginResultStatus string, pluginResultCounts map[string]int) error {
@@ -339,12 +339,12 @@ func updatePluginStatus(client kubernetes.Interface, namespace string, pluginTyp
 			break
 		}
 	}
-	return setStatus(client, namespace, podStatus)
+	return setPodStatusAnnotation(client, namespace, podStatus)
 }
 
-// setStatus sets the status on the pod via an annotation. It will overwrite the
+// setPodStatusAnnotation sets the status on the pod via an annotation. It will overwrite the
 // existing status.
-func setStatus(client kubernetes.Interface, namespace string, status *pluginaggregation.Status) error {
+func setPodStatusAnnotation(client kubernetes.Interface, namespace string, status *pluginaggregation.Status) error {
 	// Marshal back into json, inject into the patch, then serialize again.
 	statusBytes, err := json.Marshal(status)
 	if err != nil {
