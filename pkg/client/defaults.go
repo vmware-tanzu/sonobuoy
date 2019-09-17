@@ -22,9 +22,9 @@ import (
 	"github.com/heptio/sonobuoy/pkg/config"
 )
 
-// NewGenConfig is a GenConfig using the default config and Conformance mode
+// NewGenConfig is a GenConfig using the default config and NonDisruptiveConformance mode
 func NewGenConfig() *GenConfig {
-	modeName := Conformance
+	modeName := NonDisruptiveConformance
 	defaultE2E := modeName.Get().E2EConfig
 
 	return &GenConfig{

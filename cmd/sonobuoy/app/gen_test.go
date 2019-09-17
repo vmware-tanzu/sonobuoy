@@ -93,9 +93,9 @@ func TestResolveConfig(t *testing.T) {
 		cliInput string
 	}{
 		{
-			name: "Conformance mode when supplied config is nil (nothing interesting happens)",
+			name: "NonDisruptiveConformance mode when supplied config is nil (nothing interesting happens)",
 			input: &genFlags{
-				mode:           client.Conformance,
+				mode:           client.NonDisruptiveConformance,
 				sonobuoyConfig: SonobuoyConfig{},
 			},
 			expected: &config.Config{
@@ -139,9 +139,9 @@ func TestResolveConfig(t *testing.T) {
 				Resources:        config.DefaultResources,
 			},
 		}, {
-			name: "Conformance mode with plugin selection specified",
+			name: "NonDisruptiveConformance mode with plugin selection specified",
 			input: &genFlags{
-				mode: client.Conformance,
+				mode: client.NonDisruptiveConformance,
 				sonobuoyConfig: SonobuoyConfig{
 					Config: config.Config{
 						PluginSelections: []plugin.Selection{

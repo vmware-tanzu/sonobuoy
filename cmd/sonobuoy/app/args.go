@@ -55,7 +55,7 @@ func AddNamespaceFlag(str *string, flags *pflag.FlagSet) {
 // Mode can be partially or fully overridden by specifying config, e2e-focus, and e2e-skip.
 // The variables specified by those flags will overlay the defaults provided by the given mode.
 func AddModeFlag(mode *ops.Mode, flags *pflag.FlagSet) {
-	*mode = ops.Conformance // default
+	*mode = ops.NonDisruptiveConformance // default
 	flags.VarP(
 		mode, "mode", "m",
 		fmt.Sprintf("What mode to run sonobuoy in. Valid modes are %s.", strings.Join(ops.GetModes(), ", ")),
@@ -132,7 +132,7 @@ const (
 // users. Using e2e-parallel incorrectly has the potential to destroy clusters!
 func AddE2EConfigFlags(flags *pflag.FlagSet) *pflag.FlagSet {
 	e2eFlags := pflag.NewFlagSet("e2e", pflag.ExitOnError)
-	modeName := ops.Conformance
+	modeName := ops.NonDisruptiveConformance
 	defaultMode := modeName.Get()
 	e2eFlags.String(
 		e2eFocusFlag, defaultMode.E2EConfig.Focus,
