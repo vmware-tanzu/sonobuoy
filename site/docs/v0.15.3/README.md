@@ -153,7 +153,7 @@ See [the list of releases][releases] to find out about feature changes.
 [contrib]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
 [conformance]: conformance-testing
 [docker]: https://docs.docker.com/install
-[docs]: docs
+[docs]: https://sonobuoy.io/docs/v0.15.3/
 [e2e]: conformance-testing
 [gen]: gen
 [gimme]: https://github.com/travis-ci/gimme
