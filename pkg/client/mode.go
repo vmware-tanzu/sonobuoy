@@ -31,17 +31,26 @@ type Mode string
 
 const (
 	// Quick runs a single E2E test and the systemd log tests.
-	Quick Mode = "Quick"
+	Quick Mode = "quick"
 
-	// Conformance runs all of the E2E tests and the systemd log tests.
-	Conformance Mode = "Conformance"
+	// NonDisruptiveConformance runs all of the `Conformance` E2E tests which are not marked as disuprtive and the systemd log tests.
+	NonDisruptiveConformance Mode = "non-disruptive-conformance"
+
+	// CertifiedConformance runs all of the `Conformance` E2E tests and the systemd log tests.
+	CertifiedConformance Mode = "certified-conformance"
 )
 
-const defaultSkipList = `Alpha|\[(Disruptive|Feature:[^\]]+|Flaky)\]`
+// nonDisruptiveSkipList should generally just need to skip disruptive tests since upstream
+// will disallow the other types of tests from being tagged as Conformance. However, in v1.16
+// two disruptive tests were  not marked as such, meaning we needed to specify them here to ensure
+// user workload safety. See https://github.com/kubernetes/kubernetes/issues/82663
+// and https://github.com/kubernetes/kubernetes/issues/82787
+const nonDisruptiveSkipList = `\[Disruptive\]|NoExecuteTaintManager`
 
 var modeMap = map[string]Mode{
-	string(Conformance): Conformance,
-	string(Quick):       Quick,
+	string(NonDisruptiveConformance): NonDisruptiveConformance,
+	string(Quick):                    Quick,
+	string(CertifiedConformance):     CertifiedConformance,
 }
 
 // ModeConfig represents the sonobuoy configuration for a given mode.
@@ -60,9 +69,9 @@ func (m *Mode) Type() string { return "Mode" }
 
 // Set the name with a given string. Returns error on unknown mode.
 func (m *Mode) Set(str string) error {
-	// Allow lowercase "conformance", "quick" etc in command line
-	upcase := strings.Title(str)
-	mode, ok := modeMap[upcase]
+	// Allow other casing from user in command line (e.g. Quick & quick)
+	lcase := strings.ToLower(str)
+	mode, ok := modeMap[lcase]
 	if !ok {
 		return fmt.Errorf("unknown mode %s", str)
 	}
@@ -74,11 +83,22 @@ func (m *Mode) Set(str string) error {
 // if there's no associated mode
 func (m *Mode) Get() *ModeConfig {
 	switch *m {
-	case Conformance:
+	case CertifiedConformance:
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
 				Focus:    `\[Conformance\]`,
-				Skip:     defaultSkipList,
+				Parallel: "1",
+			},
+			Selectors: []plugin.Selection{
+				{Name: "e2e"},
+				{Name: "systemd-logs"},
+			},
+		}
+	case NonDisruptiveConformance:
+		return &ModeConfig{
+			E2EConfig: E2EConfig{
+				Focus:    `\[Conformance\]`,
+				Skip:     nonDisruptiveSkipList,
 				Parallel: "1",
 			},
 			Selectors: []plugin.Selection{
@@ -90,7 +110,6 @@ func (m *Mode) Get() *ModeConfig {
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
 				Focus:    "Pods should be submitted and removed",
-				Skip:     defaultSkipList,
 				Parallel: "1",
 			},
 			Selectors: []plugin.Selection{

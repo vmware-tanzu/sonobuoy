@@ -34,16 +34,15 @@ func TestGetE2EConfig(t *testing.T) {
 	}{
 		{
 			desc:     "Default",
-			mode:     "Conformance",
+			mode:     "certified-conformance",
 			flagArgs: []string{},
 			expect: &ops.E2EConfig{
 				Focus:    `\[Conformance\]`,
-				Skip:     `Alpha|\[(Disruptive|Feature:[^\]]+|Flaky)\]`,
 				Parallel: "1",
 			},
 		}, {
 			desc:     "Flags settable",
-			mode:     "Conformance",
+			mode:     "certified-conformance",
 			flagArgs: []string{"--e2e-focus=foo", "--e2e-skip=bar", "--e2e-parallel=2"},
 			expect: &ops.E2EConfig{
 				Focus:    `foo`,
@@ -52,12 +51,12 @@ func TestGetE2EConfig(t *testing.T) {
 			},
 		}, {
 			desc:      "Focus regexp validated settable",
-			mode:      "Conformance",
+			mode:      "certified-conformance",
 			flagArgs:  []string{"--e2e-focus=*"},
 			expectErr: true,
 		}, {
 			desc:      "Skip regexp validated settable",
-			mode:      "Conformance",
+			mode:      "certified-conformance",
 			flagArgs:  []string{"--e2e-skip=*"},
 			expectErr: true,
 		},
