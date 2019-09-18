@@ -25,11 +25,11 @@ import (
 	"path"
 	"strings"
 
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 	"github.com/vmware-tanzu/sonobuoy/pkg/discovery"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -299,7 +299,7 @@ func walkForSummary(o *results.Item, p, f, s int, failList []string) (numPassed,
 	switch o.Status {
 	case results.StatusPassed:
 		p++
-	case results.StatusFailed:
+	case results.StatusFailed, results.StatusTimeout:
 		f++
 		failList = append(failList, o.Name)
 	case results.StatusSkipped:

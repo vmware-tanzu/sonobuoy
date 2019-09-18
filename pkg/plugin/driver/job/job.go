@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -169,6 +170,24 @@ func (p *Plugin) Monitor(ctx context.Context, kubeclient kubernetes.Interface, _
 		// TODO: maybe use a watcher instead of polling.
 		select {
 		case <-ctx.Done():
+			switch {
+			case ctx.Err() == context.DeadlineExceeded:
+				logrus.Errorf("Timeout waiting for plugin %v", p.GetName())
+				resultsCh <- utils.MakeErrorResult(
+					p.GetName(),
+					map[string]interface{}{"error": plugin.TimeoutErrMsg},
+					plugin.GlobalResult,
+				)
+			case ctx.Err() == context.Canceled:
+				// Do nothing, just stop.
+			case ctx.Err() != nil:
+				logrus.Errorf("Error seen while monitoring plugin %v: %v", p.GetName(), ctx.Err().Error())
+				resultsCh <- utils.MakeErrorResult(
+					p.GetName(),
+					map[string]interface{}{"error": ctx.Err().Error()},
+					plugin.GlobalResult,
+				)
+			}
 			return
 		case <-sonotime.After(pollingInterval):
 		}

@@ -27,13 +27,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/utils"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	sonotime "github.com/vmware-tanzu/sonobuoy/pkg/time"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -233,6 +234,33 @@ func (p *Plugin) Monitor(ctx context.Context, kubeclient kubernetes.Interface, a
 		// enough time to create pods
 		select {
 		case <-ctx.Done():
+			switch {
+			// This routine is monitoring the entire daemonset and has no knowledge of which
+			// nodes have returned results to the aggregator. We can report the error for every node though
+			// since the aggregator will throw out duplicate results.
+			case ctx.Err() == context.DeadlineExceeded:
+				logrus.Errorf("Timeout waiting for plugin %v", p.GetName())
+				errs := makeErrorResultsForNodes(
+					p.GetName(),
+					map[string]interface{}{"error": plugin.TimeoutErrMsg},
+					availableNodes,
+				)
+				for _, e := range errs {
+					resultsCh <- e
+				}
+			case ctx.Err() == context.Canceled:
+				// Do nothing, just stop.
+			case ctx.Err() != nil:
+				logrus.Errorf("Error seen while monitoring plugin %v: %v", p.GetName(), ctx.Err().Error())
+				errs := makeErrorResultsForNodes(
+					p.GetName(),
+					map[string]interface{}{"error": ctx.Err().Error()},
+					availableNodes,
+				)
+				for _, e := range errs {
+					resultsCh <- e
+				}
+			}
 			return
 		case <-sonotime.After(pollingInterval):
 		}
@@ -314,4 +342,12 @@ func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, availableNodes []v
 	}
 
 	return false, retErrs
+}
+
+func makeErrorResultsForNodes(resultType string, errdata map[string]interface{}, nodes []v1.Node) []*plugin.Result {
+	results := []*plugin.Result{}
+	for _, n := range nodes {
+		results = append(results, utils.MakeErrorResult(resultType, errdata, n.Name))
+	}
+	return results
 }

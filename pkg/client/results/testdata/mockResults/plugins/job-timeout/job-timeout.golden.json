@@ -1,0 +1,16 @@
+{
+"name": "job-timeout",
+"status": "failed",
+"items": [
+{
+"name": "timeout waiting for results",
+"status": "timeout",
+"meta": {
+"file": "errors/error.json"
+},
+"details": {
+"error": "timeout waiting for results"
+}
+}
+]
+}

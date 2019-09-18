@@ -149,6 +149,10 @@ func TestPostProcessPlugin(t *testing.T) {
 			desc:   "DS has errors dir considered every each node",
 			key:    "ds-errors-02",
 			plugin: getPlugin("ds-errors-02", "daemonset", "junit", []string{}),
+		}, {
+			desc:   "Timeout errors cause timeout status",
+			key:    "job-timeout",
+			plugin: getPlugin("job-timeout", "job", "junit", []string{}),
 		},
 	}
 	for _, tc := range testCases {
@@ -219,6 +223,11 @@ func TestAggregateStatus(t *testing.T) {
 			input:         []Item{{Status: "foobar"}},
 			expectedItems: []Item{{Status: "foobar"}},
 			expected:      StatusPassed,
+		}, {
+			desc:          "Timeout bubbles up as failure",
+			input:         []Item{{Status: "timeout"}},
+			expectedItems: []Item{{Status: "timeout"}},
+			expected:      StatusFailed,
 		}, {
 			desc: "Single failure in group causes failure",
 			input: []Item{

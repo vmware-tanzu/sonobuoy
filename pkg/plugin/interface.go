@@ -105,6 +105,12 @@ func (r *Result) IsSuccess() bool {
 	return r.Error == ""
 }
 
+// IsTimeout returns whether or not the Result represents the error case when Sonobuoy
+// experiences a timeout waiting for results.
+func (r *Result) IsTimeout() bool {
+	return r.Error == TimeoutErrMsg
+}
+
 // Path is the path within the "plugins" section of the results tarball where
 // this Result should be stored, not including a file extension.
 func (r *Result) Path() string {

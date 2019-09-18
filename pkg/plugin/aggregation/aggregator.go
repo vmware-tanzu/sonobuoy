@@ -30,10 +30,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
-	"github.com/vmware-tanzu/sonobuoy/pkg/tarball"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/tarball"
 )
 
 const (
@@ -327,6 +327,7 @@ func (a *Aggregator) IngestResults(ctx context.Context, resultsCh <-chan *plugin
 			return
 		}
 
+		logInternalResult(result)
 		err := a.processResult(result)
 		if err != nil {
 			switch t := err.(type) {
@@ -337,6 +338,12 @@ func (a *Aggregator) IngestResults(ctx context.Context, resultsCh <-chan *plugin
 			}
 		}
 	}
+}
+
+func logInternalResult(r *plugin.Result) {
+	log := logrus.WithField("plugin_name", r.ResultType)
+	log = log.WithField("node", r.NodeName)
+	log.Info("received internal aggregator result")
 }
 
 // handleResult takes a given plugin Result and writes it out to the
@@ -371,7 +378,6 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 	}
 
 	return nil
-
 }
 
 func (a *Aggregator) handleArchiveResult(result *plugin.Result) error {

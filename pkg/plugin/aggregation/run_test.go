@@ -59,7 +59,7 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not generate test cert: %v", err)
 	}
-
+	testTimeout := 1 * time.Minute
 	sonotime.UseShortAfter()
 	defer sonotime.ResetAfter()
 
@@ -152,7 +152,7 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 			}
 
 			go func() {
-				a.RunAndMonitorPlugin(ctx, tc.plugin, fclient, nil, "testname", testCert, &corev1.Pod{}, "")
+				a.RunAndMonitorPlugin(ctx, testTimeout, tc.plugin, fclient, nil, "testname", testCert, &corev1.Pod{}, "")
 				doneCh <- struct{}{}
 			}()
 

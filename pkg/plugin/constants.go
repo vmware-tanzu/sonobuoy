@@ -22,4 +22,7 @@ const (
 
 	// ResultsDir is the directory where results will be available in Sonobuoy plugin containers.
 	ResultsDir = "/tmp/results"
+
+	// TimeoutErrMsg is the message used when Sonobuoy experiences a timeout while waiting for results.
+	TimeoutErrMsg = "timeout waiting for results"
 )

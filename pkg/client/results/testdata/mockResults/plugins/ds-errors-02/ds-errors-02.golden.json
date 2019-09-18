@@ -7,10 +7,10 @@
 "status": "failed",
 "items": [
 {
-"name": "errors.json",
+"name": "testerr",
 "status": "failed",
 "meta": {
-"file": "errors/node1/errors.json"
+"file": "errors/node1/error.json"
 },
 "details": {
 "data": "foo",
@@ -24,10 +24,10 @@
 "status": "failed",
 "items": [
 {
-"name": "errors.json",
+"name": "testerr2",
 "status": "failed",
 "meta": {
-"file": "errors/node2/errors.json"
+"file": "errors/node2/error.json"
 },
 "details": {
 "data": "foo2",

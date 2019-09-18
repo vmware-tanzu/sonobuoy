@@ -24,12 +24,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/backplane/ca"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/utils"
 	sonotime "github.com/vmware-tanzu/sonobuoy/pkg/time"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -38,12 +38,21 @@ import (
 )
 
 const (
-	annotationUpdateFreq = 5 * time.Second
-	jitterFactor         = 1.2
+	annotationUpdateFreq    = 5 * time.Second
+	jitterFactor            = 1.2
+	timeoutMonitoringOffset = 10 * time.Second
 
 	// pollingInterval is the time between polls when monitoring a plugin.
 	pollingInterval = 10 * time.Second
 )
+
+// timeoutErr is a wrapper around an error that will satisfy the timeout interface
+type timeoutErr struct {
+	e error
+}
+
+func (t *timeoutErr) Timeout() bool { return true }
+func (t *timeoutErr) Error() string { return t.e.Error() }
 
 // Run runs an aggregation server and gathers results, in accordance with the
 // given sonobuoy configuration.
@@ -123,16 +132,20 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		}).Info("Starting aggregation server")
 		doneServ <- srv.ListenAndServeTLS("", "")
 	}()
+	defer func() {
+		logrus.Info("Shutting down aggregation server")
+		srv.Close()
+	}()
 
 	updater := newUpdater(expectedResults, namespace, client)
-	ctx, cancel := context.WithCancel(context.TODO())
+	ctxAnnotation, cancelAnnotation := context.WithCancel(context.TODO())
 	pluginsdone := false
 	defer func() {
 		if pluginsdone == false {
 			logrus.Info("Last update to annotations on exit")
 			// This is the async exit cleanup function.
 			// 1. Stop the annotation updater
-			cancel()
+			cancelAnnotation()
 			// 2. Try one last time to get an update out on exit
 			if err := updater.Annotate(aggr.Results, aggr.LatestProgressUpdates); err != nil {
 				logrus.WithError(err).Info("couldn't annotate sonobuoy pod")
@@ -150,9 +163,9 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 			}
 			if pluginsdone {
 				logrus.Info("All plugins have completed, status has been updated")
-				cancel()
+				cancelAnnotation()
 			}
-		}, annotationUpdateFreq, jitterFactor, true, ctx.Done())
+		}, annotationUpdateFreq, jitterFactor, true, ctxAnnotation.Done())
 	}()
 
 	// 4. Launch each plugin, to dispatch workers which submit the results back
@@ -173,31 +186,19 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 	for _, p := range plugins {
 		logrus.WithField("plugin", p.GetName()).Info("Running plugin")
-		go aggr.RunAndMonitorPlugin(ctx, p, client, nodes.Items, cfg.AdvertiseAddress, certs[p.GetName()], aggregatorPod, progressPort)
-	}
-
-	// Give the plugins a chance to cleanup before a hard timeout occurs
-	shutdownPlugins := time.After(time.Duration(cfg.TimeoutSeconds-plugin.GracefulShutdownPeriod) * time.Second)
-	// Ensure we only wait for results for a certain time
-	var timeout <-chan time.Time
-	if cfg.TimeoutSeconds > 0 {
-		timeout = time.After(time.Duration(cfg.TimeoutSeconds) * time.Second)
+		go aggr.RunAndMonitorPlugin(context.Background(), time.Duration(cfg.TimeoutSeconds)*time.Second, p, client, nodes.Items, cfg.AdvertiseAddress, certs[p.GetName()], aggregatorPod, progressPort)
 	}
 
 	// 6. Wait for aggr to show that all results are accounted for
 	for {
 		select {
-		case <-shutdownPlugins:
-			Cleanup(client, plugins)
-			logrus.Info("Gracefully shutting down plugins due to timeout.")
-		case <-timeout:
-			srv.Close()
-			stopWaitCh <- true
-			return errors.Errorf("timed out waiting for plugins, shutting down HTTP server")
 		case err := <-doneServ:
 			stopWaitCh <- true
 			return err
 		case <-doneAggr:
+			if aggr.hadTimeout() {
+				return &timeoutErr{errors.New("timeout occurred when waiting for plugin results")}
+			}
 			return nil
 		}
 	}
@@ -215,9 +216,13 @@ func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
 
 // RunAndMonitorPlugin will start a plugin then monitor it for errors starting/running.
 // Errors detected will be handled by saving an error result in the aggregator.Results.
-func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, p plugin.Interface, client kubernetes.Interface, nodes []corev1.Node, address string, cert *tls.Certificate, aggregatorPod *corev1.Pod, progressPort string) {
+func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, timeout time.Duration, p plugin.Interface, client kubernetes.Interface, nodes []corev1.Node, address string, cert *tls.Certificate, aggregatorPod *corev1.Pod, progressPort string) {
 	monitorCh := make(chan *plugin.Result, 1)
-	pCtx, cancel := context.WithCancel(ctx)
+
+	// Give the ingestion routine a tad more time to avoid races where the monitor routine, at timeout, tries
+	// to return results.
+	ctxMonitor, cancelMonitor := context.WithTimeout(ctx, timeout)
+	ctxIngest, cancelIngest := context.WithTimeout(ctx, timeout+timeoutMonitoringOffset)
 
 	if err := p.Run(client, address, cert, aggregatorPod, progressPort); err != nil {
 		err := errors.Wrapf(err, "error running plugin %v", p.GetName())
@@ -225,22 +230,24 @@ func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, p plugin.Interface
 		monitorCh <- utils.MakeErrorResult(p.GetName(), map[string]interface{}{"error": err.Error()}, "")
 	}
 
-	go p.Monitor(pCtx, client, nodes, monitorCh)
-	go a.IngestResults(pCtx, monitorCh)
+	go p.Monitor(ctxMonitor, client, nodes, monitorCh)
+	go a.IngestResults(ctxIngest, monitorCh)
 
 	// Control loop; check regularly if we have results or not for this plugin. If results are in,
 	// then stop the go routines monitoring the plugin. If the parent context is cancelled, stop monitoring.
 	for {
 		select {
 		case <-ctx.Done():
-			cancel()
+			cancelMonitor()
+			cancelIngest()
 			return
 		case <-sonotime.After(pollingInterval):
 		}
 
 		hasResults := a.pluginHasResults(p)
 		if hasResults {
-			cancel()
+			cancelMonitor()
+			cancelIngest()
 			return
 		}
 	}
@@ -264,4 +271,17 @@ func (a *Aggregator) pluginHasResults(p plugin.Interface) bool {
 	}
 
 	return true
+}
+
+func (a *Aggregator) hadTimeout() bool {
+	a.resultsMutex.Lock()
+	defer a.resultsMutex.Unlock()
+
+	for _, r := range a.Results {
+		if r.IsTimeout() {
+			return true
+		}
+	}
+
+	return false
 }

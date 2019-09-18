@@ -52,7 +52,7 @@ const (
 
 	// DefaultErrFile is the file name used when Sonobuoy is reporting an error running a plugin.
 	// Is written into the ErrorsDir directory.
-	DefaultErrFile = "errors.json"
+	DefaultErrFile = "error.json"
 
 	hostsDir                  = "hosts/"
 	namespacedResourcesDir    = "resources/ns/"
