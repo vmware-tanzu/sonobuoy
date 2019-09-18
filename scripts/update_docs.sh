@@ -63,7 +63,6 @@ else
         /bin/sh -c \
         "rm -rf /root/site/docs/${VERSION} && \
         cp -r /root/site/docs/master /root/site/docs/${VERSION} && \
-        cp /root/README.md /root/site/docs/${VERSION}/README.md && \
         sed -i 's/site\/docs\/master\///g' /root/site/docs/${VERSION}/README.md && \
         sed -i 's/docs\/img/img/g' /root/site/docs/${VERSION}/README.md && \
         sed -i 's/sonobuoy\/tree\/master/sonobuoy\/tree\/${VERSION}/g' /root/site/docs/${VERSION}/README.md && \
