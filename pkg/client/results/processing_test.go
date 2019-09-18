@@ -74,9 +74,9 @@ func TestPostProcessPlugin(t *testing.T) {
 	}
 
 	testCases := []struct {
-		desc        string
-		plugin      plugin.Interface
-		expectedErr string
+		desc         string
+		plugin       plugin.Interface
+		expectedErrs []string
 
 		// key is used to lookup both the directory and the expected results.
 		key string
@@ -137,13 +137,28 @@ func TestPostProcessPlugin(t *testing.T) {
 			desc:   "Daemonset raw with 2 files processed, others ignored",
 			key:    "ds-raw-03",
 			plugin: getPlugin("ds-raw-03", "daemonset", "raw", []string{"output.xml", "output2.xml"}),
+		}, {
+			desc:   "Job has errors dir considered",
+			key:    "job-errors",
+			plugin: getPlugin("job-errors", "job", "junit", []string{}),
+		}, {
+			desc:   "DS has errors dir considered, still processes results for other nodes",
+			key:    "ds-errors-01",
+			plugin: getPlugin("ds-errors-01", "daemonset", "junit", []string{}),
+		}, {
+			desc:   "DS has errors dir considered every each node",
+			key:    "ds-errors-02",
+			plugin: getPlugin("ds-errors-02", "daemonset", "junit", []string{}),
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			item, err := PostProcessPlugin(tc.plugin, mockDataDir(tc.key))
-			if err != nil {
-				t.Fatalf("Unexpected error: %v", err)
+			item, errs := PostProcessPlugin(tc.plugin, mockDataDir(tc.key))
+			if len(errs) > 0 {
+				for _, e := range errs {
+					t.Errorf("Unexpected error: %v", e)
+				}
+				t.FailNow()
 			}
 			if *update {
 				// Update all the golden files instead of actually testing against them.
@@ -168,7 +183,6 @@ func TestPostProcessPlugin(t *testing.T) {
 					t.Fatalf("\n\n%s\n", diff)
 				}
 			}
-
 		})
 	}
 }

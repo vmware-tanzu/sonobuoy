@@ -1,0 +1,17 @@
+{
+"name": "job-errors",
+"status": "failed",
+"items": [
+{
+"name": "errors.json",
+"status": "failed",
+"meta": {
+"file": "errors/errors.json"
+},
+"details": {
+"data": "foo",
+"error": "testerr"
+}
+}
+]
+}

@@ -44,6 +44,16 @@ const (
 	// Example: plugins/<name>/results
 	ResultsDir = "results/"
 
+	// ErrorsDir defines where in the archive the errors running the plugin get reported.
+	// These are the Sonobuoy reported errors, e.g. failure to start a plugin, timeout, etc.
+	// This is not the appropriate directory for things like test failures.
+	// Example: plugins/<name>/errors
+	ErrorsDir = "errors/"
+
+	// DefaultErrFile is the file name used when Sonobuoy is reporting an error running a plugin.
+	// Is written into the ErrorsDir directory.
+	DefaultErrFile = "errors.json"
+
 	hostsDir                  = "hosts/"
 	namespacedResourcesDir    = "resources/ns/"
 	nonNamespacedResourcesDir = "resources/cluster/"

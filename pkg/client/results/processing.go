@@ -17,6 +17,7 @@ limitations under the License.
 package results
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path"
@@ -26,6 +27,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/daemonset"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -133,29 +135,68 @@ func aggregateStatus(items ...Item) string {
 // the location of the results directory for a sonobuoy run, not the plugin specific
 // results directory). Based on the type of plugin results, it will record what tests
 // passed/failed (if junit) or record what files were produced (if raw) and return
-// that information in an Item object.
-func PostProcessPlugin(p plugin.Interface, dir string) (Item, error) {
+// that information in an Item object. All errors encountered are returned.
+func PostProcessPlugin(p plugin.Interface, dir string) (Item, []error) {
 	i := Item{}
-	var err error
+	var errs []error
 
 	switch p.GetResultFormat() {
 	case ResultFormatE2E, ResultFormatJUnit:
-		i, err = processPluginWithProcessor(p, dir, junitProcessFile, fileOrExtension(p.GetResultFiles(), ".xml"))
+		i, errs = processPluginWithProcessor(p, dir, junitProcessFile, fileOrExtension(p.GetResultFiles(), ".xml"))
 	case ResultFormatRaw:
-		i, err = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
+		i, errs = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
 	default:
 		// Default to raw format so that consumers can still expect the aggregate file to exist and
 		// can navigate the output of the plugin more easily.
-		i, err = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
+		i, errs = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
 	}
 
 	i.Status = aggregateStatus(i.Items...)
-	return i, err
+	return i, errs
 }
 
-func processPluginWithProcessor(p plugin.Interface, baseDir string, processor postProcessor, selector fileSelector) (Item, error) {
+// processNodesWithProcessor is called to invoke processDir on each node-specific directory contained
+// underneath the given dir. The directory is assumed to be either the results directory or errors directory
+// which should have the nodes as subdirectories. It returns an item for each node processed and an error
+// only if it couldn't open the original directory. Any errors while processing a specific node are logged
+// but not returned.
+func processNodesWithProcessor(p plugin.Interface, baseDir, dir string, processor postProcessor, selector fileSelector) ([]Item, error) {
+	pdir := path.Join(baseDir, PluginsDir, p.GetName())
+
+	nodeDirs, err := ioutil.ReadDir(dir)
+	if err != nil && !os.IsNotExist(err) {
+		return []Item{}, err
+	}
+
+	results := []Item{}
+
+	for _, nodeDirInfo := range nodeDirs {
+		if !nodeDirInfo.IsDir() {
+			continue
+		}
+		nodeName := filepath.Base(nodeDirInfo.Name())
+		nodeItem := Item{
+			Name: nodeName,
+		}
+		items, err := processDir(p, pdir, filepath.Join(dir, nodeName), processor, selector)
+		nodeItem.Items = items
+		if err != nil {
+			logrus.Warningf("Error processing results entries for node %v, plugin %v: %v", nodeDirInfo.Name(), p.GetName(), err)
+		}
+		results = append(results, nodeItem)
+	}
+
+	return results, nil
+}
+
+// processPluginWithProcessor will apply the processor to the chosen files. It will also process the <plugin>/errors
+// directory for errors. One item will be returned with the results already aggregated. All errors encountered will be
+// returned.
+func processPluginWithProcessor(p plugin.Interface, baseDir string, processor postProcessor, selector fileSelector) (Item, []error) {
 	pdir := path.Join(baseDir, PluginsDir, p.GetName())
 	pResultsDir := path.Join(pdir, ResultsDir)
+	pErrorsDir := path.Join(pdir, ErrorsDir)
+	errs := []error{}
 
 	_, isDS := p.(*daemonset.Plugin)
 	results := Item{
@@ -163,36 +204,72 @@ func processPluginWithProcessor(p plugin.Interface, baseDir string, processor po
 	}
 
 	if isDS {
-		nodeDirs, err := ioutil.ReadDir(pResultsDir)
+		items, err := processNodesWithProcessor(p, baseDir, pResultsDir, processor, selector)
 		if err != nil {
-			return Item{}, err
+			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pResultsDir))
+		}
+		errItems, err := processNodesWithProcessor(p, baseDir, pErrorsDir, errProcessor, errSelector())
+		if err != nil {
+			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pErrorsDir))
 		}
 
-		for _, nodeDirInfo := range nodeDirs {
-			if !nodeDirInfo.IsDir() {
-				continue
-			}
-			nodeName := filepath.Base(nodeDirInfo.Name())
-			nodeItem := Item{
-				Name: nodeName,
-			}
-			items, err := processDir(p, pdir, filepath.Join(pResultsDir, nodeName), processor, selector)
-			nodeItem.Items = items
-			if err != nil {
-				logrus.Warningf("Error processing results entries for node %v, plugin %v: %v", nodeDirInfo.Name(), p.GetName(), err)
-			}
-			results.Items = append(results.Items, nodeItem)
-		}
+		results.Items = append(results.Items, items...)
+		results.Items = append(results.Items, errItems...)
 	} else {
 		items, err := processDir(p, pdir, pResultsDir, processor, selector)
 		if err != nil {
-			logrus.Warningf("Error processing results entries for plugin %v: %v", p.GetName(), err)
+			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pResultsDir))
 		}
 		results.Items = items
+
+		items, err = processDir(p, pdir, pErrorsDir, errProcessor, errSelector())
+		if err != nil && !os.IsNotExist(err) {
+			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pErrorsDir))
+		}
+		results.Items = append(results.Items, items...)
 	}
 
 	results.Status = aggregateStatus(results.Items...)
-	return results, nil
+	return results, errs
+}
+
+// errProcessor takes two strings: the plugin directory and the filepath in question, and parse it to create an Item.
+// Intended to be used when parsing the errors directory which holds Sonobuoy reported errors for the plugin.
+func errProcessor(pluginDir string, currentFile string) (Item, error) {
+	relPath, err := filepath.Rel(pluginDir, currentFile)
+	if err != nil {
+		logrus.Errorf("Error making path %q relative to %q: %v", pluginDir, currentFile, err)
+		relPath = currentFile
+	}
+
+	resultObj := Item{
+		Name:     filepath.Base(currentFile),
+		Status:   StatusFailed,
+		Metadata: map[string]string{"file": relPath},
+		Details:  map[string]string{},
+	}
+
+	infile, err := os.Open(currentFile)
+	if err != nil {
+		resultObj.Metadata["error"] = err.Error()
+		resultObj.Status = StatusUnknown
+
+		return resultObj, errors.Wrapf(err, "opening file %v", currentFile)
+	}
+	defer infile.Close()
+
+	dec := json.NewDecoder(infile)
+	result := map[string]string{}
+	if err := dec.Decode(&result); err != nil {
+		return resultObj, errors.Wrapf(err, "decoding file %v", currentFile)
+	}
+
+	// Just copy the data from the saved error file.
+	for k, v := range result {
+		resultObj.Details[k] = v
+	}
+
+	return resultObj, nil
 }
 
 // processDir will walk the files in a given directory, using the fileSelector function to
@@ -243,4 +320,8 @@ func fileOrExtension(files []string, ext string) fileSelector {
 
 func fileOrAny(files []string) func(fPath string, info os.FileInfo) bool {
 	return fileOrExtension(files, "*")
+}
+
+func errSelector() fileSelector {
+	return fileOrExtension([]string{DefaultErrFile}, "")
 }

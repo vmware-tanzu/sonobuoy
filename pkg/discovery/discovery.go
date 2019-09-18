@@ -198,20 +198,20 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 
 	// Postprocessing before we create the tarball.
 	for _, p := range cfg.LoadedPlugins {
-		item, err := results.PostProcessPlugin(p, outpath)
-		if err != nil {
-			logrus.Errorf("Error processing plugin %v: %v", p.GetName(), err)
+		item, errs := results.PostProcessPlugin(p, outpath)
+		for _, e := range errs {
+			logrus.Errorf("Error processing plugin %v: %v", p.GetName(), e)
 		}
-		if !item.Empty() {
-			if err := results.SaveProcessedResults(p.GetName(), outpath, item); err != nil {
-				logrus.Errorf("Unable to save results for plugin %v: %v", p.GetName(), err)
-			}
 
-			// Update the plugin status with this post-processed information.
-			statusInfo := map[string]int{}
-			statusCounts(&item, statusInfo)
-			updatePluginStatus(kubeClient, cfg.Namespace, p.GetName(), item.Status, statusInfo)
+		// Save results object regardless of errors; it is our best effort to understand the results.
+		if err := results.SaveProcessedResults(p.GetName(), outpath, item); err != nil {
+			logrus.Errorf("Unable to save results for plugin %v: %v", p.GetName(), err)
 		}
+
+		// Update the plugin status with this post-processed information.
+		statusInfo := map[string]int{}
+		statusCounts(&item, statusInfo)
+		updatePluginStatus(kubeClient, cfg.Namespace, p.GetName(), item.Status, statusInfo)
 	}
 
 	// Saving plugin definitions in their respective folders for easy reference.
