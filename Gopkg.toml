@@ -71,10 +71,6 @@
 
 [[constraint]]
   branch = "release-1.14"
-  name = "k8s.io/apiextensions-apiserver"
-
-[[constraint]]
-  branch = "release-1.14"
   name = "k8s.io/apimachinery"
 
 [[constraint]]
