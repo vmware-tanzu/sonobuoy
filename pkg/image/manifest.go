@@ -25,12 +25,17 @@ import (
 
 // RegistryList holds public and private image registries
 type RegistryList struct {
-	DockerLibraryRegistry string `yaml:"dockerLibraryRegistry"`
-	E2eRegistry           string `yaml:"e2eRegistry"`
-	EtcdRegistry          string `yaml:"etcdRegistry"`
-	GcRegistry            string `yaml:"gcRegistry"`
-	PrivateRegistry       string `yaml:"privateRegistry"`
-	SampleRegistry        string `yaml:"sampleRegistry"`
+	GcAuthenticatedRegistry string `yaml:"gcAuthenticatedRegistry"`
+	DockerLibraryRegistry   string `yaml:"dockerLibraryRegistry"`
+	E2eRegistry             string `yaml:"e2eRegistry"`
+	InvalidRegistry         string `yaml:"invalidRegistry"`
+	GcRegistry              string `yaml:"gcRegistry"`
+	GcrReleaseRegistry      string `yaml:"gcrReleaseRegistry"`
+	GoogleContainerRegistry string `yaml:"googleContainerRegistry"`
+	EtcdRegistry            string `yaml:"etcdRegistry"`
+	PrivateRegistry         string `yaml:"privateRegistry"`
+	SampleRegistry          string `yaml:"sampleRegistry"`
+	QuayK8sCSI              string `yaml:"quayK8sCSI"`
 
 	K8sVersion *version.Version
 	Images     map[int]Config
@@ -46,12 +51,17 @@ type Config struct {
 // NewRegistryList returns a default registry or one that matches a config file passed
 func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 	registry := &RegistryList{
-		DockerLibraryRegistry: "docker.io/library",
-		E2eRegistry:           "gcr.io/kubernetes-e2e-test-images",
-		EtcdRegistry:          "quay.io/coreos",
-		GcRegistry:            "k8s.gcr.io",
-		PrivateRegistry:       "gcr.io/k8s-authenticated-test",
-		SampleRegistry:        "gcr.io/google-samples",
+		DockerLibraryRegistry:   "docker.io/library",
+		E2eRegistry:             "gcr.io/kubernetes-e2e-test-images",
+		EtcdRegistry:            "quay.io/coreos",
+		GcRegistry:              "k8s.gcr.io",
+		PrivateRegistry:         "gcr.io/k8s-authenticated-test",
+		SampleRegistry:          "gcr.io/google-samples",
+		GcAuthenticatedRegistry: "gcr.io/authenticated-image-pulling",
+		InvalidRegistry:         "invalid.com/invalid",
+		GcrReleaseRegistry:      "gcr.io/gke-release",
+		GoogleContainerRegistry: "gcr.io/google-containers",
+		QuayK8sCSI:              "quay.io/k8scsi",
 	}
 
 	// Load in a config file
@@ -90,6 +100,8 @@ func (r *RegistryList) GetImageConfigs() (map[string]Config, error) {
 			return r.v1_14(), nil
 		case 15:
 			return r.v1_15(), nil
+		case 16:
+			return r.v1_16(), nil
 		}
 	}
 	return map[string]Config{}, fmt.Errorf("No matching configuration for k8s version: %v", r.K8sVersion)
