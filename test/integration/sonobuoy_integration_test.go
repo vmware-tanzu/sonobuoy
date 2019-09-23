@@ -4,11 +4,13 @@ package integration
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 )
 
 const (
@@ -32,17 +34,66 @@ func findSonobuoyCLI() (string, error) {
 	return sonobuoyPath, nil
 }
 
-// TestSonobuoyVersion checks that all fields in the output from `version` are non-empty
-func TestSonobuoyVersion(t *testing.T) {
+// runSonobuoyCommandWithContext runs the Sonobuoy CLI with the given context and arguments.
+// It returns any encountered error and the stdout and stderr from the command execution.
+func runSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args string) (error, bytes.Buffer, bytes.Buffer) {
 	var stdout, stderr bytes.Buffer
 
-	command := exec.Command(sonobuoy, "version")
+	command := exec.CommandContext(ctx, sonobuoy, strings.Fields(args)...)
 	command.Stdout = &stdout
 	command.Stderr = &stderr
 
 	t.Logf("Running %q\n", command.String())
-	if err := command.Run(); err != nil {
-		t.Errorf("Sonobuoy exited with an error: %v", err)
+
+	return command.Run(), stdout, stderr
+}
+
+// runSonobuoyCommand runs the Sonobuoy CLI with the given arguments and a background context.
+// It returns any encountered error and the stdout and stderr from the command execution.
+func runSonobuoyCommand(t *testing.T, args string) (error, bytes.Buffer, bytes.Buffer) {
+	return runSonobuoyCommandWithContext(context.Background(), t, args)
+}
+
+// cleanup runs sonobuoy delete for the given namespace. If no namespace is provided, it will
+// omit the namespace argument and use the default.
+func cleanup(t *testing.T, namespace string) {
+	args := "delete"
+	if namespace != "" {
+		args += " -n " + namespace
+	}
+
+	err, stdout, stderr := runSonobuoyCommand(t, args)
+
+	if err != nil {
+		t.Logf("Error encountered during cleanup: %q\n", err)
+		t.Log(stdout.String())
+		t.Log(stderr.String())
+	}
+}
+
+// TestSimpleRun runs a simple plugin to check that it runs successfully
+func TestSimpleRun(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	ns := "sonobuoy-" + strings.ToLower(t.Name())
+	defer cleanup(t, ns)
+
+	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-passing-singlefile.yaml -n %v", ns)
+	err, _, stderr := runSonobuoyCommandWithContext(ctx, t, args)
+
+	if err != nil {
+		t.Errorf("Sonobuoy exited with an error: %q\n", err)
+		t.Log(stderr.String())
+	}
+}
+
+// TestSonobuoyVersion checks that all fields in the output from `version` are non-empty
+func TestSonobuoyVersion(t *testing.T) {
+	err, stdout, stderr := runSonobuoyCommand(t, "version")
+
+	if err != nil {
+		t.Errorf("Sonobuoy exited with an error: %q\n", err)
 		t.Log(stderr.String())
 		t.FailNow()
 	}

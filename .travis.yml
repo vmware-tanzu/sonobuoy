@@ -8,7 +8,8 @@ install: true
 script:
 - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
 - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$TRAVIS_PULL_REQUEST, BRANCH=$BRANCH"
-- VERBOSE=true make test stress int
+- VERBOSE=true make test stress
+- ./scripts/run_integration_tests.sh
 - ./travis-ci.sh
 before_install:
 - curl -L https://github.com/kubernetes-sigs/kind/releases/download/v0.4.0/kind-linux-amd64

@@ -40,7 +40,7 @@ if [ $e2eCode -ne 0 ]; then
     mkdir results; tar xzf $outFile -C results
 
     echo "Full contents of tarball:"
-    find results 
+    find results
 
     echo "Printing data on the following files:"
     find results/plugins -type f

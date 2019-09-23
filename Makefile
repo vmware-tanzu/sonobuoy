@@ -27,6 +27,7 @@ DOCKER ?= docker
 LINUX_ARCH := amd64 arm64
 DOCKERFILE :=
 PLATFORMS := $(subst $(SPACE),$(COMMA),$(foreach arch,$(LINUX_ARCH),linux/$(arch)))
+KIND_CLUSTER = kind
 
 # Not used for pushing images, just for local building on other GOOS. Defaults to
 # grabbing from the local go env but can be set manually to avoid that requirement.
@@ -68,8 +69,8 @@ VET = go vet $(TEST_PKGS)
 GOLINT_FLAGS ?= -set_exit_status
 LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 
-WORKDIR ?= /sonobuoy
-DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
+DOCKER_FLAGS =
+DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(DOCKER_FLAGS) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 GO_BUILD ?= CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)
 
 .PHONY: all container push clean test local-test local generate plugins int
@@ -88,6 +89,7 @@ stress: sonobuoy
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(STRESS_TEST)'
 
 # Integration tests
+int: DOCKER_FLAGS=-v $(KUBECONFIG):/root/.kube/kubeconfig --env KUBECONFIG=/root/.kube/kubeconfig --network host
 int: sonobuoy
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(INT_TEST)'
 
@@ -183,8 +185,8 @@ clean:
 		$(MAKE) clean_image TARGET=$(TARGET)-$$arch; \
 	done
 
-deploy_kind:
-	kind load docker-image $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) || true
+deploy_kind: container
+	kind load docker-image --name $(KIND_CLUSTER) $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) || true
 
 native:
 	$(GO_BUILD)
