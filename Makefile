@@ -184,9 +184,7 @@ clean:
 	done
 
 deploy_kind:
-	# FIXME: This assumes kind is in cwd; intended to work with our other CI scripts and
-	# is a bit wonky for general use.
-	./kind load docker-image $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) || true
+	kind load docker-image $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) || true
 
 native:
 	$(GO_BUILD)

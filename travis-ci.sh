@@ -4,7 +4,7 @@
 set -e
 
 # Early detect/fail if deps not correct.
-./dep ensure
+dep ensure
 git_status=$(git status -s)
 if [ -n "$git_status" ]; then
     echo $git_status
