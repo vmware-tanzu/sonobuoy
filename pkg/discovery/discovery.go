@@ -47,6 +47,10 @@ const (
 	pluginDefinitionFilename = "defintion.json"
 )
 
+type RunInfo struct {
+	LoadedPlugins []string `json:"plugins,omitempty"`
+}
+
 // Run is the main entrypoint for discovery.
 func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// Adjust QPS/Burst so that the queries execute as quickly as possible.
@@ -130,6 +134,11 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		}
 	}
 
+	// runInfo is for dumping additional information to help enable processing of the resulting tarball.
+	runInfo := RunInfo{
+		LoadedPlugins: []string{},
+	}
+
 	// 4. Run the plugin aggregator
 	trackErrorsFor("running plugins")(
 		pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.Namespace, outpath),
@@ -207,9 +216,18 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 
 	// Saving plugin definitions in their respective folders for easy reference.
 	for _, p := range cfg.LoadedPlugins {
+		runInfo.LoadedPlugins = append(runInfo.LoadedPlugins, p.GetName())
 		trackErrorsFor("saving plugin info")(
 			dumpPlugin(p, outpath),
 		)
+	}
+
+	// Dump extra metadata that may be useful to postprocessors or analysis.
+	blob, err := json.Marshal(runInfo)
+	trackErrorsFor("marshalling run info")(err)
+	if err == nil {
+		err = ioutil.WriteFile(path.Join(metapath, results.InfoFile), blob, 0644)
+		trackErrorsFor("saving" + results.InfoFile)(err)
 	}
 
 	// 8. tarball up results YYYYMMDDHHMM_sonobuoy_UID.tar.gz
