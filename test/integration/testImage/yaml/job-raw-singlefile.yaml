@@ -1,0 +1,17 @@
+sonobuoy-config:
+  driver: Job
+  plugin-name: job-raw-passing-singlefile
+  result-format: raw
+spec:
+  args:
+  - single-file
+  - /resources/hello-world.txt
+  command:
+  - testImage
+  image: sonobuoy/testimage:v0.1
+  name: plugin
+  resources: {}
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
+

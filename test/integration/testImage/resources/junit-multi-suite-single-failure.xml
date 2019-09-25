@@ -1,0 +1,12 @@
+<testsuites>
+  <testsuite name='test suite' tests='1' failed='0' failures='0'>
+    <testcase name='test suite-2.2.7' classname='test suite.test suite-2.2.7' target='local://' time='1.29e-05'>
+      <skipped/>
+    </testcase>
+  </testsuite>
+  <testsuite name='test suite the sequal' tests='1' failed='1' failures='1'>
+    <testcase name='test suite-2.2.7 the sequal' classname='test suite.test suite-2.2.7' target='local://' time='1.29e-05'>
+      <failure message='failure msg'/>
+    </testcase>
+  </testsuite>
+</testsuites>
