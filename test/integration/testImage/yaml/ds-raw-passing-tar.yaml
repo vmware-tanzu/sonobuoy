@@ -1,0 +1,18 @@
+sonobuoy-config:
+  driver: DaemonSet
+  plugin-name: ds-raw-passing-tar
+  result-format: raw
+spec:
+  args:
+  - tar-file
+  - /resources/hello-world.txt
+  - /resources/junit-multi-suite-single-failure.xml
+  command:
+  - testImage
+  image: sonobuoy/testimage:v0.1
+  name: plugin
+  resources: {}
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
+

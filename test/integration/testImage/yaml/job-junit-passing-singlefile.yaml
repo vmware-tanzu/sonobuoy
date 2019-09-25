@@ -1,0 +1,17 @@
+sonobuoy-config:
+  driver: Job
+  plugin-name: job-junit-passing-singlefile
+  result-format: junit
+spec:
+  args:
+  - single-file
+  - /resources/junit-passing-tests.xml
+  command:
+  - testImage
+  image: sonobuoy/testimage:v0.1
+  name: plugin
+  resources: {}
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
+

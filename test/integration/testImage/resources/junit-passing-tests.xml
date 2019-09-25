@@ -1,0 +1,5 @@
+<testsuite name='test suite A' tests='3' failed='0' failures='0'>
+    <testcase name='test case 1' classname='this is the classname' target='local://' time='1.29e-05' />
+    <testcase name='test case 2' classname='this is the classname' target='local://' time='1.29e-05' />
+    <testcase name='test case 3' classname='this is the classname' target='local://' time='1.29e-05' />
+</testsuite>
