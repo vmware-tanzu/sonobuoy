@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/heptio/sonobuoy/pkg/client/results"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/heptio/sonobuoy/pkg/plugin"
 	"github.com/heptio/sonobuoy/pkg/plugin/driver"
@@ -79,6 +80,11 @@ func NewCmdGenPluginDef() *cobra.Command {
 	genPluginSet.VarP(
 		&genPluginOpts.driver, "type", "t",
 		"Plugin Driver (job or daemonset)",
+	)
+
+	genPluginSet.StringVarP(
+		&genPluginOpts.def.SonobuoyConfig.ResultFormat, "format", "f", results.ResultFormatRaw,
+		"Result format (junit or raw)",
 	)
 
 	genPluginSet.StringVarP(
