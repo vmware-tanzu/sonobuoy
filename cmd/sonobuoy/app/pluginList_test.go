@@ -33,15 +33,15 @@ func TestSetPluginList(t *testing.T) {
 	}{
 		{
 			desc:      "empty filename",
-			expectErr: `unable to read file '': open : no such file or directory`,
+			expectErr: `unable to stat "": stat : no such file or directory`,
 		}, {
 			desc:      "file does not exist",
 			input:     "no-file",
-			expectErr: `unable to read file 'no-file': open no-file: no such file or directory`,
+			expectErr: `unable to stat "no-file": stat no-file: no such file or directory`,
 		}, {
 			desc:      "bad manifest",
 			input:     "testdata/badmanifest.yaml",
-			expectErr: `failed to load plugin file 'testdata/badmanifest.yaml': couldn't decode yaml for plugin definition: couldn't get version/kind; json parse error: json: cannot unmarshal string into Go value of type struct { APIVersion string "json:\"apiVersion,omitempty\""; Kind string "json:\"kind,omitempty\"" }`,
+			expectErr: `failed to load plugin file "testdata/badmanifest.yaml": couldn't decode yaml for plugin definition: couldn't get version/kind; json parse error: json: cannot unmarshal string into Go value of type struct { APIVersion string "json:\"apiVersion,omitempty\""; Kind string "json:\"kind,omitempty\"" }`,
 		}, {
 			desc:   "loading e2e",
 			input:  "e2e",
@@ -57,17 +57,17 @@ func TestSetPluginList(t *testing.T) {
 			input: "testdata/goodmanifest.yaml",
 			list:  pluginList{},
 			expect: pluginList{StaticPlugins: []*manifest.Manifest{
-				&manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "test"}},
+				{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "test"}},
 			}},
 		}, {
 			desc:  "dynamic and static",
 			input: "e2e",
 			list: pluginList{StaticPlugins: []*manifest.Manifest{
-				&manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "test"}},
+				{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "test"}},
 			}},
 			expect: pluginList{
 				StaticPlugins: []*manifest.Manifest{
-					&manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "test"}},
+					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "test"}},
 				},
 				DynamicPlugins: []string{"e2e"},
 			},

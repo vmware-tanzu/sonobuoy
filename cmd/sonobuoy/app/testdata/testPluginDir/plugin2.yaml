@@ -1,0 +1,14 @@
+sonobuoy-config:
+  driver: Job
+  plugin-name: plugin2
+  result-format: raw
+spec:
+  command:
+  - ./run.sh
+  image: foo/bar:v2
+  name: plugin
+  resources: {}
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
+

@@ -18,6 +18,8 @@ package app
 
 import (
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
@@ -41,6 +43,7 @@ type pluginList struct {
 const (
 	pluginE2E         = "e2e"
 	pluginSystemdLogs = "systemd-logs"
+	fileExtensionYAML = ".yaml"
 )
 
 // Make sure pluginList implements Value properly
@@ -71,19 +74,53 @@ func (p *pluginList) Set(str string) error {
 	case pluginSystemdLogs:
 		p.DynamicPlugins = append(p.DynamicPlugins, str)
 	default:
-		b, err := ioutil.ReadFile(str)
+		finfo, err := os.Stat(str)
 		if err != nil {
-			return errors.Wrapf(err, "unable to read file '%v'", str)
+			return errors.Wrapf(err, "unable to stat %q", str)
 		}
 
-		newPlugin, err := loadManifest(b)
-		if err != nil {
-			return errors.Wrapf(err, "failed to load plugin file '%v'", str)
+		if finfo.IsDir() {
+			return p.loadPluginsDir(str)
 		}
-
-		p.StaticPlugins = append(p.StaticPlugins, newPlugin)
+		return p.loadSinglePlugin(str)
 	}
 
+	return nil
+}
+
+// loadPluginsDir loads every plugin in the given directory. It does not traverse recursively
+// into the directory. A plugin must have the '.yaml' extension to be considered.
+// It returns the first error encountered and stops processing.
+func (p *pluginList) loadPluginsDir(dirpath string) error {
+	files, err := ioutil.ReadDir(dirpath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read directory %q", dirpath)
+	}
+
+	for _, file := range files {
+		if !file.IsDir() && strings.HasSuffix(file.Name(), fileExtensionYAML) {
+			if err := p.loadSinglePlugin(filepath.Join(dirpath, file.Name())); err != nil {
+				return errors.Wrapf(err, "failed to load plugin in file %q", file.Name())
+			}
+		}
+	}
+
+	return nil
+}
+
+// loadSinglePlugin loads a single plugin located at the given path.
+func (p *pluginList) loadSinglePlugin(filepath string) error {
+	b, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return errors.Wrapf(err, "unable to read file %q", filepath)
+	}
+
+	newPlugin, err := loadManifest(b)
+	if err != nil {
+		return errors.Wrapf(err, "failed to load plugin file %q", filepath)
+	}
+
+	p.StaticPlugins = append(p.StaticPlugins, newPlugin)
 	return nil
 }
 
