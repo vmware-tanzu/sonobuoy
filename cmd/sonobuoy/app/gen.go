@@ -104,7 +104,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 
 	// the Enabled and Disabled modes of rbacmode don't need the client, so kubeclient can be nil.
 	// if kubeclient is needed, ErrRBACNoClient will be returned and that error can be reported back up.
-	rbacEnabled, err := genflags.rbacMode.Enabled(kubeclient)
+	rbacEnabled, err := g.rbacMode.Enabled(kubeclient)
 	if err != nil {
 		if errors.Cause(err) == ErrRBACNoClient {
 			return nil, errors.Wrap(err, kubeError.Error())
