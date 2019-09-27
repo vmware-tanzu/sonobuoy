@@ -53,6 +53,10 @@ const (
 	defaultNodesFile          = "Nodes.json"
 	defaultServerVersionFile  = "serverversion.json"
 	defaultServerGroupsFile   = "servergroups.json"
+
+	// InfoFile contains data not that isn't strictly in another location
+	// but still relevent to post-processing or understanding the run in some way.
+	InfoFile = "info.json"
 )
 
 // Versions corresponding to Kubernetes minor version values. We used to
@@ -321,6 +325,13 @@ func ConfigFile(version string) string {
 	default:
 		return "meta/config.json"
 	}
+}
+
+// RunInfoFile returns the path to the Sonobuoy RunInfo file which is extra metadata about the run.
+// This was added in v0.16.1. The function will return the same string even for earlier
+// versions where that file does not exist.
+func (r *Reader) RunInfoFile() string {
+	return path.Join(metadataDir, InfoFile)
 }
 
 // PluginResultsItem returns the results file from the given plugin if found, error otherwise.

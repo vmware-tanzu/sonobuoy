@@ -21,7 +21,10 @@ import (
 
 func ExampleNewCmdResults() {
 	cmd := NewCmdResults()
-	cmd.SetArgs([]string{filepath.Join("testdata", "testResultsOutput.tar.gz")})
+	cmd.SetArgs([]string{
+		filepath.Join("testdata", "testResultsOutput.tar.gz"),
+		"--plugin=e2e",
+	})
 	cmd.Execute()
 	// Output:
 	// Plugin: e2e
@@ -39,7 +42,7 @@ func ExampleNewCmdResults_detailed() {
 	cmd := NewCmdResults()
 	cmd.SetArgs([]string{
 		filepath.Join("testdata", "testResultsOutput.tar.gz"),
-		"--mode", "detailed",
+		"--mode", "detailed", "--plugin=e2e",
 	})
 	cmd.Execute()
 	// Output:

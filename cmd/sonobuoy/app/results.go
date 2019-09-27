@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/heptio/sonobuoy/pkg/client/results"
+	"github.com/heptio/sonobuoy/pkg/discovery"
 	"github.com/heptio/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -66,7 +67,11 @@ func NewCmdResults() *cobra.Command {
 		},
 		Args: cobra.ExactArgs(1),
 	}
-	AddPluginFlag(&data.plugin, cmd.Flags())
+
+	cmd.Flags().StringVarP(
+		&data.plugin, "plugin", "p", "",
+		"Which plugin to show results for. Defaults to printing them all.",
+	)
 	cmd.Flags().StringVarP(
 		&data.mode, "mode", "m", resultModeReport,
 		`Modifies the format of the output. Valid options are report, detailed, or dump.`,
@@ -100,6 +105,9 @@ func getReader(filepath string) (*results.Reader, func(), error) {
 	return r, func() { gzr.Close(); f.Close() }, nil
 }
 
+// result takes the resultsInput and tries to print the requested infromation from the archive.
+// If there is an error printing any individual plugin, only the last error is printed and all plugins
+// continue to be processed.
 func result(input resultsInput) error {
 	r, cleanup, err := getReader(input.archive)
 	defer cleanup()
@@ -107,6 +115,42 @@ func result(input resultsInput) error {
 		return err
 	}
 
+	// Report on all plugins or the specified one.
+	plugins := []string{input.plugin}
+	if len(input.plugin) == 0 {
+		plugins, err = getPluginList(r)
+		if err != nil {
+			return errors.Wrapf(err, "unable to determine plugins to report on")
+		}
+		if len(plugins) == 0 {
+			return fmt.Errorf("no plugins specified by either the --plugin flag or tarball metadata")
+		}
+	}
+
+	var lastErr error
+	for i, plugin := range plugins {
+		input.plugin = plugin
+
+		// Load file with a new reader since we can't assume this reader has rewind
+		// capabilities.
+		r, cleanup, err := getReader(input.archive)
+		defer cleanup()
+
+		err = printSinglePlugin(input, r)
+		if err != nil {
+			lastErr = err
+		}
+
+		// Seperator line, but don't print a needless one at the end.
+		if i+1 < len(plugins) {
+			fmt.Println()
+		}
+	}
+
+	return lastErr
+}
+
+func printSinglePlugin(input resultsInput, r *results.Reader) error {
 	// If we want to dump the whole file, don't decode to an Item object first.
 	if input.mode == resultModeDump {
 		fReader, err := r.PluginResultsReader(input.plugin)
@@ -134,6 +178,15 @@ func result(input resultsInput) error {
 	default:
 		return printResultsSummary(obj)
 	}
+}
+
+func getPluginList(r *results.Reader) ([]string, error) {
+	runInfo := discovery.RunInfo{}
+	err := r.WalkFiles(func(path string, info os.FileInfo, err error) error {
+		return results.ExtractFileIntoStruct(r.RunInfoFile(), path, info, &runInfo)
+	})
+
+	return runInfo.LoadedPlugins, errors.Wrap(err, "finding plugin list")
 }
 
 func getItemInTree(i *results.Item, root string) *results.Item {
