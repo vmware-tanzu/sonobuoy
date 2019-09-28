@@ -35,14 +35,9 @@ data:
       command:
       - /run_e2e.sh
       env:
-      - name: E2E_DRYRUN
-        value: "true"
       - name: E2E_FOCUS
       - name: E2E_PARALLEL
       - name: E2E_SKIP
-        value: override
-      - name: E2E_USE_GO_RUNNER
-        value: "true"
       name: e2e
       resources: {}
       volumeMounts:
