@@ -304,6 +304,7 @@ func e2eManifest(cfg *GenConfig) *manifest.Manifest {
 					{Name: "E2E_FOCUS", Value: cfg.E2EConfig.Focus},
 					{Name: "E2E_SKIP", Value: cfg.E2EConfig.Skip},
 					{Name: "E2E_PARALLEL", Value: cfg.E2EConfig.Parallel},
+					{Name: "E2E_USE_GO_RUNNER", Value: "true"},
 				},
 				VolumeMounts: []corev1.VolumeMount{
 					{

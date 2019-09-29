@@ -333,6 +333,16 @@ func TestGenerateManifestGolden(t *testing.T) {
 			},
 			goldenFile: filepath.Join("testdata", "default-pod-spec.golden"),
 		}, {
+			name: "E2E_USE_GO_RUNNER can be overridden/removed",
+			inputcm: &client.GenConfig{
+				E2EConfig:      &client.E2EConfig{},
+				DynamicPlugins: []string{"e2e"},
+				PluginEnvOverrides: map[string]map[string]string{
+					"e2e": {"E2E_USE_GO_RUNNER": ""},
+				},
+			},
+			goldenFile: filepath.Join("testdata", "goRunnerRemoved.golden"),
+		}, {
 			name: "Existing pod spec is not modified if default pod spec is requested",
 			inputcm: &client.GenConfig{
 				E2EConfig:          &client.E2EConfig{},
