@@ -5,10 +5,10 @@ toc:
         url: /index.html
       - page: Config
         url: /sonobuoy-config
+      - page: Checking Results
+        url: /results
       - page: Snapshot layout
         url: /snapshot
-      - page: ImagePullSecrects
-        url: /pullsecrets
   - title: Use cases
     subfolderitems:
       - page: Conformance testing
@@ -17,11 +17,13 @@ toc:
         url: /airgap
       - page: Plugins
         url: /plugins
+      - page: Using Private Images
+        url: /pullsecrets
   - title: Next steps
     subfolderitems:
       - page: Customization
         url: /gen
-      - page: Make your own plugins
+      - page: Example Plugins
         url: /examples
         github: true
       - page: Cut a Release
