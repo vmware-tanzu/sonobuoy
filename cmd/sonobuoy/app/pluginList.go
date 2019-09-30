@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 

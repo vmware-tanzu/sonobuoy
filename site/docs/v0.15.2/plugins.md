@@ -183,9 +183,9 @@ Here's the current list:
 
 
 [gen]: gen.md
-[systemd]: https://github.com/heptio/sonobuoy/blob/master/examples/plugins.d/systemd_logs.yaml
+[systemd]: https://github.com/vmware-tanzu/sonobuoy/blob/master/examples/plugins.d/systemd_logs.yaml
 [systemd-repo]: https://github.com/heptio/sonobuoy-plugin-systemd-logs
-[e2e]: https://github.com/heptio/sonobuoy/blob/master/examples/plugins.d/heptio-e2e.yaml
+[e2e]: https://github.com/vmware-tanzu/sonobuoy/blob/master/examples/plugins.d/heptio-e2e.yaml
 [conformance]: https://github.com/kubernetes/kubernetes/tree/master/cluster/images/conformance
 [guide]: conformance-testing.md#integration-with-sonobuoy 
 [bulkhead]: https://github.com/bgeesaman/sonobuoy-plugin-bulkhead/blob/master/examples/benchmark.yml

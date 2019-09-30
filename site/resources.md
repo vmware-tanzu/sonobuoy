@@ -20,4 +20,4 @@ Here you will find external resources about Sonobuoy, such as videos, podcasts, 
 
 * Learn more about CNCF Certified Kubernetes: <https://github.com/cncf/k8s-conformance#certified-kubernetes>
 
-* Sonobuoy source code: <https://github.com/heptio/sonobuoy>
+* Sonobuoy source code: <https://github.com/vmware-tanzu/sonobuoy>

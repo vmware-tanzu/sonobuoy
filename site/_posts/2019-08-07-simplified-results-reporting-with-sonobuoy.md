@@ -145,5 +145,5 @@ Join the Sonobuoy community:
 [twitter]: https://twitter.com/projectsonobuoy
 [slack]: https://kubernetes.slack.com/messages/C6L3G051C
 [conformance-wg]: https://github.com/cncf/k8s-conformance
-[github]: https://github.com/heptio/sonobuoy
+[github]: https://github.com/vmware-tanzu/sonobuoy
 [cncf]: https://www.cncf.io/certification/software-conformance/

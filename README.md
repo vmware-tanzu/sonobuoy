@@ -38,7 +38,7 @@ Download one of the releases directly from [here][releases].
 Alternatively, you can install the CLI by running:
 
 ```bash
-go get -u -v github.com/heptio/sonobuoy
+go get -u -v github.com/vmware-tanzu/sonobuoy
 ```
 
 Golang version 1.13 or greater is recommended. Golang can be installed via
@@ -151,24 +151,24 @@ See [the list of releases][releases] to find out about feature changes.
 [airgap]: https://sonobuoy.io/docs/airgap
 [brew]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
-[coc]: https://github.com/heptio/sonobuoy/blob/master/CODE_OF_CONDUCT.md
-[contrib]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
+[coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
+[contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
 [conformance]: https://sonobuoy.io/docs/conformance-testing
 [docker]: https://docs.docker.com/install
 [docs]: https://sonobuoy.io/docs
 [e2e]: https://sonobuoy.io/docs/conformance-testing
 [gen]: https://sonobuoy.io/docs/gen
 [gimme]: https://github.com/travis-ci/gimme
-[issue]: https://github.com/heptio/sonobuoy/issues
+[issue]: https://github.com/vmware-tanzu/sonobuoy/issues
 [k8s]: https://github.com/kubernetes/kubernetes
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
 [oview]: https://youtu.be/k-P4hXdruRs?t=9m27s
 [plugins]: https://sonobuoy.io/docs/plugins
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
-[releases]: https://github.com/heptio/sonobuoy/releases
+[releases]: https://github.com/vmware-tanzu/sonobuoy/releases
 [results]: https://sonobuoy.io/docs/results.md
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 [snapshot]:https://sonobuoy.io/docs/snapshot
 [sonobuoyconfig]: https://sonobuoy.io/docs/sonobuoy-config
-[status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
-[travis]: https://travis-ci.org/heptio/sonobuoy/#
+[status]: https://travis-ci.org/vmware-tanzu/sonobuoy.svg?branch=master
+[travis]: https://travis-ci.org/vmware-tanzu/sonobuoy/#

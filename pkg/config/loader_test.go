@@ -24,7 +24,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 )
 
 func TestOpenConfigFile(t *testing.T) {

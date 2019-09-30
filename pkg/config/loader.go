@@ -23,9 +23,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/heptio/sonobuoy/pkg/buildinfo"
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	pluginloader "github.com/heptio/sonobuoy/pkg/plugin/loader"
+	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	pluginloader "github.com/vmware-tanzu/sonobuoy/pkg/plugin/loader"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 )

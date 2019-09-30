@@ -21,4 +21,4 @@ kubectl apply -f sonobuoy.yaml
 > Note: If you find that you need this flow to accomplish your work, talk to us about it in our [Slack][slack] channel or file an [issue][issue] in Github. Others may have the same need and we'd love to help support you.
 
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
-[issue]: https://github.com/heptio/sonobuoy/issues
+[issue]: https://github.com/vmware-tanzu/sonobuoy/issues

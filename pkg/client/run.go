@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	kubeerror "k8s.io/apimachinery/pkg/api/errors"

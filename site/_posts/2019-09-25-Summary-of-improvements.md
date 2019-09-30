@@ -138,11 +138,11 @@ Join the Sonobuoy community:
 [twitter]: https://twitter.com/projectsonobuoy
 [slack]: https://kubernetes.slack.com/messages/C6L3G051C
 [conformance-wg]: https://github.com/cncf/k8s-conformance
-[github]: https://github.com/heptio/sonobuoy
+[github]: https://github.com/vmware-tanzu/sonobuoy
 [cncf]: https://www.cncf.io/certification/software-conformance/
 [schnakeGithub]: https://github.com/johnschnake
 [zubronGithub]: https://github.com/zubron
-[releases]: https://github.com/heptio/sonobuoy/releases
-[progressExample]: https://github.com/heptio/sonobuoy/tree/master/examples/plugins/progress-reporter
+[releases]: https://github.com/vmware-tanzu/sonobuoy/releases
+[progressExample]: https://github.com/vmware-tanzu/sonobuoy/tree/master/examples/plugins/progress-reporter
 [resultsBlogpost]: https://sonobuoy.io/simplified-results-reporting-with-sonobuoy/
 [podSpecBlogPost]: https://sonobuoy.io/customizing-plugin-podspecs/

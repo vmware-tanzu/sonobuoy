@@ -27,12 +27,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/client/results"
-	"github.com/heptio/sonobuoy/pkg/config"
-	"github.com/heptio/sonobuoy/pkg/dynamic"
-	"github.com/heptio/sonobuoy/pkg/errlog"
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	pluginaggregation "github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/dynamic"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	pluginaggregation "github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"

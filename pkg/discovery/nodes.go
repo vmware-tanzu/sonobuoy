@@ -23,7 +23,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"

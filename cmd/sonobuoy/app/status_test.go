@@ -21,7 +21,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 )
 
 var expectedSummary = `         PLUGIN     STATUS   RESULT   COUNT

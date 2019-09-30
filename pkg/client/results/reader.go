@@ -30,7 +30,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 
 	goversion "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"

@@ -23,10 +23,10 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/heptio/sonobuoy/pkg/dynamic"
+	"github.com/vmware-tanzu/sonobuoy/pkg/dynamic"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

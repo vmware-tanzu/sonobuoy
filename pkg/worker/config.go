@@ -19,7 +19,7 @@ package worker
 import (
 	"os"
 
-	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )

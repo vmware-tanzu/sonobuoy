@@ -21,8 +21,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/heptio/sonobuoy/pkg/config"
-	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 )
 
 func TestDefaults(t *testing.T) {

@@ -7,7 +7,7 @@
 1. Generate a new set of [versioned docs][gendocs] for this release.
 1. If the new release corresponds to a new Kubernetes release, the following steps must be performed:
    * Add the new list of E2E test images.
-     For an example of the outcome of this process, see the [change corresponding to the Kubernetes v1.14 release](https://github.com/heptio/sonobuoy/commit/68f15a260e60a288f91bc40347c817b382a3d45c).
+     For an example of the outcome of this process, see the [change corresponding to the Kubernetes v1.14 release](https://github.com/vmware-tanzu/sonobuoy/commit/68f15a260e60a288f91bc40347c817b382a3d45c).
      1. Within `pkg/image/`, copy the latest `v1.x.go` file to a file which corresponds to the new Kubernetes release number.
         For example, if the new Sonobuoy release corresponds to Kubernetes `v1.15`, copy the `v1.14.go` file to `v1.15.go`.
         ```
@@ -36,7 +36,7 @@
 
     > NOTE: Tag the new tip of master, not the branch you just merged.
 
-1. Push the tag to the [`github.com/heptio/sonobuoy`](https://github.com/heptio/sonobuoy/) repository.
+1. Push the tag to the [`github.com/vmware-tanzu/sonobuoy`](https://github.com/vmware-tanzu/sonobuoy/) repository.
    * To ensure that the tag is pushed to the correct repository, check which remote corresponds to that repository using the following command:
      ```
      git remote -v
@@ -46,10 +46,10 @@
      ```
      origin	git@github.com:<username>/sonobuoy.git (fetch)
      origin	git@github.com:<username>/sonobuoy.git (push)
-     upstream	https://github.com/heptio/sonobuoy (fetch)
-     upstream	https://github.com/heptio/sonobuoy (push)
+     upstream	https://github.com/vmware-tanzu/sonobuoy (fetch)
+     upstream	https://github.com/vmware-tanzu/sonobuoy (push)
      ```
-     For the following steps, use the remote configured for the `heptio/sonobuoy` repository.
+     For the following steps, use the remote configured for the `vmware-tanzu/sonobuoy` repository.
      The following instructions will use `upstream`.
    * Push the tag with the following command.
      > NOTE: This will push all tags.
@@ -73,14 +73,14 @@
 
 
 ## Validation
-1. Open a browser tab and go to: https://travis-ci.org/heptio/sonobuoy/builds and verify go releaser for tag v0.x.y completes successfully.
-1. Upon successful completion of build job above, check the [releases tab of Sonobuoy](https://github.com/heptio/sonobuoy/releases) and verify the artifacts and changelog were published correctly.
+1. Open a browser tab and go to: https://travis-ci.org/vmware-tanzu/sonobuoy/builds and verify go releaser for tag v0.x.y completes successfully.
+1. Upon successful completion of build job above, check the [releases tab of Sonobuoy](https://github.com/vmware-tanzu/sonobuoy/releases) and verify the artifacts and changelog were published correctly.
 1. Run the following command to make sure the image was pushed correctly to [gcr.io][gcr]:
    ```
    docker run -it gcr.io/heptio-images/sonobuoy:v0.x.y /sonobuoy version
    ```
    The `Sonobuoy Version` in the output should match the release tag above.
-1. Go to the [GitHub release page](https://github.com/heptio/sonobuoy/releases) and download the release binaries and make sure the version matches the expected values.
+1. Go to the [GitHub release page](https://github.com/vmware-tanzu/sonobuoy/releases) and download the release binaries and make sure the version matches the expected values.
 2. Run a [Kind](https://github.com/kubernetes-sigs/kind) cluster locally and ensure that you can run `sonobuoy run --mode quick`.
    If this release corresponds to a new Kubernetes release as well, ensure:
     - you're testing with the new Kind images by checking the output from:

@@ -3,8 +3,8 @@ package discovery
 import (
 	"testing"
 
-	"github.com/heptio/sonobuoy/pkg/client/results"
-	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 
 	"github.com/kylelemons/godebug/pretty"
 )

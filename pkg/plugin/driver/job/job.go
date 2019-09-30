@@ -27,12 +27,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/heptio/sonobuoy/pkg/errlog"
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/heptio/sonobuoy/pkg/plugin/driver"
-	"github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
-	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
-	sonotime "github.com/heptio/sonobuoy/pkg/time"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
+	sonotime "github.com/vmware-tanzu/sonobuoy/pkg/time"
 )
 
 const (

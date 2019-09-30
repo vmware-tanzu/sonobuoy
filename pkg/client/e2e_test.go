@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/heptio/sonobuoy/pkg/client/results"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 
 	"k8s.io/client-go/rest"
 )

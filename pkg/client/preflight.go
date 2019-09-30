@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	version "github.com/hashicorp/go-version"
-	"github.com/heptio/sonobuoy/pkg/buildinfo"
+	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	apicorev1 "k8s.io/api/core/v1"

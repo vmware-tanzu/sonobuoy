@@ -11,7 +11,7 @@ total_updates=60
 sleep_seconds=1
 
 # saveResults prepares the results for handoff to the Sonobuoy worker.
-# See: https://github.com/heptio/sonobuoy/blob/master/docs/plugins.md
+# See: https://github.com/vmware-tanzu/sonobuoy/blob/master/docs/plugins.md
 saveResults() {
     # Signal to the worker that we are done and where to find the results.
     echo "hello world" > ${results_dir}/myresults

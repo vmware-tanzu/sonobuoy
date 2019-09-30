@@ -29,10 +29,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/backplane/ca/authtest"
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
-	"github.com/heptio/sonobuoy/pkg/worker"
+	"github.com/vmware-tanzu/sonobuoy/pkg/backplane/ca/authtest"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
+	"github.com/vmware-tanzu/sonobuoy/pkg/worker"
 )
 
 var numResults = 1000

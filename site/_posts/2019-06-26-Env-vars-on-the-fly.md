@@ -61,5 +61,5 @@ Join the Sonobuoy community:
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 [conformance-wg]: https://github.com/cncf/k8s-conformance
 [first-blog]: https://blogs.vmware.com/cloudnative/2019/02/21/certifying-kubernetes-with-sonobuoy/
-[github]: https://github.com/heptio/sonobuoy
+[github]: https://github.com/vmware-tanzu/sonobuoy
 [cncf]: https://www.cncf.io/certification/software-conformance/

@@ -36,7 +36,7 @@ Download one of the releases directly from [here][releases].
 Alternatively, you can install the CLI by running:
 
 ```
-go get -u -v github.com/heptio/sonobuoy
+go get -u -v github.com/vmware-tanzu/sonobuoy
 ```
 
 Golang version 1.12 or greater is recommended. Golang can be installed via
@@ -139,23 +139,23 @@ See [the list of releases][releases] to find out about feature changes.
 [airgap]: airgap.md
 [brew]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
-[coc]: https://github.com/heptio/sonobuoy/blob/master/CODE_OF_CONDUCT.md
-[contrib]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
+[coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
+[contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
 [conformance]: conformance-testing.md
 [docs]: https://sonobuoy.io/docs/v0.15.0/
 [e2e]: conformance-testing.md
 [gen]: gen.md
 [gimme]: https://github.com/travis-ci/gimme
-[issue]: https://github.com/heptio/sonobuoy/issues
+[issue]: https://github.com/vmware-tanzu/sonobuoy/issues
 [k8s]: https://github.com/kubernetes/kubernetes
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
 [oview]: https://youtu.be/k-P4hXdruRs?t=9m27s
 [plugins]: plugins.md
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
-[releases]: https://github.com/heptio/sonobuoy/releases
+[releases]: https://github.com/vmware-tanzu/sonobuoy/releases
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 [snapshot]: snapshot.md
 [sonobuoyconfig]: sonobuoy-config.md
-[status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
-[travis]: https://travis-ci.org/heptio/sonobuoy/#
+[status]: https://travis-ci.org/vmware-tanzu/sonobuoy.svg?branch=master
+[travis]: https://travis-ci.org/vmware-tanzu/sonobuoy/#
 [wait]: wait.md

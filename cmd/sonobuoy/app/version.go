@@ -19,8 +19,8 @@ package app
 import (
 	"fmt"
 
-	"github.com/heptio/sonobuoy/pkg/buildinfo"
-	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

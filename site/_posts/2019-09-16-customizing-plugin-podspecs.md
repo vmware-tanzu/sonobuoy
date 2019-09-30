@@ -194,10 +194,10 @@ Join the Sonobuoy community:
 - Join the Kubernetes Software Conformance Working Group: [github.com/cncf/k8s-conformance][conformance-wg]
 
 [kubernetes-podspec]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core
-[sonobuoy-examples]: https://github.com/heptio/sonobuoy/tree/master/examples/plugins/cmd-runner
+[sonobuoy-examples]: https://github.com/vmware-tanzu/sonobuoy/tree/master/examples/plugins/cmd-runner
 [cis-benchmark]: https://www.cisecurity.org/benchmark/kubernetes/
 [twitter]: https://twitter.com/projectsonobuoy
 [slack]: https://kubernetes.slack.com/messages/C6L3G051C
 [conformance-wg]: https://github.com/cncf/k8s-conformance
-[github]: https://github.com/heptio/sonobuoy
+[github]: https://github.com/vmware-tanzu/sonobuoy
 [cncf]: https://www.cncf.io/certification/software-conformance/

@@ -19,7 +19,7 @@ package app
 import (
 	"flag"
 
-	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/spf13/cobra"
 
 	"k8s.io/klog"
