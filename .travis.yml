@@ -18,6 +18,15 @@ before_install:
 - export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
 - curl -L https://github.com/golang/dep/releases/download/v0.5.3/dep-linux-amd64 --output
   $HOME/bin/dep && chmod +x $HOME/bin/dep
+- curl -L https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 --output
+  $HOME/bin/jq && chmod +x $HOME/bin/jq
+- jq --version
+- curl -L https://github.com/mikefarah/yq/releases/download/2.4.0/yq_linux_amd64 --output
+  $HOME/bin/yq && chmod +x $HOME/bin/yq
+- yq --version
+- curl -L https://storage.googleapis.com/kubernetes-release/release/v1.16.0/bin/linux/amd64/kubectl --output
+  $HOME/bin/kubectl && chmod +x $HOME/bin/kubectl
+- kubectl cluster-info
 before_deploy:
 - if [ ! -d ${HOME}/google-cloud-sdk ]; then curl https://sdk.cloud.google.com | bash
   /dev/stdin --disable-prompts; fi
