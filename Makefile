@@ -90,6 +90,7 @@ stress: sonobuoy
 
 # Integration tests
 int: DOCKER_FLAGS=-v $(KUBECONFIG):/root/.kube/kubeconfig --env KUBECONFIG=/root/.kube/kubeconfig --network host
+int: TEST_ARGS= $(VERBOSE_FLAG) -timeout 10m
 int: sonobuoy
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(INT_TEST)'
 
