@@ -53,6 +53,12 @@ defaults:
       gh: https://github.com/heptio/sonobuoy/tree/master
       layout: "docs"
   - scope:
+      path: docs/v0.16.1
+    values:
+      version: v0.16.1
+      gh: https://github.com/heptio/sonobuoy/tree/v0.16.1
+      layout: "docs"
+  - scope:
       path: docs/v0.16.0
     values:
       version: v0.16.0
@@ -130,9 +136,10 @@ collections:
   - casestudies
 
 versioning: true
-latest: v0.16.0
+latest: v0.16.1
 versions:
 - master
+- v0.16.1
 - v0.16.0
 - v0.15.4
 - v0.15.3
