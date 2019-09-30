@@ -63,8 +63,10 @@ results=$(sonobuoy retrieve)
 Inspect results for test failures.  This will list the number of tests failed and their names:
 
 ```bash
-sonobuoy e2e $results
+sonobuoy results $results
 ```
+
+> Note: The `results` command has lots of useful options for various situations. See the [results page][results] for more details.
 
 You can also extract the entire contents of the file to get much more [detailed data][snapshot] about your cluster.
 
@@ -164,6 +166,7 @@ See [the list of releases][releases] to find out about feature changes.
 [plugins]: plugins
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
 [releases]: https://github.com/heptio/sonobuoy/releases
+[results]: results.md
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 [snapshot]:snapshot
 [sonobuoyconfig]: sonobuoy-config
