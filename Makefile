@@ -18,7 +18,7 @@ COMMA := $(EMPTY),$(EMPTY)
 
 BINARY = sonobuoy
 TARGET = sonobuoy
-GOTARGET = github.com/heptio/$(TARGET)
+GOTARGET = github.com/vmware-tanzu/$(TARGET)
 GOPATH = $(shell go env GOPATH)
 REGISTRY ?= gcr.io/heptio-images
 IMAGE = $(REGISTRY)/$(TARGET)

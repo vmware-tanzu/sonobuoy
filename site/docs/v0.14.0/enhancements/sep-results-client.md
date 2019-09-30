@@ -74,5 +74,5 @@ picture.
 
 [tar structure]: snapshot.md
 [queries]:
-https://github.com/heptio/sonobuoy/blob/v0.14.0/pkg/discovery/queries.go
+https://github.com/vmware-tanzu/sonobuoy/blob/v0.14.0/pkg/discovery/queries.go
 [struct]: https://github.com/chuckha/sonobuoy/blob/sep-1/client/

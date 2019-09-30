@@ -30,8 +30,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/heptio/sonobuoy/pkg/tarball"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/tarball"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )

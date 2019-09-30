@@ -19,7 +19,7 @@ package image
 import (
 	"testing"
 
-	"github.com/heptio/sonobuoy/pkg/image/docker"
+	"github.com/vmware-tanzu/sonobuoy/pkg/image/docker"
 	"github.com/pkg/errors"
 )
 

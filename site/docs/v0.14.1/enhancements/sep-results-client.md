@@ -72,7 +72,7 @@ picture.
 
 * None at this time.
 
-[tar structure]: https://github.com/heptio/sonobuoy/blob/master/docs/snapshot.md
+[tar structure]: https://github.com/vmware-tanzu/sonobuoy/blob/master/docs/snapshot.md
 [queries]:
-https://github.com/heptio/sonobuoy/blob/master/pkg/discovery/queries.go
+https://github.com/vmware-tanzu/sonobuoy/blob/master/pkg/discovery/queries.go
 [struct]: https://github.com/chuckha/sonobuoy/blob/sep-1/client/

@@ -1,4 +1,4 @@
-module github.com/heptio/sonobuoy/test/integration/testImage/src
+module github.com/vmware-tanzu/sonobuoy/test/integration/testImage/src
 
 go 1.13
 

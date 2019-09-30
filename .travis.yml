@@ -26,7 +26,7 @@ deploy:
   skip_cleanup: true
   script: ./travis-deploy.sh
   on:
-    repo: heptio/sonobuoy
+    repo: vmware-tanzu/sonobuoy
     all_branches: true
 env:
   secure: AsGb+4LLxBE9fo8eJMfuwUK3QTt61TC+HDP+GbzRaYPB27usaSouAvqeLJI2jxDU/oNaDlNarb3A43gZIqbZe+0uT8jdrqnv5pGmX4CooNm52zF4QEQrFpERvfFAdbUKkZ11NLXav3S0iLVb8/iWopF0/yvt7h0ohBzNX/tMs7vYeZ5KbKUF8v7Uwg3VmjIHsvfSmtaEvWPi3302O/lo5J1tB6TH8b/bAXWweU8GKmQnQKES/+tUern+zOT0S47/fyRbvG6KbLdttol9k7KbzWZxG2iHcC65ogmdHD2azZmLyL8s5khDkA2rO4ovnOqse2kxmxn7da7y8k93vWaN1y98RpXw4H6brsH15BzoGoYBaMLg/Kn/JbTkSxPkPr/+6WGJ6lFeGgvArkwCXVyRPpecSH55+kvKmD8wxGnXaQp086cNKBiZYgN4C+T/8XXO011CxgjzLCsyyqr2KGI7c1VXvdiDt+fjVUeE/ftbHFdHH8Oc809U+6sa+6UWFxDcg3fsyIDKqUAh+cOYdjL+8+OpNWiV8p7/Yu+QntbfMuRmkyQz9boYZU58uzFGe0B87nu0Y9O6nIKJWu07nPiPP11CU3iv2aYDfg2y1wvyvk5rWSgnBnD82nHf7ip2/bykbsajK2fcX1sIA/3c7NzWtKauxnfTXLxxqBRbZFkOuoE=

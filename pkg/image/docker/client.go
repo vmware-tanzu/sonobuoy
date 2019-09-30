@@ -17,7 +17,7 @@ limitations under the License.
 package docker
 
 import (
-	"github.com/heptio/sonobuoy/pkg/image/exec"
+	"github.com/vmware-tanzu/sonobuoy/pkg/image/exec"
 	log "github.com/sirupsen/logrus"
 )
 

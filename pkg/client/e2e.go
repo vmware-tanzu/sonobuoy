@@ -25,8 +25,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/heptio/sonobuoy/pkg/client/results"
-	"github.com/heptio/sonobuoy/pkg/client/results/e2e"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client/results/e2e"
 	"github.com/pkg/errors"
 )
 

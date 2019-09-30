@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 )
 
 // Mode identifies a specific mode of running Sonobuoy.

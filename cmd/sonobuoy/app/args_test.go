@@ -21,7 +21,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	ops "github.com/heptio/sonobuoy/pkg/client"
+	ops "github.com/vmware-tanzu/sonobuoy/pkg/client"
 )
 
 func TestGetE2EConfig(t *testing.T) {

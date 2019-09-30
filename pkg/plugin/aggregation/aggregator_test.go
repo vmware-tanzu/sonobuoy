@@ -32,9 +32,9 @@ import (
 	"testing/iotest"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/backplane/ca/authtest"
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	pluginutils "github.com/heptio/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/vmware-tanzu/sonobuoy/pkg/backplane/ca/authtest"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	pluginutils "github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/utils"
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/viniciuschiele/tarx"
 )

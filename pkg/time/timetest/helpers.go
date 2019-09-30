@@ -1,7 +1,7 @@
 package timetest
 
 import (
-	sonotime "github.com/heptio/sonobuoy/pkg/time"
+	sonotime "github.com/vmware-tanzu/sonobuoy/pkg/time"
 	"time"
 )
 

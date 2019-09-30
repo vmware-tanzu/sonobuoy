@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/heptio/sonobuoy/pkg/client"
-	"github.com/heptio/sonobuoy/pkg/config"
-	"github.com/heptio/sonobuoy/pkg/errlog"
-	imagepkg "github.com/heptio/sonobuoy/pkg/image"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+	imagepkg "github.com/vmware-tanzu/sonobuoy/pkg/image"
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -96,7 +96,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		return nil, errors.Wrap(err, "could not retrieve E2E config")
 	}
 
-	// TODO: Refactor this logic to be less convuled: https://github.com/heptio/sonobuoy/issues/481
+	// TODO: Refactor this logic to be less convuled: https://github.com/vmware-tanzu/sonobuoy/issues/481
 
 	// In some configurations, the kube client isn't actually needed for correct executation
 	// Therefore, delay reporting the error until we're sure we need the client

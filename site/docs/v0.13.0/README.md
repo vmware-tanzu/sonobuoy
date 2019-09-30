@@ -5,8 +5,8 @@
 [![Build Status][status]][travis]
 
 [heptio]: https://github.com/heptio
-[status]: https://travis-ci.org/heptio/sonobuoy.svg?branch=master
-[travis]: https://travis-ci.org/heptio/sonobuoy/#
+[status]: https://travis-ci.org/vmware-tanzu/sonobuoy.svg?branch=master
+[travis]: https://travis-ci.org/vmware-tanzu/sonobuoy/#
 
 ## [Overview][oview]
 
@@ -34,7 +34,7 @@ Sonobuoy supports Kubernetes versions 1.11, 1.12 and 1.13.
 [The documentation][docs] provides further information about the conformance
 tests, plugins, etc.
 
-[docs]: https://github.com/heptio/sonobuoy/tree/v0.13.0/docs
+[docs]: https://github.com/vmware-tanzu/sonobuoy/tree/v0.13.0/docs
 
 ## Prerequisites
 
@@ -90,7 +90,7 @@ $ export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 Download the CLI by running:
 
 ```
-$ go get -u -v github.com/heptio/sonobuoy
+$ go get -u -v github.com/vmware-tanzu/sonobuoy
 ```
 
 Deploy a Sonobuoy pod to your cluster with:
@@ -152,7 +152,7 @@ kubectl create clusterrolebinding <your-user-cluster-admin-binding> --clusterrol
 If you encounter any problems that the documentation does not address, [file an
 issue][issue].
 
-[issue]: https://github.com/heptio/sonobuoy/issues
+[issue]: https://github.com/vmware-tanzu/sonobuoy/issues
 
 ## Contributing
 
@@ -168,8 +168,8 @@ welcome pull requests. Feel free to dig through the [issues][issue] and jump in.
 * There is a [mailing list][list] and [Slack channel][slack] if you want to
   interact with other members of the community
 
-[coc]: https://github.com/heptio/sonobuoy/blob/master/CODE_OF_CONDUCT.md
-[contrib]: https://github.com/heptio/sonobuoy/blob/master/CONTRIBUTING.md
+[coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
+[contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
 [list]: https://groups.google.com/forum/#!forum/heptio-sonobuoy
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 
@@ -177,4 +177,4 @@ welcome pull requests. Feel free to dig through the [issues][issue] and jump in.
 
 See [the list of releases][releases] to find out about feature changes.
 
-[releases]: https://github.com/heptio/sonobuoy/releases
+[releases]: https://github.com/vmware-tanzu/sonobuoy/releases

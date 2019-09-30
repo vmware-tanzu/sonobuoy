@@ -23,10 +23,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/heptio/sonobuoy/pkg/plugin/driver/daemonset"
-	"github.com/heptio/sonobuoy/pkg/plugin/driver/job"
-	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/daemonset"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/job"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"

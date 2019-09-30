@@ -28,7 +28,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/heptio/sonobuoy/pkg/client/results"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sver "k8s.io/apimachinery/pkg/version"
 )

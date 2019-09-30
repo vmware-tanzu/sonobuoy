@@ -9,7 +9,7 @@ twitter:
   username: projectsonobuoy
   card: summary
 vm_logo: vm-logo.png
-gh_repo: https://github.com/heptio/sonobuoy
+gh_repo: https://github.com/vmware-tanzu/sonobuoy
 markdown: redcarpet
 hero:
   background-color: med-blue
@@ -33,7 +33,7 @@ footer_social_links:
     url: feed.xml
   GitHub:
     fa_icon: fab fa-github
-    url: https://github.com/heptio/sonobuoy
+    url: https://github.com/vmware-tanzu/sonobuoy
 
 defaults:
   - scope:
@@ -50,79 +50,79 @@ defaults:
       path: docs/master
     values:
       version: master
-      gh: https://github.com/heptio/sonobuoy/tree/master
+      gh: https://github.com/vmware-tanzu/sonobuoy/tree/master
       layout: "docs"
   - scope:
       path: docs/v0.16.1
     values:
       version: v0.16.1
-      gh: https://github.com/heptio/sonobuoy/tree/v0.16.1
+      gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.16.1
       layout: "docs"
   - scope:
       path: docs/v0.16.0
     values:
       version: v0.16.0
-      gh: https://github.com/heptio/sonobuoy/tree/v0.16.0
+      gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.16.0
       layout: "docs"
   - scope:
       path: docs/v0.15.4
     values:
       version: v0.15.4
-      gh: https://github.com/heptio/sonobuoy/tree/v0.15.4
+      gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.15.4
       layout: "docs"
   - scope:
       path: docs/v0.15.3
     values:
       version: v0.15.3
-      gh: https://github.com/heptio/sonobuoy/tree/v0.15.3
+      gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.15.3
       layout: "docs"
   - scope:
       path: docs/v0.15.2
     values:
       version: v0.15.2
-      gh: https://github.com/heptio/sonobuoy/tree/v0.15.2
+      gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.15.2
       layout: "docs"
   - scope:
       path: docs/v0.15.1
     values:
       version: v0.15.1
-      gh: https://github.com/heptio/sonobuoy/tree/v0.15.1
+      gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.15.1
       layout: "docs"
   - scope:
       path: docs/v0.15.0
     values:
       version: v0.15.0
-      gh: https://github.com/heptio/sonobuoy/tree/v0.15.0
+      gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.15.0
       layout: "docs"
   - scope:
       path: docs/v0.14.3
     values:
       version: v0.14.3
-      gh: https:/github.com/heptio/sonobuoy/tree/v0.14.3
+      gh: https:/github.com/vmware-tanzu/sonobuoy/tree/v0.14.3
       layout: "docs"
   - scope:
       path: docs/v0.14.2
     values:
       version: v0.14.2
-      gh: https:/github.com/heptio/sonobuoy/tree/v0.14.2
+      gh: https:/github.com/vmware-tanzu/sonobuoy/tree/v0.14.2
       layout: "docs"
   - scope:
       path: docs/v0.14.1
     values:
       version: v0.14.1
-      gh: https:/github.com/heptio/sonobuoy/tree/v0.14.1
+      gh: https:/github.com/vmware-tanzu/sonobuoy/tree/v0.14.1
       layout: "docs"
   - scope:
       path: docs/v0.14.0
     values:
       version: v0.14.0
-      gh: https:/github.com/heptio/sonobuoy/tree/v0.14.0
+      gh: https:/github.com/vmware-tanzu/sonobuoy/tree/v0.14.0
       layout: "docs"
   - scope:
       path: docs/v0.13.0
     values:
       version: v0.13.0
-      gh: https:/github.com/heptio/sonobuoy/tree/v0.13.0
+      gh: https:/github.com/vmware-tanzu/sonobuoy/tree/v0.13.0
       layout: "docs"
 
 page_gen:

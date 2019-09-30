@@ -26,11 +26,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/backplane/ca"
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/heptio/sonobuoy/pkg/plugin/driver"
-	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
-	sonotime "github.com/heptio/sonobuoy/pkg/time/timetest"
+	"github.com/vmware-tanzu/sonobuoy/pkg/backplane/ca"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
+	sonotime "github.com/vmware-tanzu/sonobuoy/pkg/time/timetest"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

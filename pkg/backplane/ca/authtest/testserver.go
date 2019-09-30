@@ -22,7 +22,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/heptio/sonobuoy/pkg/backplane/ca"
+	"github.com/vmware-tanzu/sonobuoy/pkg/backplane/ca"
 )
 
 // Server is an extension of httptest.Server that uses our own CA

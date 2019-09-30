@@ -27,11 +27,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/heptio/sonobuoy/pkg/config"
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/heptio/sonobuoy/pkg/plugin/driver"
-	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
-	"github.com/heptio/sonobuoy/pkg/templates"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
+	"github.com/vmware-tanzu/sonobuoy/pkg/templates"
 
 	corev1 "k8s.io/api/core/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"

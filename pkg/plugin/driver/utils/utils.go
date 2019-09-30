@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	gouuid "github.com/satori/go.uuid"
 
 	v1 "k8s.io/api/core/v1"

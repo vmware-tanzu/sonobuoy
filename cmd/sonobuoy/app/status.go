@@ -28,9 +28,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/heptio/sonobuoy/pkg/client"
-	"github.com/heptio/sonobuoy/pkg/errlog"
-	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 )
 
 var statusFlags struct {
@@ -138,7 +138,7 @@ func humanReadableStatus(str string) string {
 	case aggregation.PostProcessingStatus:
 		return "Sonobuoy plugins have completed. Preparing results for download."
 	default:
-		return fmt.Sprintf("Sonobuoy is in unknown state %q. Please report a bug at github.com/heptio/sonobuoy", str)
+		return fmt.Sprintf("Sonobuoy is in unknown state %q. Please report a bug at github.com/vmware-tanzu/sonobuoy", str)
 	}
 }
 

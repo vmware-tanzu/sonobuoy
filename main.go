@@ -19,7 +19,7 @@ package main
 import (
 	"os"
 
-	"github.com/heptio/sonobuoy/cmd/sonobuoy/app"
+	"github.com/vmware-tanzu/sonobuoy/cmd/sonobuoy/app"
 )
 
 func main() {

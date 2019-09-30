@@ -27,8 +27,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/backplane/ca/authtest"
-	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/backplane/ca/authtest"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 
 	"github.com/kylelemons/godebug/pretty"
 )

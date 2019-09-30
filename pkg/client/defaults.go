@@ -19,7 +19,7 @@ package client
 import (
 	"os"
 
-	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 )
 
 // NewGenConfig is a GenConfig using the default config and NonDisruptiveConformance mode

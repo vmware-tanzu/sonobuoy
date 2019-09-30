@@ -22,12 +22,12 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/heptio/sonobuoy/pkg/image"
+	"github.com/vmware-tanzu/sonobuoy/pkg/image"
 
 	"gopkg.in/yaml.v2"
 
-	ops "github.com/heptio/sonobuoy/pkg/client"
-	"github.com/heptio/sonobuoy/pkg/config"
+	ops "github.com/vmware-tanzu/sonobuoy/pkg/client"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	v1 "k8s.io/api/core/v1"

@@ -25,9 +25,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/heptio/sonobuoy/pkg/client/results"
-	"github.com/heptio/sonobuoy/pkg/discovery"
-	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
+	"github.com/vmware-tanzu/sonobuoy/pkg/discovery"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

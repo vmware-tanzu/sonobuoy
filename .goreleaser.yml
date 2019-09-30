@@ -8,7 +8,7 @@ builds:
     - linux
   goarch:
     - amd64
-  ldflags: -s -w -X github.com/heptio/sonobuoy/pkg/buildinfo.Version=v{{.Version}} -X github.com/heptio/sonobuoy/pkg/buildinfo.GitSHA={{.FullCommit}}
+  ldflags: -s -w -X github.com/vmware-tanzu/sonobuoy/pkg/buildinfo.Version=v{{.Version}} -X github.com/vmware-tanzu/sonobuoy/pkg/buildinfo.GitSHA={{.FullCommit}}
 archive:
   format: tar.gz
   files:

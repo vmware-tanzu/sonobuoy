@@ -24,8 +24,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/heptio/sonobuoy/pkg/plugin"
-	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

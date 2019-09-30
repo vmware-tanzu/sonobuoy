@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/heptio/sonobuoy/pkg/plugin/manifest"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	"github.com/kylelemons/godebug/pretty"
 )
 

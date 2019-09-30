@@ -25,8 +25,8 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/heptio/sonobuoy/pkg/config"
-	pluginaggregation "github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
+	pluginaggregation "github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 	"github.com/pkg/errors"
 
 	corev1 "k8s.io/api/core/v1"

@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/c2h5oh/datasize"
-	"github.com/heptio/sonobuoy/pkg/buildinfo"
-	"github.com/heptio/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	uuid "github.com/satori/go.uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

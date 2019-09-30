@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	sonodynamic "github.com/heptio/sonobuoy/pkg/dynamic"
+	sonodynamic "github.com/vmware-tanzu/sonobuoy/pkg/dynamic"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"

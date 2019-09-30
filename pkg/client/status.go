@@ -19,7 +19,7 @@ package client
 import (
 	"github.com/pkg/errors"
 
-	"github.com/heptio/sonobuoy/pkg/plugin/aggregation"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 )
 
 func (c *SonobuoyClient) GetStatus(cfg *StatusConfig) (*aggregation.Status, error) {

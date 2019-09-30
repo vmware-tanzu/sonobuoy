@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/heptio/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 )

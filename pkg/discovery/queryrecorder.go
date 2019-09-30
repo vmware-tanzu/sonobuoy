@@ -23,7 +23,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/heptio/sonobuoy/pkg/errlog"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 )
 

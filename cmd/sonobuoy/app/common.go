@@ -2,8 +2,8 @@ package app
 
 import (
 	"time"
-	"github.com/heptio/sonobuoy/pkg/client"
-	sonodynamic "github.com/heptio/sonobuoy/pkg/dynamic"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client"
+	sonodynamic "github.com/vmware-tanzu/sonobuoy/pkg/dynamic"
 
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"

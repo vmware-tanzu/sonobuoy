@@ -17,9 +17,9 @@ limitations under the License.
 package client_test
 
 import (
-	"github.com/heptio/sonobuoy/pkg/client"
-	"github.com/heptio/sonobuoy/pkg/config"
-	"github.com/heptio/sonobuoy/pkg/dynamic"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/dynamic"
 	"k8s.io/client-go/rest"
 )
 
