@@ -20,13 +20,16 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
+	"golang.org/x/crypto/ssh/terminal"
 	kubeerror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,22 +44,16 @@ const (
 	spinnerType     int           = 14
 	spinnerDuration time.Duration = 2000 * time.Millisecond
 	spinnerColor                  = "red"
+
+	// Special key for when to load manifest from stdin instead of a local file.
+	stdinFile = "-"
 )
 
-func (c *SonobuoyClient) Run(cfg *RunConfig) error {
-	if cfg == nil {
-		return errors.New("nil RunConfig provided")
-	}
-
-	if err := cfg.Validate(); err != nil {
-		return errors.Wrap(err, "config validation failed")
-	}
-
-	manifest, err := c.GenerateManifest(&cfg.GenConfig)
-	if err != nil {
-		return errors.Wrap(err, "couldn't run invalid manifest")
-	}
-
+// RunManifest is the same as Run(*RunConfig) execpt that the []byte given
+// should represent the output from `sonobuoy gen`, a series of YAML resources
+// separated by `---`. This method will disregard the RunConfig.GenConfig
+// and instead use the given []byte as the manifest.
+func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 	buf := bytes.NewBuffer(manifest)
 	d := yaml.NewYAMLOrJSONDecoder(buf, bufferSize)
 
@@ -137,6 +134,45 @@ func (c *SonobuoyClient) Run(cfg *RunConfig) error {
 	}
 
 	return nil
+}
+
+// Run will use the given RunConfig to generate YAML for a series of resources and then
+// create them in the cluster.
+func (c *SonobuoyClient) Run(cfg *RunConfig) error {
+	if cfg == nil {
+		return errors.New("nil RunConfig provided")
+	}
+
+	var manifest []byte
+	var err error
+	if len(cfg.GenFile) != 0 {
+		manifest, err = loadManifestFromFile(cfg.GenFile)
+		if err != nil {
+			return errors.Wrap(err, "loading manifest")
+		}
+	} else {
+		if err := cfg.Validate(); err != nil {
+			return errors.Wrap(err, "config validation failed")
+		}
+		manifest, err = c.GenerateManifest(&cfg.GenConfig)
+		if err != nil {
+			return errors.Wrap(err, "couldn't run invalid manifest")
+		}
+	}
+
+	return c.RunManifest(cfg, manifest)
+}
+
+func loadManifestFromFile(f string) ([]byte, error) {
+	if f == stdinFile {
+		if terminal.IsTerminal(int(os.Stdin.Fd())) {
+			return nil, fmt.Errorf("nothing on stdin to read")
+		}
+
+		return ioutil.ReadAll(os.Stdin)
+	} else {
+		return ioutil.ReadFile(f)
+	}
 }
 
 func handleCreateError(name, namespace, resource string, err error) error {

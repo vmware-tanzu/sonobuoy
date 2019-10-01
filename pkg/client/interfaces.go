@@ -20,10 +20,10 @@ import (
 	"io"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
-	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -110,14 +110,20 @@ type E2EConfig struct {
 // RunConfig are the input options for running Sonobuoy.
 type RunConfig struct {
 	GenConfig
+	GenFile    string
 	Wait       time.Duration
 	WaitOutput string
 }
 
 // Validate checks the config to determine if it is valid.
 func (rc *RunConfig) Validate() error {
-	err := rc.GenConfig.Validate()
-	return errors.Wrap(err, "GenConfig validation failed")
+	// If given a manifest, just load it as-is.
+	if len(rc.GenFile) == 0 {
+		err := rc.GenConfig.Validate()
+		return errors.Wrap(err, "GenConfig validation failed")
+	}
+
+	return nil
 }
 
 // DeleteConfig are the input options for cleaning up a Sonobuoy run.

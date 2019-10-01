@@ -17,9 +17,7 @@ limitations under the License.
 package app
 
 import (
-	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -35,6 +33,7 @@ type runFlags struct {
 	skipPreflight bool
 	wait          int
 	waitOutput    WaitOutputMode
+	genFile       string
 }
 
 var runflags runFlags
@@ -46,20 +45,30 @@ func RunFlagSet(cfg *runFlags) *pflag.FlagSet {
 	AddSkipPreflightFlag(&cfg.skipPreflight, runset)
 	AddRunWaitFlag(&cfg.wait, runset)
 	AddWaitOutputFlag(&cfg.waitOutput, runset, SilentOutputMode)
+	runset.StringVarP(
+		&cfg.genFile, "file", "f", "",
+		"If set, loads the file as if it were the output from sonobuoy gen. Set to `-` to read from stdin.",
+	)
 
 	return runset
 }
 
 func (r *runFlags) Config() (*client.RunConfig, error) {
-	gencfg, err := r.genFlags.Config()
-	if err != nil {
-		return nil, err
-	}
-	return &client.RunConfig{
-		GenConfig:  *gencfg,
+	runcfg := &client.RunConfig{
 		Wait:       time.Duration(r.wait) * time.Minute,
 		WaitOutput: runflags.waitOutput.String(),
-	}, nil
+		GenFile:    r.genFile,
+	}
+
+	if r.genFile == "" {
+		gencfg, err := r.genFlags.Config()
+		if err != nil {
+			return nil, err
+		}
+		runcfg.GenConfig = *gencfg
+	}
+
+	return runcfg, nil
 }
 
 func NewCmdRun() *cobra.Command {
@@ -75,7 +84,6 @@ func NewCmdRun() *cobra.Command {
 }
 
 func submitSonobuoyRun(cmd *cobra.Command, args []string) {
-
 	sbc, err := getSonobuoyClientFromKubecfg(runflags.kubecfg)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
@@ -86,15 +94,6 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not retrieve E2E config"))
 		os.Exit(1)
-	}
-
-	plugins := make([]string, len(runCfg.Config.PluginSelections))
-	for i, plugin := range runCfg.Config.PluginSelections {
-		plugins[i] = plugin.Name
-	}
-
-	if len(plugins) > 0 {
-		fmt.Printf("Running plugins: %v\n", strings.Join(plugins, ", "))
 	}
 
 	if !runflags.skipPreflight {
@@ -111,5 +110,4 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
 	}
-
 }
