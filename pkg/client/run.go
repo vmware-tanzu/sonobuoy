@@ -57,6 +57,7 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 	buf := bytes.NewBuffer(manifest)
 	d := yaml.NewYAMLOrJSONDecoder(buf, bufferSize)
 
+	var createdNamespace string
 	for {
 		ext := runtime.RawExtension{}
 		if err := d.Decode(&ext); err != nil {
@@ -84,6 +85,14 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 		if err != nil {
 			return errors.Wrap(err, "could not get object namespace")
 		}
+
+		// The namespace value is required if Wait is enabled in order to check the status.
+		// It may not be available within the RunConfig but we can retrieve it from the
+		// namespace of objects within the manifest.
+		if createdNamespace == "" && namespace != "" {
+			createdNamespace = namespace
+		}
+
 		// err is used to determine output for user; but first extract resource
 		_, err = c.dynamicClient.CreateObject(obj)
 		resource, err2 := c.dynamicClient.ResourceVersion(obj)
@@ -101,7 +110,7 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 		seenStatus := false
 		runCondition := func() (bool, error) {
 			// Get the Aggregator pod and check if its status is completed or terminated.
-			status, err := c.GetStatus(&StatusConfig{cfg.Config.Namespace})
+			status, err := c.GetStatus(&StatusConfig{Namespace: createdNamespace})
 			switch {
 			case err != nil && seenStatus:
 				return false, errors.Wrap(err, "failed to get status")
