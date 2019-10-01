@@ -26,10 +26,10 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	ops "github.com/vmware-tanzu/sonobuoy/pkg/client"
-	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
+	ops "github.com/vmware-tanzu/sonobuoy/pkg/client"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	v1 "k8s.io/api/core/v1"
 )
 

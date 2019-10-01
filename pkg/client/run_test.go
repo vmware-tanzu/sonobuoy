@@ -38,6 +38,16 @@ func TestRunInvalidConfig(t *testing.T) {
 			config:           &RunConfig{},
 			expectedErrorMsg: "config validation failed",
 		},
+		{
+			desc: "Passing a file takes priority over config flags",
+			config: &RunConfig{
+				GenFile: "foo.yaml",
+			},
+			expectedErrorMsg: "no such file or directory",
+		},
+		// NOTE: Running non-failing logic here is not supported at this time due to the fact
+		// that it tries to actually start executing logic with the dynamic client which
+		// is nil.
 	}
 
 	c, err := NewSonobuoyClient(nil, nil)

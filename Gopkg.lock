@@ -924,6 +924,7 @@
     "github.com/spf13/pflag",
     "github.com/spf13/viper",
     "github.com/viniciuschiele/tarx",
+    "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/sync/errgroup",
     "gopkg.in/yaml.v2",
     "k8s.io/api/apps/v1",
