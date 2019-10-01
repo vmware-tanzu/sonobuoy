@@ -73,7 +73,7 @@ You can also extract the entire contents of the file to get much more [detailed 
 Sonobuoy creates a few resources in order to run and expects to run within its
 own namespace.
 
-Deleting Sonobuoy entails removing it's namespace as well as a few cluster
+Deleting Sonobuoy entails removing its namespace as well as a few cluster
 scoped resources.
 
 ```bash
