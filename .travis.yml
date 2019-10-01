@@ -12,7 +12,7 @@ script:
 - ./scripts/run_integration_tests.sh
 - ./travis-ci.sh
 before_install:
-- curl -L https://github.com/kubernetes-sigs/kind/releases/download/v0.4.0/kind-linux-amd64
+- curl -L https://github.com/kubernetes-sigs/kind/releases/download/v0.5.1/kind-linux-amd64
   --output $HOME/bin/kind && chmod +x $HOME/bin/kind
 - kind create cluster --config kind-config.yaml
 - export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"

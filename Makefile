@@ -20,7 +20,7 @@ BINARY = sonobuoy
 TARGET = sonobuoy
 GOTARGET = github.com/vmware-tanzu/$(TARGET)
 GOPATH = $(shell go env GOPATH)
-REGISTRY ?= gcr.io/heptio-images
+REGISTRY ?= sonobuoy
 IMAGE = $(REGISTRY)/$(TARGET)
 DIR := ${CURDIR}
 DOCKER ?= docker
@@ -72,6 +72,10 @@ LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 DOCKER_FLAGS =
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(DOCKER_FLAGS) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 GO_BUILD ?= CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)
+
+# Kind images
+K8S_PATH ?= $(GOPATH)/src/github.com/kubernetes/kubernetes
+KIND_K8S_TAG ?= $(shell cd $(K8S_PATH) && git describe)
 
 .PHONY: all container push clean test local-test local generate plugins int
 
@@ -187,6 +191,25 @@ clean:
 
 deploy_kind: container
 	kind load docker-image --name $(KIND_CLUSTER) $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) || true
+
+# kind_images will build the kind-node image. Generally building the base image is not necessary
+# and we can use the upstream kindest/base image.
+kind_images: check-kind-env
+	kind build node-image --kube-root=$(K8S_PATH) --image $(REGISTRY)/kind-node:$(KIND_K8S_TAG)
+
+# push_kind_images will push the same image kind_images just built our registry.
+push_kind_images:
+	docker push $(REGISTRY)/kind-node:$(KIND_K8S_TAG)
+
+# check-kind-env will show you what will be built/tagged before doing so with kind_images
+check-kind-env:
+ifndef K8S_PATH
+	$(error K8S_PATH is undefined)
+endif
+ifndef KIND_K8S_TAG
+	$(error KIND_K8S_TAG is undefined)
+endif
+	echo --kube-root=$(K8S_PATH) tagging as --image $(REGISTRY)/kind-node:$(KIND_K8S_TAG)
 
 native:
 	$(GO_BUILD)

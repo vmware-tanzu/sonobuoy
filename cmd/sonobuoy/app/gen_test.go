@@ -117,7 +117,7 @@ func TestResolveConfig(t *testing.T) {
 			input: "",
 			expected: &config.Config{
 				Namespace:       "sonobuoy",
-				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				WorkerImage:     "sonobuoy/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
 					{Name: "e2e"},
@@ -136,7 +136,7 @@ func TestResolveConfig(t *testing.T) {
 			configFileContents: `{"Server":{"bindaddress":"10.0.0.1"}}`,
 			expected: &config.Config{
 				Namespace:       "sonobuoy",
-				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				WorkerImage:     "sonobuoy/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
 					{Name: "e2e"},
@@ -158,7 +158,7 @@ func TestResolveConfig(t *testing.T) {
 			configFileContents: `{"Plugins":[{"name":"systemd-logs"}]}`,
 			expected: &config.Config{
 				Namespace:       "sonobuoy",
-				WorkerImage:     "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				WorkerImage:     "sonobuoy/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy: "IfNotPresent", // default
 				PluginSelections: []plugin.Selection{
 					{Name: "systemd-logs"},
@@ -236,7 +236,7 @@ func TestResolveConfig(t *testing.T) {
 			input: "--plugin e2e",
 			expected: &config.Config{
 				Namespace:        "sonobuoy",
-				WorkerImage:      "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				WorkerImage:      "sonobuoy/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy:  "IfNotPresent",
 				PluginSelections: nil,
 				PluginSearchPath: defaultPluginSearchPath,
@@ -251,7 +251,7 @@ func TestResolveConfig(t *testing.T) {
 			input: "--config testdata/emptyQueryAndPlugins.conf",
 			expected: &config.Config{
 				Namespace:        "sonobuoy",
-				WorkerImage:      "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				WorkerImage:      "sonobuoy/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy:  "IfNotPresent",
 				PluginSearchPath: defaultPluginSearchPath,
 				Aggregation:      defaultAggr,
@@ -264,7 +264,7 @@ func TestResolveConfig(t *testing.T) {
 			input: "--plugin testdata/testPluginDir",
 			expected: &config.Config{
 				Namespace:        "sonobuoy",
-				WorkerImage:      "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				WorkerImage:      "sonobuoy/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy:  "IfNotPresent",
 				PluginSelections: nil,
 				PluginSearchPath: defaultPluginSearchPath,
@@ -282,7 +282,7 @@ func TestResolveConfig(t *testing.T) {
 			input: "--plugin e2e --plugin testdata/testPluginDir --plugin testdata/testPluginDir/pluginNotYAML.ext",
 			expected: &config.Config{
 				Namespace:        "sonobuoy",
-				WorkerImage:      "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version,
+				WorkerImage:      "sonobuoy/sonobuoy:" + buildinfo.Version,
 				ImagePullPolicy:  "IfNotPresent",
 				PluginSelections: nil,
 				PluginSearchPath: defaultPluginSearchPath,

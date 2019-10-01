@@ -5,6 +5,14 @@
 1. Update the version defined in the code to the new version number.
    As of the time of writing, the version is defined in `pkg/buildinfo/version.go`.
 1. Generate a new set of [versioned docs][gendocs] for this release.
+1. If there an a Kubernetes release coming soon, do the following to ensure the upstream conformance script is
+working appropriately:
+  * Build the kind images for this new version.
+    * Checkout K8s locally at the tag in question
+    * Run `make check-kind-env` to ensure the repo/tag are correct
+    * Run `make kind_images`
+    * Run `make push_kind_images`
+  * Update our CI build our kind cluster with the new image.
 1. If the new release corresponds to a new Kubernetes release, the following steps must be performed:
    * Add the new list of E2E test images.
      For an example of the outcome of this process, see the [change corresponding to the Kubernetes v1.14 release](https://github.com/vmware-tanzu/sonobuoy/commit/68f15a260e60a288f91bc40347c817b382a3d45c).
