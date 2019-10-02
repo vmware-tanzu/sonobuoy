@@ -6,7 +6,8 @@ services:
 - docker
 install: true
 script:
-- export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+- export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH;
+  else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
 - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$TRAVIS_PULL_REQUEST, BRANCH=$BRANCH"
 - VERBOSE=true make test stress
 - ./scripts/run_integration_tests.sh
@@ -30,5 +31,7 @@ deploy:
     all_branches: true
 env:
   secure: AsGb+4LLxBE9fo8eJMfuwUK3QTt61TC+HDP+GbzRaYPB27usaSouAvqeLJI2jxDU/oNaDlNarb3A43gZIqbZe+0uT8jdrqnv5pGmX4CooNm52zF4QEQrFpERvfFAdbUKkZ11NLXav3S0iLVb8/iWopF0/yvt7h0ohBzNX/tMs7vYeZ5KbKUF8v7Uwg3VmjIHsvfSmtaEvWPi3302O/lo5J1tB6TH8b/bAXWweU8GKmQnQKES/+tUern+zOT0S47/fyRbvG6KbLdttol9k7KbzWZxG2iHcC65ogmdHD2azZmLyL8s5khDkA2rO4ovnOqse2kxmxn7da7y8k93vWaN1y98RpXw4H6brsH15BzoGoYBaMLg/Kn/JbTkSxPkPr/+6WGJ6lFeGgvArkwCXVyRPpecSH55+kvKmD8wxGnXaQp086cNKBiZYgN4C+T/8XXO011CxgjzLCsyyqr2KGI7c1VXvdiDt+fjVUeE/ftbHFdHH8Oc809U+6sa+6UWFxDcg3fsyIDKqUAh+cOYdjL+8+OpNWiV8p7/Yu+QntbfMuRmkyQz9boYZU58uzFGe0B87nu0Y9O6nIKJWu07nPiPP11CU3iv2aYDfg2y1wvyvk5rWSgnBnD82nHf7ip2/bykbsajK2fcX1sIA/3c7NzWtKauxnfTXLxxqBRbZFkOuoE=
+  global:
+    secure: 3JlSHh+BxMOZSbLoAcbcFomLu3lA21NiV8lNK5avMCxKogy65ea+uMhL4GTJLz9XTm0W3T3eXIsW4eLgVYxPPnGifxhnZTkkiSWSJNVCZiy6IHuvysCrtk/1pZyK/JiYN3FaWmeh7xq+8pMCnCCIDyVhb0zLd7nE6zzl2OaL8zRm9lnG+tGzjPy03MExy0ShYAenSMycOvj2Mxsmiez4MacOAbs0nbm9ANICppI5jrO7smJopnAUV99oMzYPD4X1SnW6Wh0gLYx2Nhafr2ceZ8r99ghBeqt1rY9CSNCmoSk8WHHvscNlgjaz6ROMvrpT5NBfMlNqDtjAP9L9Atg4Nlok4Fc+k3Wjqbjg0EbBB7L1wnTO18HwNz7bWVUfq7ZsfcgF4iC2VuotokaljNlZuBfVEqFN6/zxxS816QYD5Vpknurw7jUHRfeO7N2SsuT55xqMKUyffwcg+TPSk1WA2cudBukU/lZzRflydxtH4Olm0+jJzqZSBcQZ6F4engk0wK5htfxEexrgiFGECsPqVOwSg0zD9b5rwkFSxJW6SpZWWZL+8s2IC4TOkd8a0NyBOODJ6WuZ8u9050poOzjr7WWAz8MEjKMfZ4oNF/e34lX+QBqr2v/4kbBYifMN2pCUuEsDOzP4LXz8kmwKGBtmy0PNGKWNEon50YJp1fj/zVM=
 after_success:
 - bash <(curl -s https://codecov.io/bash)

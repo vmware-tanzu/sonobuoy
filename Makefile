@@ -108,6 +108,7 @@ pre:
 	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64 \
 	  -O manifest-tool && \
 	 chmod +x ./manifest-tool
+	echo $(DOCKERHUB_TOKEN) | docker login --username sonobuoybot
 
 build_container:
 	$(DOCKER) build \
@@ -161,7 +162,7 @@ push_images:
 	fi
 
 push_manifest:
-	./manifest-tool --username oauth2accesstoken --password "`gcloud auth print-access-token`" push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
+	./manifest-tool push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
 
 push: pre container
 	for arch in $(LINUX_ARCH); do \
