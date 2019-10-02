@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/c2h5oh/datasize"
+	uuid "github.com/satori/go.uuid"
 	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
-	uuid "github.com/satori/go.uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -64,7 +64,7 @@ var (
 	// DefaultKubeConformanceImage is the URL and tag of the docker image to run for the kube conformance tests.
 	DefaultKubeConformanceImage = DefaultKubeConformanceImageURL + ":" + DefaultKubeConformanceImageTag
 	// DefaultImage is the URL of the docker image to run for the aggregator and workers
-	DefaultImage = "gcr.io/heptio-images/sonobuoy:" + buildinfo.Version
+	DefaultImage = "sonobuoy/sonobuoy:" + buildinfo.Version
 	// DefaultResources is the default set of resources which are queried for after plugins run. The strings
 	// are compared against the resource.Name given by the client-go discovery client. The non-standard values
 	// that are included here are: podlogs, servergroups, serverversion. The value 'nodes', although a crawlable
