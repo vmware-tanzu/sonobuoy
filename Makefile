@@ -108,7 +108,7 @@ pre:
 	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64 \
 	  -O manifest-tool && \
 	 chmod +x ./manifest-tool
-	echo $(DOCKERHUB_TOKEN) | docker login --username sonobuoybot
+	echo $(DOCKERHUB_TOKEN) | docker login --username sonobuoybot --password-stdin
 
 build_container:
 	$(DOCKER) build \
