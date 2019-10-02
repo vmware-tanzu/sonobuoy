@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -68,6 +69,45 @@ func cleanup(t *testing.T, namespace string) {
 		t.Logf("Error encountered during cleanup: %q\n", err)
 		t.Log(stdout.String())
 		t.Log(stderr.String())
+	}
+}
+
+func TestUseNamespaceFromManifest(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	ns := "sonobuoy-" + strings.ToLower(t.Name())
+	defer cleanup(t, ns)
+
+	genArgs := fmt.Sprintf("gen -p testImage/yaml/job-junit-passing-singlefile.yaml -n %v", ns)
+	err, genStdout, genStderr := runSonobuoyCommandWithContext(ctx, t, genArgs)
+
+	if err != nil {
+		t.Fatalf("Sonobuoy exited with an error: %q\n", err)
+		t.Log(genStderr.String())
+	}
+
+	// Write the contents of gen to a temp file
+	tmpfile, err := ioutil.TempFile("", "gen.*.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer os.Remove(tmpfile.Name()) // clean up
+
+	if _, err := tmpfile.Write(genStdout.Bytes()); err != nil {
+		t.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Pass the gen output to sonobuoy run
+	runArgs := fmt.Sprintf("run --wait -f %v", tmpfile.Name())
+	err, _, runStderr := runSonobuoyCommandWithContext(ctx, t, runArgs)
+	if err != nil {
+		t.Errorf("Sonobuoy exited with an error: %q\n", err)
+		t.Log(runStderr.String())
 	}
 }
 
