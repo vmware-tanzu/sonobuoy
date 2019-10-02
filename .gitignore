@@ -21,9 +21,8 @@ Dockerfile-arm64
 *.tar.gz
 *.tar
 
-# kind/dep are downloaded for testing in CI
+# kind is downloaded for testing in CI
 kind
-dep
 
 # coverage profile
 coverage.txt
