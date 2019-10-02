@@ -13,7 +13,7 @@ function goreleaser() {
 }
 
 function image_push() {
-    echo ${DOCKERHUB_TOKEN} | docker login --username sonobuoybot
+    echo ${DOCKERHUB_TOKEN} | docker login --username sonobuoybot --password-stdin
     IMAGE_BRANCH="$BRANCH" make container push
 }
 
