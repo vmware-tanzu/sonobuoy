@@ -97,24 +97,31 @@ func aggregateStatus(items ...Item) string {
 		return StatusUnknown
 	}
 
-	unknownFound := false
+	failedFound, unknownFound := false, false
 	for i := range items {
 		// Branches should just aggregate their leaves and return the result.
 		if len(items[i].Items) > 0 {
 			items[i].Status = aggregateStatus(items[i].Items...)
 		}
 
-		// Any failures immediately fail the parent.
-		if items[i].Status == StatusFailed {
-			return StatusFailed
+		// Empty status should be updated to unknown.
+		if items[i].Status == "" {
+			items[i].Status = StatusUnknown
 		}
 
-		if items[i].Status == StatusUnknown {
+		switch items[i].Status {
+		case StatusFailed:
+			failedFound = true
+		case StatusUnknown:
 			unknownFound = true
+		default:
 		}
 	}
 
-	if unknownFound {
+	// Only return once all processing is completed; otherwise other leaves don't get resolved.
+	if failedFound {
+		return StatusFailed
+	} else if unknownFound {
 		return StatusUnknown
 	}
 

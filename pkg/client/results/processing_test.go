@@ -420,6 +420,75 @@ func TestAggregateStatus(t *testing.T) {
 				},
 			},
 			expected: StatusUnknown,
+		}, {
+			desc: "Leaf nodes with empty status get changed to unknown",
+			input: []Item{
+				{
+					Name: "unknown node",
+					Items: []Item{
+						{
+							Name: "first leaf no status",
+						},
+					},
+				},
+			},
+			expectedItems: []Item{
+				{
+					Name:   "unknown node",
+					Status: StatusUnknown,
+					Items: []Item{
+						{
+							Name:   "first leaf no status",
+							Status: StatusUnknown,
+						},
+					},
+				},
+			},
+			expected: StatusUnknown,
+		}, {
+			desc: "Processes all nodes even after seeing first failure",
+			input: []Item{
+				{
+					Name: "DS plugin",
+					Items: []Item{
+						{
+							Name: "node1",
+							Items: []Item{
+								{Name: "foo", Status: StatusFailed},
+							},
+						},
+						{
+							Name: "node2",
+							Items: []Item{
+								{Name: "foo", Status: StatusFailed},
+							},
+						},
+					},
+				},
+			},
+			expectedItems: []Item{
+				{
+					Name:   "DS plugin",
+					Status: StatusFailed,
+					Items: []Item{
+						{
+							Name:   "node1",
+							Status: StatusFailed,
+							Items: []Item{
+								{Name: "foo", Status: StatusFailed},
+							},
+						},
+						{
+							Name:   "node2",
+							Status: StatusFailed,
+							Items: []Item{
+								{Name: "foo", Status: StatusFailed},
+							},
+						},
+					},
+				},
+			},
+			expected: StatusFailed,
 		},
 	}
 
