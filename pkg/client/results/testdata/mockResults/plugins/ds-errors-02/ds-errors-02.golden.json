@@ -1,0 +1,41 @@
+{
+"name": "ds-errors-02",
+"status": "failed",
+"items": [
+{
+"name": "node1",
+"status": "failed",
+"items": [
+{
+"name": "errors.json",
+"status": "failed",
+"meta": {
+"file": "errors/node1/errors.json"
+},
+"details": {
+"data": "foo",
+"error": "testerr"
+}
+}
+]
+},
+{
+"name": "node2",
+"status": "failed",
+"items": [
+{
+"name": "errors.json",
+"status": "failed",
+"meta": {
+"file": "errors/node2/errors.json"
+},
+"details": {
+"data": "foo2",
+"error": "testerr2",
+"node": "node2"
+}
+}
+]
+}
+]
+}
