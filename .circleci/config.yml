@@ -1,0 +1,68 @@
+version: 2
+jobs:
+  check_go_mod:
+    docker:
+      - image: golang:1.13
+    steps:
+      - checkout
+      - run:
+          name: "Check go module up to date"
+          command: ./scripts/ci/check_go_modules.sh
+
+  check_readme_sync:
+    docker:
+      - image: golang:1.13
+    steps:
+      - checkout
+      - run:
+          name: "Check README in sync"
+          command: ./scripts/ci/check_readme_in_sync.sh
+
+  build:
+    machine:
+      enabled: true
+      docker_layer_caching: true
+    steps:
+      - checkout
+      - run:
+          name: "Install kind"
+          command: |
+            curl -L https://github.com/kubernetes-sigs/kind/releases/download/v0.5.1/kind-linux-amd64 --output kind
+            chmod +x ./kind
+            sudo mv ./kind /usr/local/bin
+      - run:
+          name: "Create kind cluster"
+          command: |
+            kind create cluster --config kind-config.yaml
+            echo 'export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"' >> $BASH_ENV
+      - run:
+          name: "Build Sonobuoy container image and add to kind cluster"
+          command: make container deploy_kind
+      - run:
+          name: "Run unit and stress tests"
+          command: VERBOSE=true make test stress
+      - run:
+          name: "Run Sonobuoy integration tests"
+          command: |
+            ./scripts/run_integration_tests.sh
+      - run:
+          name: "Start Sonobuoy run, wait, and gather results"
+          command: |
+            ./sonobuoy run --image-pull-policy=IfNotPresent -m Quick --wait
+            tarball=$(./sonobuoy retrieve)
+            ./scripts/ci/check_e2e_tarball.sh $tarball
+            mv $tarball /tmp/sonobuoy-tarball.tar.gz
+      - store_artifacts:
+          path: /tmp/sonobuoy-tarball.tar.gz
+      - run:
+          name: "Upload codecov results"
+          command: bash <(curl -s https://codecov.io/bash)
+
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - check_go_mod
+      - check_readme_sync
+      - build
