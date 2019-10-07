@@ -17,8 +17,6 @@ before_install:
   --output $HOME/bin/kind && chmod +x $HOME/bin/kind
 - kind create cluster --config kind-config.yaml
 - export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
-- curl -L https://github.com/golang/dep/releases/download/v0.5.3/dep-linux-amd64 --output
-  $HOME/bin/dep && chmod +x $HOME/bin/dep
 before_deploy:
 - if [ ! -d ${HOME}/google-cloud-sdk ]; then curl https://sdk.cloud.google.com | bash
   /dev/stdin --disable-prompts; fi

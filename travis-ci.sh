@@ -4,11 +4,11 @@
 set -e
 
 # Early detect/fail if deps not correct.
-dep ensure
+go mod tidy
 git_status=$(git status -s)
 if [ -n "$git_status" ]; then
     echo $git_status
-    echo "dep ensure modified the git status; did you need add/remove a dependency?"
+    echo "go mod tidy modified the git status; did you need add/remove a dependency?"
     exit 1
 fi
 
