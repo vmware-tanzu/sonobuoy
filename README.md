@@ -33,16 +33,21 @@ Sonobuoy supports 3 Kubernetes minor versions: the current release and 2 minor v
 
 ## Installing
 
-Download one of the releases directly from [here][releases].
+We recommend installing Sonobuoy via downloading one of the releases directly from [here][releases].
 
-Alternatively, you can install the CLI by running:
+You can use the web UI to download a release or from the terminal:
 
-```bash
-go get -u -v github.com/vmware-tanzu/sonobuoy
+```
+$ VERSION=0.16.1 OS=darwin && \
+    curl -L "https://github.com/vmware-tanzu/sonobuoy/releases/download/v${VERSION}/sonobuoy_${VERSION}_${OS}_amd64.tar.gz" --output $HOME/bin/sonobuoy.tar.gz && \
+    tar -xzf $HOME/bin/sonobuoy.tar.gz -C $HOME/bin && \
+    chmod +x $HOME/bin/sonobuoy && \
+    rm $HOME/bin/sonobuoy.tar.gz
 ```
 
-Golang version 1.13 or greater is recommended. Golang can be installed via
-[gimme][gimme].
+> Note: Be sure to update the OS to your local value. Supported values are: "linux", "darwin", and "windows".
+
+If building locally, you should clone the repository and run `make`. To build locally, Docker is required.
 
 ## Getting Started
 
@@ -73,7 +78,7 @@ You can also extract the entire contents of the file to get much more [detailed 
 Sonobuoy creates a few resources in order to run and expects to run within its
 own namespace.
 
-Deleting Sonobuoy entails removing it's namespace as well as a few cluster
+Deleting Sonobuoy entails removing its namespace as well as a few cluster
 scoped resources.
 
 ```bash
@@ -158,7 +163,6 @@ See [the list of releases][releases] to find out about feature changes.
 [docs]: https://sonobuoy.io/docs
 [e2e]: https://sonobuoy.io/docs/conformance-testing
 [gen]: https://sonobuoy.io/docs/gen
-[gimme]: https://github.com/travis-ci/gimme
 [issue]: https://github.com/vmware-tanzu/sonobuoy/issues
 [k8s]: https://github.com/kubernetes/kubernetes
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
