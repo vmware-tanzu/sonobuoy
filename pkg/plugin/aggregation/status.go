@@ -57,9 +57,11 @@ type PluginStatus struct {
 // Status represents the current status of a Sonobuoy run.
 // TODO(EKF): Find a better name for this struct/package.
 type Status struct {
-	Plugins []PluginStatus `json:"plugins"`
-	Status  string         `json:"status"`
-	Tarball TarInfo        `json:"tar-info,omitempty"`
+	Plugins     []PluginStatus `json:"plugins"`
+	Status      string         `json:"status"`
+	Tarball     TarInfo        `json:"tar-info,omitempty"`
+	StartTime   *time.Time     `json:"start_time,omitempty"`
+	CurrentTime *time.Time     `json:"current_time,omitempty"`
 }
 
 // TarInfo is the type that contains information regarding the tarball
