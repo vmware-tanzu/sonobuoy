@@ -21,9 +21,15 @@ jobs:
   build:
     machine:
       enabled: true
-      docker_layer_caching: true
     steps:
       - checkout
+      - run:
+          name: "Check env var values"
+          command: |
+            echo $CIRCLE_BRANCH
+            echo $CIRCLE_PR_NUMBER
+            echo $CIRCLE_PR_REPONAME
+            echo $CIRCLE_PR_USERNAME
       - run:
           name: "Install kind"
           command: |
