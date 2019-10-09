@@ -206,7 +206,7 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 		}
 	}
 	sort.Sort(summaries)
-	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tRESULT\tCOUNT\t\n")
+	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tRESULT\tCOUNT\tStart Time\t\n")
 	for _, summary := range summaries {
 		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%s\t\n", summary.plugin, summary.status, summary.result, summary.count, summary.currentTime)
 	}

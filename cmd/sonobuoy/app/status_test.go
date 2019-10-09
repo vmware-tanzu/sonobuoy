@@ -24,10 +24,10 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 )
 
-var expectedSummary = `         PLUGIN     STATUS   RESULT   COUNT
-            e2e   complete   passed       102 Jan 06 15:04 UTC
-   systemd_logs   complete   failed       102 Jan 06 15:04 UTC
-   systemd_logs    running                202 Jan 06 15:04 UTC
+var expectedSummary = `         PLUGIN     STATUS   RESULT   COUNT            Start Time
+            e2e   complete   passed       1   02 Jan 06 15:04 UTC
+   systemd_logs   complete   failed       1   02 Jan 06 15:04 UTC
+   systemd_logs    running                2   02 Jan 06 15:04 UTC
 
 Sonobuoy is still running. Runs can take up to 60 minutes.
 `
