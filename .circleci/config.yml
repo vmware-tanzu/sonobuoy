@@ -23,7 +23,7 @@ jobs:
       enabled: true
     steps:
       - checkout
-      - run: ./scripts/publish.sh
+      - run: ./scripts/ci/publish.sh
 
   build_and_test:
     machine:
