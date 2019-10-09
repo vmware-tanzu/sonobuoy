@@ -43,10 +43,12 @@ var statusFlags struct {
 type pluginSummaries []pluginSummary
 
 type pluginSummary struct {
-	plugin string
-	status string
-	result string
-	count  int
+	plugin      string
+	status      string
+	result      string
+	count       int
+	startTime   string
+	currentTime string
 }
 
 // For sort.Interface
@@ -62,6 +64,7 @@ func (p pluginSummaries) Less(i, j int) bool {
 	return pi.plugin < pj.plugin
 }
 
+// NewCmdStatus returns a new Status command
 func NewCmdStatus() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
@@ -165,37 +168,47 @@ func printAll(w io.Writer, status *aggregation.Status) error {
 
 func printSummary(w io.Writer, status *aggregation.Status) error {
 	tw := defaultTabWriter(w)
-	totals := map[string]map[string]int{}
+	totals := map[string]map[string]map[string]int{}
 
 	// Effectively making a pivot chart to count the unique combinations of status/result.
 	statusResultKey := func(p aggregation.PluginStatus) string {
 		return p.Status + ":" + p.ResultStatus
 	}
 
+	statusTimeKey := func(p aggregation.PluginStatus) string {
+		return p.StartTime + "-" + p.CurrentTime
+	}
+
 	for _, pStatus := range status.Plugins {
 		if _, ok := totals[pStatus.Plugin]; !ok {
-			totals[pStatus.Plugin] = make(map[string]int)
+			totals[pStatus.Plugin] = make(map[string]map[string]int)
 		}
-		totals[pStatus.Plugin][statusResultKey(pStatus)]++
+		if _, ok := totals[pStatus.Plugin][statusResultKey(pStatus)]; !ok {
+			totals[pStatus.Plugin][statusResultKey(pStatus)] = make(map[string]int)
+		}
+		totals[pStatus.Plugin][statusResultKey(pStatus)][statusTimeKey(pStatus)]++
 	}
 
 	// Sort everything nicely
 	summaries := make(pluginSummaries, 0)
-	for pluginName, pluginStats := range totals {
-		for statusAndResult, count := range pluginStats {
-			summaries = append(summaries, pluginSummary{
-				plugin: pluginName,
-				status: strings.Split(statusAndResult, ":")[0],
-				result: strings.Split(statusAndResult, ":")[1],
-				count:  count,
-			})
-
+	for pluginName, results := range totals {
+		for statusAndResult, pluginStats := range results {
+			for startAndCurrent, count := range pluginStats {
+				summaries = append(summaries, pluginSummary{
+					plugin:      pluginName,
+					status:      strings.Split(statusAndResult, ":")[0],
+					result:      strings.Split(statusAndResult, ":")[1],
+					count:       count,
+					startTime:   strings.Split(startAndCurrent, "-")[0],
+					currentTime: strings.Split(startAndCurrent, "-")[1],
+				})
+			}
 		}
 	}
 	sort.Sort(summaries)
 	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tRESULT\tCOUNT\t\n")
 	for _, summary := range summaries {
-		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t\n", summary.plugin, summary.status, summary.result, summary.count)
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%s\t\n", summary.plugin, summary.status, summary.result, summary.count, summary.currentTime)
 	}
 
 	if err := tw.Flush(); err != nil {

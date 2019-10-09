@@ -25,9 +25,9 @@ import (
 )
 
 var expectedSummary = `         PLUGIN     STATUS   RESULT   COUNT
-            e2e   complete   passed       1
-   systemd_logs   complete   failed       1
-   systemd_logs    running                2
+            e2e   complete   passed       102 Jan 06 15:04 UTC
+   systemd_logs   complete   failed       102 Jan 06 15:04 UTC
+   systemd_logs    running                202 Jan 06 15:04 UTC
 
 Sonobuoy is still running. Runs can take up to 60 minutes.
 `
@@ -48,22 +48,26 @@ var exampleStatus = aggregation.Status{
 			Node:         "",
 			Status:       "complete",
 			ResultStatus: "passed",
+			CurrentTime:  "02 Jan 06 15:04 UTC",
 		},
 		{
-			Plugin: "systemd_logs",
-			Node:   "node01",
-			Status: "running",
+			Plugin:      "systemd_logs",
+			Node:        "node01",
+			Status:      "running",
+			CurrentTime: "02 Jan 06 15:04 UTC",
 		},
 		{
 			Plugin:       "systemd_logs",
 			Node:         "node02",
 			Status:       "complete",
 			ResultStatus: "failed",
+			CurrentTime:  "02 Jan 06 15:04 UTC",
 		},
 		{
-			Plugin: "systemd_logs",
-			Node:   "node03",
-			Status: "running",
+			Plugin:      "systemd_logs",
+			Node:        "node03",
+			Status:      "running",
+			CurrentTime: "02 Jan 06 15:04 UTC",
 		},
 	},
 }
@@ -93,7 +97,6 @@ func TestPrintStatus(t *testing.T) {
 			if err != nil {
 				t.Fatalf("expected err to be nil, got %v", err)
 			}
-
 			if b.String() != test.expected {
 				t.Errorf("expected output to be \n%v, got \n%v", test.expected, b.String())
 			}
