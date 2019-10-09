@@ -51,9 +51,9 @@ type PluginStatus struct {
 	ResultStatus       string         `json:"result-status"`
 	ResultStatusCounts map[string]int `json:"result-counts"`
 
-	Progress    *plugin.ProgressUpdate `json:"progress,omitempty"`
-	StartTime   string                 `json:"start_time"`
-	CurrentTime string                 `json:"current_time"`
+	Progress  *plugin.ProgressUpdate `json:"progress,omitempty"`
+	StartTime string                 `json:"start_time"`
+	Duration  string                 `json:"duration"`
 }
 
 // Status represents the current status of a Sonobuoy run.

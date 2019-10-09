@@ -43,12 +43,12 @@ var statusFlags struct {
 type pluginSummaries []pluginSummary
 
 type pluginSummary struct {
-	plugin      string
-	status      string
-	result      string
-	count       int
-	startTime   string
-	currentTime string
+	plugin    string
+	status    string
+	result    string
+	count     int
+	startTime string
+	duration  string
 }
 
 // For sort.Interface
@@ -176,7 +176,7 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 	}
 
 	statusTimeKey := func(p aggregation.PluginStatus) string {
-		return p.StartTime + "-" + p.CurrentTime
+		return p.StartTime + "-" + p.Duration
 	}
 
 	for _, pStatus := range status.Plugins {
@@ -195,20 +195,20 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 		for statusAndResult, pluginStats := range results {
 			for startAndCurrent, count := range pluginStats {
 				summaries = append(summaries, pluginSummary{
-					plugin:      pluginName,
-					status:      strings.Split(statusAndResult, ":")[0],
-					result:      strings.Split(statusAndResult, ":")[1],
-					count:       count,
-					startTime:   strings.Split(startAndCurrent, "-")[0],
-					currentTime: strings.Split(startAndCurrent, "-")[1],
+					plugin:    pluginName,
+					status:    strings.Split(statusAndResult, ":")[0],
+					result:    strings.Split(statusAndResult, ":")[1],
+					count:     count,
+					startTime: strings.Split(startAndCurrent, "-")[0],
+					duration:  strings.Split(startAndCurrent, "-")[1],
 				})
 			}
 		}
 	}
 	sort.Sort(summaries)
-	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tRESULT\tCOUNT\tStart Time\t\n")
+	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tRESULT\tCOUNT\tSTART TIME\tDURATION\t\n")
 	for _, summary := range summaries {
-		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%s\t\n", summary.plugin, summary.status, summary.result, summary.count, summary.currentTime)
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%s\t%s\t\n", summary.plugin, summary.status, summary.result, summary.count, summary.startTime, summary.duration)
 	}
 
 	if err := tw.Flush(); err != nil {

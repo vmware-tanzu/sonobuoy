@@ -24,10 +24,10 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 )
 
-var expectedSummary = `         PLUGIN     STATUS   RESULT   COUNT            Start Time
-            e2e   complete   passed       1   02 Jan 06 15:04 UTC
-   systemd_logs   complete   failed       1   02 Jan 06 15:04 UTC
-   systemd_logs    running                2   02 Jan 06 15:04 UTC
+var expectedSummary = `         PLUGIN     STATUS   RESULT   COUNT            START TIME   DURATION
+            e2e   complete   passed       1   02 Jan 06 15:04 UTC    1h1m45s
+   systemd_logs   complete   failed       1   02 Jan 06 15:04 UTC    1h1m45s
+   systemd_logs    running                2   02 Jan 06 15:04 UTC    1h1m45s
 
 Sonobuoy is still running. Runs can take up to 60 minutes.
 `
@@ -48,26 +48,30 @@ var exampleStatus = aggregation.Status{
 			Node:         "",
 			Status:       "complete",
 			ResultStatus: "passed",
-			CurrentTime:  "02 Jan 06 15:04 UTC",
+			StartTime:    "02 Jan 06 15:04 UTC",
+			Duration:     "1h1m45s",
 		},
 		{
-			Plugin:      "systemd_logs",
-			Node:        "node01",
-			Status:      "running",
-			CurrentTime: "02 Jan 06 15:04 UTC",
+			Plugin:    "systemd_logs",
+			Node:      "node01",
+			Status:    "running",
+			StartTime: "02 Jan 06 15:04 UTC",
+			Duration:  "1h1m45s",
 		},
 		{
 			Plugin:       "systemd_logs",
 			Node:         "node02",
 			Status:       "complete",
 			ResultStatus: "failed",
-			CurrentTime:  "02 Jan 06 15:04 UTC",
+			StartTime:    "02 Jan 06 15:04 UTC",
+			Duration:     "1h1m45s",
 		},
 		{
-			Plugin:      "systemd_logs",
-			Node:        "node03",
-			Status:      "running",
-			CurrentTime: "02 Jan 06 15:04 UTC",
+			Plugin:    "systemd_logs",
+			Node:      "node03",
+			Status:    "running",
+			StartTime: "02 Jan 06 15:04 UTC",
+			Duration:  "1h1m45s",
 		},
 	},
 }
