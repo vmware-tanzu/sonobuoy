@@ -69,8 +69,11 @@ VET = go vet $(TEST_PKGS)
 GOLINT_FLAGS ?= -set_exit_status
 LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 
+ifneq ($(GO_MODULES_PATH),)
+	GO_MODULES_VOLUME = -v $(GO_MODULES_PATH):/go/pkg/mod/cache
+endif
 DOCKER_FLAGS =
-DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(DOCKER_FLAGS) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
+DOCKER_BUILD ?= $(DOCKER) run --rm $(GO_MODULES_VOLUME) -v $(DIR):$(BUILDMNT) $(DOCKER_FLAGS) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 GO_BUILD ?= CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)
 
 # Kind images
