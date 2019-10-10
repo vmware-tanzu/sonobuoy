@@ -5,7 +5,7 @@ set -e
 SCRIPTS_DIR="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
 DIR=$(cd $SCRIPTS_DIR; cd ..; pwd)
 
-cluster="integration"
+cluster="kind"
 testImage="sonobuoy/testimage:v0.1"
 
 if ! kind get clusters | grep -q "^$cluster$"; then
