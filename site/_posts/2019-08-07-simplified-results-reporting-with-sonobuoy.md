@@ -4,7 +4,7 @@ title: Simplified Results Reporting with Sonobuoy 0.15.1
 excerpt: Sonobuoy 0.15.1 introduces an entirely new feature that promises to make it easier than ever to see the results of your plug-ins.
 author_name: John Schnake
 author_url: https://github.com/johnschnake
-# author_avatar: https://placehold.it/64x64
+author_avatar: /img/contributors/john-schnake.png
 categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
