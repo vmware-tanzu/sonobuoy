@@ -67,7 +67,10 @@ workflows:
     jobs:
       - check_go_mod
       - check_readme_sync
-      - build_and_test
+      - build_and_test:
+          filters:
+            tags:
+              only: /^v.*/
       - build_and_publish:
           requires:
             - build_and_test
