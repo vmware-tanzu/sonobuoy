@@ -22,6 +22,3 @@
 - title: Make your own plugins
   key: examples
   destination: examples
-- title: Cut a release
-  key: release
-  destination: release

@@ -81,11 +81,11 @@ working appropriately:
 
 
 ## Validation
-1. Open a browser tab and go to: https://travis-ci.org/vmware-tanzu/sonobuoy/builds and verify go releaser for tag v0.x.y completes successfully.
+1. Open a browser tab and go to: https://circleci.com/gh/vmware-tanzu/sonobuoy and verify go releaser for tag v0.x.y completes successfully.
 1. Upon successful completion of build job above, check the [releases tab of Sonobuoy](https://github.com/vmware-tanzu/sonobuoy/releases) and verify the artifacts and changelog were published correctly.
-1. Run the following command to make sure the image was pushed correctly to [gcr.io][gcr]:
+1. Run the following command to make sure the image was pushed correctly to [Docker Hub][dockerhub]:
    ```
-   docker run -it gcr.io/heptio-images/sonobuoy:v0.x.y /sonobuoy version
+   docker run -it sonobuoy/sonobuoy:v0.x.y /sonobuoy version
    ```
    The `Sonobuoy Version` in the output should match the release tag above.
 1. Go to the [GitHub release page](https://github.com/vmware-tanzu/sonobuoy/releases) and download the release binaries and make sure the version matches the expected values.
@@ -115,4 +115,4 @@ version of the docs.
 1. Before releasing, ensure all parties are available to resolve any issues that come up. If not, just bump the release.
 
 [gendocs]: #generating-a-new-set-of-versioned-docs
-[gcr]: https://console.cloud.google.com/gcr/images/heptio-images/GLOBAL
+[dockerhub]: https://cloud.docker.com/u/sonobuoy/repository/docker/sonobuoy/sonobuoy/tags
