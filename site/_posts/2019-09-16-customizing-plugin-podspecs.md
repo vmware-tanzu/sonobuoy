@@ -4,7 +4,7 @@ title: Customizing Plug-in PodSpecs
 excerpt: With custom PodSpecs, you can configure precisely how your plug-ins run on your Kubernetes cluster
 author_name: Bridget McErlean
 author_url: https://github.com/zubron
-# author_avatar: https://placehold.it/64x64
+author_avatar: /img/contributors/bridget-mcerlean.png
 categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']

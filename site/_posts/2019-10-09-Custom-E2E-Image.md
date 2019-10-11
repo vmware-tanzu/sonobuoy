@@ -3,7 +3,7 @@ title: Simple Approaches to Customizing the Kubernetes E2E Tests
 excerpt: Two approaches to running the E2E tests with custom options to support your workflow.
 author_name: John Schnake
 author_url: https://github.com/johnschnake
-# author_avatar: https://placehold.it/64x64
+author_avatar: /img/contributors/john-schnake.png
 categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']

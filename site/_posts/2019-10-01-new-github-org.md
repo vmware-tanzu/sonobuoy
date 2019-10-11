@@ -4,7 +4,7 @@ image: /img/vmware-tanzu.svg
 excerpt: Big news! We're moving, but the project stays the same.
 author_name: John Schnake
 author_url: https://github.com/johnschnake
-# author_avatar: https://placehold.it/64x64
+author_avatar: /img/contributors/john-schnake.png
 categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
