@@ -51,6 +51,11 @@ type RunInfo struct {
 	LoadedPlugins []string `json:"plugins,omitempty"`
 }
 
+// timeout is an interface to identify if an error is due to a timeout or not.
+type timeout interface {
+	Timeout() bool
+}
+
 // Run is the main entrypoint for discovery.
 func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// Adjust QPS/Burst so that the queries execute as quickly as possible.
@@ -139,10 +144,9 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		LoadedPlugins: []string{},
 	}
 
-	// 4. Run the plugin aggregator
-	trackErrorsFor("running plugins")(
-		pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.Namespace, outpath),
-	)
+	// 4. Run the plugin aggregator. Save this error for clear logging later.
+	runErr := pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.Namespace, outpath)
+	trackErrorsFor("running plugins")(runErr)
 
 	// 5. Run the queries
 	recorder := NewQueryRecorder()
@@ -166,6 +170,13 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		)
 	}
 
+	// Add a log line at the end of the run for clarity. Common problem in timeout situations is that
+	// users do not find the timeout message in the middle of the run logs. Can't just add it with a `defer`
+	// since we'd also like this to appear in the podlogs that get put into the tarball.
+	if tErr, ok := runErr.(timeout); ok && tErr.Timeout() {
+		logrus.Errorf("Timeout occurred when running plugins. Inspect logs further for details.")
+	}
+
 	// query pod logs
 	if cfg.Resources == nil || sliceContains(cfg.Resources, "podlogs") {
 
@@ -187,6 +198,8 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	} else {
 		logrus.Infof("podlogs not specified in non-nil Resources, skipping getting podlogs")
 	}
+
+	logrus.Infof("Log lines after this point will not appear in the downloaded tarball.")
 
 	// 6. Dump the query times
 	trackErrorsFor("recording query times")(

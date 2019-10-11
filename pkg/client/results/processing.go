@@ -48,6 +48,11 @@ const (
 	// if another can not be determined.
 	StatusUnknown = "unknown"
 
+	// StatusTimeout is the key used when the plugin does not report results within the
+	// timeout period. It will be treated as a failure (e.g. its parent will be marked
+	// as a failure).
+	StatusTimeout = "timeout"
+
 	// PostProcessedResultsFile is the name of the file we create when doing
 	// postprocessing on the plugin results.
 	PostProcessedResultsFile = "sonobuoy_results.yaml"
@@ -111,10 +116,10 @@ func aggregateStatus(items ...Item) string {
 			items[i].Status = StatusUnknown
 		}
 
-		switch items[i].Status {
-		case StatusFailed:
+		switch {
+		case isFailureStatus(items[i].Status):
 			failedFound = true
-		case StatusUnknown:
+		case items[i].Status == StatusUnknown:
 			unknownFound = true
 		default:
 		}
@@ -129,6 +134,12 @@ func aggregateStatus(items ...Item) string {
 
 	// Only pass if no failures found.
 	return StatusPassed
+}
+
+// isFailureStatus returns true if the status is any one of the failure modes (e.g.
+// StatusFailed or StatusTimeout).
+func isFailureStatus(s string) bool {
+	return s == StatusFailed || s == StatusTimeout
 }
 
 // PostProcessPlugin will inspect the files in the given directory (representing
@@ -269,7 +280,23 @@ func errProcessor(pluginDir string, currentFile string) (Item, error) {
 		resultObj.Details[k] = v
 	}
 
+	// Surface the error to be the name of the "test" to make the error mode more visible to end users.
+	// Seeing `error.json` wouldn't be helpful.
+	if resultObj.Details["error"] != "" {
+		resultObj.Name = resultObj.Details["error"]
+	}
+
+	if isTimeoutErr(resultObj) {
+		resultObj.Status = StatusTimeout
+	}
+
 	return resultObj, nil
+}
+
+// isTimeoutErr is the snippet of logic that determines whether or not a given Item represents
+// a timeout error (i.e. Sonobuoy timed out waiting for results).
+func isTimeoutErr(i Item) bool {
+	return strings.Contains(i.Details["error"], "timeout")
 }
 
 // processDir will walk the files in a given directory, using the fileSelector function to

@@ -3,10 +3,10 @@
 "status": "failed",
 "items": [
 {
-"name": "errors.json",
+"name": "testerr",
 "status": "failed",
 "meta": {
-"file": "errors/errors.json"
+"file": "errors/error.json"
 },
 "details": {
 "data": "foo",
