@@ -11,7 +11,7 @@ about your cluster.
 Its selective data dumps of Kubernetes resource objects and cluster nodes allow
 for the following use cases:
 
-* Integrated end-to-end (e2e) [conformance-testing][e2e]
+* Integrated end-to-end (e2e) [conformance-testing][e2ePlugin]
 * Workload debugging
 * Custom data collection via extensible plugins
 
@@ -87,6 +87,20 @@ sonobuoy delete --wait
 
 > Note: The --wait option ensures the Kubernetes namespace is deleted, avoiding conflicts if another Sonobuoy run is started quickly.
 
+### Other Tests
+
+By default, `sonobuoy run` runs the Kubernetes conformance tests but this can easily be configured. The same plugin that has the conformance tests has all the Kubernetes end-to-end tests which include other tests such as:
+
+* tests for specific storage features
+* performance tests
+* scaling tests
+* provider specific tests
+* and many more
+
+To modify which tests you want to run, checkout our page on the [e2e plugin][e2ePlugin].
+
+If you want to run other tests or tools which are not a part of the Kubernetes end-to-end suite, refer to our documentation on [custom plugins][customPlugins].
+
 ### Monitoring Sonobuoy during a run
 
 You can check on the status of each of the plugins running with:
@@ -100,16 +114,6 @@ You can also inspect the logs of all Sonobuoy containers:
 ```bash
 sonobuoy logs
 ```
-
-## More information
-
-[The documentation][docs] provides further information about:
-
-* [conformance tests][conformance]
-* [plugins][plugins]
-* Testing of [air gapped clusters][airgap].
-* [Customization][gen] of YAML prior to running.
-* The [Sonobuoy config file][sonobuoyconfig] file and how to edit it.
 
 ## Troubleshooting
 
@@ -158,10 +162,10 @@ See [the list of releases][releases] to find out about feature changes.
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
 [coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
-[conformance]: https://sonobuoy.io/docs/conformance-testing
 [docker]: https://docs.docker.com/install
 [docs]: https://sonobuoy.io/docs
-[e2e]: https://sonobuoy.io/docs/conformance-testing
+[e2ePlugin]: https://sonobuoy.io/docs/e2eplugin
+[customPlugins]: https://sonobuoy.io/docs/plugins
 [gen]: https://sonobuoy.io/docs/gen
 [issue]: https://github.com/vmware-tanzu/sonobuoy/issues
 [k8s]: https://github.com/kubernetes/kubernetes

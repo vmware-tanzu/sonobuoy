@@ -1,30 +1,28 @@
 toc:
-  - title: Setting up
+  - title: Basics
     subfolderitems:
-      - page: Getting started
+      - page: Overview
         url: /index.html
-      - page: Config
-        url: /sonobuoy-config
       - page: Checking Results
         url: /results
-      - page: Snapshot layout
-        url: /snapshot
-  - title: Use cases
+  - title: Plugins
     subfolderitems:
-      - page: Conformance testing
-        url: /conformance-testing
-      - page: Custom Registries & Airgap Testing
-        url: /airgap
-      - page: Plugins
+      - page: Overview
         url: /plugins
-      - page: Using Private Images
-        url: /pullsecrets
-  - title: Next steps
-    subfolderitems:
-      - page: Customization
-        url: /gen
-      - page: Make your own plugins
+      - page: E2E & Conformance
+        url: /e2eplugin
+      - page: Examples
         url: /examples
         github: true
-      - page: Cut a Release
-        url: /release
+  - title: Advanced
+    subfolderitems:
+      - page: Detailed result contents
+        url: /snapshot
+      - page: Configuration Options
+        url: /sonobuoy-config
+      - page: Custom Registries & Airgap Testing
+        url: /airgap
+      - page: Using Private Images
+        url: /pullsecrets
+      - page: Advanced Customization
+        url: /gen
