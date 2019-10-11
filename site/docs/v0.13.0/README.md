@@ -2,11 +2,11 @@
 
 **Maintainers:** [Heptio][heptio]
 
-[![Build Status][status]][travis]
+[![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 [heptio]: https://github.com/heptio
-[status]: https://travis-ci.org/vmware-tanzu/sonobuoy.svg?branch=master
-[travis]: https://travis-ci.org/vmware-tanzu/sonobuoy/#
+
+
 
 ## [Overview][oview]
 
