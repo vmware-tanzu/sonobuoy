@@ -1,4 +1,4 @@
-# <img src="img/sonobuoy-logo.png" width="400px" > [![Build Status][status]][travis]
+# <img src="img/sonobuoy-logo.png" width="400px" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 ## [Overview][oview]
 
@@ -155,6 +155,4 @@ See [the list of releases][releases] to find out about feature changes.
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 [snapshot]: snapshot.md
 [sonobuoyconfig]: sonobuoy-config.md
-[status]: https://travis-ci.org/vmware-tanzu/sonobuoy.svg?branch=master
-[travis]: https://travis-ci.org/vmware-tanzu/sonobuoy/#
 [wait]: wait.md
