@@ -5,16 +5,13 @@ jobs:
       - image: golang:1.13
     steps:
       - checkout
-      - restore_cache:
-          name: Restore go modules cache
-          key: v1-sonobuoy-{{ checksum "go.sum" }}
       - run:
           name: "Download go modules"
           command: go mod download
-      - save_cache:
-          key: v1-sonobuoy-{{ checksum "go.sum" }}
+      - persist_to_workspace:
+          root: /go
           paths:
-            - "/go/pkg/mod/cache"
+            - pkg/mod/cache
 
   check_go_mod:
     docker:
@@ -46,14 +43,8 @@ jobs:
       enabled: true
     steps:
       - checkout
-      - run:
-          name: "Make directory for go modules cache"
-          command: |
-            sudo mkdir -p /go/pkg/mod/cache
-            sudo chown -R $USER /go/pkg/mod/cache
-      - restore_cache:
-          name: Restore go modules cache
-          key: v1-sonobuoy-{{ checksum "go.sum" }}
+      - attach_workspace:
+          at: /tmp/workspace
       - run:
           name: "Install kind"
           command: |
@@ -70,14 +61,14 @@ jobs:
             echo 'export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"' >> $BASH_ENV
       - run:
           name: "Build Sonobuoy container image and add to kind cluster"
-          command: make container deploy_kind GO_MODULES_PATH=/go/pkg/mod/cache
+          command: make container deploy_kind GO_MODULES_PATH=/tmp/workspace/pkg/mod/cache
       - run:
           name: "Run unit and stress tests"
-          command: VERBOSE=true make test stress GO_MODULES_PATH=/go/pkg/mod/cache
+          command: VERBOSE=true make test stress GO_MODULES_PATH=/tmp/workspace/pkg/mod/cache
       - run:
           name: "Run Sonobuoy integration tests"
           command: |
-            GO_MODULES_PATH=/go/pkg/mod/cache ./scripts/run_integration_tests.sh
+            GO_MODULES_PATH=/tmp/workspace/pkg/mod/cache ./scripts/run_integration_tests.sh
       - store_artifacts:
           path: /tmp/artifacts
       - run:
