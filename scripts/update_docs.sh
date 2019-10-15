@@ -25,7 +25,7 @@ read -r -d '' OLD_SCOPE_BLOCK << EOM
       path: docs\/master
     values:
       version: master
-      gh: https:\/\/github.com\/heptio\/sonobuoy\/tree\/master
+      gh: https:\/\/github.com\/vmware-tanzu\/sonobuoy\/tree\/master
       layout: \"docs\"
 EOM
 
@@ -34,13 +34,13 @@ read -r -d '' NEW_SCOPE_BLOCK << EOM
       path: docs\/master
     values:
       version: master
-      gh: https:\/\/github.com\/heptio\/sonobuoy\/tree\/master
+      gh: https:\/\/github.com\/vmware-tanzu\/sonobuoy\/tree\/master
       layout: \"docs\"
   - scope:
       path: docs\/${VERSION}
     values:
       version: ${VERSION}
-      gh: https:\/\/github.com\/heptio\/sonobuoy\/tree\/${VERSION}
+      gh: https:\/\/github.com\/vmware-tanzu\/sonobuoy\/tree\/${VERSION}
       layout: \"docs\"
 EOM
 
