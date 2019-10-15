@@ -23,6 +23,9 @@ jobs:
       enabled: true
     steps:
       - checkout
+      - run:
+          name: "Build Sonobuoy to ensure version"
+          command: make build_sonobuoy && sudo mv ./sonobuoy /usr/local/bin
       - run: ./scripts/ci/publish.sh
 
   build_and_test:
