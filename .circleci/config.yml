@@ -18,14 +18,18 @@ jobs:
           name: "Check README in sync"
           command: ./scripts/ci/check_readme_in_sync.sh
 
-  build_and_publish:
+  github-release:
+    docker:
+      - image: circleci/golang:1.13.1
+    steps:
+      - checkout
+      - run: curl -sL https://git.io/goreleaser | bash
+      
+  publish_images:
     machine:
       enabled: true
     steps:
       - checkout
-      - run:
-          name: "Build Sonobuoy to ensure version"
-          command: make build_sonobuoy && sudo mv ./sonobuoy /usr/local/bin
       - run: ./scripts/ci/publish.sh
 
   build_and_test:
@@ -74,11 +78,21 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-      - build_and_publish:
+      - publish_images:
           requires:
+            - check_go_mod
+            - check_readme_sync
             - build_and_test
           filters:
             branches:
               only: master
+            tags:
+              only: /^v.*/
+      - github-release:
+          requires:
+            - publish_images
+          filters:
+            branches:
+              ignore: /.*/
             tags:
               only: /^v.*/
