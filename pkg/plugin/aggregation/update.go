@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -65,11 +66,15 @@ func newUpdater(expected []plugin.ExpectedResult, namespace string, client kuber
 		client:    client,
 	}
 
+	pluginStartTime := time.Now()
+	initialRuntime := time.Since(pluginStartTime) * time.Second
 	for i, result := range expected {
 		u.status.Plugins[i] = PluginStatus{
-			Node:   result.NodeName,
-			Plugin: result.ResultType,
-			Status: RunningStatus,
+			Node:      result.NodeName,
+			Plugin:    result.ResultType,
+			Status:    RunningStatus,
+			StartTime: &pluginStartTime,
+			Duration:  &initialRuntime,
 		}
 
 		u.positionLookup[result.ID()] = &u.status.Plugins[i]
@@ -98,6 +103,7 @@ func deepCopyPluginStatus(dst, src *PluginStatus) {
 	dst.Node = src.Node
 	dst.Status = src.Status
 	dst.ResultStatus = src.ResultStatus
+	dst.Duration = duration(src.StartTime)
 
 	if src.ResultStatusCounts != nil {
 		dst.ResultStatusCounts = map[string]int{}
@@ -258,4 +264,9 @@ func GetAggregatorPodName(client kubernetes.Interface, namespace string) (string
 	}
 
 	return ap.GetName(), nil
+}
+
+func duration(t *time.Time) *time.Duration {
+	since := time.Since(*t)
+	return &since
 }
