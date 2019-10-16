@@ -176,7 +176,10 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 	}
 
 	statusTimeKey := func(p aggregation.PluginStatus) string {
-		return p.StartTime.String() + "-" + p.Duration.String()
+		if p.StartTime != nil && p.Duration != nil {
+			return p.StartTime.String() + "=" + p.Duration.String()
+		}
+		return "="
 	}
 
 	for _, pStatus := range status.Plugins {
@@ -194,22 +197,21 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 	for pluginName, results := range totals {
 		for statusAndResult, pluginStats := range results {
 			for startAndCurrent, count := range pluginStats {
-				fmt.Printf("%v", startAndCurrent)
 				summaries = append(summaries, pluginSummary{
 					plugin:    pluginName,
 					status:    strings.Split(statusAndResult, ":")[0],
 					result:    strings.Split(statusAndResult, ":")[1],
 					count:     count,
-					startTime: strings.Split(startAndCurrent, "")[0],
-					duration:  strings.Split(startAndCurrent, "")[1],
+					startTime: strings.Split(startAndCurrent, "=")[0],
+					duration:  strings.Split(startAndCurrent, "=")[1],
 				})
 			}
 		}
 	}
 	sort.Sort(summaries)
-	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tRESULT\tCOUNT\tSTART TIME\tDURATION\t\n")
+	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tRESULT\tCOUNT\tDURATION\t\n")
 	for _, summary := range summaries {
-		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%s\t%s\t\n", summary.plugin, summary.status, summary.result, summary.count, summary.startTime, summary.duration)
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%s\t\n", summary.plugin, summary.status, summary.result, summary.count, summary.duration)
 	}
 
 	if err := tw.Flush(); err != nil {

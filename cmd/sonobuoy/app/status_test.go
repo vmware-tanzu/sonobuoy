@@ -26,9 +26,9 @@ import (
 )
 
 var expectedSummary = `         PLUGIN     STATUS   RESULT   COUNT   DURATION
-            e2e   complete   passed       1   02 Jan 06 15:04 time.UTC
-   systemd_logs   complete   failed       1   02 Jan 06 15:04 time.UTC
-   systemd_logs    running                2   02 Jan 06 15:04 time.UTC
+            e2e   complete   passed       1      1m40s
+   systemd_logs   complete   failed       1      1m40s
+   systemd_logs    running                2      1m40s
 
 Sonobuoy is still running. Runs can take up to 60 minutes.
 `
@@ -49,30 +49,31 @@ var exampleStatus = aggregation.Status{
 			Node:         "",
 			Status:       "complete",
 			ResultStatus: "passed",
-			StartTime:    Time(time.Date(2009, 11, 23, 0, 0, 0, 1, time.UTC)),
-			Duration:     Duration(time.Duration(1)),
+			StartTime:    Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
+			Duration:     Duration(time.Duration(100) * time.Second),
 		},
 		{
 			Plugin:    "systemd_logs",
 			Node:      "node01",
 			Status:    "running",
-			StartTime: Time(time.Date(2009, 11, 23, 0, 0, 0, 1, time.UTC)),
-			Duration:  Duration(time.Duration(1)),
+			StartTime: Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
+			Duration:  Duration(time.Duration(100) * time.Second),
 		},
 		{
 			Plugin:       "systemd_logs",
 			Node:         "node02",
 			Status:       "complete",
 			ResultStatus: "failed",
-			StartTime:    Time(time.Date(2009, 11, 23, 0, 0, 0, 1, time.UTC)),
-			Duration:     Duration(time.Duration(1)),
+			StartTime:    Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
+			Duration:     Duration(time.Duration(100) * time.Second),
 		},
+
 		{
 			Plugin:    "systemd_logs",
 			Node:      "node03",
 			Status:    "running",
-			StartTime: Time(time.Date(2009, 11, 23, 0, 0, 0, 1, time.UTC)),
-			Duration:  Duration(time.Duration(1)),
+			StartTime: Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
+			Duration:  Duration(time.Duration(100) * time.Second),
 		},
 	},
 }
