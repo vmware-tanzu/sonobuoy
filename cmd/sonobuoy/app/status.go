@@ -176,7 +176,7 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 	}
 
 	statusTimeKey := func(p aggregation.PluginStatus) string {
-		return p.StartTime + "-" + p.Duration
+		return p.StartTime.String() + "-" + p.Duration.String()
 	}
 
 	for _, pStatus := range status.Plugins {
@@ -194,13 +194,14 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 	for pluginName, results := range totals {
 		for statusAndResult, pluginStats := range results {
 			for startAndCurrent, count := range pluginStats {
+				fmt.Printf("%v", startAndCurrent)
 				summaries = append(summaries, pluginSummary{
 					plugin:    pluginName,
 					status:    strings.Split(statusAndResult, ":")[0],
 					result:    strings.Split(statusAndResult, ":")[1],
 					count:     count,
-					startTime: strings.Split(startAndCurrent, "-")[0],
-					duration:  strings.Split(startAndCurrent, "-")[1],
+					startTime: strings.Split(startAndCurrent, "")[0],
+					duration:  strings.Split(startAndCurrent, "")[1],
 				})
 			}
 		}

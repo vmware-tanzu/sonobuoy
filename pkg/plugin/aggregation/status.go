@@ -52,18 +52,16 @@ type PluginStatus struct {
 	ResultStatusCounts map[string]int `json:"result-counts"`
 
 	Progress  *plugin.ProgressUpdate `json:"progress,omitempty"`
-	StartTime string                 `json:"start_time"`
-	Duration  string                 `json:"duration"`
+	StartTime *time.Time             `json:"start_time,omitempty"`
+	Duration  *time.Duration         `json:"duration,omitempty"`
 }
 
 // Status represents the current status of a Sonobuoy run.
 // TODO(EKF): Find a better name for this struct/package.
 type Status struct {
-	Plugins     []PluginStatus `json:"plugins"`
-	Status      string         `json:"status"`
-	Tarball     TarInfo        `json:"tar-info,omitempty"`
-	StartTime   string         `json:"start_time"`
-	CurrentTime string         `json:"current_timey"`
+	Plugins []PluginStatus `json:"plugins"`
+	Status  string         `json:"status"`
+	Tarball TarInfo        `json:"tar-info,omitempty"`
 }
 
 // TarInfo is the type that contains information regarding the tarball
