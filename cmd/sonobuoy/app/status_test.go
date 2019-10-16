@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
+	sonotime "github.com/vmware-tanzu/sonobuoy/pkg/time"
 )
 
 var expectedSummary = `         PLUGIN     STATUS   RESULT   COUNT   DURATION
@@ -49,31 +50,31 @@ var exampleStatus = aggregation.Status{
 			Node:         "",
 			Status:       "complete",
 			ResultStatus: "passed",
-			StartTime:    Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
-			Duration:     Duration(time.Duration(100) * time.Second),
+			StartTime:    sonotime.Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
+			Duration:     sonotime.Duration(time.Duration(100) * time.Second),
 		},
 		{
 			Plugin:    "systemd_logs",
 			Node:      "node01",
 			Status:    "running",
-			StartTime: Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
-			Duration:  Duration(time.Duration(100) * time.Second),
+			StartTime: sonotime.Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
+			Duration:  sonotime.Duration(time.Duration(100) * time.Second),
 		},
 		{
 			Plugin:       "systemd_logs",
 			Node:         "node02",
 			Status:       "complete",
 			ResultStatus: "failed",
-			StartTime:    Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
-			Duration:     Duration(time.Duration(100) * time.Second),
+			StartTime:    sonotime.Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
+			Duration:     sonotime.Duration(time.Duration(100) * time.Second),
 		},
 
 		{
 			Plugin:    "systemd_logs",
 			Node:      "node03",
 			Status:    "running",
-			StartTime: Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
-			Duration:  Duration(time.Duration(100) * time.Second),
+			StartTime: sonotime.Time(time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)),
+			Duration:  sonotime.Duration(time.Duration(100) * time.Second),
 		},
 	},
 }
@@ -108,12 +109,4 @@ func TestPrintStatus(t *testing.T) {
 			}
 		})
 	}
-}
-
-func Time(time time.Time) *time.Time {
-	return &time
-}
-
-func Duration(duration time.Duration) *time.Duration {
-	return &duration
 }

@@ -18,6 +18,7 @@ package aggregation
 
 import (
 	"testing"
+	"time"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 
@@ -41,12 +42,18 @@ func TestCreateUpdater(t *testing.T) {
 		expected,
 		"sonobuoy-test",
 		nil,
+		nil,
 	)
 
+	pluginStartTime := time.Now()
+	initialRuntime := time.Since(pluginStartTime) * time.Second
+
 	if err := updater.Receive(&PluginStatus{
-		Status: FailedStatus,
-		Node:   "node1",
-		Plugin: "systemd",
+		Status:    FailedStatus,
+		Node:      "node1",
+		Plugin:    "systemd",
+		StartTime: &pluginStartTime,
+		Duration:  &initialRuntime,
 	}); err != nil {
 		t.Errorf("unexpected error receiving update %v", err)
 	}
@@ -321,7 +328,7 @@ func TestReceive(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			u := newUpdater(expectedResults, "testns", nil)
+			u := newUpdater(expectedResults, "testns", nil, nil)
 			u.ReceiveAll(tc.results, tc.updates)
 			if diff := pretty.Compare(tc.expected, u.status); diff != "" {
 				t.Fatalf("\n\n%s\n", diff)

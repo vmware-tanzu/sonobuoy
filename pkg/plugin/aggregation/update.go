@@ -55,7 +55,7 @@ type updater struct {
 }
 
 // newUpdater creates an an updater that expects ExpectedResult.
-func newUpdater(expected []plugin.ExpectedResult, namespace string, client kubernetes.Interface) *updater {
+func newUpdater(expected []plugin.ExpectedResult, namespace string, client kubernetes.Interface, start *time.Time) *updater {
 	u := &updater{
 		positionLookup: make(map[string]*PluginStatus),
 		status: Status{
@@ -66,15 +66,13 @@ func newUpdater(expected []plugin.ExpectedResult, namespace string, client kuber
 		client:    client,
 	}
 
-	pluginStartTime := time.Now()
-	initialRuntime := time.Since(pluginStartTime) * time.Second
 	for i, result := range expected {
 		u.status.Plugins[i] = PluginStatus{
 			Node:      result.NodeName,
 			Plugin:    result.ResultType,
 			Status:    RunningStatus,
-			StartTime: &pluginStartTime,
-			Duration:  &initialRuntime,
+			StartTime: start,
+			Duration:  nil,
 		}
 
 		u.positionLookup[result.ID()] = &u.status.Plugins[i]
@@ -103,7 +101,8 @@ func deepCopyPluginStatus(dst, src *PluginStatus) {
 	dst.Node = src.Node
 	dst.Status = src.Status
 	dst.ResultStatus = src.ResultStatus
-	dst.Duration = duration(src.StartTime)
+	dst.StartTime = src.StartTime
+	dst.Duration = src.Duration
 
 	if src.ResultStatusCounts != nil {
 		dst.ResultStatusCounts = map[string]int{}
@@ -111,6 +110,7 @@ func deepCopyPluginStatus(dst, src *PluginStatus) {
 			dst.ResultStatusCounts[k] = v
 		}
 	}
+
 	if src.Progress != nil {
 		dst.Progress = &plugin.ProgressUpdate{
 			PluginName: src.Progress.PluginName,
@@ -199,12 +199,16 @@ func (u *updater) ReceiveAll(results map[string]*plugin.Result, progressUpdates 
 		}
 
 		update.Progress = progressUpdates[k]
+		updateDuration := time.Since(*update.StartTime) * time.Second
+		update.Duration = &updateDuration
 		if err := u.Receive(&update); err != nil {
 			logrus.WithFields(
 				logrus.Fields{
-					"node":   update.Node,
-					"plugin": update.Plugin,
-					"status": update.Status,
+					"node":       update.Node,
+					"plugin":     update.Plugin,
+					"status":     update.Status,
+					"start_time": *update.StartTime,
+					"duration":   *update.Duration,
 				},
 			).WithError(err).Info("couldn't update plugin")
 		}
@@ -264,9 +268,4 @@ func GetAggregatorPodName(client kubernetes.Interface, namespace string) (string
 	}
 
 	return ap.GetName(), nil
-}
-
-func duration(t *time.Time) *time.Duration {
-	since := time.Since(*t)
-	return &since
 }
