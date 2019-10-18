@@ -24,6 +24,7 @@ import (
 	"sort"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -177,7 +178,7 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 
 	statusTimeKey := func(p aggregation.PluginStatus) string {
 		if p.StartTime != nil && p.Duration != nil {
-			return p.StartTime.String() + "=" + p.Duration.String()
+			return p.StartTime.String() + "=" + p.Duration.Truncate(time.Second).String()
 		}
 		return "="
 	}

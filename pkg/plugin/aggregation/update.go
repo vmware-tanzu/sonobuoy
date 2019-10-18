@@ -24,6 +24,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	sonotime "github.com/vmware-tanzu/sonobuoy/pkg/time"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -52,10 +53,11 @@ type updater struct {
 	status         Status
 	namespace      string
 	client         kubernetes.Interface
+	startTime      time.Time
 }
 
 // newUpdater creates an an updater that expects ExpectedResult.
-func newUpdater(expected []plugin.ExpectedResult, namespace string, client kubernetes.Interface, start *time.Time) *updater {
+func newUpdater(expected []plugin.ExpectedResult, namespace string, client kubernetes.Interface, startTime time.Time) *updater {
 	u := &updater{
 		positionLookup: make(map[string]*PluginStatus),
 		status: Status{
@@ -64,6 +66,7 @@ func newUpdater(expected []plugin.ExpectedResult, namespace string, client kuber
 		},
 		namespace: namespace,
 		client:    client,
+		startTime: startTime,
 	}
 
 	for i, result := range expected {
@@ -71,8 +74,7 @@ func newUpdater(expected []plugin.ExpectedResult, namespace string, client kuber
 			Node:      result.NodeName,
 			Plugin:    result.ResultType,
 			Status:    RunningStatus,
-			StartTime: start,
-			Duration:  nil,
+			StartTime: &startTime,
 		}
 
 		u.positionLookup[result.ID()] = &u.status.Plugins[i]
@@ -199,16 +201,17 @@ func (u *updater) ReceiveAll(results map[string]*plugin.Result, progressUpdates 
 		}
 
 		update.Progress = progressUpdates[k]
-		updateDuration := time.Since(*update.StartTime) * time.Second
-		update.Duration = &updateDuration
+		update.StartTime = &u.startTime
+		update.Duration = sonotime.Duration(time.Since(u.startTime))
+
 		if err := u.Receive(&update); err != nil {
 			logrus.WithFields(
 				logrus.Fields{
-					"node":       update.Node,
-					"plugin":     update.Plugin,
-					"status":     update.Status,
-					"start_time": *update.StartTime,
-					"duration":   *update.Duration,
+					"node":      update.Node,
+					"plugin":    update.Plugin,
+					"status":    update.Status,
+					"startTime": update.StartTime,
+					"duration":  update.Duration,
 				},
 			).WithError(err).Info("couldn't update plugin")
 		}
