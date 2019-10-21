@@ -257,7 +257,7 @@ func systemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 			Container: corev1.Container{
 				Name:            "systemd-logs",
 				Image:           "gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest",
-				Command:         []string{"/bin/sh", "-c", "/get_systemd_logs.sh && sleep 3600"},
+				Command:         []string{"/bin/sh", "-c", `/get_systemd_logs.sh && while true; do echo "Sleeping for 1h to avoid daemonset restart"; sleep 3600; done`},
 				ImagePullPolicy: corev1.PullPolicy(cfg.ImagePullPolicy),
 				Env: []corev1.EnvVar{
 					{Name: "CHROOT_DIR", Value: "/node"},
