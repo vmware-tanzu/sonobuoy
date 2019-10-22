@@ -42,7 +42,7 @@ func TestCreateUpdater(t *testing.T) {
 		expected,
 		"sonobuoy-test",
 		nil,
-		time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC),
+		nil,
 	)
 
 	pluginStartTime := time.Now()
@@ -328,8 +328,7 @@ func TestReceive(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			startTime := time.Date(2009, 11, 23, 0, 0, 0, 0, time.UTC)
-			u := newUpdater(expectedResults, "testns", nil, startTime)
+			u := newUpdater(expectedResults, "testns", nil, nil)
 			u.ReceiveAll(tc.results, tc.updates)
 			if diff := pretty.Compare(tc.expected, u.status); diff != "" {
 				t.Fatalf("\n\n%s\n", diff)

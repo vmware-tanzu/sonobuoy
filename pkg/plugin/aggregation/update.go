@@ -53,11 +53,11 @@ type updater struct {
 	status         Status
 	namespace      string
 	client         kubernetes.Interface
-	startTime      time.Time
+	startTime      *time.Time
 }
 
 // newUpdater creates an an updater that expects ExpectedResult.
-func newUpdater(expected []plugin.ExpectedResult, namespace string, client kubernetes.Interface, startTime time.Time) *updater {
+func newUpdater(expected []plugin.ExpectedResult, namespace string, client kubernetes.Interface, startTime *time.Time) *updater {
 	u := &updater{
 		positionLookup: make(map[string]*PluginStatus),
 		status: Status{
@@ -74,7 +74,7 @@ func newUpdater(expected []plugin.ExpectedResult, namespace string, client kuber
 			Node:      result.NodeName,
 			Plugin:    result.ResultType,
 			Status:    RunningStatus,
-			StartTime: &startTime,
+			StartTime: startTime,
 		}
 
 		u.positionLookup[result.ID()] = &u.status.Plugins[i]
@@ -103,8 +103,14 @@ func deepCopyPluginStatus(dst, src *PluginStatus) {
 	dst.Node = src.Node
 	dst.Status = src.Status
 	dst.ResultStatus = src.ResultStatus
-	dst.StartTime = src.StartTime
-	dst.Duration = src.Duration
+
+	if src.StartTime != nil {
+		dst.StartTime = src.StartTime
+	}
+
+	if src.Duration != nil {
+		dst.Duration = src.Duration
+	}
 
 	if src.ResultStatusCounts != nil {
 		dst.ResultStatusCounts = map[string]int{}
@@ -201,8 +207,11 @@ func (u *updater) ReceiveAll(results map[string]*plugin.Result, progressUpdates 
 		}
 
 		update.Progress = progressUpdates[k]
-		update.StartTime = &u.startTime
-		update.Duration = sonotime.Duration(time.Since(u.startTime))
+
+		if u.startTime != nil {
+			update.StartTime = u.startTime
+			update.Duration = sonotime.Duration(time.Since(*u.startTime))
+		}
 
 		if err := u.Receive(&update); err != nil {
 			logrus.WithFields(

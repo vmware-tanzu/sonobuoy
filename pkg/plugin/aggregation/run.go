@@ -138,7 +138,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	}()
 
 	startTime := time.Now()
-	updater := newUpdater(expectedResults, namespace, client, startTime)
+	updater := newUpdater(expectedResults, namespace, client, &startTime)
 	ctxAnnotation, cancelAnnotation := context.WithCancel(context.TODO())
 	pluginsdone := false
 	defer func() {
