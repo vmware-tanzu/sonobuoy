@@ -159,7 +159,7 @@ func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificat
 func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod, progressPort string) error {
 	daemonSet := p.createDaemonSetDefinition(fmt.Sprintf("https://%s", hostname), cert, ownerPod, progressPort)
 
-	secret, err := p.MakeTLSSecret(cert)
+	secret, err := p.MakeTLSSecret(cert, ownerPod)
 	if err != nil {
 		return errors.Wrapf(err, "couldn't make secret for daemonset plugin %v", p.GetName())
 	}
