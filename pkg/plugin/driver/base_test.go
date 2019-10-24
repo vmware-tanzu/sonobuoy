@@ -26,6 +26,8 @@ import (
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/backplane/ca"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
@@ -53,7 +55,16 @@ func TestMakeTLSSecret(t *testing.T) {
 		SessionID: sessionID,
 	}
 
-	secret, err := driver.MakeTLSSecret(cert)
+	ownerPodName := "ownerPodName"
+	var ownerPodUID types.UID = "ownerPodUID"
+	ownerPod := &v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: ownerPodName,
+			UID:  ownerPodUID,
+		},
+	}
+
+	secret, err := driver.MakeTLSSecret(cert, ownerPod)
 	if err != nil {
 		t.Fatalf("unexpected error %v making TLS Secret", err)
 	}
@@ -63,6 +74,18 @@ func TestMakeTLSSecret(t *testing.T) {
 	}
 	if secret.ObjectMeta.Namespace != expectedNamespace {
 		t.Errorf("expected namespace %v, got %v", expectedNamespace, secret.ObjectMeta.Namespace)
+	}
+
+	if len(secret.ObjectMeta.OwnerReferences) != 1 {
+		t.Errorf("expected secret to have 1 owner reference, got %v", len(secret.ObjectMeta.OwnerReferences))
+	} else {
+		ownerReference := secret.ObjectMeta.OwnerReferences[0]
+		if ownerReference.Name != ownerPodName {
+			t.Errorf("expected owner reference to have name %v, got %v", ownerPodName, ownerReference.Name)
+		}
+		if ownerReference.UID != ownerPodUID {
+			t.Errorf("expected owner reference to have UID %v, got %v", ownerPodUID, ownerReference.UID)
+		}
 	}
 
 	expectedKeyBytes, err := x509.MarshalECPrivateKey(cert.PrivateKey.(*ecdsa.PrivateKey))

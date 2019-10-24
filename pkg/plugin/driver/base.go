@@ -24,9 +24,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -79,7 +79,7 @@ func (b *Base) GetResultFiles() []string {
 }
 
 // MakeTLSSecret makes a Kubernetes secret object for the given TLS certificate.
-func (b *Base) MakeTLSSecret(cert *tls.Certificate) (*v1.Secret, error) {
+func (b *Base) MakeTLSSecret(cert *tls.Certificate, ownerPod *v1.Pod) (*v1.Secret, error) {
 	rsaKey, ok := cert.PrivateKey.(*ecdsa.PrivateKey)
 	if !ok {
 		return nil, errors.New("private key not ECDSA")
@@ -104,6 +104,14 @@ func (b *Base) MakeTLSSecret(cert *tls.Certificate) (*v1.Secret, error) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      b.GetSecretName(),
 			Namespace: b.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: "v1",
+					Kind:       "Pod",
+					Name:       ownerPod.GetName(),
+					UID:        ownerPod.GetUID(),
+				},
+			},
 		},
 		Data: map[string][]byte{
 			v1.TLSPrivateKeyKey: keyPEM,
