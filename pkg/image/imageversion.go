@@ -22,7 +22,6 @@ import (
 
 	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/discovery"
 )
 
@@ -104,7 +103,13 @@ func (c *ConformanceImageVersion) Get(client discovery.ServerVersionInterface) (
 		if len(segments) < 3 {
 			return fmt.Sprintf("v%d.%d.%d", segments[0], segments[1], 0), nil
 		}
-		return fmt.Sprintf("v%d.%d.%d", segments[0], segments[1], segments[2]), nil
+
+		// Upstream Kubernetes publishes the conformance images for prereleases as well; we should use them
+		// to ease testing new versions.
+		if parsedVersion.Prerelease() == "" {
+			return fmt.Sprintf("v%d.%d.%d", segments[0], segments[1], segments[2]), nil
+		}
+		return fmt.Sprintf("v%d.%d.%d-%v", segments[0], segments[1], segments[2], parsedVersion.Prerelease()), nil
 	}
 	return string(*c), nil
 }
@@ -112,9 +117,7 @@ func (c *ConformanceImageVersion) Get(client discovery.ServerVersionInterface) (
 func validateVersion(v string) (*version.Version, error) {
 	version, err := version.NewVersion(v)
 	if err == nil {
-		if version.Metadata() != "" || version.Prerelease() != "" {
-			logrus.Warningf("Version %v is not a stable version, conformance image may not exist upstream", v)
-		} else if !strings.HasPrefix(v, "v") {
+		if !strings.HasPrefix(v, "v") {
 			err = errors.New("version must start with v")
 		}
 	}

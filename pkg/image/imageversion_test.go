@@ -22,7 +22,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	testhook "github.com/sirupsen/logrus/hooks/test"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/discovery"
 )
@@ -111,10 +110,6 @@ func TestSetConformanceImageVersion(t *testing.T) {
 }
 
 func TestGetConformanceImageVersion(t *testing.T) {
-	testHook := &testhook.Hook{}
-	logrus.AddHook(testHook)
-	logrus.SetOutput(ioutil.Discard)
-
 	workingServerVersion := &fakeServerVersionInterface{
 		version: version.Info{
 			Major:      "1",
@@ -149,7 +144,6 @@ func TestGetConformanceImageVersion(t *testing.T) {
 		serverVersion discovery.ServerVersionInterface
 		expected      string
 		error         bool
-		warning       bool
 	}{
 		{
 			name:          "auto retrieves server version",
@@ -164,11 +158,10 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			error:         true,
 		},
 		{
-			name:          "beta server version throws warning",
+			name:          "prerelease info used without warning but metadata dropped",
 			version:       "auto",
 			serverVersion: betaServerVersion,
-			warning:       true,
-			expected:      "v1.14.1",
+			expected:      "v1.14.1-beta.2.78",
 		},
 		{
 			name:          "gke server strips plus sign",
@@ -216,21 +209,11 @@ func TestGetConformanceImageVersion(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			testHook.Reset()
 			v, err := test.version.Get(test.serverVersion)
 			if test.error && err == nil {
 				t.Fatalf("expected error, got nil")
 			} else if !test.error && err != nil {
 				t.Fatalf("unexpecter error %v", err)
-			}
-
-			if test.warning {
-				last := testHook.LastEntry()
-				if last == nil {
-					t.Errorf("expected warning entry, got nothing")
-				} else if last.Level != logrus.WarnLevel {
-					t.Errorf("expected level %v, got %v", logrus.WarnLevel, last.Level)
-				}
 			}
 
 			if v != test.expected {
