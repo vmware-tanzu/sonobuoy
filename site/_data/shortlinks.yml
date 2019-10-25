@@ -22,3 +22,6 @@
 - title: Make your own plugins
   key: examples
   destination: examples
+- title: Kubernetes End-To-End Testing Plugin
+  key: e2eplugin
+  destination: e2eplugin
