@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"strings"
 
-	version "github.com/hashicorp/go-version"
 	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
+
+	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	apicorev1 "k8s.io/api/core/v1"
@@ -84,23 +85,21 @@ func (c *SonobuoyClient) PreflightChecks(cfg *PreflightConfig) []error {
 
 func preflightDNSCheck(client kubernetes.Interface, cfg *PreflightConfig) error {
 	return dnsCheck(
-		client.CoreV1().Pods(kubeSystemNamespace).List,
-		expectedDNSLabels...,
+		client.CoreV1().Pods(cfg.DNSNamespace).List,
+		cfg.DNSNamespace,
+		cfg.DNSPodLabels...,
 	)
 }
 
-func dnsCheck(listPods listFunc, dnsLabels ...string) error {
+func dnsCheck(listPods listFunc, dnsNamespace string, dnsLabels ...string) error {
 	if len(dnsLabels) == 0 {
 		return nil
 	}
 
 	var nPods = 0
-	for _, labelValue := range dnsLabels {
-		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, kubeDNSLabelKey, labelValue)
+	for _, label := range dnsLabels {
 
-		obj, err := listPods(
-			metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)},
-		)
+		obj, err := listPods(metav1.ListOptions{LabelSelector: label})
 		if err != nil {
 			return errors.Wrap(err, "could not retrieve list of pods")
 		}
@@ -112,7 +111,7 @@ func dnsCheck(listPods listFunc, dnsLabels ...string) error {
 	}
 
 	if nPods == 0 {
-		return fmt.Errorf("no dns pods found with the labels [%s] in namespace kube-system", strings.Join(dnsLabels, ", "))
+		return fmt.Errorf("no dns pods found with the labels [%s] in namespace %s", strings.Join(dnsLabels, ", "), dnsNamespace)
 	}
 
 	return nil

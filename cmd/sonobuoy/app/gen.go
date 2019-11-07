@@ -24,6 +24,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	imagepkg "github.com/vmware-tanzu/sonobuoy/pkg/image"
+
 	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -38,6 +39,8 @@ type genFlags struct {
 	rbacMode                    RBACMode
 	kubecfg                     Kubeconfig
 	namespace                   string
+	dnsNamespace                string
+	dnsPodLabels                []string
 	sonobuoyImage               string
 	kubeConformanceImage        string
 	sshKeyPath                  string
@@ -78,6 +81,8 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddShowDefaultPodSpecFlag(&cfg.showDefaultPodSpec, genset)
 
 	AddNamespaceFlag(&cfg.namespace, genset)
+	AddDNSNamespaceFlag(&cfg.dnsNamespace, genset)
+	AddDNSPodLabelsFlag(&cfg.dnsPodLabels, genset)
 	AddSonobuoyImage(&cfg.sonobuoyImage, genset)
 	AddKubeConformanceImage(&cfg.kubeConformanceImage, genset)
 	AddKubeConformanceImageVersion(&cfg.kubeConformanceImageVersion, genset)

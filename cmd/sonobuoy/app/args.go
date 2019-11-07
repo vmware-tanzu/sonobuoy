@@ -50,6 +50,26 @@ func AddNamespaceFlag(str *string, flags *pflag.FlagSet) {
 	)
 }
 
+// AddDNSNamespaceFlag initialises the dns-namespace flag.
+// The value of this flag is used during preflight checks to determine which namespace to use
+// when looking for the DNS pods.
+func AddDNSNamespaceFlag(str *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		str, "dns-namespace", config.DefaultDNSNamespace,
+		"The namespace to check for DNS pods during preflight checks.",
+	)
+}
+
+// AddDNSPodLabelsFlag initialises the dns-pod-labels flag.
+// The value of this flag is used during preflight checks to determine which labels to use
+// when looking for the DNS pods.
+func AddDNSPodLabelsFlag(str *[]string, flags *pflag.FlagSet) {
+	flags.StringSliceVar(
+		str, "dns-pod-labels", config.DefaultDNSPodLabels,
+		"The label selectors to use for locating DNS pods during preflight checks. Can be specified multiple times or as a comma-separated list.",
+	)
+}
+
 // AddModeFlag initialises a mode flag.
 // The mode is a preset configuration of sonobuoy configuration and e2e configuration variables.
 // Mode can be partially or fully overridden by specifying config, e2e-focus, and e2e-skip.

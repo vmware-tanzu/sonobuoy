@@ -97,7 +97,12 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 	}
 
 	if !runflags.skipPreflight {
-		if errs := sbc.PreflightChecks(&client.PreflightConfig{Namespace: runflags.namespace}); len(errs) > 0 {
+		pcfg := &client.PreflightConfig{
+			Namespace:    runflags.namespace,
+			DNSNamespace: runflags.dnsNamespace,
+			DNSPodLabels: runflags.dnsPodLabels,
+		}
+		if errs := sbc.PreflightChecks(pcfg); len(errs) > 0 {
 			errlog.LogError(errors.New("Preflight checks failed"))
 			for _, err := range errs {
 				errlog.LogError(err)
