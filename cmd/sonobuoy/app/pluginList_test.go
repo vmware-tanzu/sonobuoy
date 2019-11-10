@@ -17,13 +17,29 @@ package app
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
+
 	"github.com/kylelemons/godebug/pretty"
 )
 
 func TestSetPluginList(t *testing.T) {
+	serveFile := func(filepath string) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			b, err := ioutil.ReadFile(filepath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			w.Write(b)
+		})
+	}
+	ts := httptest.NewServer(serveFile("testdata/goodmanifest.yaml"))
+	defer ts.Close()
+
 	testCases := []struct {
 		desc      string
 		list      pluginList
@@ -41,7 +57,7 @@ func TestSetPluginList(t *testing.T) {
 		}, {
 			desc:      "bad manifest",
 			input:     "testdata/badmanifest.yaml",
-			expectErr: `failed to load plugin file "testdata/badmanifest.yaml": couldn't decode yaml for plugin definition: couldn't get version/kind; json parse error: json: cannot unmarshal string into Go value of type struct { APIVersion string "json:\"apiVersion,omitempty\""; Kind string "json:\"kind,omitempty\"" }`,
+			expectErr: `loading plugin from file "testdata/badmanifest.yaml": failed to load plugin: couldn't decode yaml for plugin definition: couldn't get version/kind; json parse error: json: cannot unmarshal string into Go value of type struct { APIVersion string "json:\"apiVersion,omitempty\""; Kind string "json:\"kind,omitempty\"" }`,
 		}, {
 			desc:   "loading e2e",
 			input:  "e2e",
@@ -78,6 +94,13 @@ func TestSetPluginList(t *testing.T) {
 			expect: pluginList{
 				DynamicPlugins: []string{"e2e", "systemd-logs"},
 			},
+		}, {
+			desc:  "loading from url",
+			input: ts.URL,
+			list:  pluginList{},
+			expect: pluginList{StaticPlugins: []*manifest.Manifest{
+				{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "test"}},
+			}},
 		},
 	}
 	for _, tc := range testCases {
