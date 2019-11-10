@@ -25,9 +25,11 @@ import (
 	"testing"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/backplane/ca"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 
+	"github.com/kylelemons/godebug/pretty"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -374,6 +376,23 @@ func TestMonitorOnce(t *testing.T) {
 	// We will need to be able to grab these items repeatedly and tweak the minor details
 	// so these helpers make the test cases much more readable.
 	testPlugin := &Plugin{Base: driver.Base{Definition: manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myPlugin"}}}}
+	testPluginWithAffinity := &Plugin{Base: driver.Base{Definition: manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myPlugin"}}}}
+	testPluginWithAffinity.Base.Definition.PodSpec = &manifest.PodSpec{
+		PodSpec: corev1.PodSpec{
+			Affinity: &corev1.Affinity{
+				NodeAffinity: &corev1.NodeAffinity{
+					RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+						NodeSelectorTerms: []corev1.NodeSelectorTerm{
+							{
+								MatchExpressions: []corev1.NodeSelectorRequirement{{Key: "foo", Operator: corev1.NodeSelectorOpExists}},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
 	validDS := appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{"sonobuoy-run": ""}},
 	}
@@ -397,7 +416,7 @@ func TestMonitorOnce(t *testing.T) {
 	default3Nodes := []corev1.Node{
 		{ObjectMeta: metav1.ObjectMeta{Name: "node1"}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "node2"}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "node3"}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "node3", Labels: map[string]string{"foo": "bar"}}},
 	}
 
 	testCases := []struct {
@@ -438,6 +457,15 @@ func TestMonitorOnce(t *testing.T) {
 			expectErrResultMsgs: []string{
 				"No pod was scheduled on node node1 within 2562047h47m16.854775807s. Check tolerations for plugin myPlugin",
 				"No pod was scheduled on node node2 within 2562047h47m16.854775807s. Check tolerations for plugin myPlugin",
+				"No pod was scheduled on node node3 within 2562047h47m16.854775807s. Check tolerations for plugin myPlugin",
+			},
+		}, {
+			desc:         "Missing pods results in errors for each only if targeting those nodes",
+			nodes:        default3Nodes,
+			dsPlugin:     testPluginWithAffinity,
+			dsOnServer:   &appsv1.DaemonSetList{Items: []appsv1.DaemonSet{validDS}},
+			podsOnServer: &corev1.PodList{},
+			expectErrResultMsgs: []string{
 				"No pod was scheduled on node node3 within 2562047h47m16.854775807s. Check tolerations for plugin myPlugin",
 			},
 		}, {
@@ -508,6 +536,115 @@ func TestMonitorOnce(t *testing.T) {
 				if errResults[i].Error != tc.expectErrResultMsgs[i] {
 					t.Errorf("Expected error[%v] to be %q but got %q", i, tc.expectErrResultMsgs[i], errResults[i].Error)
 				}
+			}
+		})
+	}
+}
+
+func TestExpectedResults(t *testing.T) {
+	testNodes := []corev1.Node{
+		{ObjectMeta: metav1.ObjectMeta{Name: "node1"}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "node2", Labels: map[string]string{"foo": "bar"}}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "node3", Labels: map[string]string{"foo": "baz"}}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "node4", Labels: map[string]string{"foo": "bar2"}}},
+	}
+
+	pluginWithAffinity := func(reqs []corev1.NodeSelectorRequirement) *Plugin {
+		p := &Plugin{
+			Base: driver.Base{
+				Definition: manifest.Manifest{
+					SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myPlugin"},
+				},
+			},
+		}
+		if len(reqs) > 0 {
+			p.Base.Definition.PodSpec = &manifest.PodSpec{
+				PodSpec: corev1.PodSpec{
+					Affinity: &corev1.Affinity{
+						NodeAffinity: &corev1.NodeAffinity{
+							RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+								NodeSelectorTerms: []corev1.NodeSelectorTerm{
+									{
+										MatchExpressions: reqs,
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+		}
+		return p
+	}
+
+	testCases := []struct {
+		desc   string
+		p      *Plugin
+		expect []plugin.ExpectedResult
+	}{
+		{
+			desc: "Defaults to all nodes",
+			expect: []plugin.ExpectedResult{
+				{NodeName: "node1", ResultType: "myPlugin"},
+				{NodeName: "node2", ResultType: "myPlugin"},
+				{NodeName: "node3", ResultType: "myPlugin"},
+				{NodeName: "node4", ResultType: "myPlugin"},
+			},
+			p: pluginWithAffinity(nil),
+		}, {
+			desc: "Filters for label exists",
+			expect: []plugin.ExpectedResult{
+				{NodeName: "node2", ResultType: "myPlugin"},
+				{NodeName: "node3", ResultType: "myPlugin"},
+				{NodeName: "node4", ResultType: "myPlugin"},
+			},
+			p: pluginWithAffinity([]corev1.NodeSelectorRequirement{
+				{Key: "foo", Operator: corev1.NodeSelectorOpExists},
+			}),
+		}, {
+			desc: "Filters for label does not exist",
+			expect: []plugin.ExpectedResult{
+				{NodeName: "node1", ResultType: "myPlugin"},
+			},
+			p: pluginWithAffinity([]corev1.NodeSelectorRequirement{
+				{Key: "foo", Operator: corev1.NodeSelectorOpDoesNotExist},
+			}),
+		}, {
+			desc: "Filters for label value in",
+			expect: []plugin.ExpectedResult{
+				{NodeName: "node2", ResultType: "myPlugin"},
+				{NodeName: "node3", ResultType: "myPlugin"},
+			},
+			p: pluginWithAffinity([]corev1.NodeSelectorRequirement{
+				{Key: "foo", Operator: corev1.NodeSelectorOpIn, Values: []string{"bar", "baz"}},
+			}),
+		}, {
+			desc: "Filters for label value not in",
+			expect: []plugin.ExpectedResult{
+				{NodeName: "node1", ResultType: "myPlugin"},
+				{NodeName: "node4", ResultType: "myPlugin"},
+			},
+			p: pluginWithAffinity([]corev1.NodeSelectorRequirement{
+				{Key: "foo", Operator: corev1.NodeSelectorOpNotIn, Values: []string{"bar", "baz"}},
+			}),
+		}, {
+			desc: "Can combine filters as union",
+			expect: []plugin.ExpectedResult{
+				{NodeName: "node1", ResultType: "myPlugin"},
+				{NodeName: "node2", ResultType: "myPlugin"},
+				{NodeName: "node4", ResultType: "myPlugin"},
+			},
+			p: pluginWithAffinity([]corev1.NodeSelectorRequirement{
+				{Key: "foo", Operator: corev1.NodeSelectorOpNotIn, Values: []string{"bar", "baz"}},
+				{Key: "foo", Operator: corev1.NodeSelectorOpIn, Values: []string{"bar"}},
+			}),
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			out := tc.p.ExpectedResults(testNodes)
+			if diff := pretty.Compare(tc.expect, out); diff != "" {
+				t.Fatalf("\n\n%s\n", diff)
 			}
 		})
 	}
