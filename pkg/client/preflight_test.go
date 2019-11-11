@@ -133,10 +133,11 @@ func (f *fakeServerVersionInterface) ServerVersion() (*k8sversion.Info, error) {
 
 func TestDNSCheck(t *testing.T) {
 	testCases := []struct {
-		desc      string
-		lister    listFunc
-		dnsLabels []string
-		expectErr string
+		desc         string
+		lister       listFunc
+		dnsNamespace string
+		dnsLabels    []string
+		expectErr    string
 	}{
 		{
 			desc: "Needs only a single pod",
@@ -147,7 +148,8 @@ func TestDNSCheck(t *testing.T) {
 					},
 				}, nil
 			},
-			dnsLabels: []string{"foo"},
+			dnsNamespace: "dns-namespace",
+			dnsLabels:    []string{"foo"},
 		}, {
 			desc: "Multiple pods OK",
 			lister: func(metav1.ListOptions) (*apicorev1.PodList, error) {
@@ -158,14 +160,16 @@ func TestDNSCheck(t *testing.T) {
 					},
 				}, nil
 			},
-			dnsLabels: []string{"foo"},
+			dnsNamespace: "dns-namespace",
+			dnsLabels:    []string{"foo"},
 		}, {
 			desc: "Requires at least one pod",
 			lister: func(metav1.ListOptions) (*apicorev1.PodList, error) {
 				return &apicorev1.PodList{}, nil
 			},
-			dnsLabels: []string{"foo"},
-			expectErr: "no dns pods found with the labels [foo] in namespace kube-system",
+			dnsNamespace: "dns-namespace",
+			dnsLabels:    []string{"foo"},
+			expectErr:    "no dns pods found with the labels [foo] in namespace dns-namespace",
 		}, {
 			desc: "Skipped if no labels required",
 			lister: func(metav1.ListOptions) (*apicorev1.PodList, error) {
@@ -175,7 +179,7 @@ func TestDNSCheck(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := dnsCheck(tc.lister, tc.dnsLabels...)
+			err := dnsCheck(tc.lister, tc.dnsNamespace, tc.dnsLabels...)
 			if err != nil && len(tc.expectErr) == 0 {
 				t.Fatalf("Expected nil error but got %q", err)
 			}

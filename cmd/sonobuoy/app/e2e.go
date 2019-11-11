@@ -23,6 +23,7 @@ import (
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -114,9 +115,12 @@ func e2es(cmd *cobra.Command, args []string) {
 	}
 
 	if !e2eflags.skipPreflight {
-		errs := sonobuoy.PreflightChecks(&client.PreflightConfig{
-			Namespace: e2eflags.namespace,
-		})
+		pcfg := &client.PreflightConfig{
+			Namespace:    runflags.namespace,
+			DNSNamespace: runflags.dnsNamespace,
+			DNSPodLabels: runflags.dnsPodLabels,
+		}
+		errs := sonobuoy.PreflightChecks(pcfg)
 		if len(errs) > 0 {
 			errlog.LogError(errors.New("Preflight checks failed"))
 			for _, err := range errs {

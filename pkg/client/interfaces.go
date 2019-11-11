@@ -176,7 +176,9 @@ func (sc *StatusConfig) Validate() error {
 
 // PreflightConfig are the options passed to PreflightChecks.
 type PreflightConfig struct {
-	Namespace string
+	Namespace    string
+	DNSNamespace string
+	DNSPodLabels []string
 }
 
 // Validate checks the config to determine if it is valid.

@@ -58,6 +58,9 @@ const (
 	DefaultQueryBurst = 50
 	// DefaultProgressUpdatesPort is the port on which the Sonobuoy worker will listen for status updates from its plugin.
 	DefaultProgressUpdatesPort = "8099"
+
+	// DefaultDNSNamespace is the namespace where the DNS pods for the cluster are found.
+	DefaultDNSNamespace = "kube-system"
 )
 
 var (
@@ -111,6 +114,12 @@ var (
 		"storageclasses",
 		"validatingwebhookconfigurations",
 		"volumeattachments",
+	}
+
+	// DefaultDNSPodLabels are the label selectors that are used to locate the DNS pods in the cluster.
+	DefaultDNSPodLabels = []string{
+		"k8s-app=kube-dns",
+		"k8s-app=coredns",
 	}
 )
 
