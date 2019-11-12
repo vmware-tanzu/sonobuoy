@@ -70,6 +70,7 @@ func NewPlugin(dfn manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy,
 
 // ExpectedResults returns the list of results expected for this daemonset.
 func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
+	nodes = p.filterByNodeSelector(nodes)
 	ret := make([]plugin.ExpectedResult, 0, len(nodes))
 
 	for _, node := range nodes {
@@ -80,6 +81,26 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	}
 
 	return ret
+}
+
+// filterByNodeSelector will filter the list of nodes to just the ones matching the affinity of the plugin.
+func (p *Plugin) filterByNodeSelector(nodes []v1.Node) []v1.Node {
+	ps := p.Base.Definition.PodSpec
+	if ps == nil ||
+		ps.Affinity == nil ||
+		ps.Affinity.NodeAffinity == nil ||
+		ps.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
+		return nodes
+	}
+
+	retNodes := []v1.Node{}
+	nodeSelector := ps.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution
+	for _, node := range nodes {
+		if nodeMatchesNodeSelector(&node, nodeSelector) {
+			retNodes = append(retNodes, node)
+		}
+	}
+	return retNodes
 }
 
 func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificate, ownerPod *v1.Pod, progressPort string) appsv1.DaemonSet {
@@ -222,6 +243,7 @@ func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*appsv1.DaemonS
 // Monitor adheres to plugin.Interface by ensuring the DaemonSet is correctly
 // configured and that each pod is running normally.
 func (p *Plugin) Monitor(ctx context.Context, kubeclient kubernetes.Interface, availableNodes []v1.Node, resultsCh chan<- *plugin.Result) {
+	availableNodes = p.filterByNodeSelector(availableNodes)
 	podsReported := make(map[string]bool)
 	podsFound := make(map[string]bool, len(availableNodes))
 	for _, node := range availableNodes {
@@ -322,6 +344,11 @@ func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, availableNodes []v
 		}
 	}
 
+	// The main caller, Monitor, filters the list typically before passing it to us. However,
+	// the cost of the call is pretty small and this aids in testing to ensure that we do
+	// not error when the plugin isn't targeting that node.
+	availableNodes = p.filterByNodeSelector(availableNodes)
+
 	// DaemonSets are a bit strange, if node taints are preventing
 	// scheduling, pods won't even be created (unlike say Jobs,
 	// which will create the pod and leave it in an unscheduled
@@ -350,4 +377,46 @@ func makeErrorResultsForNodes(resultType string, errdata map[string]interface{},
 		results = append(results, utils.MakeErrorResult(resultType, errdata, n.Name))
 	}
 	return results
+}
+
+// nodeMatchesNodeSelector checks if a node's labels satisfy a node selector. It is a simplification
+// of upstream logic in `k8s.io/kubernetes` which isn't intended for consumption as a module.
+// If the nodeSelector has multiple expressions/terms; this method returns the union of the nodes
+// satisfying the individual terms.
+func nodeMatchesNodeSelector(node *v1.Node, sel *v1.NodeSelector) bool {
+	for _, term := range sel.NodeSelectorTerms {
+		// We only support MatchExpressions at this time.
+		for _, exp := range term.MatchExpressions {
+			switch exp.Operator {
+			case v1.NodeSelectorOpExists:
+				if _, ok := node.Labels[exp.Key]; ok {
+					return true
+				}
+			case v1.NodeSelectorOpDoesNotExist:
+				if _, ok := node.Labels[exp.Key]; !ok {
+					return true
+				}
+			case v1.NodeSelectorOpIn:
+				if val, ok := node.Labels[exp.Key]; ok && stringInList(exp.Values, val) {
+					return true
+				}
+			case v1.NodeSelectorOpNotIn:
+				if val, ok := node.Labels[exp.Key]; !ok || !stringInList(exp.Values, val) {
+					return true
+				}
+			default:
+				continue
+			}
+		}
+	}
+	return false
+}
+
+func stringInList(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
