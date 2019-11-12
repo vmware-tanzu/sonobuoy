@@ -331,7 +331,7 @@ func AddSSHUserFlag(user *string, flags *pflag.FlagSet) {
 // AddPluginSetFlag adds the flag for gen/run which keeps track of which plugins
 // to run and loads them from local files if necessary.
 func AddPluginSetFlag(p *pluginList, flags *pflag.FlagSet) {
-	flags.VarP(p, "plugin", "p", "Which plugins to run. Can either point to a local file or be one of the known plugins (e2e or systemd-logs). Can be specified multiple times to run multiple plugins.")
+	flags.VarP(p, "plugin", "p", "Which plugins to run. Can either point to a URL, local file/directory, or be one of the known plugins (e2e or systemd-logs). Can be specified multiple times to run multiple plugins.")
 }
 
 // AddPluginEnvFlag adds the flag for gen/run which keeps track of which plugins
