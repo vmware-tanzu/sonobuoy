@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
-	gouuid "github.com/satori/go.uuid"
 
+	gouuid "github.com/satori/go.uuid"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -74,7 +74,7 @@ func IsPodFailing(pod *v1.Pod) (bool, string) {
 		if cstatus.State.Terminated != nil {
 			// Ensure we give some time to process the results.
 			if time.Now().Sub(cstatus.State.Terminated.FinishedAt.Time) > terminatedContainerWindow {
-				errstr := fmt.Sprintf("Container %v is terminated state (exit code %v) due to reason: %v: %v",
+				errstr := fmt.Sprintf("Container %v is in a terminated state (exit code %v) due to reason: %v: %v",
 					cstatus.Name,
 					cstatus.State.Terminated.ExitCode,
 					cstatus.State.Terminated.Reason,

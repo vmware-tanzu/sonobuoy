@@ -153,6 +153,10 @@ func TestPostProcessPlugin(t *testing.T) {
 			desc:   "Timeout errors cause timeout status",
 			key:    "job-timeout",
 			plugin: getPlugin("job-timeout", "job", "junit", []string{}),
+		}, {
+			desc:   "Errors can contain complex structured data",
+			key:    "job-complex-err",
+			plugin: getPlugin("job-complex-err", "job", "junit", []string{}),
 		},
 	}
 	for _, tc := range testCases {

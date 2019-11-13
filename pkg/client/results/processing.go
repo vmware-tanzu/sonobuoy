@@ -18,6 +18,7 @@ package results
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -270,14 +271,14 @@ func errProcessor(pluginDir string, currentFile string) (Item, error) {
 	defer infile.Close()
 
 	dec := json.NewDecoder(infile)
-	result := map[string]string{}
+	result := map[string]interface{}{}
 	if err := dec.Decode(&result); err != nil {
 		return resultObj, errors.Wrapf(err, "decoding file %v", currentFile)
 	}
 
 	// Just copy the data from the saved error file.
 	for k, v := range result {
-		resultObj.Details[k] = v
+		resultObj.Details[k] = fmt.Sprint(v)
 	}
 
 	// Surface the error to be the name of the "test" to make the error mode more visible to end users.
