@@ -44,7 +44,7 @@ func TestPodFailing(t *testing.T) {
 		}, {
 			desc:          "Terminated container reported failing if old enough",
 			expectFailing: true,
-			expectMsg:     "Container container1 is terminated state (exit code 1) due to reason: myReason: myMsg",
+			expectMsg:     "Container container1 is in a terminated state (exit code 1) due to reason: myReason: myMsg",
 			pod: fromGoodPod(func(p *corev1.Pod) *corev1.Pod {
 				p.Status.ContainerStatuses = []corev1.ContainerStatus{
 					{
