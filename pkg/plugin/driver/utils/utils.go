@@ -34,6 +34,10 @@ const (
 	// that we consider it a failure mode. This handles the situation where the plugin container
 	// exits without returning results.
 	terminatedContainerWindow = 5 * time.Minute
+
+	// maxWaitForImageTime is the amount of time that we allow for pods to recover from failed image pulls.
+	// This allows for transient image pull errors to be recovered from without marking the plugin as failed.
+	maxWaitForImageTime = 5 * time.Minute
 )
 
 // GetSessionID generates a new session id.
@@ -62,10 +66,11 @@ func IsPodFailing(pod *v1.Pod) (bool, string) {
 			return true, errstr
 		}
 
-		// Check if it can't fetch its image
+		// Check if it can't fetch its image within the maximum wait time
 		if waiting := cstatus.State.Waiting; waiting != nil {
-			if waiting.Reason == "ImagePullBackOff" || waiting.Reason == "ErrImagePull" {
-				errstr := fmt.Sprintf("Container %v is in state %v", cstatus.Name, waiting.Reason)
+			elapsedPodTime := time.Now().Sub(pod.Status.StartTime.Time)
+			if elapsedPodTime > maxWaitForImageTime && (waiting.Reason == "ImagePullBackOff" || waiting.Reason == "ErrImagePull") {
+				errstr := fmt.Sprintf("Failed to pull image for container %v within %v. Container is in state %v", cstatus.Name, maxWaitForImageTime, waiting.Reason)
 				return true, errstr
 			}
 		}
