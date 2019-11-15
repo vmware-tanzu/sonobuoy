@@ -77,6 +77,71 @@ func TestPodFailing(t *testing.T) {
 				}
 				return p
 			}),
+		}, {
+			desc:          "ImagePullBackOff is not considered a failure if elapsed time within wait window",
+			expectFailing: false,
+			expectMsg:     "",
+			pod: fromGoodPod(func(p *corev1.Pod) *corev1.Pod {
+				p.Status.StartTime = &metav1.Time{Time: time.Now().Add(maxWaitForImageTime / -2)}
+				p.Status.ContainerStatuses = []corev1.ContainerStatus{
+					{State: corev1.ContainerState{
+						Waiting: &corev1.ContainerStateWaiting{
+							Reason: "ImagePullBackOff",
+						},
+					}},
+				}
+				return p
+			}),
+		}, {
+			desc:          "ImagePullBackOff is considered a failure if elapsed time greater than wait window",
+			expectFailing: true,
+			expectMsg:     "Failed to pull image for container error-container within 5m0s. Container is in state ImagePullBackOff",
+			pod: fromGoodPod(func(p *corev1.Pod) *corev1.Pod {
+				p.Status.StartTime = &metav1.Time{Time: time.Now().Add(-maxWaitForImageTime)}
+				p.Status.ContainerStatuses = []corev1.ContainerStatus{
+					{
+						Name: "error-container",
+						State: corev1.ContainerState{
+							Waiting: &corev1.ContainerStateWaiting{
+								Reason: "ImagePullBackOff",
+							},
+						}},
+				}
+				return p
+			}),
+		}, {
+			desc:          "ErrImagePull is considered a failure if elapsed time greater than wait window",
+			expectFailing: true,
+			expectMsg:     "Failed to pull image for container error-container within 5m0s. Container is in state ErrImagePull",
+			pod: fromGoodPod(func(p *corev1.Pod) *corev1.Pod {
+				p.Status.StartTime = &metav1.Time{Time: time.Now().Add(-maxWaitForImageTime)}
+				p.Status.ContainerStatuses = []corev1.ContainerStatus{
+					{
+						Name: "error-container",
+						State: corev1.ContainerState{
+							Waiting: &corev1.ContainerStateWaiting{
+								Reason: "ErrImagePull",
+							},
+						}},
+				}
+				return p
+			}),
+		}, {
+			desc:          "Other wait reason not considered a failure if elapsed time greater than wait window",
+			expectFailing: false,
+			expectMsg:     "",
+			pod: fromGoodPod(func(p *corev1.Pod) *corev1.Pod {
+				p.Status.StartTime = &metav1.Time{Time: time.Now().Add(-maxWaitForImageTime)}
+				p.Status.ContainerStatuses = []corev1.ContainerStatus{
+					{
+						State: corev1.ContainerState{
+							Waiting: &corev1.ContainerStateWaiting{
+								Reason: "ContainerCreating",
+							},
+						}},
+				}
+				return p
+			}),
 		},
 	}
 
