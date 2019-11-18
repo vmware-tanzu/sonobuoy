@@ -94,9 +94,11 @@ We can chain these desired commands together as a single bash command and then s
 $ sonobuoy gen plugin \
     --name kube-bench-worker \
     --image=schnake/kube-bench:v0.2.0-demo \
-    --cmd=/bin/sh
-    --args=-c
-    --args=”kube-bench --version 1.13 --outputfile /tmp/results/output.xml --junit ; echo -n /tmp/results/output.xml > /tmp/results/done” \
+    --type=DaemonSet \
+    --format=junit \
+    --cmd=/bin/sh \
+    --arg=-c \
+    --arg="kube-bench --version 1.13 --outputfile /tmp/results/output.xml --junit ; echo -n /tmp/results/output.xml > /tmp/results/done" \
     --show-default-podspec > kube-bench-worker.yaml
 ```
 
@@ -158,10 +160,10 @@ For the master nodes, we need to do three things:
 Each of these things can be done manually, or with the following command:
 
 ```
-$ cat kub-bench-worker.yaml | \
-  sed ‘/kube-bench-worker/kube-bench-master/’ | \
-  sed ‘/- kube-bench/- kube-bench master/’ | \
-  sed ‘/Exists/DoesNotExist/’ > kube-bench-master.yaml
+$ cat kube-bench-worker.yaml | \
+  sed 's/kube-bench-worker/kube-bench-master/g' | \
+  sed 's/- kube-bench/- kube-bench master/g' | \
+  sed 's/DoesNotExist/Exists/g' > kube-bench-master.yaml
 ```
 
 Now you can run the plugins with the following command:
