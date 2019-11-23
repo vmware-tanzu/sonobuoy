@@ -60,9 +60,9 @@ func TestLateErrors(t *testing.T) {
 
 	go func() { errc <- errors.New("introduce an error") }()
 
-	// We are guaranteed to eventually get the error because we never close bytestream.
+	// We should see all the messages (3) and the error message (1) then get the error returned.
 	errcount := 0
-	for i := 0; i <= 3; i++ {
+	for i := 0; i <= 4; i++ {
 		_, err := reader.Read(mybuf)
 		if err != nil && err != io.EOF {
 			errcount++
@@ -182,6 +182,7 @@ func TestLogReaderNoError(t *testing.T) {
 			i := 0
 			for ; ; i++ {
 				n, err := reader.Read(mybuf)
+
 				if err != nil && err != io.EOF {
 					t.Fatalf("Expected no errors got %v", err)
 				}
@@ -192,7 +193,7 @@ func TestLogReaderNoError(t *testing.T) {
 					t.Fatalf("n is too big: %v mybuf is only %v", n, len(mybuf))
 				}
 				if i >= len(tc.expectedReads) {
-					t.Fatalf("Too many actual reads, not enough expected reads. BUF: %v", mybuf[:n])
+					t.Fatalf("Too many actual reads, not enough expected reads. BUF: %q", string(mybuf[:n]))
 				}
 				if len(mybuf[:n]) != len(tc.expectedReads[i]) {
 					t.Errorf("Expected to read %v bytes, got %v buf: '%v' expected: '%v'", len(tc.expectedReads[i]), n, string(mybuf[:n]), tc.expectedReads[i])
@@ -200,6 +201,7 @@ func TestLogReaderNoError(t *testing.T) {
 				if string(mybuf[:n]) != tc.expectedReads[i] {
 					t.Errorf("Expected '%v' got '%v'", tc.expectedReads[i], string(mybuf[:n]))
 				}
+
 			}
 			i++ // add one to i for the final read.
 			if i < len(tc.expectedReads) {
@@ -260,60 +262,39 @@ func TestPodsForLogs(t *testing.T) {
 			},
 		},
 	}
-	allPods := &corev1.PodList{Items: []corev1.Pod{pluginPod, corev1.Pod{}}}
+	allPods := &corev1.PodList{Items: []corev1.Pod{pluginPod, {}}}
 	testCases := []struct {
-		desc                   string
-		pluginName             string
-		expectedCallCount      int
-		expectedLabelSelectors []string
-		podListErrors          []error
-		expectedPodCount       int
-		expectedError          error
+		desc                  string
+		pluginName            string
+		expectedCallCount     int
+		expectedLabelSelector string
+		podListError          error
+		expectedPodCount      int
+		expectedError         error
 	}{
 		{
-			desc:                   "No plugin specified results in all pods being fetched once",
-			pluginName:             "",
-			expectedCallCount:      1,
-			expectedLabelSelectors: []string{""},
-			podListErrors:          []error{nil},
-			expectedPodCount:       2,
-			expectedError:          nil,
+			desc:                  "No plugin specified results in all pods being fetched once",
+			pluginName:            "",
+			expectedLabelSelector: "",
+			podListError:          nil,
+			expectedPodCount:      2,
+			expectedError:         nil,
 		},
 		{
-			desc:                   "Plugin specified results in plugin pods being fetched once",
-			pluginName:             pluginName,
-			expectedCallCount:      1,
-			expectedLabelSelectors: []string{"sonobuoy-plugin=my-plugin"},
-			podListErrors:          []error{nil},
-			expectedPodCount:       1,
-			expectedError:          nil,
+			desc:                  "Plugin specified results in plugin pods being fetched once",
+			pluginName:            pluginName,
+			expectedLabelSelector: "sonobuoy-plugin=my-plugin",
+			podListError:          nil,
+			expectedPodCount:      1,
+			expectedError:         nil,
 		},
 		{
-			desc:                   "Error when fetching plugin pods results in error being returned",
-			pluginName:             pluginName,
-			expectedCallCount:      1,
-			expectedLabelSelectors: []string{"sonobuoy-plugin=my-plugin"},
-			podListErrors:          []error{errors.New("error")},
-			expectedPodCount:       1,
-			expectedError:          errors.New("failed to list pods: error"),
-		},
-		{
-			desc:                   "Unknown plugin specified results in plugin pods being fetched, then retry with all pods fetched",
-			pluginName:             "unknown-plugin",
-			expectedCallCount:      2,
-			expectedLabelSelectors: []string{"sonobuoy-plugin=unknown-plugin", ""},
-			podListErrors:          []error{nil, nil},
-			expectedPodCount:       2,
-			expectedError:          nil,
-		},
-		{
-			desc:                   "Error when fetching plugin pods on retry results in error being returned",
-			pluginName:             "unknown-plugin",
-			expectedCallCount:      2,
-			expectedLabelSelectors: []string{"sonobuoy-plugin=unknown-plugin", ""},
-			podListErrors:          []error{nil, errors.New("error")},
-			expectedPodCount:       2,
-			expectedError:          errors.New("failed to list pods: error"),
+			desc:                  "Error when fetching plugin pods results in error being returned",
+			pluginName:            pluginName,
+			expectedLabelSelector: "sonobuoy-plugin=my-plugin",
+			podListError:          errors.New("error"),
+			expectedPodCount:      1,
+			expectedError:         errors.New("failed to list pods: error"),
 		},
 	}
 
@@ -321,35 +302,32 @@ func TestPodsForLogs(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			cfg := &LogConfig{Plugin: tc.pluginName}
 
-			callCount := 0
 			fclient := fake.NewSimpleClientset()
 			fclient.PrependReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				if callCount >= tc.expectedCallCount {
-					t.Fatal("Unexpected call to list pods")
-				}
-
 				listAction := action.(k8stesting.ListAction)
 				labelSelector := listAction.GetListRestrictions().Labels.String()
-				if labelSelector != tc.expectedLabelSelectors[callCount] {
-					t.Errorf("expected label selector to be %q, got %q", tc.expectedLabelSelectors[callCount], labelSelector)
+				if labelSelector != tc.expectedLabelSelector {
+					t.Errorf("expected label selector to be %q, got %q", tc.expectedLabelSelector, labelSelector)
 				}
-				err := tc.podListErrors[callCount]
-				callCount++
+				err := tc.podListError
 				return true, allPods, err
 			})
 
-			pods, err := getPodsForLogs(fclient, cfg)
+			podCh := make(chan *v1.Pod)
+			err := getPodsToStreamLogs(fclient, cfg, podCh)
 			if tc.expectedError != nil {
-				if err.Error() != tc.expectedError.Error() {
+				if err == nil || err.Error() != tc.expectedError.Error() {
 					t.Errorf("Unexpected error result, expected %q, got %q", tc.expectedError, err)
 				}
-
 			} else {
-				if len(pods.Items) != tc.expectedPodCount {
-					t.Errorf("Unexpected number of pods returned, expected %d, got %d", tc.expectedPodCount, len(pods.Items))
+				podCount := 0
+				for range podCh {
+					podCount++
+				}
+				if podCount != tc.expectedPodCount {
+					t.Errorf("Unexpected number of pods returned, expected %d, got %d", tc.expectedPodCount, podCount)
 				}
 			}
-
 		})
 	}
 }
