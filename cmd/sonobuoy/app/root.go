@@ -20,8 +20,8 @@ import (
 	"flag"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
-	"github.com/spf13/cobra"
 
+	"github.com/spf13/cobra"
 	"k8s.io/klog"
 )
 
@@ -42,6 +42,7 @@ func NewSonobuoyCommand() *cobra.Command {
 	gen := NewCmdGen()
 	gen.AddCommand(NewCmdGenPluginDef())
 	gen.AddCommand(NewCmdGenConfig())
+	gen.AddCommand(NewCmdGenImageRepoConfig())
 	cmds.AddCommand(gen)
 
 	cmds.AddCommand(NewCmdLogs())

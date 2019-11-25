@@ -23,24 +23,36 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+const (
+	dockerLibraryRegistry   = "docker.io/library"
+	e2eRegistry             = "gcr.io/kubernetes-e2e-test-images"
+	etcdRegistry            = "quay.io/coreos"
+	gcAuthenticatedRegistry = "gcr.io/authenticated-image-pulling"
+	gcRegistry              = "k8s.gcr.io"
+	gcrReleaseRegistry      = "gcr.io/gke-release"
+	googleContainerRegistry = "gcr.io/google-containers"
+	invalidRegistry         = "invalid.com/invalid"
+	privateRegistry         = "gcr.io/k8s-authenticated-test"
+	quayK8sCSI              = "quay.io/k8scsi"
+	sampleRegistry          = "gcr.io/google-samples"
+)
+
 // RegistryList holds public and private image registries
 type RegistryList struct {
-	GcAuthenticatedRegistry string `yaml:"gcAuthenticatedRegistry"`
-	DockerLibraryRegistry   string `yaml:"dockerLibraryRegistry"`
-	E2eRegistry             string `yaml:"e2eRegistry"`
-	InvalidRegistry         string `yaml:"invalidRegistry"`
-	GcRegistry              string `yaml:"gcRegistry"`
-	GcrReleaseRegistry      string `yaml:"gcrReleaseRegistry"`
-	GoogleContainerRegistry string `yaml:"googleContainerRegistry"`
-	PrivateRegistry         string `yaml:"privateRegistry"`
-	SampleRegistry          string `yaml:"sampleRegistry"`
-	QuayK8sCSI              string `yaml:"quayK8sCSI"`
+	DockerLibraryRegistry   string `yaml:"dockerLibraryRegistry,omitempty"`
+	E2eRegistry             string `yaml:"e2eRegistry,omitempty"`
+	EtcdRegistry            string `yaml:"etcdRegistry,omitempty"`
+	GcAuthenticatedRegistry string `yaml:"gcAuthenticatedRegistry,omitempty"`
+	GcRegistry              string `yaml:"gcRegistry,omitempty"`
+	GcrReleaseRegistry      string `yaml:"gcrReleaseRegistry,omitempty"`
+	GoogleContainerRegistry string `yaml:"googleContainerRegistry,omitempty"`
+	InvalidRegistry         string `yaml:"invalidRegistry,omitempty"`
+	PrivateRegistry         string `yaml:"privateRegistry,omitempty"`
+	QuayK8sCSI              string `yaml:"quayK8sCSI,omitempty"`
+	SampleRegistry          string `yaml:"sampleRegistry,omitempty"`
 
-	// Registry used in v1.14.0 only
-	EtcdRegistry string `yaml:"etcdRegistry"`
-
-	K8sVersion *version.Version
-	Images     map[int]Config
+	K8sVersion *version.Version `yaml:"-"`
+	Images     map[int]Config   `yaml:"-"`
 }
 
 // Config holds an images registry, name, and version
@@ -53,17 +65,17 @@ type Config struct {
 // NewRegistryList returns a default registry or one that matches a config file passed
 func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 	registry := &RegistryList{
-		GcAuthenticatedRegistry: "gcr.io/authenticated-image-pulling",
-		DockerLibraryRegistry:   "docker.io/library",
-		E2eRegistry:             "gcr.io/kubernetes-e2e-test-images",
-		InvalidRegistry:         "invalid.com/invalid",
-		GcRegistry:              "k8s.gcr.io",
-		GcrReleaseRegistry:      "gcr.io/gke-release",
-		GoogleContainerRegistry: "gcr.io/google-containers",
-		PrivateRegistry:         "gcr.io/k8s-authenticated-test",
-		SampleRegistry:          "gcr.io/google-samples",
-		QuayK8sCSI:              "quay.io/k8scsi",
-		EtcdRegistry:            "quay.io/coreos",
+		DockerLibraryRegistry:   dockerLibraryRegistry,
+		E2eRegistry:             e2eRegistry,
+		EtcdRegistry:            etcdRegistry,
+		GcAuthenticatedRegistry: gcAuthenticatedRegistry,
+		GcRegistry:              gcRegistry,
+		GcrReleaseRegistry:      gcrReleaseRegistry,
+		GoogleContainerRegistry: googleContainerRegistry,
+		InvalidRegistry:         invalidRegistry,
+		PrivateRegistry:         privateRegistry,
+		QuayK8sCSI:              quayK8sCSI,
+		SampleRegistry:          sampleRegistry,
 	}
 
 	// Load in a config file
@@ -107,6 +119,52 @@ func (r *RegistryList) GetImageConfigs() (map[string]Config, error) {
 		}
 	}
 	return map[string]Config{}, fmt.Errorf("No matching configuration for k8s version: %v", r.K8sVersion)
+}
+
+// GetDefaultImageRegistries returns the default default image registries used for
+// a given version of the Kubernetes E2E tests
+func GetDefaultImageRegistries(version string) (*RegistryList, error) {
+	// Init images for k8s version & repos configured
+	v, err := validateVersion(version)
+	if err != nil {
+		return nil, err
+	}
+
+	switch v.Segments()[0] {
+	case 1:
+		switch v.Segments()[1] {
+		case 13, 14:
+			return &RegistryList{
+				DockerLibraryRegistry: dockerLibraryRegistry,
+				E2eRegistry:           e2eRegistry,
+				EtcdRegistry:          etcdRegistry,
+				GcRegistry:            gcRegistry,
+				SampleRegistry:        sampleRegistry,
+			}, nil
+		case 15:
+			return &RegistryList{
+				DockerLibraryRegistry: dockerLibraryRegistry,
+				E2eRegistry:           e2eRegistry,
+				GcRegistry:            gcRegistry,
+				SampleRegistry:        sampleRegistry,
+			}, nil
+		case 16:
+			return &RegistryList{
+				DockerLibraryRegistry:   dockerLibraryRegistry,
+				E2eRegistry:             e2eRegistry,
+				GcRegistry:              gcRegistry,
+				GoogleContainerRegistry: googleContainerRegistry,
+				SampleRegistry:          sampleRegistry,
+
+				// The following keys are used in the v1.16 registry list however their images
+				// cannot be pulled as they are used as part of tests for checking image pull
+				// behavior. They are omitted from the resulting config.
+				// InvalidRegistry:         invalidRegistry,
+				// GcAuthenticatedRegistry: gcAuthenticatedRegistry,
+			}, nil
+		}
+	}
+	return nil, fmt.Errorf("No matching configuration for k8s version: %v", v)
 }
 
 // GetE2EImage returns the fully qualified URI to an image (including version)
