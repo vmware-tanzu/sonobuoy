@@ -25,6 +25,7 @@ import (
 	"sort"
 	"strings"
 
+	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
@@ -38,8 +39,11 @@ import (
 )
 
 const (
-	e2ePluginName   = "e2e"
-	systemdLogsName = "systemd-logs"
+	e2ePluginName                 = "e2e"
+	systemdLogsName               = "systemd-logs"
+	lastE2EVersionWithoutProgress = "1.16.99"
+
+	envVarKeyExtraArgs = "E2E_EXTRA_ARGS"
 )
 
 // templateValues are used for direct template substitution for manifest generation.
@@ -288,6 +292,10 @@ func systemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 }
 
 func e2eManifest(cfg *GenConfig) *manifest.Manifest {
+	if cfg.Config == nil {
+		cfg.Config = config.New()
+	}
+
 	m := &manifest.Manifest{
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			PluginName:   "e2e",
@@ -375,5 +383,36 @@ func e2eManifest(cfg *GenConfig) *manifest.Manifest {
 		)
 	}
 
+	if e2eImageSupportsProgress(cfg.KubeConformanceImage) {
+		m.Spec.Env = updateExtraArgs(m.Spec.Env, cfg.Config.ProgressUpdatesPort)
+	}
+
 	return m
+}
+
+func e2eImageSupportsProgress(imageName string) bool {
+	parts := strings.SplitAfter(imageName, ":")
+	tag := parts[len(parts)-1]
+	imageVersion, err := version.NewVersion(tag)
+	if err != nil {
+		return false
+	}
+	return imageVersion.GreaterThan(version.Must(version.NewVersion(lastE2EVersionWithoutProgress)))
+}
+
+// updateExtraArgs adds the flag expected by the e2e plugin for the progress report URL.
+// If no port is given, the default "8099" is used.
+func updateExtraArgs(envs []corev1.EnvVar, port string) []corev1.EnvVar {
+	for _, env := range envs {
+		// If set by user, just leave as-is.
+		if env.Name == envVarKeyExtraArgs {
+			return envs
+		}
+	}
+	if port == "" {
+		port = config.DefaultProgressUpdatesPort
+	}
+	val := fmt.Sprintf("--progress-report-url=http://localhost:%v/progress", port)
+	envs = append(envs, corev1.EnvVar{Name: envVarKeyExtraArgs, Value: val})
+	return envs
 }

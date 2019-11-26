@@ -1,0 +1,118 @@
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: 
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-serviceaccount
+  namespace: 
+---
+apiVersion: v1
+data:
+  config.json: |
+    {"Description":"","UUID":"","Version":"","ResultsDir":"","Resources":null,"Filters":{"Namespaces":"","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"","SonobuoyNamespace":null,"FieldSelectors":null,"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null,"LimitSize":"","LimitTime":""}},"Server":{"bindaddress":"","bindport":0,"advertiseaddress":"","timeoutseconds":0},"Plugins":null,"PluginSearchPath":null,"Namespace":"","WorkerImage":"","ImagePullPolicy":"","ImagePullSecrets":"","ProgressUpdatesPort":"1234"}
+kind: ConfigMap
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-config-cm
+  namespace: 
+---
+apiVersion: v1
+data:
+  plugin-0.yaml: |
+    sonobuoy-config:
+      driver: Job
+      plugin-name: e2e
+      result-format: junit
+    spec:
+      command:
+      - /run_e2e.sh
+      env:
+      - name: E2E_FOCUS
+      - name: E2E_SKIP
+      - name: E2E_PARALLEL
+      - name: E2E_USE_GO_RUNNER
+        value: "true"
+      - name: E2E_EXTRA_ARGS
+        value: --progress-report-url=http://localhost:1234/progress
+      image: some-image:v1.17.0
+      name: e2e
+      resources: {}
+      volumeMounts:
+      - mountPath: /tmp/results
+        name: results
+kind: ConfigMap
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-plugins-cm
+  namespace: 
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    component: sonobuoy
+    run: sonobuoy-master
+    tier: analysis
+  name: sonobuoy
+  namespace: 
+spec:
+  containers:
+  - command:
+    - /bin/bash
+    - -c
+    - /sonobuoy master --no-exit=true -v 3 --logtostderr
+    env:
+    - name: SONOBUOY_ADVERTISE_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    image: 
+    imagePullPolicy: 
+    name: kube-sonobuoy
+    volumeMounts:
+    - mountPath: /etc/sonobuoy
+      name: sonobuoy-config-volume
+    - mountPath: /plugins.d
+      name: sonobuoy-plugins-volume
+    - mountPath: /tmp/sonobuoy
+      name: output-volume
+  restartPolicy: Never
+  serviceAccountName: sonobuoy-serviceaccount
+  tolerations:
+  - key: "kubernetes.io/e2e-evict-taint-key"
+    operator: "Exists"
+  volumes:
+  - configMap:
+      name: sonobuoy-config-cm
+    name: sonobuoy-config-volume
+  - configMap:
+      name: sonobuoy-plugins-cm
+    name: sonobuoy-plugins-volume
+  - emptyDir: {}
+    name: output-volume
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    component: sonobuoy
+    run: sonobuoy-master
+  name: sonobuoy-master
+  namespace: 
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    run: sonobuoy-master
+  type: ClusterIP

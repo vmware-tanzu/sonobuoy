@@ -355,6 +355,36 @@ func TestGenerateManifestGolden(t *testing.T) {
 				},
 			},
 			goldenFile: filepath.Join("testdata", "use-existing-pod-spec.golden"),
+		}, {
+			name: "Conformance images >= v1.17 support progress",
+			inputcm: &client.GenConfig{
+				E2EConfig:            &client.E2EConfig{},
+				DynamicPlugins:       []string{"e2e"},
+				KubeConformanceImage: "some-image:v1.17.0",
+			},
+			goldenFile: filepath.Join("testdata", "e2e-progress.golden"),
+		}, {
+			name: "ProgressUpdatesPort is customizable for e2e",
+			inputcm: &client.GenConfig{
+				E2EConfig:            &client.E2EConfig{},
+				DynamicPlugins:       []string{"e2e"},
+				KubeConformanceImage: "some-image:v1.17.0",
+				Config: &config.Config{
+					ProgressUpdatesPort: "1234",
+				},
+			},
+			goldenFile: filepath.Join("testdata", "e2e-progress-custom-port.golden"),
+		}, {
+			name: "Conformance images >= v1.17 will not override E2E_EXTRA_ARGS if specified by user",
+			inputcm: &client.GenConfig{
+				E2EConfig:            &client.E2EConfig{},
+				DynamicPlugins:       []string{"e2e"},
+				KubeConformanceImage: "some-image:v1.17.0",
+				PluginEnvOverrides: map[string]map[string]string{
+					"e2e": {"E2E_EXTRA_ARGS": "user-defined"},
+				},
+			},
+			goldenFile: filepath.Join("testdata", "e2e-progress-vs-user-defined.golden"),
 		},
 	}
 
