@@ -1,4 +1,4 @@
-# <img src="img/sonobuoy-logo.png" width="400px" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
+# <img src="img/sonobuoy-logo.png" alt="Sonobuoy logo" width="400px" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 ## [Overview][oview]
 
