@@ -11,7 +11,7 @@ The most common point of customization is changing the set of tests to run. This
 * E2E_FOCUS
 * E2E_SKIP
 
-Each of these is a regular expression describing which tests tests to run or skip. The "E2E_FOCUS" value is applied first and the "E2E_SKIP" value then further restricts that list. These can be set using Sonobuoy flags:
+Each of these is a regular expression describing which tests to run or skip. The "E2E_FOCUS" value is applied first and the "E2E_SKIP" value then further restricts that list. These can be set using Sonobuoy flags:
 
 ```
 sonobuoy run \
