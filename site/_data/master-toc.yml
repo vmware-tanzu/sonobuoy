@@ -26,3 +26,7 @@ toc:
         url: /pullsecrets
       - page: Advanced Customization
         url: /gen
+  - title: Resources
+    subfolderitems:
+      - page: Frequently Asked Questions
+        url: /faq
