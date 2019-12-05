@@ -1,0 +1,28 @@
+{
+"name": "job-junit-falsepositive",
+"status": "failed",
+"items": [
+{
+"name": "output.xml",
+"status": "failed",
+"meta": {
+"file": "results/global/output.xml"
+},
+"items": [
+{
+"name": "Alertmanager - Alertmanager statefuleset(executeK8sTests())",
+"status": "failed",
+"items": [
+{
+"name": "Alertmanager - Alertmanager statefuleset(executeK8sTests",
+"status": "failed",
+"details": {
+"error": "Alertmanager statefuleset - Connection refused (Connection refused) org.opentest4j.AssertionFailedError: Alertmanager statefuleset - Connection refused (Connection refused)\n\tat com.cg.k8s.tests.client.K8sPlatformTests.test(K8sPlatformTests.java:163)\n\tat com.cg.k8s.tests.client.K8sPlatformTests.lambda$0(K8sPlatformTests.java:94)\n\tat java.util.Optional.ifPresent(Optional.java:159)\n\tat java.util.ArrayList.forEach(ArrayList.java:1257)\n\tat java.util.ArrayList.forEach(ArrayList.java:1257)\n\tat com.cg.k8s.tests.client.RunTests.main(RunTests.java:41)"
+}
+}
+]
+}
+]
+}
+]
+}

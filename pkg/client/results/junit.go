@@ -37,6 +37,9 @@ const (
 
 	// JUnitFailureKey is the key in the Items.Details map for the failure output.
 	JUnitFailureKey = "failure"
+
+	// JUnitErrorKey is the key in the Items.Details map for the error output.
+	JUnitErrorKey = "error"
 )
 
 // junitResult is a wrapper around the suite[s] which enable results to
@@ -89,14 +92,15 @@ type JUnitTestSuite struct {
 
 // JUnitTestCase is a single test case with its result.
 type JUnitTestCase struct {
-	XMLName     xml.Name             `xml:"testcase"`
-	Classname   string               `xml:"classname,attr"`
-	Name        string               `xml:"name,attr"`
-	Time        string               `xml:"time,attr"`
-	SkipMessage *JUnitSkipMessage    `xml:"skipped,omitempty"`
-	Failure     *JUnitFailureMessage `xml:"failure,omitempty"`
-	SystemOut   string               `xml:"system-out,omitempty"`
-	SystemErr   string               `xml:"system-err,omitempty"`
+	XMLName      xml.Name             `xml:"testcase"`
+	Classname    string               `xml:"classname,attr"`
+	Name         string               `xml:"name,attr"`
+	Time         string               `xml:"time,attr"`
+	SkipMessage  *JUnitSkipMessage    `xml:"skipped,omitempty"`
+	Failure      *JUnitFailureMessage `xml:"failure,omitempty"`
+	ErrorMessage *JUnitErrorMessage   `xml:"error,omitempty"`
+	SystemOut    string               `xml:"system-out,omitempty"`
+	SystemErr    string               `xml:"system-err,omitempty"`
 }
 
 // JUnitSkipMessage contains the reason why a testcase was skipped.
@@ -106,6 +110,13 @@ type JUnitSkipMessage struct {
 
 // JUnitFailureMessage contains data related to a failed test.
 type JUnitFailureMessage struct {
+	Message  string `xml:"message,attr"`
+	Type     string `xml:"type,attr"`
+	Contents string `xml:",chardata"`
+}
+
+// JUnitErrorMessage contains data related to a failed test.
+type JUnitErrorMessage struct {
 	Message  string `xml:"message,attr"`
 	Type     string `xml:"type,attr"`
 	Contents string `xml:",chardata"`
@@ -142,12 +153,17 @@ func JUnitSkipped(testCase JUnitTestCase) bool { return testCase.SkipMessage != 
 
 // JUnitPassed returns true if the test passed.
 func JUnitPassed(testCase JUnitTestCase) bool {
-	return testCase.SkipMessage == nil && testCase.Failure == nil
+	return testCase.SkipMessage == nil && testCase.Failure == nil && testCase.ErrorMessage == nil
 }
 
 // JUnitFailed returns true if the test failed.
 func JUnitFailed(testCase JUnitTestCase) bool {
 	return testCase.SkipMessage == nil && testCase.Failure != nil
+}
+
+// JUnitErrored returns true if the test errored.
+func JUnitErrored(testCase JUnitTestCase) bool {
+	return testCase.SkipMessage == nil && testCase.Failure == nil && testCase.ErrorMessage != nil
 }
 
 func junitProcessFile(pluginDir, currentFile string) (Item, error) {
@@ -225,6 +241,10 @@ func junitProcessReader(r io.Reader, name string, metadata map[string]string) (I
 				rootItem.Status = StatusFailed
 				suiteItem.Status = StatusFailed
 				status = StatusFailed
+			case JUnitErrored(t):
+				rootItem.Status = StatusFailed
+				suiteItem.Status = StatusFailed
+				status = StatusFailed
 			case JUnitSkipped(t):
 				status = StatusSkipped
 			}
@@ -237,6 +257,11 @@ func junitProcessReader(r io.Reader, name string, metadata map[string]string) (I
 			if hasFailureContents {
 				testItem.Details[JUnitFailureKey] = strings.TrimSpace(t.Failure.Message + " " + t.Failure.Contents)
 			}
+			hasErrorContents := (t.ErrorMessage != nil && (t.ErrorMessage.Message != "" || t.ErrorMessage.Contents != ""))
+			if hasErrorContents {
+				testItem.Details[JUnitErrorKey] = strings.TrimSpace(t.ErrorMessage.Message + " " + t.ErrorMessage.Contents)
+			}
+
 			if t.SystemOut != "" {
 				testItem.Details[JUnitStdoutKey] = t.SystemOut
 			}

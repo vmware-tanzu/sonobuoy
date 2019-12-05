@@ -157,6 +157,10 @@ func TestPostProcessPlugin(t *testing.T) {
 			desc:   "Errors can contain complex structured data",
 			key:    "job-complex-err",
 			plugin: getPlugin("job-complex-err", "job", "junit", []string{}),
+		}, {
+			desc:   "tmp name",
+			key:    "job-junit-falsepositive",
+			plugin: getPlugin("job-junit-falsepositive", "job", "junit", []string{}),
 		},
 	}
 	for _, tc := range testCases {

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite errors="0" failures="1" hostname="cgogineni" name="Alertmanager - Alertmanager statefuleset(executeK8sTests())" skipped="0" tests="1" time="0.005" timestamp="2019-12-03T17:53:38">
+  <properties />
+  <testcase classname="com.cg.k8s.tests.reports.JUnitResultFormatterAsRunListener$DescriptionAsTest" name="Alertmanager - Alertmanager statefuleset(executeK8sTests" time="0.005">
+    <error message="Alertmanager statefuleset - Connection refused (Connection refused)" type="org.opentest4j.AssertionFailedError">org.opentest4j.AssertionFailedError: Alertmanager statefuleset - Connection refused (Connection refused)
+	at com.cg.k8s.tests.client.K8sPlatformTests.test(K8sPlatformTests.java:163)
+	at com.cg.k8s.tests.client.K8sPlatformTests.lambda$0(K8sPlatformTests.java:94)
+	at java.util.Optional.ifPresent(Optional.java:159)
+	at java.util.ArrayList.forEach(ArrayList.java:1257)
+	at java.util.ArrayList.forEach(ArrayList.java:1257)
+	at com.cg.k8s.tests.client.RunTests.main(RunTests.java:41)
+</error>
+  </testcase>
+  <system-out><![CDATA[Request method:	GET
+Request URI:	http://localhost:8001/apis/apps/v1/namespaces/monitoring/statefulsets/alertmanager-main/status
+Proxy:			<none>
+...
+]]></system-out>
+  <system-err><![CDATA[java.net.ConnectException: Connection refused (Connection refused)
+	at java.net.PlainSocketImpl.socketConnect(Native Method)
+	...
+	...
+]]></system-err>
+</testsuite>
