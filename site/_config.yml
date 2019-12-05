@@ -53,6 +53,12 @@ defaults:
       gh: https://github.com/vmware-tanzu/sonobuoy/tree/master
       layout: "docs"
   - scope:
+      path: docs/v0.16.5
+    values:
+      version: v0.16.5
+      gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.16.5
+      layout: "docs"
+  - scope:
       path: docs/v0.16.4
     values:
       version: v0.16.4
@@ -154,9 +160,10 @@ collections:
   - casestudies
 
 versioning: true
-latest: v0.16.4
+latest: v0.16.5
 versions:
 - master
+- v0.16.5
 - v0.16.4
 - v0.16.3
 - v0.16.2
