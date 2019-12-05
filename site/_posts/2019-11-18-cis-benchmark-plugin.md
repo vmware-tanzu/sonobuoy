@@ -75,7 +75,7 @@ For our starting line, we are targeting the CIS benchmarks implemented in the [k
 
 Luckily for us, the Aqua Security provides an image ready to run the benchmarks. We are able to leverage this image and use our custom plugin specification to redirect the results to Sonobuoy.
 
-_Note: Currently we're using a custom image temporarily made from the current master branch the kube-bench repo. This is only temporary until v0.2.0 is released. The reason for this is so that we can leverage the new `--junit` flag so that Sonobuoy can more easily process the output._
+_Note: This post was originally published while we were using a custom image temporarily made from the master branch the kube-bench repo. That was meant to be temporary until a release supporting the `--junit` flag was created. The plugin (and this post) have now been updated to use `aquasec/kube-bench:0.2.1`_
 
 ### Creating the Plugin Definition
 
@@ -93,7 +93,7 @@ We can chain these desired commands together as a single bash command and then s
 ```
 $ sonobuoy gen plugin \
     --name kube-bench-worker \
-    --image=schnake/kube-bench:v0.2.0-demo \
+    --image=aquasec/kube-bench:0.2.1 \
     --type=DaemonSet \
     --format=junit \
     --cmd=/bin/sh \
