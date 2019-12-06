@@ -25,3 +25,6 @@
 - title: Kubernetes End-To-End Testing Plugin
   key: e2eplugin
   destination: e2eplugin
+- title: Frequently Asked Questions
+  key: faq
+  destination: faq
