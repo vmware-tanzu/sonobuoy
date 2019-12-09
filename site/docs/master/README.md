@@ -174,7 +174,7 @@ See [the list of releases][releases] to find out about feature changes.
 [plugins]: plugins
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
 [releases]: https://github.com/vmware-tanzu/sonobuoy/releases
-[results]: results.md
+[results]: results
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 [snapshot]:snapshot
 [sonobuoyconfig]: sonobuoy-config
