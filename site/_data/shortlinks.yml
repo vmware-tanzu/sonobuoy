@@ -28,3 +28,6 @@
 - title: Frequently Asked Questions
   key: faq
   destination: faq
+- title: Viewing Plugin Results
+  key: results
+  destination: results
