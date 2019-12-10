@@ -8,34 +8,42 @@
 1. If there an a Kubernetes release coming soon, do the following to ensure the upstream conformance script is
 working appropriately:
   * Build the kind images for this new version.
-    * Checkout K8s locally at the tag in question
-    * Run `make check-kind-env` to ensure the repo/tag are correct
-    * Run `make kind_images`
-    * Run `make push_kind_images`
+    1. Checkout K8s locally at the tag in question
+    1. Run `make check-kind-env` to ensure the repo/tag are correct
+    1. Run `make kind_images`
+    1. Run `make push_kind_images`
   * Update our CI build our kind cluster with the new image.
 1. If the new release corresponds to a new Kubernetes release, the following steps must be performed:
-   * Add the new list of E2E test images.
-     For an example of the outcome of this process, see the [change corresponding to the Kubernetes v1.14 release](https://github.com/vmware-tanzu/sonobuoy/commit/68f15a260e60a288f91bc40347c817b382a3d45c).
-     1. Within `pkg/image/`, copy the latest `v1.x.go` file to a file which corresponds to the new Kubernetes release number.
-        For example, if the new Sonobuoy release corresponds to Kubernetes `v1.15`, copy the `v1.14.go` file to `v1.15.go`.
-        ```
-        cp pkg/image/v1.{14,15}.go
-        ```
-        This file will contain a function to return the list of test images for this new release.
-     1. Update the name of the function in the newly created file.
-       For example, if the file is for the v1.15 release, ensure the function name is `v1_15`.
-     1. Replace the map of images within the previously mentioned function with the map of images for the new release.
-       To do this, copy the equivalent map entries for the release from the Kubernetes repository.
-       For an example, see the entries [from the v1.15.0 release](https://github.com/kubernetes/kubernetes/blob/v1.15.0/test/utils/image/manifest.go#L202-L252).
-       Within the new function, remove any entries in the `config` map and replace with those copied from the Kubernetes repository.
-       The entries from the Kubernetes repository use an `int` as the key in the map however in the Sonobuoy repository the keys are strings.
-       Convert the new key names to strings.
-     1. To make use of these new images, update the `GetImageConfigs` function within `pkg/image/manifest.go`.
-       Add a new case to the minor version check which will be the minor version of the new Kubernetes release.
-       In this new case, call the newly created function (e.g. `r.v1_15()`).
-   * Update the minimum and maximum Kubernetes API versions that Sonobuoy supports.
-     Edit `pkg/buildinfo/version.go` and update the `MinimumKubeVersion` to be 2 minor version below the new Kubernetes release version and update the `MaximumKubeVersion` to support future point releases.
-     For example, for the Kubernetes 1.15.0 release, the `MinimumKubeVersion` would become `1.13.0` and the `MaximumKubeVersion` would become `1.15.99`.
+  * Add the new list of E2E test images.
+    For an example of the outcome of this process, see the [change corresponding to the Kubernetes v1.14 release](https://github.com/vmware-tanzu/sonobuoy/commit/68f15a260e60a288f91bc40347c817b382a3d45c).
+      1. Within `pkg/image/`, copy the latest `v1.x.go` file to a file which corresponds to the new Kubernetes release number.
+         For example, if the new Sonobuoy release corresponds to Kubernetes `v1.15`, copy the `v1.14.go` file to `v1.15.go`.
+         ```
+         cp pkg/image/v1.{14,15}.go
+         ```
+         This file will contain a function to return the list of test images for this new release.
+      1. Update the name of the function in the newly created file.
+        For example, if the file is for the v1.15 release, ensure the function name is `v1_15`.
+      1. Replace the map of images within the previously mentioned function with the map of images for the new release.
+        To do this, copy the equivalent map entries for the release from the Kubernetes repository.
+        For an example, see the entries [from the v1.15.0 release](https://github.com/kubernetes/kubernetes/blob/v1.15.0/test/utils/image/manifest.go#L202-L252).
+        Within the new function, remove any entries in the `config` map and replace with those copied from the Kubernetes repository.
+        The entries from the Kubernetes repository use an `int` as the key in the map however in the Sonobuoy repository the keys are strings.
+        Convert the new key names to strings.
+      1. To make use of these new images, update the `GetImageConfigs` function within `pkg/image/manifest.go`.
+        Add a new case to the minor version check which will be the minor version of the new Kubernetes release.
+        In this new case, call the newly created function (e.g. `r.v1_15()`).
+  * Add the new default image registry configuration.
+    Once the images for the release have been added, update the function `GetDefaultImageRegistries` within `pkg/image/manifest.go` to return the default image registries for the new version.
+    To do this, add a new case to the minor version check which will be the minor version of the new Kubernetes release.
+    Within this case, return a new `RegistryList` object which includes only the registry keys used within the registry config for that version.
+    Some registries are not applicable to include in this object as they are there to test specific image pull behavior such as pulling from a private or non-existent registry.
+    This object should only include registries that can be successfully pulled from.
+    The other registries are not used within the end-to-end tests.
+    For an example, see the addition [from the v1.17.0 release](https://github.com/vmware-tanzu/sonobuoy/commit/93f63ef51e135dccf22407a0cdbf22f6c4a2cd26#diff-655c3323e53de3dff85eadd7592ca218R173-R188).
+  * Update the minimum and maximum Kubernetes API versions that Sonobuoy supports.
+    Edit `pkg/buildinfo/version.go` and update the `MinimumKubeVersion` to be 2 minor version below the new Kubernetes release version and update the `MaximumKubeVersion` to support future point releases.
+    For example, for the Kubernetes 1.15.0 release, the `MinimumKubeVersion` would become `1.13.0` and the `MaximumKubeVersion` would become `1.15.99`.
 1. Commit and open/merge a pull request with these changes.
 1. Create an annotated tag for the commit once the changes are merged:
     ```
