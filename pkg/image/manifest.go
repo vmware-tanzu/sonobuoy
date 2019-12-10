@@ -24,6 +24,7 @@ import (
 )
 
 const (
+	dockerGluster           = "docker.io/gluster"
 	dockerLibraryRegistry   = "docker.io/library"
 	e2eRegistry             = "gcr.io/kubernetes-e2e-test-images"
 	etcdRegistry            = "quay.io/coreos"
@@ -33,12 +34,14 @@ const (
 	googleContainerRegistry = "gcr.io/google-containers"
 	invalidRegistry         = "invalid.com/invalid"
 	privateRegistry         = "gcr.io/k8s-authenticated-test"
+	quayIncubator           = "quay.io/kubernetes_incubator"
 	quayK8sCSI              = "quay.io/k8scsi"
 	sampleRegistry          = "gcr.io/google-samples"
 )
 
 // RegistryList holds public and private image registries
 type RegistryList struct {
+	DockerGluster           string `yaml:"dockerGluster,omitempty"`
 	DockerLibraryRegistry   string `yaml:"dockerLibraryRegistry,omitempty"`
 	E2eRegistry             string `yaml:"e2eRegistry,omitempty"`
 	EtcdRegistry            string `yaml:"etcdRegistry,omitempty"`
@@ -48,6 +51,7 @@ type RegistryList struct {
 	GoogleContainerRegistry string `yaml:"googleContainerRegistry,omitempty"`
 	InvalidRegistry         string `yaml:"invalidRegistry,omitempty"`
 	PrivateRegistry         string `yaml:"privateRegistry,omitempty"`
+	QuayIncubator           string `yaml:"quayIncubator,omitempty"`
 	QuayK8sCSI              string `yaml:"quayK8sCSI,omitempty"`
 	SampleRegistry          string `yaml:"sampleRegistry,omitempty"`
 
@@ -65,6 +69,7 @@ type Config struct {
 // NewRegistryList returns a default registry or one that matches a config file passed
 func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 	registry := &RegistryList{
+		DockerGluster:           dockerGluster,
 		DockerLibraryRegistry:   dockerLibraryRegistry,
 		E2eRegistry:             e2eRegistry,
 		EtcdRegistry:            etcdRegistry,
@@ -74,6 +79,7 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 		GoogleContainerRegistry: googleContainerRegistry,
 		InvalidRegistry:         invalidRegistry,
 		PrivateRegistry:         privateRegistry,
+		QuayIncubator:           quayIncubator,
 		QuayK8sCSI:              quayK8sCSI,
 		SampleRegistry:          sampleRegistry,
 	}
@@ -116,6 +122,8 @@ func (r *RegistryList) GetImageConfigs() (map[string]Config, error) {
 			return r.v1_15(), nil
 		case 16:
 			return r.v1_16(), nil
+		case 17:
+			return r.v1_17(), nil
 		}
 	}
 	return map[string]Config{}, fmt.Errorf("No matching configuration for k8s version: %v", r.K8sVersion)
@@ -161,6 +169,22 @@ func GetDefaultImageRegistries(version string) (*RegistryList, error) {
 				// behavior. They are omitted from the resulting config.
 				// InvalidRegistry:         invalidRegistry,
 				// GcAuthenticatedRegistry: gcAuthenticatedRegistry,
+			}, nil
+		case 17:
+			return &RegistryList{
+				E2eRegistry:             e2eRegistry,
+				DockerLibraryRegistry:   dockerLibraryRegistry,
+				GcRegistry:              gcRegistry,
+				GoogleContainerRegistry: googleContainerRegistry,
+				DockerGluster:           dockerGluster,
+				QuayIncubator:           quayIncubator,
+
+				// The following keys are used in the v1.17 registry list however their images
+				// cannot be pulled as they are used as part of tests for checking image pull
+				// behavior. They are omitted from the resulting config.
+				// InvalidRegistry:         invalidRegistry,
+				// GcAuthenticatedRegistry: gcAuthenticatedRegistry,
+				// PrivateRegistry:         privateRegistry,
 			}, nil
 		}
 	}
