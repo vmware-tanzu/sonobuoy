@@ -1,10 +1,16 @@
 {
 "name": "ds-raw-02",
 "status": "passed",
+"meta": {
+"type": "summary"
+},
 "items": [
 {
 "name": "global",
 "status": "passed",
+"meta": {
+"type": "node"
+},
 "items": [
 {
 "name": "output.xml",

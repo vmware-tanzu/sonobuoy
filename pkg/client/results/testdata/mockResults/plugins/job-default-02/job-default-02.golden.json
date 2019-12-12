@@ -1,6 +1,9 @@
 {
 "name": "job-default-02",
 "status": "passed",
+"meta": {
+"type": "summary"
+},
 "items": [
 {
 "name": "output.xml",

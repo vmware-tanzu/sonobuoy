@@ -1,6 +1,9 @@
 {
 "name": "job-complex-err",
 "status": "failed",
+"meta": {
+"type": "summary"
+},
 "items": [
 {
 "name": "Container e2e is terminated state (exit code 0) due to reason: Completed: ",

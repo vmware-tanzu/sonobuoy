@@ -1,16 +1,23 @@
 {
 "name": "ds-errors-01",
 "status": "failed",
+"meta": {
+"type": "summary"
+},
 "items": [
 {
 "name": "node2",
 "status": "passed",
+"meta": {
+"type": "node"
+},
 "items": [
 {
 "name": "output.xml",
 "status": "passed",
 "meta": {
-"file": "results/node2/output.xml"
+"file": "results/node2/output.xml",
+"type": "file"
 },
 "items": [
 {
@@ -46,6 +53,9 @@
 {
 "name": "node1",
 "status": "failed",
+"meta": {
+"type": "node"
+},
 "items": [
 {
 "name": "testerr",

@@ -174,9 +174,12 @@ func junitProcessFile(pluginDir, currentFile string) (Item, error) {
 	}
 
 	resultObj := Item{
-		Name:     filepath.Base(currentFile),
-		Status:   StatusUnknown,
-		Metadata: map[string]string{"file": relPath},
+		Name:   filepath.Base(currentFile),
+		Status: StatusUnknown,
+		Metadata: map[string]string{
+			metadataFileKey: relPath,
+			metadataTypeKey: metadataTypeFile,
+		},
 	}
 
 	infile, err := os.Open(currentFile)
