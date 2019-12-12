@@ -1,6 +1,9 @@
 {
 "name": "job-raw-01",
 "status": "passed",
+"meta": {
+"type": "summary"
+},
 "items": [
 {
 "name": "output.xml",

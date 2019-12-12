@@ -1,16 +1,23 @@
 {
 "name": "ds-junit-01",
 "status": "passed",
+"meta": {
+"type": "summary"
+},
 "items": [
 {
 "name": "global",
 "status": "passed",
+"meta": {
+"type": "node"
+},
 "items": [
 {
 "name": "output.xml",
 "status": "passed",
 "meta": {
-"file": "results/global/output.xml"
+"file": "results/global/output.xml",
+"type": "file"
 },
 "items": [
 {

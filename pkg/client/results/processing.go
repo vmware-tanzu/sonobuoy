@@ -57,6 +57,18 @@ const (
 	// PostProcessedResultsFile is the name of the file we create when doing
 	// postprocessing on the plugin results.
 	PostProcessedResultsFile = "sonobuoy_results.yaml"
+
+	// metadataFileKey is the key used in an Item's metadata field when the Item is
+	// representing the a file summary (and its leaf nodes are individual tests or suites).
+	metadataFileKey = "file"
+
+	// metadataTypeKey is the key used in an Item's metadata field when describing what type
+	// of entry in the tree it is. Currently we just tag summaries, files, and nodes.
+	metadataTypeKey = "type"
+
+	metadataTypeNode    = "node"
+	metadataTypeFile    = "file"
+	metadataTypeSummary = "summary"
 )
 
 // ResultFormat constants are the supported values for the resultFormat field
@@ -211,7 +223,8 @@ func processNodesWithProcessor(p plugin.Interface, baseDir, dir string, processo
 		}
 		nodeName := filepath.Base(nodeDirInfo.Name())
 		nodeItem := Item{
-			Name: nodeName,
+			Name:     nodeName,
+			Metadata: map[string]string{metadataTypeKey: metadataTypeNode},
 		}
 		items, err := processDir(p, pdir, filepath.Join(dir, nodeName), processor, selector)
 		nodeItem.Items = items
@@ -235,7 +248,8 @@ func processPluginWithProcessor(p plugin.Interface, baseDir string, processor po
 
 	_, isDS := p.(*daemonset.Plugin)
 	results := Item{
-		Name: p.GetName(),
+		Name:     p.GetName(),
+		Metadata: map[string]string{metadataTypeKey: metadataTypeSummary},
 	}
 
 	if isDS {

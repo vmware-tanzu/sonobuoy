@@ -1,16 +1,23 @@
 {
 "name": "ds-junit-03",
 "status": "failed",
+"meta": {
+"type": "summary"
+},
 "items": [
 {
 "name": "global",
 "status": "failed",
+"meta": {
+"type": "node"
+},
 "items": [
 {
 "name": "output.xml",
 "status": "passed",
 "meta": {
-"file": "results/global/output.xml"
+"file": "results/global/output.xml",
+"type": "file"
 },
 "items": [
 {
@@ -45,7 +52,8 @@
 "name": "output2.xml",
 "status": "failed",
 "meta": {
-"file": "results/global/output2.xml"
+"file": "results/global/output2.xml",
+"type": "file"
 },
 "items": [
 {
