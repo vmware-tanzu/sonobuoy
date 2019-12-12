@@ -95,6 +95,29 @@ func (i Item) Empty() bool {
 	return false
 }
 
+// GetSubTreeByName traverses the tree and returns a reference to the
+// subtree whose root has the given name.
+func (i *Item) GetSubTreeByName(root string) *Item {
+	if i == nil {
+		return nil
+	}
+
+	if root == "" || i.Name == root {
+		return i
+	}
+
+	if len(i.Items) > 0 {
+		for _, v := range i.Items {
+			subItem := (&v).GetSubTreeByName(root)
+			if subItem != nil {
+				return subItem
+			}
+		}
+	}
+
+	return nil
+}
+
 // aggregateStatus defines the aggregation rules for status. Failures bubble
 // up and otherwise the status is assumed to pass as long as there are >=1 result.
 // If 0 items are aggregated, StatusUnknown is returned.

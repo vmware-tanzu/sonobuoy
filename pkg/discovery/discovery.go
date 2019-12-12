@@ -222,9 +222,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		}
 
 		// Update the plugin status with this post-processed information.
-		statusInfo := map[string]int{}
-		statusCounts(&item, statusInfo)
-		updatePluginStatus(kubeClient, cfg.Namespace, p.GetName(), item.Status, statusInfo)
+		updatePluginStatus(kubeClient, cfg.Namespace, p.GetName(), item)
 	}
 
 	// Saving plugin definitions in their respective folders for easy reference.
@@ -357,20 +355,38 @@ func updateStatus(client kubernetes.Interface, namespace string, status string, 
 	return setPodStatusAnnotation(client, namespace, podStatus)
 }
 
-func updatePluginStatus(client kubernetes.Interface, namespace string, pluginType string, pluginResultStatus string, pluginResultCounts map[string]int) error {
+func updatePluginStatus(client kubernetes.Interface, namespace string, pluginName string, item results.Item) error {
 	podStatus, err := pluginaggregation.GetStatus(client, namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the existing status")
 	}
 
-	for i := range podStatus.Plugins {
-		if podStatus.Plugins[i].Plugin == pluginType {
-			podStatus.Plugins[i].ResultStatus = pluginResultStatus
-			podStatus.Plugins[i].ResultStatusCounts = pluginResultCounts
-			break
-		}
-	}
+	integrateResultsIntoStatus(podStatus, pluginName, &item)
+
 	return setPodStatusAnnotation(client, namespace, podStatus)
+}
+
+func integrateResultsIntoStatus(podStatus *pluginaggregation.Status, pluginName string, item *results.Item) {
+	for i := range podStatus.Plugins {
+		if podStatus.Plugins[i].Plugin != pluginName {
+			continue
+		}
+		var itemForNode *results.Item
+		if podStatus.Plugins[i].Node == plugin.GlobalResult {
+			itemForNode = item
+		} else {
+			itemForNode = item.GetSubTreeByName(podStatus.Plugins[i].Node)
+		}
+
+		if itemForNode == nil {
+			return
+		}
+
+		statusInfo := map[string]int{}
+		statusCounts(itemForNode, statusInfo)
+		podStatus.Plugins[i].ResultStatus = itemForNode.Status
+		podStatus.Plugins[i].ResultStatusCounts = statusInfo
+	}
 }
 
 // setPodStatusAnnotation sets the status on the pod via an annotation. It will overwrite the
