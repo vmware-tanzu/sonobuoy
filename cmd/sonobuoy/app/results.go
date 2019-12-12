@@ -167,7 +167,7 @@ func printSinglePlugin(input resultsInput, r *results.Reader) error {
 		return err
 	}
 
-	obj = getItemInTree(obj, input.node)
+	obj = obj.GetSubTreeByName(input.node)
 	if obj == nil {
 		return fmt.Errorf("node named %q not found", input.node)
 	}
@@ -187,27 +187,6 @@ func getPluginList(r *results.Reader) ([]string, error) {
 	})
 
 	return runInfo.LoadedPlugins, errors.Wrap(err, "finding plugin list")
-}
-
-func getItemInTree(i *results.Item, root string) *results.Item {
-	if i == nil {
-		return nil
-	}
-
-	if root == "" || i.Name == root {
-		return i
-	}
-
-	if len(i.Items) > 0 {
-		for _, v := range i.Items {
-			subItem := getItemInTree(&v, root)
-			if subItem != nil {
-				return subItem
-			}
-		}
-	}
-
-	return nil
 }
 
 func printResultsDetails(treePath []string, o *results.Item, input resultsInput) error {
