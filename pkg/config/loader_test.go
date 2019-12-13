@@ -197,18 +197,13 @@ func TestDefaultResources(t *testing.T) {
 
 func TestLoadAllPlugins(t *testing.T) {
 	cfg := &Config{
-		PluginSearchPath: []string{"./examples/plugins.d"},
+		PluginSearchPath: []string{"testdata/plugins.d"},
 		PluginSelections: []plugin.Selection{
 			{Name: "systemd-logs"},
 			{Name: "e2e"},
 			{Name: "heptio-e2e"},
 		},
 	}
-
-	// Make sure we pick up the plugins directory from the root of the repo
-	oldwd, _ := os.Getwd()
-	os.Chdir("../..")
-	defer os.Chdir(oldwd)
 
 	err := loadAllPlugins(cfg)
 	if err != nil {
