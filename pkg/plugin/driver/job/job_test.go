@@ -377,12 +377,11 @@ func TestMonitorOnce(t *testing.T) {
 			expectDone: true,
 			job:        &Plugin{driver.Base{CleanedUp: true}},
 		}, {
-			desc:               "Missing pod results in error",
-			job:                &Plugin{},
-			podOnServer:        nil,
-			errFromServer:      errors.New("forcedError"),
-			expectErrResultMsg: "forcedError",
-			expectDone:         true,
+			desc:          "Server error results in error being ignored",
+			job:           &Plugin{},
+			podOnServer:   nil,
+			errFromServer: errors.New("forcedError"),
+			expectDone:    false,
 		}, {
 			desc: "Failing pod results in error",
 			job:  &Plugin{},
