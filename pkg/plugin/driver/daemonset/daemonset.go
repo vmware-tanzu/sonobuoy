@@ -227,7 +227,6 @@ func (p *Plugin) listOptions() metav1.ListOptions {
 
 // findDaemonSet gets the daemonset that we created, using a kubernetes label search.
 func (p *Plugin) findDaemonSet(kubeclient kubernetes.Interface) (*appsv1.DaemonSet, error) {
-	// TODO(EKF): Move to v1 in 1.11
 	dsets, err := kubeclient.AppsV1().DaemonSets(p.Namespace).List(p.listOptions())
 	if err != nil {
 		return nil, errors.WithStack(err)

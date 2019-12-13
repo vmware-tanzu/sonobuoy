@@ -208,10 +208,11 @@ func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, _ []v1.Node) (done
 		return true, nil
 	}
 
-	// Make sure there's a pod
+	// Make sure there's a pod; dont fail the pod if there are issues querying the API server.
 	pod, err := p.findPod(kubeclient)
 	if err != nil {
-		return true, utils.MakeErrorResult(p.GetName(), map[string]interface{}{"error": err.Error()}, plugin.GlobalResult)
+		errlog.LogError(errors.Wrapf(err, "could not find pod created by plugin %v, will retry", p.GetName()))
+		return false, nil
 	}
 
 	// Make sure the pod isn't failing
