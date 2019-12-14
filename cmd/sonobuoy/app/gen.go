@@ -67,7 +67,10 @@ type genFlags struct {
 	genflags *pflag.FlagSet
 }
 
+// TODO(jschnake): Avoid using these globals if possible.
 var genflags genFlags
+var genSystemdLogsflags genFlags
+var genE2Eflags genFlags
 
 func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	genset := pflag.NewFlagSet("generate", pflag.ExitOnError)
