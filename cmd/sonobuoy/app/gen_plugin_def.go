@@ -20,15 +20,17 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
+	manifesthelper "github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest/helper"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
 	v1 "k8s.io/api/core/v1"
 	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -168,4 +170,58 @@ func genPluginDef(cfg *GenPluginDefConfig) ([]byte, error) {
 
 	yaml, err := kuberuntime.Encode(manifest.Encoder, &cfg.def)
 	return yaml, errors.Wrap(err, "serializing as YAML")
+}
+
+func NewCmdGenE2E() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "e2e",
+		Short: "Generates the e2e plugin definition based on the given options",
+		RunE:  genE2EManifest,
+		Args:  cobra.NoArgs,
+	}
+	cmd.Flags().AddFlagSet(GenFlagSet(&genE2Eflags, EnabledRBACMode))
+	return cmd
+}
+
+func genE2EManifest(cmd *cobra.Command, args []string) error {
+	cfg, err := genflags.Config()
+	if err != nil {
+		return err
+	}
+
+	m := client.E2EManifest(cfg)
+	yaml, err := manifesthelper.ToYAML(m, cfg.ShowDefaultPodSpec)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(yaml))
+	return nil
+}
+
+func NewCmdGenSystemdLogs() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "systemd-logs",
+		Short: "Generates the systemd-logs plugin definition based on the given options",
+		RunE:  genSystemdLogsManifest,
+		Args:  cobra.NoArgs,
+	}
+	cmd.Flags().AddFlagSet(GenFlagSet(&genSystemdLogsflags, EnabledRBACMode))
+	return cmd
+}
+
+func genSystemdLogsManifest(cmd *cobra.Command, args []string) error {
+	cfg, err := genflags.Config()
+	if err != nil {
+		return err
+	}
+
+	m := client.SystemdLogsManifest(cfg)
+	yaml, err := manifesthelper.ToYAML(m, cfg.ShowDefaultPodSpec)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(yaml))
+	return nil
 }

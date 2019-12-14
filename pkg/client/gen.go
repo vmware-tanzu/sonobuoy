@@ -30,12 +30,11 @@ import (
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
-	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
+	manifesthelper "github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest/helper"
 	"github.com/vmware-tanzu/sonobuoy/pkg/templates"
 
 	corev1 "k8s.io/api/core/v1"
-	kuberuntime "k8s.io/apimachinery/pkg/runtime"
 )
 
 const (
@@ -116,9 +115,9 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	for _, v := range cfg.DynamicPlugins {
 		switch v {
 		case e2ePluginName:
-			plugins = append(plugins, e2eManifest(cfg))
+			plugins = append(plugins, E2EManifest(cfg))
 		case systemdLogsName:
-			plugins = append(plugins, systemdLogsManifest(cfg))
+			plugins = append(plugins, SystemdLogsManifest(cfg))
 		}
 	}
 	plugins = append(plugins, cfg.StaticPlugins...)
@@ -164,14 +163,9 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 
 	pluginYAML := []string{}
 	for _, v := range plugins {
-		if cfg.ShowDefaultPodSpec && v.PodSpec == nil {
-			v.PodSpec = &manifest.PodSpec{
-				PodSpec: driver.DefaultPodSpec(v.SonobuoyConfig.Driver),
-			}
-		}
-		yaml, err := kuberuntime.Encode(manifest.Encoder, v)
+		yaml, err := manifesthelper.ToYAML(v, cfg.ShowDefaultPodSpec)
 		if err != nil {
-			return nil, errors.Wrapf(err, "serializing plugin %v as YAML", v.SonobuoyConfig.PluginName)
+			return nil, err
 		}
 		pluginYAML = append(pluginYAML, strings.TrimSpace(string(yaml)))
 	}
@@ -249,7 +243,7 @@ func mergeEnv(e1, e2 []corev1.EnvVar, removeKeys map[string]struct{}) []corev1.E
 	return returnEnv
 }
 
-func systemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
+func SystemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 	trueVal := true
 	return &manifest.Manifest{
 		SonobuoyConfig: manifest.SonobuoyConfig{
@@ -291,7 +285,7 @@ func systemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 	}
 }
 
-func e2eManifest(cfg *GenConfig) *manifest.Manifest {
+func E2EManifest(cfg *GenConfig) *manifest.Manifest {
 	if cfg.Config == nil {
 		cfg.Config = config.New()
 	}
