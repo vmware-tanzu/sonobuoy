@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 
 	version "github.com/hashicorp/go-version"
+	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -109,25 +110,38 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 	return registry, nil
 }
 
-// GetImageNames returns the map of image Config
-func (r *RegistryList) GetImageNames() ([]string, error) {
-	imgConfigs := map[string]Config{}
+// getImageConfigs returns the map of image Config for the registry version
+func (r *RegistryList) getImageConfigs() (map[string]Config, error) {
 	switch r.K8sVersion.Segments()[0] {
 	case 1:
 		switch r.K8sVersion.Segments()[1] {
 		case 13:
-			imgConfigs = r.v1_13()
+			return r.v1_13(), nil
 		case 14:
-			imgConfigs = r.v1_14()
+			return r.v1_14(), nil
 		case 15:
-			imgConfigs = r.v1_15()
+			return r.v1_15(), nil
 		case 16:
-			imgConfigs = r.v1_16()
+			return r.v1_16(), nil
 		case 17:
-			imgConfigs = r.v1_17()
-		default:
-			return []string{}, fmt.Errorf("No matching configuration for k8s version: %v", r.K8sVersion)
+			return r.v1_17(), nil
 		}
+	}
+	return map[string]Config{}, fmt.Errorf("No matching configuration for k8s version: %v", r.K8sVersion)
+
+}
+
+// GetE2EImages gets a list of E2E image names
+func GetE2EImages(e2eRegistryConfig, version string) ([]string, error) {
+	// Get list of upstream images that match the version
+	reg, err := NewRegistryList(e2eRegistryConfig, version)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't create image registry list")
+	}
+
+	imgConfigs, err := reg.getImageConfigs()
+	if err != nil {
+		return []string{}, errors.Wrap(err, "couldn't get images for version")
 	}
 
 	imageNames := []string{}
@@ -136,6 +150,36 @@ func (r *RegistryList) GetImageNames() ([]string, error) {
 
 	}
 	return imageNames, nil
+}
+
+// GetE2EImagePairs gets a list of E2E image tag pairs from the default src to custom destination
+func GetE2EImageTagPairs(e2eRegistryConfig, version string) ([]TagPair, error) {
+	defaultImageRegistry, err := NewRegistryList("", version)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't create image registry list")
+	}
+	defaultImageConfigs, err := defaultImageRegistry.getImageConfigs()
+	if err != nil {
+		return []TagPair{}, errors.Wrap(err, "couldn't get images for version")
+	}
+
+	customImageRegistry, err := NewRegistryList(e2eRegistryConfig, version)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't create image registry list")
+	}
+	customImageConfigs, err := customImageRegistry.getImageConfigs()
+	if err != nil {
+		return []TagPair{}, errors.Wrap(err, "couldn't get images for version")
+	}
+
+	var imageTagPairs []TagPair
+	for name, cfg := range defaultImageConfigs {
+		imageTagPairs = append(imageTagPairs, TagPair{
+			Src: cfg.GetFullyQualifiedImageName(),
+			Dst: customImageConfigs[name].GetFullyQualifiedImageName(),
+		})
+	}
+	return imageTagPairs, nil
 }
 
 // GetDefaultImageRegistries returns the default default image registries used for
@@ -201,6 +245,6 @@ func GetDefaultImageRegistries(version string) (*RegistryList, error) {
 }
 
 // GetFullyQualifiedImageName returns the fully qualified URI to an image (including tag)
-func (i *Config) GetFullyQualifiedImageName() string {
+func (i Config) GetFullyQualifiedImageName() string {
 	return fmt.Sprintf("%s/%s:%s", i.registry, i.name, i.tag)
 }

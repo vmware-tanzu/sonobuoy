@@ -46,35 +46,35 @@ func TestResolveConformanceImage(t *testing.T) {
 		{
 			name:             "Comparison is lexical",
 			requestedVersion: "foo",
-			expected:         "gcr.io/heptio-images/kube-conformance",
+			expected:         "gcr.io/heptio-images/kube-conformance:foo",
 		}, {
 			name:             "Prior to v1.14.0 uses heptio and major.minor",
 			requestedVersion: "v1.13.99",
-			expected:         "gcr.io/heptio-images/kube-conformance",
+			expected:         "gcr.io/heptio-images/kube-conformance:v1.13.99",
 		}, {
 			name:             "v1.14.0 uses heptio and major.minor",
 			requestedVersion: "v1.14.0",
-			expected:         "gcr.io/heptio-images/kube-conformance",
+			expected:         "gcr.io/heptio-images/kube-conformance:v1.14.0",
 		}, {
 			name:             "v1.14.1 and after uses upstream and major.minor.patch",
 			requestedVersion: "v1.14.1",
-			expected:         "gcr.io/google-containers/conformance",
+			expected:         "gcr.io/google-containers/conformance:v1.14.1",
 		}, {
 			name:             "v1.14.0 and after uses upstream and major.minor.patch",
 			requestedVersion: "v1.15.1",
-			expected:         "gcr.io/google-containers/conformance",
+			expected:         "gcr.io/google-containers/conformance:v1.15.1",
 		}, {
 			name:             "latest should use upstream image",
 			requestedVersion: "latest",
-			expected:         "gcr.io/google-containers/conformance",
+			expected:         "gcr.io/google-containers/conformance:latest",
 		}, {
 			name:             "explicit version before v1.14.0 should use heptio image and given version",
 			requestedVersion: "v1.12+.0.alpha+",
-			expected:         "gcr.io/heptio-images/kube-conformance",
+			expected:         "gcr.io/heptio-images/kube-conformance:v1.12+.0.alpha+",
 		}, {
 			name:             "explicit version after v1.14.0 should use upstream and use given version",
 			requestedVersion: "v1.14.1",
-			expected:         "gcr.io/google-containers/conformance",
+			expected:         "gcr.io/google-containers/conformance:v1.14.1",
 		},
 	}
 

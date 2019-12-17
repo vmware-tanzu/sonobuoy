@@ -145,9 +145,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 			return nil, err
 		}
 
-		image = fmt.Sprintf("%v:%v",
-			resolveConformanceImage(imageVersion),
-			imageVersion)
+		image = resolveConformanceImage(imageVersion)
 	}
 
 	return &client.GenConfig{
@@ -175,14 +173,17 @@ func resolveConformanceImage(imageVersion string) string {
 	// required as we phase in the use of the upstream k8s kube-conformance
 	// image instead of our own heptio/kube-conformance one. They started
 	// publishing it for v1.14.1. (https://github.com/kubernetes/kubernetes/pull/76101)
+	var imageURL string
 	switch {
 	case imageVersion == imagepkg.ConformanceImageVersionLatest:
-		return config.UpstreamKubeConformanceImageURL
+		imageURL = config.UpstreamKubeConformanceImageURL
 	case imageVersion < "v1.14.1":
-		return config.DefaultKubeConformanceImageURL
+		imageURL = config.DefaultKubeConformanceImageURL
 	default:
-		return config.UpstreamKubeConformanceImageURL
+		imageURL = config.UpstreamKubeConformanceImageURL
 	}
+	return fmt.Sprintf("%v:%v", imageURL, imageVersion)
+
 }
 
 func NewCmdGen() *cobra.Command {

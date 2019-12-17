@@ -77,11 +77,22 @@ func (l FakeDockerClient) Save(images []string, filename string) error {
 }
 
 func TestPushImages(t *testing.T) {
-	var privateImgs = []string{"test1/private.io/sonobuoy:x.y"}
+	imageTagPairs := []TagPair{
+		{
+			Src: imgs[0],
+			Dst: "test1/private.io/sonobuoy:x.y",
+		},
+	}
+	imageTagPairSame := []TagPair{
+		{
+			Src: imgs[0],
+			Dst: imgs[0],
+		},
+	}
 
 	tests := map[string]struct {
 		client         docker.Docker
-		privateImgs    []string
+		imageTagPairs  []TagPair
 		wantErrorCount int
 	}{
 		"simple": {
@@ -89,7 +100,7 @@ func TestPushImages(t *testing.T) {
 				pushFails: false,
 				tagFails:  false,
 			},
-			privateImgs:    privateImgs,
+			imageTagPairs:  imageTagPairs,
 			wantErrorCount: 0,
 		},
 		"tag fails": {
@@ -97,7 +108,7 @@ func TestPushImages(t *testing.T) {
 				pushFails: false,
 				tagFails:  true,
 			},
-			privateImgs:    privateImgs,
+			imageTagPairs:  imageTagPairs,
 			wantErrorCount: 1,
 		},
 		"push fails": {
@@ -105,7 +116,7 @@ func TestPushImages(t *testing.T) {
 				pushFails: true,
 				tagFails:  true,
 			},
-			privateImgs:    privateImgs,
+			imageTagPairs:  imageTagPairs,
 			wantErrorCount: 2,
 		},
 		"source images equal destination images": {
@@ -113,7 +124,7 @@ func TestPushImages(t *testing.T) {
 				pushFails: true,
 				tagFails:  true,
 			},
-			privateImgs:    imgs,
+			imageTagPairs:  imageTagPairSame,
 			wantErrorCount: 0,
 		},
 	}
@@ -121,11 +132,11 @@ func TestPushImages(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 
-			imgClient := ImageClient{
+			imgClient := DockerClient{
 				dockerClient: tc.client,
 			}
 
-			got := imgClient.PushImages(imgs, tc.privateImgs, 0)
+			got := imgClient.PushImages(tc.imageTagPairs, 0)
 
 			if len(got) != tc.wantErrorCount {
 				t.Fatalf("Expected errors: %d but got %d", tc.wantErrorCount, len(got))
@@ -166,7 +177,7 @@ func TestPullImages(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 
-			imgClient := ImageClient{
+			imgClient := DockerClient{
 				dockerClient: tc.client,
 			}
 
@@ -206,7 +217,7 @@ func TestDownloadImages(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 
-			imgClient := ImageClient{
+			imgClient := DockerClient{
 				dockerClient: tc.client,
 			}
 
@@ -244,7 +255,7 @@ func TestDeleteImages(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 
-			imgClient := ImageClient{
+			imgClient := DockerClient{
 				dockerClient: tc.client,
 			}
 

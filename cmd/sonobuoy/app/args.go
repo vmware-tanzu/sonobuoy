@@ -40,6 +40,7 @@ const (
 	pluginFlag          = "plugin"
 	timeoutFlag         = "timeout"
 	waitOutputFlag      = "wait-output"
+	customRegistryFlag  = "custom-registry"
 	kubeconfig          = "kubeconfig"
 	context             = "context"
 )
@@ -124,17 +125,19 @@ func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	flags.StringVar(&cfg.Context, "context", "", "Context in the kubeconfig to use.")
 }
 
-// AddPluginFlag describes which plugin's images to interact with
-func AddPluginFlag(cfg *string, flags *pflag.FlagSet) {
-	// The default is 'e2e' since it's the only plugin enabled at the moment
-	flags.StringVarP(cfg, pluginFlag, "p", "e2e", "Describe which plugin's images to interact (Valid plugins are 'e2e').")
-}
-
 // AddE2ERegistryConfigFlag adds a e2eRegistryConfigFlag flag to the provided command.
 func AddE2ERegistryConfigFlag(cfg *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		cfg, e2eRegistryConfigFlag, "",
-		"Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.",
+		"Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images. Required when pushing images for the e2e plugin.",
+	)
+}
+
+// AddCustomRepoFlag adds a custom registry flag to the provided command.
+func AddCustomRegistryFlag(cfg *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		cfg, customRegistryFlag, "",
+		"Specify a registry to override the Sonobuoy and Plugin image registries.",
 	)
 }
 
@@ -350,11 +353,24 @@ func AddPluginEnvFlag(p *PluginEnvVars, flags *pflag.FlagSet) {
 	flags.Var(p, "plugin-env", "Set env vars on plugins. Values can be given multiple times and are in the form plugin.env=value")
 }
 
+// AddPluginListFlag adds the flag to keep track of which built-in plugins to use.
+func AddPluginListFlag(p *[]string, flags *pflag.FlagSet) {
+	flags.StringSliceVarP(p, "plugin", "p", []string{"e2e", "systemd-logs"}, "Describe which plugin's images to interact with (Valid plugins are 'e2e', 'systemd-logs').")
+}
+
 // AddShortFlag adds a boolean flag to just print the Sonobuoy version and
 // nothing else. Useful in scripts.
 func AddShortFlag(flag *bool, flags *pflag.FlagSet) {
 	flags.BoolVar(
 		flag, "short", false,
 		"If true, prints just the sonobuoy version",
+	)
+}
+
+// AddDryRunFlag adds a boolean flag to perform a dry-run of image operations.
+func AddDryRunFlag(flag *bool, flags *pflag.FlagSet) {
+	flags.BoolVar(
+		flag, "dry-run", false,
+		"If true, only print the image operations that would be performed.",
 	)
 }
