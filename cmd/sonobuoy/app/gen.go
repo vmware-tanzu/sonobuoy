@@ -43,6 +43,7 @@ type genFlags struct {
 	dnsPodLabels                []string
 	sonobuoyImage               string
 	kubeConformanceImage        string
+	systemdLogsImage            string
 	sshKeyPath                  string
 	sshUser                     string
 	kubeConformanceImageVersion imagepkg.ConformanceImageVersion
@@ -88,6 +89,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddDNSPodLabelsFlag(&cfg.dnsPodLabels, genset)
 	AddSonobuoyImage(&cfg.sonobuoyImage, genset)
 	AddKubeConformanceImage(&cfg.kubeConformanceImage, genset)
+	AddSystemdLogsImage(&cfg.systemdLogsImage, genset)
 	AddKubeConformanceImageVersion(&cfg.kubeConformanceImageVersion, genset)
 	AddSSHKeyPathFlag(&cfg.sshKeyPath, genset)
 	AddSSHUserFlag(&cfg.sshUser, genset)
@@ -153,6 +155,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		Config:               g.resolveConfig(),
 		EnableRBAC:           rbacEnabled,
 		KubeConformanceImage: image,
+		SystemdLogsImage:     g.systemdLogsImage,
 		ImagePullPolicy:      g.imagePullPolicy.String(),
 		SSHKeyPath:           g.sshKeyPath,
 		SSHUser:              g.sshUser,

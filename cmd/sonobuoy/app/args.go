@@ -98,6 +98,14 @@ func AddKubeConformanceImage(image *string, flags *pflag.FlagSet) {
 	)
 }
 
+// AddSystemdLogsImage initialises the systemd-logs-image flag.
+func AddSystemdLogsImage(image *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		image, "systemd-logs-flag", config.DefaultSystemdLogsImage,
+		"Container image override for the systemd-logs plugin image.",
+	)
+}
+
 // AddKubeConformanceImageVersion initialises an image version flag.
 func AddKubeConformanceImageVersion(imageVersion *image.ConformanceImageVersion, flags *pflag.FlagSet) {
 	help := "Use default Conformance image, but override the version. "

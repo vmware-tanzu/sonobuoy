@@ -385,6 +385,14 @@ func TestGenerateManifestGolden(t *testing.T) {
 				},
 			},
 			goldenFile: filepath.Join("testdata", "e2e-progress-vs-user-defined.golden"),
+		}, {
+			name: "Custom systemd-logs image is used if specified",
+			inputcm: &client.GenConfig{
+				E2EConfig:        &client.E2EConfig{},
+				DynamicPlugins:   []string{"systemd-logs"},
+				SystemdLogsImage: "custom-systemd-logs:v1.0.0",
+			},
+			goldenFile: filepath.Join("testdata", "custom-systemd-logs-image.golden"),
 		},
 	}
 
