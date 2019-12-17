@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: sonobuoy
+  name: 
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -11,18 +11,18 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-serviceaccount
-  namespace: sonobuoy
+  namespace: 
 ---
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"DEFAULT","UUID":"","Version":"static-version-for-testing","ResultsDir":"/tmp/sonobuoy","Resources":["apiservices","certificatesigningrequests","clusterrolebindings","clusterroles","componentstatuses","configmaps","controllerrevisions","cronjobs","customresourcedefinitions","daemonsets","deployments","endpoints","ingresses","jobs","leases","limitranges","mutatingwebhookconfigurations","namespaces","networkpolicies","nodes","persistentvolumeclaims","persistentvolumes","poddisruptionbudgets","pods","podlogs","podsecuritypolicies","podtemplates","priorityclasses","replicasets","replicationcontrollers","resourcequotas","rolebindings","roles","servergroups","serverversion","serviceaccounts","services","statefulsets","storageclasses","validatingwebhookconfigurations","volumeattachments"],"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null,"LimitSize":"","LimitTime":""}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":10800},"Plugins":[{"name":"systemd-logs"}],"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:static-version-for-testing","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","ProgressUpdatesPort":"8099"}
+    {"Description":"","UUID":"","Version":"","ResultsDir":"","Resources":null,"Filters":{"Namespaces":"","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"","SonobuoyNamespace":null,"FieldSelectors":null,"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null,"LimitSize":"","LimitTime":""}},"Server":{"bindaddress":"","bindport":0,"advertiseaddress":"","timeoutseconds":0},"Plugins":null,"PluginSearchPath":null,"Namespace":"","WorkerImage":"","ImagePullPolicy":"","ImagePullSecrets":""}
 kind: ConfigMap
 metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-config-cm
-  namespace: sonobuoy
+  namespace: 
 ---
 apiVersion: v1
 data:
@@ -46,6 +46,7 @@ data:
         valueFrom:
           fieldRef:
             fieldPath: spec.nodeName
+      image: custom-systemd-logs:v1.0.0
       name: systemd-logs
       resources: {}
       securityContext:
@@ -60,7 +61,7 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-plugins-cm
-  namespace: sonobuoy
+  namespace: 
 ---
 apiVersion: v1
 kind: Pod
@@ -70,7 +71,7 @@ metadata:
     run: sonobuoy-master
     tier: analysis
   name: sonobuoy
-  namespace: sonobuoy
+  namespace: 
 spec:
   containers:
   - command:
@@ -82,8 +83,8 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: sonobuoy/sonobuoy:static-version-for-testing
-    imagePullPolicy: IfNotPresent
+    image: 
+    imagePullPolicy: 
     name: kube-sonobuoy
     volumeMounts:
     - mountPath: /etc/sonobuoy
@@ -114,7 +115,7 @@ metadata:
     component: sonobuoy
     run: sonobuoy-master
   name: sonobuoy-master
-  namespace: sonobuoy
+  namespace: 
 spec:
   ports:
   - port: 8080

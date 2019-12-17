@@ -62,6 +62,7 @@ type GenConfig struct {
 	EnableRBAC           bool
 	ImagePullPolicy      string
 	KubeConformanceImage string
+	SystemdLogsImage     string
 	SSHKeyPath           string
 	SSHUser              string
 
