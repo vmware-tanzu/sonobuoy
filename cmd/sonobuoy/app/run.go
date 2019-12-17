@@ -17,6 +17,7 @@ limitations under the License.
 package app
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -36,7 +37,11 @@ type runFlags struct {
 	genFile       string
 }
 
-var runflags runFlags
+var (
+	runflags runFlags
+
+	allowedGenFlagsWithRunFile = []string{kubeconfig, context}
+)
 
 func RunFlagSet(cfg *runFlags) *pflag.FlagSet {
 	runset := pflag.NewFlagSet("run", pflag.ExitOnError)
@@ -60,6 +65,10 @@ func (r *runFlags) Config() (*client.RunConfig, error) {
 		GenFile:    r.genFile,
 	}
 
+	if r.genFile != "" && givenAnyGenConfigFlags(&(r.genFlags), allowedGenFlagsWithRunFile) {
+		return nil, fmt.Errorf("setting the --file flag is incompatible with any other options")
+	}
+
 	if r.genFile == "" {
 		gencfg, err := r.genFlags.Config()
 		if err != nil {
@@ -69,6 +78,19 @@ func (r *runFlags) Config() (*client.RunConfig, error) {
 	}
 
 	return runcfg, nil
+}
+
+func givenAnyGenConfigFlags(gf *genFlags, whitelistFlagNames []string) bool {
+	changed := false
+	gf.genflags.Visit(func(f *pflag.Flag) {
+		if changed {
+			return
+		}
+		if f.Changed && !stringInList(whitelistFlagNames, f.Name) {
+			changed = true
+		}
+	})
+	return changed
 }
 
 func NewCmdRun() *cobra.Command {
@@ -115,4 +137,13 @@ func submitSonobuoyRun(cmd *cobra.Command, args []string) {
 		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
 		os.Exit(1)
 	}
+}
+
+func stringInList(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
