@@ -59,11 +59,11 @@ type RegistryList struct {
 	Images     map[int]Config   `yaml:"-"`
 }
 
-// Config holds an images registry, name, and version
+// Config holds an image's fully qualified name components registry, name, and tag
 type Config struct {
 	registry string
 	name     string
-	version  string
+	tag      string
 }
 
 // NewRegistryList returns a default registry or one that matches a config file passed
@@ -89,12 +89,12 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 
 		fileContent, err := ioutil.ReadFile(repoConfig)
 		if err != nil {
-			panic(fmt.Errorf("Error reading '%v' file contents: %v", repoConfig, err))
+			return nil, fmt.Errorf("Error reading '%v' file contents: %v", repoConfig, err)
 		}
 
 		err = yaml.Unmarshal(fileContent, &registry)
 		if err != nil {
-			panic(fmt.Errorf("Error unmarshalling '%v' YAML file: %v", repoConfig, err))
+			return nil, fmt.Errorf("Error unmarshalling '%v' YAML file: %v", repoConfig, err)
 		}
 	}
 
@@ -109,24 +109,33 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 	return registry, nil
 }
 
-// GetImageConfigs returns the map of imageConfigs
-func (r *RegistryList) GetImageConfigs() (map[string]Config, error) {
+// GetImageNames returns the map of image Config
+func (r *RegistryList) GetImageNames() ([]string, error) {
+	imgConfigs := map[string]Config{}
 	switch r.K8sVersion.Segments()[0] {
 	case 1:
 		switch r.K8sVersion.Segments()[1] {
 		case 13:
-			return r.v1_13(), nil
+			imgConfigs = r.v1_13()
 		case 14:
-			return r.v1_14(), nil
+			imgConfigs = r.v1_14()
 		case 15:
-			return r.v1_15(), nil
+			imgConfigs = r.v1_15()
 		case 16:
-			return r.v1_16(), nil
+			imgConfigs = r.v1_16()
 		case 17:
-			return r.v1_17(), nil
+			imgConfigs = r.v1_17()
+		default:
+			return []string{}, fmt.Errorf("No matching configuration for k8s version: %v", r.K8sVersion)
 		}
 	}
-	return map[string]Config{}, fmt.Errorf("No matching configuration for k8s version: %v", r.K8sVersion)
+
+	imageNames := []string{}
+	for _, imageConfig := range imgConfigs {
+		imageNames = append(imageNames, imageConfig.GetFullyQualifiedImageName())
+
+	}
+	return imageNames, nil
 }
 
 // GetDefaultImageRegistries returns the default default image registries used for
@@ -191,7 +200,7 @@ func GetDefaultImageRegistries(version string) (*RegistryList, error) {
 	return nil, fmt.Errorf("No matching configuration for k8s version: %v", v)
 }
 
-// GetE2EImage returns the fully qualified URI to an image (including version)
-func (i *Config) GetE2EImage() string {
-	return fmt.Sprintf("%s/%s:%s", i.registry, i.name, i.version)
+// GetFullyQualifiedImageName returns the fully qualified URI to an image (including tag)
+func (i *Config) GetFullyQualifiedImageName() string {
+	return fmt.Sprintf("%s/%s:%s", i.registry, i.name, i.tag)
 }
