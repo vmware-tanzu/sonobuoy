@@ -108,7 +108,7 @@ func (s *Status) updateStatus() error {
 // is returned.
 func GetStatus(client kubernetes.Interface, namespace string) (*Status, error) {
 	if _, err := client.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{}); err != nil {
-		return nil, errors.Wrap(err, "sonobuoy namespace does not exist")
+		return nil, errors.Wrapf(err, "failed to get namespace %v", namespace)
 	}
 
 	// Determine sonobuoy pod name
