@@ -31,11 +31,12 @@ import (
 )
 
 const (
-	clusterRoleFieldName  = "component"
-	clusterRoleFieldValue = "sonobuoy"
-	spinnerMode           = "Spinner"
-	e2eNamespacePrefix    = "e2e-"
-	pollFreq              = 5 * time.Second
+	clusterRoleFieldName      = "component"
+	clusterRoleFieldNamespace = "namespace"
+	clusterRoleFieldValue     = "sonobuoy"
+	spinnerMode               = "Spinner"
+	e2eNamespacePrefix        = "e2e-"
+	pollFreq                  = 5 * time.Second
 )
 
 // Delete removes all the resources that Sonobuoy had created including
@@ -63,7 +64,7 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 	conditions = append(conditions, nsCondition)
 
 	if cfg.EnableRBAC {
-		rbacCondition, err := deleteRBAC(client)
+		rbacCondition, err := deleteRBAC(client, cfg)
 		if err != nil {
 			return err
 		}
@@ -127,13 +128,20 @@ func cleanupNamespace(namespace string, client kubernetes.Interface) (wait.Condi
 	return nsDeletedCondition, nil
 }
 
-func deleteRBAC(client kubernetes.Interface) (wait.ConditionFunc, error) {
+func deleteRBAC(client kubernetes.Interface, cfg *DeleteConfig) (wait.ConditionFunc, error) {
 	// ClusterRole and ClusterRoleBindings aren't namespaced, so delete them seperately
 	selector := metav1.AddLabelToSelector(
 		&metav1.LabelSelector{},
 		clusterRoleFieldName,
 		clusterRoleFieldValue,
 	)
+	if cfg != nil {
+		selector = metav1.AddLabelToSelector(
+			selector,
+			clusterRoleFieldNamespace,
+			cfg.Namespace,
+		)
+	}
 
 	deleteOpts := &metav1.DeleteOptions{}
 	listOpts := metav1.ListOptions{
