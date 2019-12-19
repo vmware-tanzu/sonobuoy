@@ -76,3 +76,49 @@ func TestGetDefaultImageRegistryVersionValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestFullQualifiedImageName(t *testing.T) {
+	img := Config{
+		registry: "docker.io/sonobuoy",
+		name:     "testimage",
+		tag:      "latest",
+	}
+	expected := "docker.io/sonobuoy/testimage:latest"
+	actual := img.GetFullyQualifiedImageName()
+	if actual != expected {
+		t.Errorf("expected image name to be %q, got %q", expected, actual)
+	}
+}
+
+func TestGetImageNames(t *testing.T) {
+	registry, err := NewRegistryList("", "v1.17.0")
+	if err != nil {
+		t.Fatalf("unexpected error from NewRegistryList %q", err)
+	}
+
+	imageNames, err := registry.GetImageNames()
+	if err != nil {
+		t.Fatalf("unexpected error from GetImageNames %q", err)
+	}
+
+	expectedRegistry := registry.v1_17()
+	if len(imageNames) != len(expectedRegistry) {
+		t.Fatalf("Unexpected number of images returned, expected %v, got %v", len(expectedRegistry), len(imageNames))
+	}
+
+	// Check one of the returned image names to ensure correct format
+	registryImage := expectedRegistry["Agnhost"]
+	registryImageName := registryImage.GetFullyQualifiedImageName()
+	if !contains(imageNames, registryImageName) {
+		t.Errorf("Expected result of GetImageNames to contain registry image %q", registryImageName)
+	}
+}
+
+func contains(set []string, val string) bool {
+	for _, v := range set {
+		if v == val {
+			return true
+		}
+	}
+	return false
+}

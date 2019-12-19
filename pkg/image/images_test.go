@@ -19,17 +19,11 @@ package image
 import (
 	"testing"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/image/docker"
 	"github.com/pkg/errors"
+	"github.com/vmware-tanzu/sonobuoy/pkg/image/docker"
 )
 
-var imgs = map[string]Config{
-	"test": Config{
-		name:     "test1",
-		registry: "foo.io/sonobuoy",
-		version:  "x.y",
-	},
-}
+var imgs = []string{"test1/foo.io/sonobuoy:x.y"}
 
 type FakeDockerClient struct {
 	imageExists bool
@@ -83,17 +77,11 @@ func (l FakeDockerClient) Save(images []string, filename string) error {
 }
 
 func TestPushImages(t *testing.T) {
-	var privateImgs = map[string]Config{
-		"test": Config{
-			name:     "test1",
-			registry: "private.io/sonobuoy",
-			version:  "x.y",
-		},
-	}
+	var privateImgs = []string{"test1/private.io/sonobuoy:x.y"}
 
 	tests := map[string]struct {
 		client         docker.Docker
-		privateImgs    map[string]Config
+		privateImgs    []string
 		wantErrorCount int
 	}{
 		"simple": {
