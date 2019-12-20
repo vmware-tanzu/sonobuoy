@@ -53,7 +53,6 @@ data:
         valueFrom:
           fieldRef:
             fieldPath: spec.nodeName
-      image: gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest
       name: systemd-logs
       resources: {}
       securityContext:

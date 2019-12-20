@@ -22,11 +22,10 @@ import (
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/vmware-tanzu/sonobuoy/pkg/image"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
-
-var imagesflags imagesFlags
 
 // Number times to retry docker commands before giving up
 const (
@@ -41,291 +40,249 @@ type imagesFlags struct {
 }
 
 func NewCmdImages() *cobra.Command {
+	var flags imagesFlags
 	// Main command
 	cmd := &cobra.Command{
 		Use:   "images",
 		Short: "Manage images used in a plugin. Supported plugins are: 'e2e'",
-		Run:   listImages,
-		Args:  cobra.ExactArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := listImages(flags.plugin, flags.kubeconfig); err != nil {
+				errlog.LogError(err)
+				os.Exit(1)
+			}
+		},
+		Args: cobra.ExactArgs(0),
 	}
 
-	AddKubeconfigFlag(&imagesflags.kubeconfig, cmd.Flags())
-	AddPluginFlag(&imagesflags.plugin, cmd.Flags())
+	AddKubeconfigFlag(&flags.kubeconfig, cmd.Flags())
+	AddPluginFlag(&flags.plugin, cmd.Flags())
 
-	// Pull command
-	pullCmd := &cobra.Command{
-		Use:   "pull",
-		Short: "Pulls images to local docker client for a specific plugin",
-		Run:   pullImages,
-		Args:  cobra.ExactArgs(0),
-	}
-	AddE2ERegistryConfigFlag(&imagesflags.e2eRegistryConfig, pullCmd.Flags())
-	AddKubeconfigFlag(&imagesflags.kubeconfig, pullCmd.Flags())
-	AddPluginFlag(&imagesflags.plugin, pullCmd.Flags())
-
-	// Download command
-	downloadCmd := &cobra.Command{
-		Use:   "download",
-		Short: "Saves downloaded images from local docker client to a tar file",
-		Run:   downloadImages,
-		Args:  cobra.ExactArgs(0),
-	}
-	AddKubeconfigFlag(&imagesflags.kubeconfig, downloadCmd.Flags())
-	AddPluginFlag(&imagesflags.plugin, downloadCmd.Flags())
-
-	// Push command
-	pushCmd := &cobra.Command{
-		Use:   "push",
-		Short: "Pushes images to docker registry for a specific plugin",
-		Run:   pushImages,
-		Args:  cobra.ExactArgs(0),
-	}
-	AddE2ERegistryConfigFlag(&imagesflags.e2eRegistryConfig, pushCmd.Flags())
-	AddKubeconfigFlag(&imagesflags.kubeconfig, pushCmd.Flags())
-	AddPluginFlag(&imagesflags.plugin, pushCmd.Flags())
-	pushCmd.MarkFlagRequired(e2eRegistryConfigFlag)
-
-	// Delete command
-	deleteCmd := &cobra.Command{
-		Use:   "delete",
-		Short: "Deletes all images downloaded to local docker client",
-		Run:   deleteImages,
-		Args:  cobra.ExactArgs(0),
-	}
-	AddE2ERegistryConfigFlag(&imagesflags.e2eRegistryConfig, deleteCmd.Flags())
-	AddKubeconfigFlag(&imagesflags.kubeconfig, deleteCmd.Flags())
-	AddPluginFlag(&imagesflags.plugin, deleteCmd.Flags())
-
-	cmd.AddCommand(pullCmd)
-	cmd.AddCommand(pushCmd)
-	cmd.AddCommand(downloadCmd)
-	cmd.AddCommand(deleteCmd)
+	cmd.AddCommand(pullCmd())
+	cmd.AddCommand(pushCmd())
+	cmd.AddCommand(downloadCmd())
+	cmd.AddCommand(deleteCmd())
 
 	return cmd
 }
 
-func listImages(cmd *cobra.Command, args []string) {
-
-	switch imagesflags.plugin {
-	case "e2e":
-
-		if len(imagesflags.e2eRegistryConfig) > 0 {
-			// Check if the e2e file exists
-			if _, err := os.Stat(imagesflags.e2eRegistryConfig); err != nil {
-				errlog.LogError(errors.Errorf("file does not exist or cannot be opened: %v", imagesflags.e2eRegistryConfig))
+func pullCmd() *cobra.Command {
+	var flags imagesFlags
+	pullCmd := &cobra.Command{
+		Use:   "pull",
+		Short: "Pulls images to local docker client for a specific plugin",
+		Run: func(cmd *cobra.Command, args []string) {
+			if errs := pullImages(flags.plugin, flags.kubeconfig, flags.e2eRegistryConfig); len(errs) > 0 {
+				for _, err := range errs {
+					errlog.LogError(err)
+				}
 				os.Exit(1)
 			}
-		}
-
-		sbc, err := getSonobuoyClientFromKubecfg(imagesflags.kubeconfig)
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
-			os.Exit(1)
-		}
-
-		version, err := sbc.Version()
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get Sonobuoy client"))
-			os.Exit(1)
-		}
-
-		// Get list of images that match the version
-		registry, err := image.NewRegistryList("", version)
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't init Registry List"))
-			os.Exit(1)
-		}
-
-		images, err := registry.GetImageConfigs()
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get images for version"))
-			os.Exit(1)
-		}
-
-		for _, v := range images {
-			fmt.Println(v.GetE2EImage())
-		}
-	default:
-		errlog.LogError(errors.Errorf("Unsupported plugin: %v", imagesflags.plugin))
-		os.Exit(1)
+		},
+		Args: cobra.ExactArgs(0),
 	}
+	AddE2ERegistryConfigFlag(&flags.e2eRegistryConfig, pullCmd.Flags())
+	AddKubeconfigFlag(&flags.kubeconfig, pullCmd.Flags())
+	AddPluginFlag(&flags.plugin, pullCmd.Flags())
+
+	return pullCmd
 }
 
-func pullImages(cmd *cobra.Command, args []string) {
-	switch imagesflags.plugin {
+func pushCmd() *cobra.Command {
+	var flags imagesFlags
+	pushCmd := &cobra.Command{
+		Use:   "push",
+		Short: "Pushes images to docker registry for a specific plugin",
+		Run: func(cmd *cobra.Command, args []string) {
+			if errs := pushImages(flags.plugin, flags.kubeconfig, flags.e2eRegistryConfig); len(errs) > 0 {
+				for _, err := range errs {
+					errlog.LogError(err)
+				}
+				os.Exit(1)
+			}
+		},
+		Args: cobra.ExactArgs(0),
+	}
+	AddE2ERegistryConfigFlag(&flags.e2eRegistryConfig, pushCmd.Flags())
+	AddKubeconfigFlag(&flags.kubeconfig, pushCmd.Flags())
+	AddPluginFlag(&flags.plugin, pushCmd.Flags())
+	// TODO(bridget): This won't be required when dealing with other plugins
+	pushCmd.MarkFlagRequired(e2eRegistryConfigFlag)
+
+	return pushCmd
+}
+
+func downloadCmd() *cobra.Command {
+	var flags imagesFlags
+	downloadCmd := &cobra.Command{
+		Use:   "download",
+		Short: "Saves downloaded images from local docker client to a tar file",
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := downloadImages(flags.plugin, flags.kubeconfig, flags.e2eRegistryConfig); err != nil {
+				errlog.LogError(err)
+				os.Exit(1)
+			}
+		},
+		Args: cobra.ExactArgs(0),
+	}
+	AddE2ERegistryConfigFlag(&flags.e2eRegistryConfig, downloadCmd.Flags())
+	AddKubeconfigFlag(&flags.kubeconfig, downloadCmd.Flags())
+	AddPluginFlag(&flags.plugin, downloadCmd.Flags())
+	return downloadCmd
+}
+
+func deleteCmd() *cobra.Command {
+	var flags imagesFlags
+	deleteCmd := &cobra.Command{
+		Use:   "delete",
+		Short: "Deletes all images downloaded to local docker client",
+		Run: func(cmd *cobra.Command, args []string) {
+			if errs := deleteImages(flags.plugin, flags.kubeconfig, flags.e2eRegistryConfig); len(errs) > 0 {
+				for _, err := range errs {
+					errlog.LogError(err)
+				}
+				os.Exit(1)
+			}
+		},
+		Args: cobra.ExactArgs(0),
+	}
+	AddE2ERegistryConfigFlag(&flags.e2eRegistryConfig, deleteCmd.Flags())
+	AddKubeconfigFlag(&flags.kubeconfig, deleteCmd.Flags())
+	AddPluginFlag(&flags.plugin, deleteCmd.Flags())
+	return deleteCmd
+}
+
+func getClusterVersion(kubeconfig Kubeconfig) (string, error) {
+	sbc, err := getSonobuoyClientFromKubecfg(kubeconfig)
+	if err != nil {
+		return "", errors.Wrap(err, "couldn't create sonobuoy client")
+	}
+
+	version, err := sbc.Version()
+	if err != nil {
+		return "", errors.Wrap(err, "couldn't get Sonobuoy client")
+	}
+
+	return version, nil
+}
+
+func listImages(plugin string, kubeconfig Kubeconfig) error {
+	switch plugin {
 	case "e2e":
-
-		sbc, err := getSonobuoyClientFromKubecfg(imagesflags.kubeconfig)
+		version, err := getClusterVersion(kubeconfig)
 		if err != nil {
-			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
-			os.Exit(1)
+			return errors.Wrap(err, "failed to get cluster version")
 		}
 
-		version, err := sbc.Version()
+		defaultImages, err := image.GetE2EImages(defaultE2ERegistries, version)
 		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get Sonobuoy client"))
-			os.Exit(1)
+			return errors.Wrap(err, "couldn't get images")
 		}
 
-		upstreamImages, err := image.GetImages(imagesflags.e2eRegistryConfig, version)
+		for _, image := range defaultImages {
+			fmt.Println(image)
+		}
+	default:
+		return errors.Errorf("Unsupported plugin: %v", plugin)
+	}
+
+	return nil
+}
+
+func pullImages(plugin string, kubeconfig Kubeconfig, e2eRegistryConfig string) []error {
+	switch plugin {
+	case "e2e":
+		version, err := getClusterVersion(kubeconfig)
 		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't init upstream registry list"))
-			os.Exit(1)
+			return []error{errors.Wrap(err, "failed to get cluster version")}
 		}
 
-		// Init client
+		images, err := image.GetE2EImages(e2eRegistryConfig, version)
+		if err != nil {
+			return []error{errors.Wrap(err, "couldn't get images")}
+		}
+
 		imageClient := image.NewImageClient()
 
-		// Pull all images
-		errs := imageClient.PullImages(upstreamImages, numDockerRetries)
-		for _, err := range errs {
-			errlog.LogError(err)
-		}
-
-		if len(errs) > 0 {
-			os.Exit(1)
-		}
-
+		return imageClient.PullImages(images, numDockerRetries)
 	default:
-		errlog.LogError(errors.Errorf("Unsupported plugin: %v", imagesflags.plugin))
-		os.Exit(1)
+		return []error{errors.Errorf("Unsupported plugin: %v", plugin)}
 	}
+
 }
 
-func downloadImages(cmd *cobra.Command, args []string) {
-	switch imagesflags.plugin {
+func downloadImages(plugin string, kubeconfig Kubeconfig, e2eRegistryConfig string) error {
+	switch plugin {
 	case "e2e":
-
-		sbc, err := getSonobuoyClientFromKubecfg(imagesflags.kubeconfig)
+		version, err := getClusterVersion(kubeconfig)
 		if err != nil {
-			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
-			os.Exit(1)
+			return errors.Wrap(err, "failed to get cluster version")
 		}
 
-		version, err := sbc.Version()
+		images, err := image.GetE2EImages(e2eRegistryConfig, version)
 		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get Sonobuoy client"))
-			os.Exit(1)
+			return errors.Wrap(err, "couldn't get images")
 		}
 
-		upstreamImages, err := image.GetImages(defaultE2ERegistries, version)
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't init upstream registry list"))
-			os.Exit(1)
-		}
-
-		images := []string{}
-		for _, v := range upstreamImages {
-			images = append(images, v.GetE2EImage())
-		}
-
-		// Init client
 		imageClient := image.NewImageClient()
 
 		fileName, err := imageClient.DownloadImages(images, version)
 		if err != nil {
-			errlog.LogError(err)
-			os.Exit(1)
+			return err
 		}
 
 		fmt.Println(fileName)
 
 	default:
-		errlog.LogError(errors.Errorf("Unsupported plugin: %v", imagesflags.plugin))
-		os.Exit(1)
+		return errors.Errorf("Unsupported plugin: %v", plugin)
+	}
+
+	return nil
+}
+
+func pushImages(plugin string, kubeconfig Kubeconfig, e2eRegistryConfig string) []error {
+	switch plugin {
+	case "e2e":
+		version, err := getClusterVersion(kubeconfig)
+		if err != nil {
+			return []error{errors.Wrap(err, "failed to get cluster version")}
+		}
+
+		defaultImages, err := image.GetE2EImages(defaultE2ERegistries, version)
+		if err != nil {
+			return []error{errors.Wrap(err, "couldn't get images")}
+		}
+
+		privateImages, err := image.GetE2EImages(e2eRegistryConfig, version)
+		if err != nil {
+			return []error{errors.Wrap(err, "couldn't get images")}
+		}
+
+		imageClient := image.NewImageClient()
+
+		return imageClient.PushImages(defaultImages, privateImages, numDockerRetries)
+	default:
+		return []error{errors.Errorf("Unsupported plugin: %v", plugin)}
 	}
 }
 
-func pushImages(cmd *cobra.Command, args []string) {
-
-	switch imagesflags.plugin {
+func deleteImages(plugin string, kubeconfig Kubeconfig, e2eRegistryConfig string) []error {
+	switch plugin {
 	case "e2e":
-
-		if len(imagesflags.e2eRegistryConfig) > 0 {
-			// Check if the e2e file exists
-			if _, err := os.Stat(imagesflags.e2eRegistryConfig); err != nil {
-				errlog.LogError(errors.Errorf("file does not exist or cannot be opened: %v", imagesflags.e2eRegistryConfig))
-				os.Exit(1)
-			}
-		}
-
-		// Check if the e2e file exists
-		if _, err := os.Stat(imagesflags.e2eRegistryConfig); os.IsNotExist(err) {
-			errlog.LogError(errors.Errorf("file does not exist or cannot be opened: %v", imagesflags.e2eRegistryConfig))
-			os.Exit(1)
-		}
-
-		sbc, err := getSonobuoyClientFromKubecfg(imagesflags.kubeconfig)
+		version, err := getClusterVersion(kubeconfig)
 		if err != nil {
-			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
-			os.Exit(1)
+			return []error{errors.Wrap(err, "failed to get cluster version")}
 		}
 
-		version, err := sbc.Version()
+		images, err := image.GetE2EImages(e2eRegistryConfig, version)
 		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get Sonobuoy client"))
-			os.Exit(1)
+			return []error{errors.Wrap(err, "couldn't get images")}
 		}
 
-		upstreamImages, err := image.GetImages("", version)
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't init upstream registry list"))
-			os.Exit(1)
-		}
-
-		privateImages, err := image.GetImages(imagesflags.e2eRegistryConfig, version)
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't init upstream registry list"))
-			os.Exit(1)
-		}
-
-		// Init client
 		imageClient := image.NewImageClient()
 
-		// Push all images
-		errs := imageClient.PushImages(upstreamImages, privateImages, numDockerRetries)
-		for _, err := range errs {
-			errlog.LogError(err)
-		}
+		return imageClient.DeleteImages(images, numDockerRetries)
 
 	default:
-		errlog.LogError(errors.Errorf("Unsupported plugin: %v", imagesflags.plugin))
-		os.Exit(1)
-	}
-
-}
-
-func deleteImages(cmd *cobra.Command, args []string) {
-	switch imagesflags.plugin {
-	case "e2e":
-		sbc, err := getSonobuoyClientFromKubecfg(imagesflags.kubeconfig)
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
-			os.Exit(1)
-		}
-
-		version, err := sbc.Version()
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get Sonobuoy client"))
-			os.Exit(1)
-		}
-
-		images, err := image.GetImages(imagesflags.e2eRegistryConfig, version)
-		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't init registry list"))
-			os.Exit(1)
-		}
-
-		// Init client
-		imageClient := image.NewImageClient()
-
-		errs := imageClient.DeleteImages(images, numDockerRetries)
-		for _, err := range errs {
-			errlog.LogError(err)
-		}
-
-	default:
-		errlog.LogError(errors.Errorf("Unsupported plugin: %v", imagesflags.plugin))
-		os.Exit(1)
+		return []error{errors.Errorf("Unsupported plugin: %v", plugin)}
 	}
 }

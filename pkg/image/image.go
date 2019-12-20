@@ -19,8 +19,8 @@ package image
 import (
 	"fmt"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/image/docker"
 	"github.com/pkg/errors"
+	"github.com/vmware-tanzu/sonobuoy/pkg/image/docker"
 )
 
 type ImageClient struct {
@@ -33,36 +33,36 @@ func NewImageClient() ImageClient {
 	}
 }
 
-func (i ImageClient) PullImages(images map[string]Config, retries int) []error {
+func (i ImageClient) PullImages(images []string, retries int) []error {
 	errs := []error{}
-	for _, v := range images {
-		err := i.dockerClient.PullIfNotPresent(v.GetE2EImage(), retries)
+	for _, image := range images {
+		err := i.dockerClient.PullIfNotPresent(image, retries)
 		if err != nil {
-			errs = append(errs, errors.Wrapf(err, "couldn't pull image: %v", v.GetE2EImage()))
+			errs = append(errs, errors.Wrapf(err, "couldn't pull image: %v", image))
 		}
 	}
 	return errs
 }
 
-func (i ImageClient) PushImages(upstreamImages, privateImages map[string]Config, retries int) []error {
+func (i ImageClient) PushImages(upstreamImages, privateImages []string, retries int) []error {
 	errs := []error{}
-	for k, v := range upstreamImages {
+	for k, upstreamImg := range upstreamImages {
 		privateImg := privateImages[k]
 
 		// Skip if the source/dest are equal
-		if privateImg.GetE2EImage() == v.GetE2EImage() {
-			fmt.Printf("Skipping public image: %s\n", v.GetE2EImage())
+		if privateImg == upstreamImg {
+			fmt.Printf("Skipping public image: %s\n", upstreamImg)
 			continue
 		}
 
-		err := i.dockerClient.Tag(v.GetE2EImage(), privateImg.GetE2EImage(), retries)
+		err := i.dockerClient.Tag(upstreamImg, privateImg, retries)
 		if err != nil {
-			errs = append(errs, errors.Wrapf(err, "couldn't tag image: %v", v.GetE2EImage()))
+			errs = append(errs, errors.Wrapf(err, "couldn't tag image %q as %q", upstreamImg, privateImg))
 		}
 
-		err = i.dockerClient.Push(privateImg.GetE2EImage(), retries)
+		err = i.dockerClient.Push(privateImg, retries)
 		if err != nil {
-			errs = append(errs, errors.Wrapf(err, "couldn't push image: %v", v.GetE2EImage()))
+			errs = append(errs, errors.Wrapf(err, "couldn't push image: %v", privateImg))
 		}
 	}
 	return errs
@@ -79,28 +79,28 @@ func (i ImageClient) DownloadImages(images []string, version string) (string, er
 	return fileName, nil
 }
 
-func (i ImageClient) DeleteImages(images map[string]Config, retries int) []error {
+func (i ImageClient) DeleteImages(images []string, retries int) []error {
 	errs := []error{}
 
-	for _, v := range images {
-		err := i.dockerClient.Rmi(v.GetE2EImage(), retries)
+	for _, image := range images {
+		err := i.dockerClient.Rmi(image, retries)
 		if err != nil {
-			errs = append(errs, errors.Wrapf(err, "couldn't delete image: %v", v.GetE2EImage()))
+			errs = append(errs, errors.Wrapf(err, "couldn't delete image: %v", image))
 		}
 	}
 
 	return errs
 }
 
-// GetImages gets a map of image Configs
-func GetImages(e2eRegistryConfig, version string) (map[string]Config, error) {
+// GetE2EImages gets a list of E2E image names
+func GetE2EImages(e2eRegistryConfig, version string) ([]string, error) {
 	// Get list of upstream images that match the version
 	reg, err := NewRegistryList(e2eRegistryConfig, version)
 	if err != nil {
-		return nil, errors.Wrap(err, "couldn't init Registry List")
+		return nil, errors.Wrap(err, "couldn't create image registry list")
 	}
 
-	imgs, err := reg.GetImageConfigs()
+	imgs, err := reg.GetImageNames()
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't get images for version")
 	}

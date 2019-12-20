@@ -61,6 +61,9 @@ const (
 
 	// DefaultDNSNamespace is the namespace where the DNS pods for the cluster are found.
 	DefaultDNSNamespace = "kube-system"
+
+	// DefaultSystemdLogsImage is the URL for the docker image used by the systemd-logs plugin
+	DefaultSystemdLogsImage = "gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest"
 )
 
 var (
