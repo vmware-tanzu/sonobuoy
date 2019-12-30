@@ -38,11 +38,12 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     component: sonobuoy
+    namespace: {{.Namespace}}
   name: sonobuoy-serviceaccount-{{.Namespace}}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: sonobuoy-serviceaccount
+  name: sonobuoy-serviceaccount-{{.Namespace}}
 subjects:
 - kind: ServiceAccount
   name: sonobuoy-serviceaccount
@@ -53,7 +54,8 @@ kind: ClusterRole
 metadata:
   labels:
     component: sonobuoy
-  name: sonobuoy-serviceaccount
+    namespace: {{.Namespace}}
+  name: sonobuoy-serviceaccount-{{.Namespace}}
 rules:
 - apiGroups:
   - '*'
