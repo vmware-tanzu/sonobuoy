@@ -40,6 +40,8 @@ const (
 	pluginFlag          = "plugin"
 	timeoutFlag         = "timeout"
 	waitOutputFlag      = "wait-output"
+	kubeconfig          = "kubeconfig"
+	context             = "context"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
