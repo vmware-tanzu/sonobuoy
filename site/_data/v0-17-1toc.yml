@@ -1,0 +1,32 @@
+toc:
+  - title: Basics
+    subfolderitems:
+      - page: Overview
+        url: /index.html
+      - page: Checking Results
+        url: /results
+  - title: Plugins
+    subfolderitems:
+      - page: Overview
+        url: /plugins
+      - page: E2E & Conformance
+        url: /e2eplugin
+      - page: Examples
+        url: /examples
+        github: true
+  - title: Advanced
+    subfolderitems:
+      - page: Detailed result contents
+        url: /snapshot
+      - page: Configuration Options
+        url: /sonobuoy-config
+      - page: Custom Registries & Airgap Testing
+        url: /airgap
+      - page: Using Private Images
+        url: /pullsecrets
+      - page: Advanced Customization
+        url: /gen
+  - title: Resources
+    subfolderitems:
+      - page: Frequently Asked Questions
+        url: /faq
