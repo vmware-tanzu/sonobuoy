@@ -171,23 +171,40 @@ func getPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh chan
 //  If a plugin name has been provided, retrieve the pods with only the plugin label matching that plugin name. If no pods are found,
 // or no plugin has been specified, retrieve all pods within the namespace. It will return an error if unable to create the watcher
 // but will continue to add pods to the channel in a separate go routine.
-func watchPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh chan *v1.Pod) error {
+func watchPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh chan *v1.Pod, errc chan error) {
 	listOptions := metav1.ListOptions{}
 	if cfg.Plugin != "" {
 		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, "sonobuoy-plugin", cfg.Plugin)
 		listOptions = metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)}
 	}
 
-	watcher, err := client.CoreV1().Pods(cfg.Namespace).Watch(listOptions)
-	if err != nil {
-		return errors.Wrap(err, "failed to watch pods")
+	var ch <-chan watch.Event
+
+	f := func() (bool, error) {
+		watcher, err := client.CoreV1().Pods(cfg.Namespace).Watch(listOptions)
+		if err != nil {
+			errc <- errors.Wrap(err, "failed to watch pods")
+
+			return false, nil
+		}
+
+		ch = watcher.ResultChan()
+
+		return true, nil
 	}
-	ch := watcher.ResultChan()
+
+	waitWithBackoff(f)
 
 	go func() {
 		for {
 			select {
-			case v := <-ch:
+			case v, ok := <-ch:
+				if !ok {
+					waitWithBackoff(f)
+
+					continue
+				}
+
 				if v.Type == watch.Added && v.Object != nil {
 					switch t := v.Object.(type) {
 					case *v1.Pod:
@@ -198,7 +215,6 @@ func watchPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh ch
 			}
 		}
 	}()
-	return nil
 }
 
 // LogReader configures a Reader that provides an io.Reader interface to a merged stream of logs from various containers.
@@ -218,19 +234,18 @@ func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
 	podCh := make(chan *v1.Pod)
 	var wg sync.WaitGroup
 
+	errc := make(chan error)
+
 	if cfg.Follow {
 		// Extra waitGroup item ensures we just keep processing forever.
 		wg.Add(1)
-		if err := watchPodsToStreamLogs(client, cfg, podCh); err != nil {
-			return nil, errors.Wrap(err, "failed to watch for new pods")
-		}
+		watchPodsToStreamLogs(client, cfg, podCh, errc)
 	} else {
 		if err := getPodsToStreamLogs(client, cfg, podCh); err != nil {
 			return nil, errors.Wrap(err, "failed to list pods")
 		}
 	}
 
-	errc := make(chan error)
 	agg := make(chan *message)
 
 	drainPodChannelAndStartStreaming := func() {
