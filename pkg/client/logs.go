@@ -318,25 +318,41 @@ func isContainerRunning(statuses *[]v1.ContainerStatus, containerName string) bo
 	return false
 }
 
-func (l *logStreamer) waitForContainerRunning() error {
+func waitWithBackoff(f func() (bool, error)) error {
 	backoffSeconds := 1 * time.Second
 	for {
-		pod, err := l.client.CoreV1().Pods(l.ns).Get(l.pod, metav1.GetOptions{})
+		r, err := f()
 		if err != nil {
-			return fmt.Errorf("failed to get pod [%s/%s]", l.ns, l.pod)
+			return err
 		}
 
-		if isContainerRunning(&pod.Status.ContainerStatuses, l.container) {
+		if r {
 			return nil
 		}
 
-		fmt.Printf("container %v, is not running, will retry streaming logs in %v seconds\n", l.podName(), backoffSeconds)
 		time.Sleep(backoffSeconds)
 		backoffSeconds *= 2
 		if backoffSeconds > maxBackoffSeconds*time.Second {
 			backoffSeconds = maxBackoffSeconds * time.Second
 		}
 	}
+}
+
+func (l *logStreamer) waitForContainerRunning() error {
+	return waitWithBackoff(func() (bool, error) {
+		pod, err := l.client.CoreV1().Pods(l.ns).Get(l.pod, metav1.GetOptions{})
+		if err != nil {
+			return false, fmt.Errorf("failed to get pod [%s/%s]", l.ns, l.pod)
+		}
+
+		if isContainerRunning(&pod.Status.ContainerStatuses, l.container) {
+			return true, nil
+		}
+
+		fmt.Printf("container %v, is not running, will retry streaming logs...\n", l.podName())
+
+		return false, nil
+	})
 }
 
 // stream will open a connection to the pod's logs and push messages onto a fan-in channel.
