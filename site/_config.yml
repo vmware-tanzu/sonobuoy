@@ -170,6 +170,7 @@ page_gen:
 collections:
   - contributors
   - casestudies
+  - plugin-list
 
 versioning: true
 latest: v0.17.1
