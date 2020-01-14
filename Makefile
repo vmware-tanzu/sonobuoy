@@ -211,6 +211,7 @@ push: #pre
 	for arch in $(LINUX_ARCH); do \
 		$(MAKE) push_images TARGET="sonobuoy-$$arch"; \
 	done
+
 ifeq ($(PUSH_WINDOWS),true)
 	for arch in $(WIN_ARCH); do \
 		$(MAKE) push_images TARGET="sonobuoy-win-$$arch"; \

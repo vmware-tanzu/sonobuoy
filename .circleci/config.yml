@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  win: circleci/windows@2.4.0
+
 jobs:
   check_go_mod:
     docker:
@@ -35,6 +38,7 @@ jobs:
           name: Load images into docker from workspace
           command: |
             docker load -i /home/circleci/project/sonobuoyImages.tar.gz
+            docker load -i /home/circleci/project/sonobuoyWindowsImages.tar.gz
       - run: ./scripts/ci/publish.sh
 
   build_clients:
@@ -50,6 +54,7 @@ jobs:
           paths: 
             - build/linux/amd64/*
             - build/linux/arm64/*
+            - build/windows/amd64/*
 
   build_containers:
     machine:
@@ -79,6 +84,24 @@ jobs:
       - run:
           name: "Run unit and stress tests"
           command: VERBOSE=true make test stress
+
+  build_windows_containers:
+    executor: win/default
+    steps:
+      - checkout
+      - run: Write-Host 'Hello, Windows'
+      - run:
+          name: "Build Sonobuoy container image"
+          command: make windows_containers
+          shell: bash.exe
+      - run:
+          name: Save as tar files to persist to next step
+          command: |
+            docker save -o sonobuoyWindowsImages.tar.gz sonobuoy/sonobuoy
+      - persist_to_workspace:
+          root: /home/circleci/project
+          paths:
+            - sonobuoyImages.tar.gz
 
   integration_tests:
     machine:
@@ -125,6 +148,9 @@ workflows:
       - build_clients
       - unit_tests
       - build_containers:
+          requires:
+            - build_clients
+      - build_windows_containers:
           requires:
             - build_clients
       - integration_tests:
