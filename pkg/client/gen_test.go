@@ -393,6 +393,22 @@ func TestGenerateManifestGolden(t *testing.T) {
 				SystemdLogsImage: "custom-systemd-logs:v1.0.0",
 			},
 			goldenFile: filepath.Join("testdata", "custom-systemd-logs-image.golden"),
+		}, {
+			name: "Node selector can be added",
+			inputcm: &client.GenConfig{
+				E2EConfig:     &client.E2EConfig{},
+				Config:        newConfigWithoutUUID(),
+				NodeSelectors: map[string]string{"foo": "bar"},
+			},
+			goldenFile: filepath.Join("testdata", "single-node-selector.golden"),
+		}, {
+			name: "Multiple node selectors can be added",
+			inputcm: &client.GenConfig{
+				E2EConfig:     &client.E2EConfig{},
+				Config:        newConfigWithoutUUID(),
+				NodeSelectors: map[string]string{"foo": "bar", "fizz": "buzz"},
+			},
+			goldenFile: filepath.Join("testdata", "multiple-node-selector.golden"),
 		},
 	}
 

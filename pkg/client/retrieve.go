@@ -22,7 +22,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
@@ -30,16 +29,32 @@ import (
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 )
 
-var tarCommand = []string{
-	"/usr/bin/env",
-	"bash",
-	"-c",
-	fmt.Sprintf("tar cf - %s/*.tar.gz", config.AggregatorResultsPath),
-}
+const (
+	nodeOSLabelBeta = "beta.kubernetes.io/os"
+	nodeOSLabel     = "kubernetes.io/os"
+	nodeOSWindows   = "windows"
+)
+
+var (
+	linuxTarCommand = []string{
+		"/usr/bin/env",
+		"bash",
+		"-c",
+		fmt.Sprintf("tar cf - %s/*.tar.gz", config.AggregatorResultsPath),
+	}
+
+	winTarCommand = []string{
+		"powershell.exe",
+		"-Command",
+		fmt.Sprintf(`& {tar -cC %s --format pax -f - *.tar.gz}`, config.AggregatorResultsPath),
+	}
+)
 
 // RetrieveResults copies results from a sonobuoy run into a Reader in tar format.
 // It also returns a channel of errors, where any errors encountered when writing results
@@ -63,6 +78,11 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 	podName, err := pluginaggregation.GetAggregatorPodName(client, cfg.Namespace)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get the name of the aggregator pod to fetch results from")
+	}
+
+	tarCommand := linuxTarCommand
+	if isWin, _ := isPodRunningOnWindowsNode(client, cfg.Namespace, podName); isWin {
+		tarCommand = winTarCommand
 	}
 
 	restClient := client.CoreV1().RESTClient()
@@ -98,6 +118,34 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 	}(writer, ec)
 
 	return reader, ec, nil
+}
+
+func isPodRunningOnWindowsNode(client kubernetes.Interface, ns, podName string) (bool, error) {
+	pod, err := client.CoreV1().Pods(ns).Get(podName, metav1.GetOptions{})
+	if err != nil {
+		return false, errors.Wrapf(err, "unable to get pod %v in namespace %v", podName, ns)
+	}
+
+	nodeName := pod.Spec.NodeName
+	if nodeName == "" {
+		return false, nil
+	}
+
+	node, err := client.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
+	if err != nil {
+		return false, errors.Wrapf(err, "unable to get node %v", nodeName)
+	}
+
+	for k, v := range node.ObjectMeta.Labels {
+		if k == nodeOSLabel && v == nodeOSWindows {
+			return true, nil
+		}
+		if k == nodeOSLabelBeta && v == nodeOSWindows {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 /** Everything below this marker originally was copy/pasta'd from k8s/k8s. The modification are:
@@ -141,8 +189,9 @@ func UntarAll(reader io.Reader, destFile, prefix string) (filenames []string, re
 		}
 		entrySeq++
 		mode := header.FileInfo().Mode()
-		outFileName := path.Join(destFile, header.Name[len(prefix):])
+		outFileName := filepath.Join(destFile, header.Name[len(prefix):])
 		baseName := filepath.Dir(outFileName)
+
 		if err := os.MkdirAll(baseName, 0755); err != nil {
 			return filenames, err
 		}

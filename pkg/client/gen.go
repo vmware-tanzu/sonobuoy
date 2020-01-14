@@ -59,6 +59,8 @@ type templateValues struct {
 	SSHKey            string
 	SSHUser           string
 
+	NodeSelectors map[string]string
+
 	// CustomRegistries should be a multiline yaml string which represents
 	// the file contents of KUBE_TEST_REPO_LIST, the overrides for k8s e2e
 	// registries.
@@ -182,6 +184,8 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		SSHUser:           cfg.SSHUser,
 
 		Plugins: pluginYAML,
+
+		NodeSelectors: cfg.NodeSelectors,
 
 		// Often created from reading a file, this value could have trailing newline.
 		CustomRegistries: strings.TrimSpace(cfg.E2EConfig.CustomRegistries),

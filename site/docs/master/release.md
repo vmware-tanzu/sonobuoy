@@ -124,3 +124,19 @@ version of the docs.
 
 [gendocs]: #generating-a-new-set-of-versioned-docs
 [dockerhub]: https://cloud.docker.com/u/sonobuoy/repository/docker/sonobuoy/sonobuoy/tags
+
+2. If you are building a Windows release you must currently build/push the Windows image outside of CI and push the manifest to also include it. To do this you must:
+
+ - Have built the Windows binaries (can be done on a Linux box and should be the default now)
+ - Have a Windows machine available for the build. The steps below will assume a `docker context` which is a Windows machine.
+ - (Recommended) Build the sample Windows plugin (in our examples directory) to test the image
+ - (Recommended) Have a cluster with Windows available for testing
+
+```
+docker context use default
+make build/windows/amd64/sonobuoy.exe
+docker context use 2019-box
+make windows_containers
+PUSH_WINDOWS=true make push
+
+```

@@ -393,3 +393,9 @@ func AddDryRunFlag(flag *bool, flags *pflag.FlagSet) {
 		"If true, only print the image operations that would be performed.",
 	)
 }
+
+// AddNodeSelectorFlag adds the flag for gen/run which keeps track of node selectors
+// to add to the aggregator. Allows running of the aggregator on Windows nodes.
+func AddNodeSelectorsFlag(p *NodeSelectors, flags *pflag.FlagSet) {
+	flags.Var(p, "aggregator-node-selector", "Node selectors to add to the aggregator. Values can be given multiple times and are in the form key:value")
+}
