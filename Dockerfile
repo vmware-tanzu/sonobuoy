@@ -13,12 +13,10 @@
 # limitations under the License.
 
 FROM BASEIMAGE
-MAINTAINER Timothy St. Clair "tstclair@heptio.com"
+MAINTAINER John Schnake "jschnake@vmware.com"
 
 CMD1
 
 ADD BINARY /sonobuoy
-ADD scripts/run_master.sh /run_master.sh
-ADD scripts/run_single_node_worker.sh /run_single_node_worker.sh
 WORKDIR /
-CMD ["/bin/sh", "-c", "/run_master.sh"]
+CMD /sonobuoy aggregator --no-exit -v 3 --logtostderr

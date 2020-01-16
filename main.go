@@ -20,12 +20,13 @@ import (
 	"os"
 
 	"github.com/vmware-tanzu/sonobuoy/cmd/sonobuoy/app"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 )
 
 func main() {
 	err := app.NewSonobuoyCommand().Execute()
 	if err != nil {
-		// Execute takes care of printing the error
+		errlog.LogError(err)
 		os.Exit(1)
 	}
 }
