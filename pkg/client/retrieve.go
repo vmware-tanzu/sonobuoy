@@ -27,8 +27,8 @@ import (
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	pluginaggregation "github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
-	"github.com/pkg/errors"
 
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
@@ -142,7 +142,7 @@ func UntarAll(reader io.Reader, destFile, prefix string) (filenames []string, re
 		entrySeq++
 		mode := header.FileInfo().Mode()
 		outFileName := path.Join(destFile, header.Name[len(prefix):])
-		baseName := path.Dir(outFileName)
+		baseName := filepath.Dir(outFileName)
 		if err := os.MkdirAll(baseName, 0755); err != nil {
 			return filenames, err
 		}
@@ -160,7 +160,7 @@ func UntarAll(reader io.Reader, destFile, prefix string) (filenames []string, re
 				return filenames, err
 			}
 			if exists {
-				outFileName = filepath.Join(outFileName, path.Base(header.Name))
+				outFileName = filepath.Join(outFileName, filepath.Base(header.Name))
 			}
 		}
 
