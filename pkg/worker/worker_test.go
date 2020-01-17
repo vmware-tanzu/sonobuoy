@@ -23,7 +23,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -52,14 +52,14 @@ func TestRun(t *testing.T) {
 			}
 
 			withTempDir(t, func(tmpdir string) {
-				ioutil.WriteFile(tmpdir+"/systemd_logs", []byte("{}"), 0755)
-				ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs"), 0755)
-				err := GatherResults(tmpdir+"/done", URL, srv.Client(), nil)
+				ioutil.WriteFile(filepath.Join(tmpdir, "systemd_logs"), []byte("{}"), 0755)
+				ioutil.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs")), 0755)
+				err := GatherResults(filepath.Join(tmpdir, "done"), URL, srv.Client(), nil)
 				if err != nil {
 					t.Fatalf("Got error running agent: %v", err)
 				}
 
-				ensureExists(t, path.Join(aggr.OutputDir, "systemd_logs", "results", "node1"))
+				ensureExists(t, filepath.Join(aggr.OutputDir, "systemd_logs", "results", "node1"))
 			})
 		}
 	})
@@ -79,14 +79,14 @@ func TestRunGlobal(t *testing.T) {
 		}
 
 		withTempDir(t, func(tmpdir string) {
-			ioutil.WriteFile(tmpdir+"/systemd_logs.json", []byte("{}"), 0755)
-			ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs.json"), 0755)
-			err := GatherResults(tmpdir+"/done", url, srv.Client(), nil)
+			ioutil.WriteFile(filepath.Join(tmpdir, "systemd_logs.json"), []byte("{}"), 0755)
+			ioutil.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs.json")), 0755)
+			err := GatherResults(filepath.Join(tmpdir, "done"), url, srv.Client(), nil)
 			if err != nil {
 				t.Fatalf("Got error running agent: %v", err)
 			}
 
-			ensureExists(t, path.Join(aggr.OutputDir, "systemd_logs", "results"))
+			ensureExists(t, filepath.Join(aggr.OutputDir, "systemd_logs", "results"))
 		})
 	})
 }
@@ -104,14 +104,14 @@ func TestRunGlobal_noExtension(t *testing.T) {
 			t.Fatalf("unexpected error getting global result url %v", err)
 		}
 		withTempDir(t, func(tmpdir string) {
-			ioutil.WriteFile(tmpdir+"/systemd_logs", []byte("{}"), 0755)
-			ioutil.WriteFile(tmpdir+"/done", []byte(tmpdir+"/systemd_logs"), 0755)
-			err := GatherResults(tmpdir+"/done", url, srv.Client(), nil)
+			ioutil.WriteFile(filepath.Join(tmpdir, "systemd_logs"), []byte("{}"), 0755)
+			ioutil.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs")), 0755)
+			err := GatherResults(filepath.Join(tmpdir, "done"), url, srv.Client(), nil)
 			if err != nil {
 				t.Fatalf("Got error running agent: %v", err)
 			}
 
-			ensureExists(t, path.Join(aggr.OutputDir, "systemd_logs", "results"))
+			ensureExists(t, filepath.Join(aggr.OutputDir, "systemd_logs", "results"))
 		})
 	})
 }
@@ -131,7 +131,7 @@ func TestRunGlobalCleanup(t *testing.T) {
 		}
 
 		withTempDir(t, func(tmpdir string) {
-			err := GatherResults(tmpdir+"/done", url, srv.Client(), stopc)
+			err := GatherResults(filepath.Join(tmpdir, "done"), url, srv.Client(), stopc)
 			if err != nil {
 				t.Fatalf("Got error running agent: %v", err)
 			}
@@ -188,10 +188,10 @@ func TestRelayProgress(t *testing.T) {
 	}
 }
 
-func ensureExists(t *testing.T, filepath string) {
-	if _, err := os.Stat(filepath); err != nil && os.IsNotExist(err) {
-		t.Logf("Plugin agent ran, but couldn't find expected results at %v:", filepath)
-		output, _ := exec.Command("ls", "-l", path.Dir(filepath)).CombinedOutput()
+func ensureExists(t *testing.T, checkPath string) {
+	if _, err := os.Stat(checkPath); err != nil && os.IsNotExist(err) {
+		t.Logf("Plugin agent ran, but couldn't find expected results at %v:", checkPath)
+		output, _ := exec.Command("ls", "-l", filepath.Dir(checkPath)).CombinedOutput()
 		t.Log(string(output))
 		t.Fail()
 	}

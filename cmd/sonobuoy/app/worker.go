@@ -25,17 +25,18 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 	"github.com/vmware-tanzu/sonobuoy/pkg/worker"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 )
 
 // NewCmdWorker is the cobra command that acts as the entrypoint for Sonobuoy when running
@@ -163,7 +164,7 @@ func runGather(global bool) error {
 	}
 
 	go worker.RelayProgressUpdates(cfg.ProgressUpdatesPort, progressURL.String(), client)
-	err = worker.GatherResults(cfg.ResultsDir+"/done", resultURL.String(), client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
+	err = worker.GatherResults(filepath.Join(cfg.ResultsDir, "done"), resultURL.String(), client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
 
 	return errors.Wrap(err, "gathering results")
 }
