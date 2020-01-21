@@ -40,6 +40,11 @@ import (
 const (
 	// pollingInterval is the time between polls when monitoring the job status.
 	pollingInterval = 10 * time.Second
+
+	// defaultSleepSeconds is the time after the plugin finishes for which Sonobuoy will sleep.
+	// The sleep functions as a way to prevent the daemonset from restarting the container once the
+	// process completes. There is currently no way to have a "run-once daemonset".
+	defaultSleepSeconds = "3600"
 )
 
 // Plugin is a plugin driver that dispatches containers to each node,
@@ -152,7 +157,7 @@ func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificat
 
 	podSpec.Containers = append(podSpec.Containers,
 		p.Definition.Spec.Container,
-		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/run_single_node_worker.sh"}, []string{}, progressPort),
+		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/sonobuoy", "worker", "single-node", "-v=5", "--logtostderr", "--sleep=" + defaultSleepSeconds}, []string{}, progressPort),
 	)
 
 	if len(p.ImagePullSecrets) > 0 {

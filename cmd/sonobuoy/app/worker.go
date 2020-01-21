@@ -30,13 +30,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 	"github.com/vmware-tanzu/sonobuoy/pkg/worker"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 // NewCmdWorker is the cobra command that acts as the entrypoint for Sonobuoy when running
@@ -50,24 +50,34 @@ func NewCmdWorker() *cobra.Command {
 		Args:   cobra.ExactArgs(0),
 	}
 
-	workerCmd.AddCommand(singleNodeCmd)
-	workerCmd.AddCommand(globalCmd)
+	workerCmd.AddCommand(newSingleNodeCmd())
+	workerCmd.AddCommand(newGlobalCmd())
 
 	return workerCmd
 }
 
-var globalCmd = &cobra.Command{
-	Use:   "global",
-	Short: "Submit results scoped to the whole cluster",
-	Run:   runGatherGlobal,
-	Args:  cobra.ExactArgs(0),
+func newGlobalCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "global",
+		Short: "Submit results scoped to the whole cluster",
+		RunE:  runGatherGlobal,
+		Args:  cobra.ExactArgs(0),
+	}
+
+	return cmd
 }
 
-var singleNodeCmd = &cobra.Command{
-	Use:   "single-node",
-	Short: "Submit results scoped to a single node",
-	Run:   runGatherSingleNode,
-	Args:  cobra.ExactArgs(0),
+func newSingleNodeCmd() *cobra.Command {
+	var sleep int64
+	cmd := &cobra.Command{
+		Use:   "single-node",
+		Short: "Submit results scoped to a single node",
+		RunE:  runGatherSingleNode(&sleep),
+		Args:  cobra.ExactArgs(0),
+	}
+
+	cmd.Flags().Int64Var(&sleep, "sleep", 0, "After sending results, keeps the process alive for N seconds to avoid restarting the container. If N<0, Sonobuoy sleeps forever.")
+	return cmd
 }
 
 // sigHandler returns a channel that will receive a message after the timeout
@@ -115,19 +125,30 @@ func loadAndValidateConfig() (*plugin.WorkerConfig, error) {
 	return cfg, nil
 }
 
-func runGatherSingleNode(cmd *cobra.Command, args []string) {
-	err := runGather(false)
-	if err != nil {
-		errlog.LogError(err)
-		os.Exit(1)
-	}
+func runGatherGlobal(cmd *cobra.Command, args []string) error {
+	return runGather(true)
 }
 
-func runGatherGlobal(cmd *cobra.Command, args []string) {
-	err := runGather(true)
-	if err != nil {
-		errlog.LogError(err)
-		os.Exit(1)
+// runGatherSingleNode returns a closure which will run the data gathering and then sleep
+// for the specified amount of seconds.
+func runGatherSingleNode(sleep *int64) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		err := runGather(false)
+
+		switch {
+		case sleep == nil || *sleep == 0:
+			// No sleep.
+		case *sleep < 0:
+			// Sleep forever.
+			logrus.Infof("Results transmitted to aggregator.  Sleeping forever.")
+			for {
+				time.Sleep(60 * time.Minute)
+			}
+		case *sleep > 0:
+			logrus.Infof("Results transmitted to aggregator. Sleeping for %v seconds", *sleep)
+			time.Sleep(time.Duration(*sleep) * time.Second)
+		}
+		return err
 	}
 }
 

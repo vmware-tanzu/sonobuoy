@@ -123,11 +123,7 @@ metadata:
 {{- end }}
 spec:
   containers:
-  - command:
-    - /bin/bash
-    - -c
-    - /sonobuoy master --no-exit=true -v 3 --logtostderr
-    env:
+  - env:
     - name: SONOBUOY_ADVERTISE_IP
       valueFrom:
         fieldRef:
