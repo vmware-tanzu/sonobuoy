@@ -63,7 +63,7 @@ const (
 	DefaultDNSNamespace = "kube-system"
 
 	// DefaultSystemdLogsImage is the URL for the docker image used by the systemd-logs plugin
-	DefaultSystemdLogsImage = "gcr.io/heptio-images/sonobuoy-plugin-systemd-logs:latest"
+	DefaultSystemdLogsImage = "sonobuoy/systemd-logs:v0.3"
 )
 
 var (
