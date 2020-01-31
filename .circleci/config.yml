@@ -32,7 +32,51 @@ jobs:
       - checkout
       - run: ./scripts/ci/publish.sh
 
-  build_and_test:
+  build_clients:
+    machine:
+      enabled: true
+    steps:
+      - checkout
+      - run:
+          name: "Build Sonobuoy binaries"
+          command: make build/linux/amd64/sonobuoy build/linux/arm64/sonobuoy
+      - persist_to_workspace:
+          root: ~/project
+          paths: 
+            - build/linux/amd64/*
+            - build/linux/arm64/*
+            - build/linux/windows/amd64/*
+
+  build_containers:
+    machine:
+      enabled: true
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /home/circleci/project
+      - run:
+          name: "Build Sonobuoy container images"
+          command: |
+            make containers
+      - run:
+          name: Save as tar files to persist to next step
+          command: |
+            docker save -o sonobuoyImages.tar.gz sonobuoy/sonobuoy
+      - persist_to_workspace:
+          root: /home/circleci/project
+          paths:
+            - sonobuoyImages.tar.gz
+
+  unit_tests:
+    machine:
+      enabled: true
+    steps:
+      - checkout
+      - run:
+          name: "Run unit and stress tests"
+          command: VERBOSE=true make test stress
+
+  integration_tests:
     machine:
       enabled: true
     steps:
@@ -51,16 +95,16 @@ jobs:
           command: |
             kind create cluster --config kind-config.yaml
             echo 'export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"' >> $BASH_ENV
+      - attach_workspace:
+          at: /home/circleci/project
       - run:
-          name: "Build Sonobuoy container image and add to kind cluster"
-          command: make container deploy_kind
-      - run:
-          name: "Run unit and stress tests"
-          command: VERBOSE=true make test stress
+          name: Load images into docker from workspace
+          command: |
+            docker load -i /home/circleci/project/sonobuoyImages.tar.gz
       - run:
           name: "Run Sonobuoy integration tests"
           command: |
-            ./scripts/run_integration_tests.sh
+            SONOBUOY_CLI=../../build/linux/amd64/sonobuoy ./scripts/run_integration_tests.sh
       - store_artifacts:
           path: /tmp/artifacts
       - run:
@@ -74,7 +118,15 @@ workflows:
     jobs:
       - check_go_mod
       - check_readme_sync
-      - build_and_test:
+      - build_clients
+      - build_containers:
+          requires:
+            - build_clients
+      - unit_tests
+      - integration_tests:
+          requires:
+            - build_clients
+            - build_containers
           filters:
             tags:
               only: /^v.*/
@@ -82,7 +134,10 @@ workflows:
           requires:
             - check_go_mod
             - check_readme_sync
-            - build_and_test
+            - unit_tests
+            - build_clients
+            - build_containers
+            - integration_tests
           filters:
             branches:
               only: master

@@ -271,6 +271,7 @@ func TestMain(m *testing.M) {
 		fmt.Printf("Skipping integration tests: failed to find sonobuoy CLI: %v\n", err)
 		os.Exit(1)
 	}
+	fmt.Printf("Using Sonobuoy CLI at %q\n", sonobuoy)
 
 	result := m.Run()
 	os.Exit(result)
