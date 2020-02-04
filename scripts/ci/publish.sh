@@ -10,7 +10,7 @@ fi
 
 function image_push() {
     echo ${DOCKERHUB_TOKEN} | docker login --username sonobuoybot --password-stdin
-    make container push
+    make containers push
 }
 
 if [ ! -z "$CIRCLE_TAG" ]; then

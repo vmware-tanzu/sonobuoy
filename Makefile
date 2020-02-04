@@ -77,25 +77,25 @@ GO_BUILD ?= CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLA
 K8S_PATH ?= $(GOPATH)/src/github.com/kubernetes/kubernetes
 KIND_K8S_TAG ?= $(shell cd $(K8S_PATH) && git describe)
 
-.PHONY: all container push clean test local-test local generate plugins int
+.PHONY: all build_container containers build_sonobuoy push push_images push_manifest clean clean_image test local-test local int lint stress vet pre native deploy_kind kind_images push_kind_images check-kind-env
 
-all: container
+all: containers
 
 local-test:
 	$(TEST)
 
 # Unit tests
-test: sonobuoy vet
+test:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(TEST)'
 
 # Stress tests
-stress: sonobuoy
+stress:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(STRESS_TEST)'
 
 # Integration tests
-int: DOCKER_FLAGS=-v $(KUBECONFIG):/root/.kube/kubeconfig -v /tmp/artifacts:/tmp/artifacts --env ARTIFACTS_DIR=/tmp/artifacts --env KUBECONFIG=/root/.kube/kubeconfig --network host
+int: DOCKER_FLAGS=-v $(KUBECONFIG):/root/.kube/kubeconfig -v /tmp/artifacts:/tmp/artifacts --env ARTIFACTS_DIR=/tmp/artifacts --env KUBECONFIG=/root/.kube/kubeconfig --network host --env SONOBUOY_CLI=$(SONOBUOY_CLI)
 int: TESTARGS= $(VERBOSE_FLAG) -timeout 3m
-int: sonobuoy
+int:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(INT_TEST)'
 
 lint:
@@ -119,7 +119,7 @@ build_container:
        -f $(DOCKERFILE) \
 		.
 
-container: sonobuoy
+containers: build/linux/arm64/sonobuoy build/linux/amd64/sonobuoy
 	for arch in $(LINUX_ARCH); do \
 		if [ $$arch = amd64 ]; then \
 			sed -e 's|BASEIMAGE|$(AMD_IMAGE)|g' \
@@ -140,14 +140,18 @@ container: sonobuoy
 build_sonobuoy:
 	$(DOCKER_BUILD) '$(GO_BUILD)'
 
-sonobuoy:
-	for arch in $(LINUX_ARCH); do \
-		mkdir -p build/linux/$$arch; \
-		echo Building: linux/$$arch; \
-		$(MAKE) build_sonobuoy GO_SYSTEM_FLAGS="GOOS=linux GOARCH=$$arch" BINARY="build/linux/$$arch/sonobuoy"; \
-	done
-	@echo Building: host
-	$(MAKE) build_sonobuoy
+build/linux/arm64/sonobuoy:
+	echo Building: linux/arm64
+	mkdir -p build/linux/arm64
+	$(MAKE) build_sonobuoy GO_SYSTEM_FLAGS="GOOS=linux GOARCH=arm64" BINARY=$@
+
+build/linux/amd64/sonobuoy:
+	echo Building: linux/amd64
+	mkdir -p build/linux/amd64
+	$(MAKE) build_sonobuoy GO_SYSTEM_FLAGS="GOOS=linux GOARCH=amd64" BINARY=$@
+
+native:
+	$(GO_BUILD)
 
 push_images:
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH)
@@ -164,7 +168,7 @@ push_images:
 push_manifest:
 	./manifest-tool push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
 
-push: pre container
+push: pre containers
 	for arch in $(LINUX_ARCH); do \
 		$(MAKE) push_images TARGET="sonobuoy-$$arch"; \
 	done
@@ -191,7 +195,7 @@ clean:
 		$(MAKE) clean_image TARGET=$(TARGET)-$$arch; \
 	done
 
-deploy_kind: container
+deploy_kind: containers
 	kind load docker-image --name $(KIND_CLUSTER) $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) || true
 
 # kind_images will build the kind-node image. Generally building the base image is not necessary
@@ -212,6 +216,3 @@ ifndef KIND_K8S_TAG
 	$(error KIND_K8S_TAG is undefined)
 endif
 	echo --kube-root=$(K8S_PATH) tagging as --image $(REGISTRY)/kind-node:$(KIND_K8S_TAG)
-
-native:
-	$(GO_BUILD)
