@@ -368,6 +368,15 @@ func AddPluginListFlag(p *[]string, flags *pflag.FlagSet) {
 	flags.StringSliceVarP(p, "plugin", "p", []string{"e2e", "systemd-logs"}, "Describe which plugin's images to interact with (Valid plugins are 'e2e', 'systemd-logs').")
 }
 
+// AddKubernetesVersionFlag adds a string flag for the user to specify the cluster version to assume instead of reaching
+// out to the cluster to auto-detect it.
+func AddKubernetesVersionFlag(version *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		version, "kubernetes-version", "",
+		fmt.Sprintf("Version to assume for Kubernetes. If empty, the cluster will be queried for its version"),
+	)
+}
+
 // AddShortFlag adds a boolean flag to just print the Sonobuoy version and
 // nothing else. Useful in scripts.
 func AddShortFlag(flag *bool, flags *pflag.FlagSet) {

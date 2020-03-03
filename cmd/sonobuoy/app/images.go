@@ -19,6 +19,7 @@ package app
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
@@ -43,6 +44,7 @@ type imagesFlags struct {
 	kubeconfig        Kubeconfig
 	customRegistry    string
 	dryRun            bool
+	k8sVersion        string
 }
 
 func NewCmdImages() *cobra.Command {
@@ -52,7 +54,7 @@ func NewCmdImages() *cobra.Command {
 		Use:   "images",
 		Short: "Manage images used in a plugin. Supported plugins are: 'e2e'",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := listImages(flags.plugins, flags.kubeconfig); err != nil {
+			if err := listImages(flags.plugins, flags.kubeconfig, flags.k8sVersion); err != nil {
 				errlog.LogError(err)
 				os.Exit(1)
 			}
@@ -62,6 +64,7 @@ func NewCmdImages() *cobra.Command {
 
 	AddKubeconfigFlag(&flags.kubeconfig, cmd.Flags())
 	AddPluginListFlag(&flags.plugins, cmd.Flags())
+	AddKubernetesVersionFlag(&flags.k8sVersion, cmd.Flags())
 
 	cmd.AddCommand(pullCmd())
 	cmd.AddCommand(pushCmd())
@@ -85,7 +88,7 @@ func pullCmd() *cobra.Command {
 				client = image.NewDockerClient()
 			}
 
-			if errs := pullImages(flags.plugins, flags.kubeconfig, flags.e2eRegistryConfig, client); len(errs) > 0 {
+			if errs := pullImages(flags.plugins, flags.kubeconfig, flags.e2eRegistryConfig, flags.k8sVersion, client); len(errs) > 0 {
 				for _, err := range errs {
 					errlog.LogError(err)
 				}
@@ -98,6 +101,7 @@ func pullCmd() *cobra.Command {
 	AddKubeconfigFlag(&flags.kubeconfig, pullCmd.Flags())
 	AddPluginListFlag(&flags.plugins, pullCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, pullCmd.Flags())
+	AddKubernetesVersionFlag(&flags.k8sVersion, pullCmd.Flags())
 
 	return pullCmd
 }
@@ -121,7 +125,7 @@ func pushCmd() *cobra.Command {
 				client = image.NewDockerClient()
 			}
 
-			if errs := pushImages(flags.plugins, flags.kubeconfig, flags.customRegistry, flags.e2eRegistryConfig, client); len(errs) > 0 {
+			if errs := pushImages(flags.plugins, flags.kubeconfig, flags.customRegistry, flags.e2eRegistryConfig, flags.k8sVersion, client); len(errs) > 0 {
 				for _, err := range errs {
 					errlog.LogError(err)
 				}
@@ -136,6 +140,7 @@ func pushCmd() *cobra.Command {
 	AddCustomRegistryFlag(&flags.customRegistry, pushCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, pushCmd.Flags())
 	pushCmd.MarkFlagRequired(customRegistryFlag)
+	AddKubernetesVersionFlag(&flags.k8sVersion, pushCmd.Flags())
 
 	return pushCmd
 }
@@ -153,7 +158,7 @@ func downloadCmd() *cobra.Command {
 				client = image.NewDockerClient()
 			}
 
-			if err := downloadImages(flags.plugins, flags.kubeconfig, flags.e2eRegistryConfig, client); err != nil {
+			if err := downloadImages(flags.plugins, flags.kubeconfig, flags.e2eRegistryConfig, flags.k8sVersion, client); err != nil {
 				errlog.LogError(err)
 				os.Exit(1)
 			}
@@ -164,6 +169,8 @@ func downloadCmd() *cobra.Command {
 	AddKubeconfigFlag(&flags.kubeconfig, downloadCmd.Flags())
 	AddPluginListFlag(&flags.plugins, downloadCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, downloadCmd.Flags())
+	AddKubernetesVersionFlag(&flags.k8sVersion, downloadCmd.Flags())
+
 	return downloadCmd
 }
 
@@ -180,7 +187,7 @@ func deleteCmd() *cobra.Command {
 				client = image.NewDockerClient()
 			}
 
-			if errs := deleteImages(flags.plugins, flags.kubeconfig, flags.e2eRegistryConfig, client); len(errs) > 0 {
+			if errs := deleteImages(flags.plugins, flags.kubeconfig, flags.e2eRegistryConfig, flags.k8sVersion, client); len(errs) > 0 {
 				for _, err := range errs {
 					errlog.LogError(err)
 				}
@@ -193,10 +200,18 @@ func deleteCmd() *cobra.Command {
 	AddKubeconfigFlag(&flags.kubeconfig, deleteCmd.Flags())
 	AddPluginListFlag(&flags.plugins, deleteCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, deleteCmd.Flags())
+	AddKubernetesVersionFlag(&flags.k8sVersion, deleteCmd.Flags())
+
 	return deleteCmd
 }
 
-func getClusterVersion(kubeconfig Kubeconfig) (string, error) {
+// getClusterVersion will return either the given string or, if empty, use the kubeconfig
+// to reach out to the server and check its version.
+func getClusterVersion(k8sVersion string, kubeconfig Kubeconfig) (string, error) {
+	if len(k8sVersion) > 0 {
+		return k8sVersion, nil
+	}
+
 	sbc, err := getSonobuoyClientFromKubecfg(kubeconfig)
 	if err != nil {
 		return "", errors.Wrap(err, "couldn't create sonobuoy client")
@@ -210,7 +225,7 @@ func getClusterVersion(kubeconfig Kubeconfig) (string, error) {
 	return version, nil
 }
 
-func listImages(plugins []string, kubeconfig Kubeconfig) error {
+func listImages(plugins []string, kubeconfig Kubeconfig, k8sVersion string) error {
 	images := []string{
 		config.DefaultImage,
 	}
@@ -219,7 +234,7 @@ func listImages(plugins []string, kubeconfig Kubeconfig) error {
 		case systemdLogsPlugin:
 			images = append(images, config.DefaultSystemdLogsImage)
 		case e2ePlugin:
-			version, err := getClusterVersion(kubeconfig)
+			version, err := getClusterVersion(k8sVersion, kubeconfig)
 			if err != nil {
 				return errors.Wrap(err, "failed to get cluster version")
 			}
@@ -236,6 +251,7 @@ func listImages(plugins []string, kubeconfig Kubeconfig) error {
 		}
 	}
 
+	sort.Strings(images)
 	for _, image := range images {
 		fmt.Println(image)
 	}
@@ -243,7 +259,7 @@ func listImages(plugins []string, kubeconfig Kubeconfig) error {
 	return nil
 }
 
-func pullImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig string, client image.Client) []error {
+func pullImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
 	images := []string{
 		config.DefaultImage,
 	}
@@ -252,7 +268,7 @@ func pullImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig strin
 		case systemdLogsPlugin:
 			images = append(images, config.DefaultSystemdLogsImage)
 		case e2ePlugin:
-			version, err := getClusterVersion(kubeconfig)
+			version, err := getClusterVersion(k8sVersion, kubeconfig)
 			if err != nil {
 				return []error{errors.Wrap(err, "failed to get cluster version")}
 			}
@@ -272,11 +288,11 @@ func pullImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig strin
 	return client.PullImages(images, numDockerRetries)
 }
 
-func downloadImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig string, client image.Client) error {
+func downloadImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig, k8sVersion string, client image.Client) error {
 	for _, plugin := range plugins {
 		switch plugin {
 		case e2ePlugin:
-			version, err := getClusterVersion(kubeconfig)
+			version, err := getClusterVersion(k8sVersion, kubeconfig)
 			if err != nil {
 				return errors.Wrap(err, "failed to get cluster version")
 			}
@@ -301,7 +317,7 @@ func downloadImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig s
 	return nil
 }
 
-func pushImages(plugins []string, kubeconfig Kubeconfig, customRegistry, e2eRegistryConfig string, client image.Client) []error {
+func pushImages(plugins []string, kubeconfig Kubeconfig, customRegistry, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
 	imagePairs := []image.TagPair{
 		{
 			Src: config.DefaultImage,
@@ -316,7 +332,7 @@ func pushImages(plugins []string, kubeconfig Kubeconfig, customRegistry, e2eRegi
 				Dst: substituteRegistry(config.DefaultSystemdLogsImage, customRegistry),
 			})
 		case e2ePlugin:
-			version, err := getClusterVersion(kubeconfig)
+			version, err := getClusterVersion(k8sVersion, kubeconfig)
 			if err != nil {
 				return []error{errors.Wrap(err, "failed to get cluster version")}
 			}
@@ -340,7 +356,7 @@ func pushImages(plugins []string, kubeconfig Kubeconfig, customRegistry, e2eRegi
 	return client.PushImages(imagePairs, numDockerRetries)
 }
 
-func deleteImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig string, client image.Client) []error {
+func deleteImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
 	images := []string{
 		config.DefaultImage,
 	}
@@ -349,7 +365,7 @@ func deleteImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig str
 		case systemdLogsPlugin:
 			images = append(images, config.DefaultSystemdLogsImage)
 		case e2ePlugin:
-			version, err := getClusterVersion(kubeconfig)
+			version, err := getClusterVersion(k8sVersion, kubeconfig)
 			if err != nil {
 				return []error{errors.Wrap(err, "failed to get cluster version")}
 			}
