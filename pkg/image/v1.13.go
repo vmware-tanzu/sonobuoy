@@ -63,7 +63,7 @@ func (r *RegistryList) v1_13() map[string]Config {
 	configs["Porter"] = Config{e2eRegistry, "porter", "1.0"}
 	configs["PortForwardTester"] = Config{e2eRegistry, "port-forward-tester", "1.0"}
 	configs["Redis"] = Config{e2eRegistry, "redis", "1.0"}
-	configs["ResourceConsumer"] = Config{e2eRegistry, "resource-consumer", "1.5"}
+	configs["ResourceConsumer"] = Config{e2eRegistry, "resource-consumer", "1.4"}
 	configs["ResourceController"] = Config{e2eRegistry, "resource-consumer/controller", "1.0"}
 	configs["ServeHostname"] = Config{e2eRegistry, "serve-hostname", "1.1"}
 	configs["TestWebserver"] = Config{e2eRegistry, "test-webserver", "1.0"}
