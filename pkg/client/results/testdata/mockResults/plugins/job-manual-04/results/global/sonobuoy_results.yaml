@@ -1,0 +1,16 @@
+name: manual-plugin
+status: status-from-default-sonobuoy-results
+meta:
+  type: summary
+items:
+- name: a test file
+  status: status 1
+  meta:
+    file: results/global/junit_01.xml
+    type: file
+  items:
+  - name: Manual suite name
+    status: status 2
+    items:
+    - name: Manual test name
+      status: passed

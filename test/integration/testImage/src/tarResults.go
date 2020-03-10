@@ -35,14 +35,17 @@ var cmdTarFile = &cobra.Command{
 }
 
 func reportTarFile(cmd *cobra.Command, args []string) error {
-	outpath := os.TempDir()
-	fmt.Printf("Using tmp dir %v for results. Will remove them after tarring the results\n", outpath)
-	defer os.RemoveAll(outpath)
+	tmpDir := os.TempDir()
+	outPath, err := ioutil.TempDir(tmpDir, "sonobuoy-integration")
+	if err != nil {
+		return errors.Wrapf(err, "failed to create outPath dir %v", outPath)
+	}
+	fmt.Printf("Using tmp dir %v for results. Will remove them after tarring the results\n", outPath)
+	defer os.RemoveAll(outPath)
 
 	for _, f := range args {
 		targetFile := f
-		resultsFile := filepath.Join(outpath, filepath.Base(targetFile))
-
+		resultsFile := filepath.Join(outPath, filepath.Base(targetFile))
 		// Copy file to location Sonobuoy can get it.
 		_, err := copyFile(targetFile, resultsFile)
 		if err != nil {
@@ -52,7 +55,7 @@ func reportTarFile(cmd *cobra.Command, args []string) error {
 
 	// Create tarball.
 	tb := filepath.Join(resultsDir, "results.tar.gz")
-	err := tarx.Compress(tb, outpath, &tarx.CompressOptions{Compression: tarx.Gzip})
+	err = tarx.Compress(tb, outPath, &tarx.CompressOptions{Compression: tarx.Gzip})
 	if err != nil {
 		return errors.Wrap(err, "failed to create tarball")
 	}

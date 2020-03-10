@@ -13,6 +13,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -220,6 +223,7 @@ func saveToArtifacts(t *testing.T, p string) (newPath string) {
 	artifactsDir := os.Getenv("ARTIFACTS_DIR")
 	if artifactsDir == "" {
 		t.Logf("Skipping saving artifact %v since ARTIFACTS_DIR is unset.", p)
+		return p
 	}
 
 	artifactFile := filepath.Join(artifactsDir, filepath.Base(p))
@@ -261,6 +265,59 @@ func TestSonobuoyVersion(t *testing.T) {
 		if len(versionComponents) == 2 && strings.TrimSpace(versionComponents[1]) == "" {
 			t.Errorf("expected value for %v to be set, but was empty", versionComponents[0])
 		}
+	}
+}
+
+func TestManualResultsJob(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	ns, cleanup := getNamespace(t)
+	defer cleanup()
+
+	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-manual.yaml -n %v", ns)
+	mustRunSonobuoyCommandWithContext(ctx, t, args)
+
+	tb := mustDownloadTarball(ctx, t, ns)
+	tb = saveToArtifacts(t, tb)
+
+	// Retrieve the sonobuoy results file from the tarball
+	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tb, "job-manual")
+	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, resultsArgs)
+	var resultItem results.Item
+	yaml.Unmarshal(resultsYaml.Bytes(), &resultItem)
+	expectedStatus := "manual-results-1: 1, manual-results-2: 1"
+	if resultItem.Status != expectedStatus {
+		t.Errorf("Expected plugin to have status: %v, got %v", expectedStatus, resultItem.Status)
+	}
+}
+
+func TestManualResultsDaemonSet(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	ns, cleanup := getNamespace(t)
+	defer cleanup()
+
+	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/ds-manual.yaml -n %v", ns)
+	mustRunSonobuoyCommandWithContext(ctx, t, args)
+
+	tb := mustDownloadTarball(ctx, t, ns)
+	tb = saveToArtifacts(t, tb)
+
+	// Retrieve the sonobuoy results file from the tarball
+	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tb, "ds-manual")
+	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, resultsArgs)
+	var resultItem results.Item
+	yaml.Unmarshal(resultsYaml.Bytes(), &resultItem)
+
+	// Each status should be reported n times where n is the number of nodes in the cluster.
+	// The number of nodes can be determined by the length of the items array in the resultItem as there is an
+	// entry for every node where the plugin ran.
+	numNodes := len(resultItem.Items)
+	expectedStatus := fmt.Sprintf("manual-results-1: %v, manual-results-2: %v", numNodes, numNodes)
+	if resultItem.Status != expectedStatus {
+		t.Errorf("Expected plugin to have status: %v, got %v", expectedStatus, resultItem.Status)
 	}
 }
 

@@ -1,0 +1,75 @@
+{
+"name": "ds-manual-04",
+"status": "status-from-default-sonobuoy-results",
+"meta": {
+"type": "summary"
+},
+"items": [
+{
+"name": "node1",
+"status": "status-from-default-sonobuoy-results",
+"meta": {
+"type": "node"
+},
+"items": [
+{
+"name": "sonobuoy_results.yaml",
+"status": "status-from-default-sonobuoy-results",
+"meta": {
+"file": "results/node1/sonobuoy_results.yaml",
+"type": "file"
+},
+"items": [
+{
+"name": "a test file",
+"status": "status 1",
+"meta": {
+"file": "results/global/junit_01.xml",
+"type": "file"
+},
+"items": [
+{
+"name": "Manual suite name",
+"status": "status 2"
+}
+]
+}
+]
+}
+]
+},
+{
+"name": "node2",
+"status": "status-from-default-sonobuoy-results",
+"meta": {
+"type": "node"
+},
+"items": [
+{
+"name": "sonobuoy_results.yaml",
+"status": "status-from-default-sonobuoy-results",
+"meta": {
+"file": "results/node2/sonobuoy_results.yaml",
+"type": "file"
+},
+"items": [
+{
+"name": "a test file",
+"status": "status 1",
+"meta": {
+"file": "results/global/junit_01.xml",
+"type": "file"
+},
+"items": [
+{
+"name": "Manual suite name",
+"status": "status 2"
+}
+]
+}
+]
+}
+]
+}
+]
+}
