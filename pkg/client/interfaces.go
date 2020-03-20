@@ -82,6 +82,10 @@ type GenConfig struct {
 	// yet able to be manipulated in this way.
 	PluginEnvOverrides map[string]map[string]string
 
+	// NodeSelectors, if set, will be applied to the aggregator pod allowing it
+	// to be schedule on particular nodes.
+	NodeSelectors map[string]string
+
 	// ShowDefaultPodSpec determines whether or not the default pod spec for
 	// the plugin should be incuded in the output.
 	ShowDefaultPodSpec bool

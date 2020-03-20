@@ -122,6 +122,10 @@ metadata:
 {{- end }}
 {{- end }}
 spec:
+{{- if .NodeSelectors }}
+  nodeSelector:{{- range $k, $v := .NodeSelectors }}
+    {{ indent 4 $k}}: {{$v}}
+{{- end }}{{- end }}
   containers:
   - env:
     - name: SONOBUOY_ADVERTISE_IP

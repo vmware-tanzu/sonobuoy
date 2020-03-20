@@ -17,6 +17,7 @@ limitations under the License.
 package worker
 
 import (
+	"bytes"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -87,6 +88,7 @@ func GatherResults(waitfile string, url string, client *http.Client, stopc <-cha
 		select {
 		case <-ticker:
 			if resultFile, err := ioutil.ReadFile(waitfile); err == nil {
+				resultFile = bytes.TrimSpace(resultFile)
 				logrus.WithField("resultFile", string(resultFile)).Info("Detected done file, transmitting result file")
 				return handleWaitFile(string(resultFile), url, client)
 			}

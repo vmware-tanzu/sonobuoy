@@ -61,6 +61,10 @@ type genFlags struct {
 	// generated at the current time and so we can't manipulate those objects.
 	pluginEnvs PluginEnvVars
 
+	// nodeSelectors, if set, will be applied to the aggregator allowing it to be
+	// schedule on specific nodes.
+	nodeSelectors NodeSelectors
+
 	// These two fields are here since to properly squash settings down into nested
 	// configs we need to tell whether or not values are default values or the user
 	// provided them on the command line/config file.
@@ -96,6 +100,8 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 
 	AddPluginSetFlag(&cfg.plugins, genset)
 	AddPluginEnvFlag(&cfg.pluginEnvs, genset)
+
+	AddNodeSelectorsFlag(&cfg.nodeSelectors, genset)
 	cfg.genflags = genset
 	return genset
 }
@@ -161,6 +167,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		StaticPlugins:        g.plugins.StaticPlugins,
 		PluginEnvOverrides:   g.pluginEnvs,
 		ShowDefaultPodSpec:   g.showDefaultPodSpec,
+		NodeSelectors:        g.nodeSelectors,
 	}, nil
 }
 

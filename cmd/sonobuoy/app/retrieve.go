@@ -21,10 +21,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/client"
-	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"golang.org/x/sync/errgroup"
 	"k8s.io/client-go/util/exec"
 )
@@ -91,7 +91,6 @@ func retrieveResults(cmd *cobra.Command, args []string) {
 	if _, ok := err.(exec.CodeExitError); ok {
 		fmt.Fprintln(os.Stderr, "Results not ready yet. Check `sonobuoy status` for status.")
 		os.Exit(1)
-
 	} else if err != nil {
 		fmt.Fprintf(os.Stderr, "error retrieving results: %v\n", err)
 		os.Exit(2)

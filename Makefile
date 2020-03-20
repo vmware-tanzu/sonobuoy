@@ -25,8 +25,8 @@ IMAGE = $(REGISTRY)/$(TARGET)
 DIR := ${CURDIR}
 DOCKER ?= docker
 LINUX_ARCH := amd64 arm64
+WIN_ARCH := amd64
 DOCKERFILE :=
-PLATFORMS := $(subst $(SPACE),$(COMMA),$(foreach arch,$(LINUX_ARCH),linux/$(arch)))
 KIND_CLUSTER = kind
 
 # Not used for pushing images, just for local building on other GOOS. Defaults to
@@ -50,6 +50,7 @@ BUILDMNT = /go/src/$(GOTARGET)
 BUILD_IMAGE ?= golang:1.13.0-stretch
 AMD_IMAGE ?= debian:stretch-slim
 ARM_IMAGE ?= arm64v8/ubuntu:16.04
+WIN_IMAGE ?= mcr.microsoft.com/windows/servercore:1809
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
 COVERARGS ?= -coverprofile=coverage.txt -covermode=atomic
@@ -72,14 +73,15 @@ LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
 DOCKER_FLAGS =
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(DOCKER_FLAGS) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 GO_BUILD ?= CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)
+PUSH_WINDOWS ?= false
 
 # Kind images
 K8S_PATH ?= $(GOPATH)/src/github.com/kubernetes/kubernetes
 KIND_K8S_TAG ?= $(shell cd $(K8S_PATH) && git describe)
 
-.PHONY: all build_container containers build_sonobuoy push push_images push_manifest clean clean_image test local-test local int lint stress vet pre native deploy_kind kind_images push_kind_images check-kind-env
+.PHONY: all build_container linux_containers windows_containers build_sonobuoy push push_images push_manifest clean clean_image test local-test local int lint stress vet pre native deploy_kind kind_images push_kind_images check-kind-env
 
-all: containers
+all: linux_containers
 
 local-test:
 	$(TEST)
@@ -119,7 +121,7 @@ build_container:
        -f $(DOCKERFILE) \
 		.
 
-containers: build/linux/arm64/sonobuoy build/linux/amd64/sonobuoy
+linux_containers: build/linux/arm64/sonobuoy build/linux/amd64/sonobuoy
 	for arch in $(LINUX_ARCH); do \
 		if [ $$arch = amd64 ]; then \
 			sed -e 's|BASEIMAGE|$(AMD_IMAGE)|g' \
@@ -133,7 +135,20 @@ containers: build/linux/arm64/sonobuoy build/linux/amd64/sonobuoy
 			-e 's|BINARY|build/linux/arm64/sonobuoy|g' Dockerfile > Dockerfile-$$arch; \
 			$(MAKE) build_container DOCKERFILE="Dockerfile-$$arch" TARGET="sonobuoy-$$arch"; \
 		else \
-			echo "ARCH unknown"; \
+			echo "Linux ARCH unknown"; \
+        fi \
+	done
+
+windows_containers: build/windows/amd64/sonobuoy.exe
+	@echo container_win
+	for arch in $(WIN_ARCH); do \
+		if [ $$arch = amd64 ]; then \
+			sed -e 's|BASEIMAGE|$(WIN_IMAGE)|g' \
+			-e 's|BINARY|build/windows/amd64/sonobuoy.exe|g' DockerfileWindows > DockerfileWindows-$$arch; \
+			$(MAKE) build_container DOCKERFILE=DockerfileWindows-$$arch; \
+			$(MAKE) build_container DOCKERFILE="DockerfileWindows-$$arch" TARGET="sonobuoy-windows-$$arch"; \
+		else \
+			echo "Windows ARCH unknown"; \
         fi \
 	done
 
@@ -150,6 +165,11 @@ build/linux/amd64/sonobuoy:
 	mkdir -p build/linux/amd64
 	$(MAKE) build_sonobuoy GO_SYSTEM_FLAGS="GOOS=linux GOARCH=amd64" BINARY=$@
 
+build/windows/amd64/sonobuoy.exe:
+	echo Building: windows/amd64
+	mkdir -p build/windows/amd64
+	$(MAKE) build_sonobuoy GO_SYSTEM_FLAGS="GOOS=windows GOARCH=amd64" BINARY=$@
+
 native:
 	$(GO_BUILD)
 
@@ -165,13 +185,39 @@ push_images:
 		$(DOCKER) push $(REGISTRY)/$(TARGET):latest; \
 	fi
 
-push_manifest:
-	./manifest-tool push from-args --platforms $(PLATFORMS) --template $(REGISTRY)/$(TARGET)-ARCH:$(VERSION) --target $(REGISTRY)/$(TARGET):$(VERSION)
+gen_manifest:
+	mkdir build
 
-push: pre containers
+ifeq ($(PUSH_WINDOWS),true)
+	sed -e 's|TAG|$(IMAGE_VERSION)|g' \
+	-e 's|REGISTRY|$(REGISTRY)|g' \
+	-e 's/WIN_ONLY//g' \
+	manifest_spec.yaml.tmpl > ./build/manifest_spec.yaml;
+else
+	echo '$$PUSH_WINDOWS not set, not including Windows in manifest'
+	sed -e 's|TAG|$(IMAGE_VERSION)|g' \
+	-e 's|REGISTRY|$(REGISTRY)|g' \
+	-e '/^WIN_ONLY/d' \
+	manifest_spec.yaml.tmpl > ./build/manifest_spec.yaml;
+endif
+
+push_manifest: gen_manifest
+	./manifest-tool push from-spec ./build/manifest_spec.yaml
+
+push: #pre
+	# Assumes you have the images built or loaded already. Not
+	# added as dependency due to having both Linux/Windows
+	# prereqs which can't be done on the same machine.
 	for arch in $(LINUX_ARCH); do \
 		$(MAKE) push_images TARGET="sonobuoy-$$arch"; \
 	done
+ifeq ($(PUSH_WINDOWS),true)
+	for arch in $(WIN_ARCH); do \
+		$(MAKE) push_images TARGET="sonobuoy-win-$$arch"; \
+	done
+else
+	echo '$$PUSH_WINDOWS not set, not pushing Windows images'
+endif
 
 	$(MAKE) push_manifest VERSION=$(IMAGE_BRANCH) TARGET="sonobuoy"
 	$(MAKE) push_manifest VERSION=$(GIT_REF_SHORT) TARGET="sonobuoy"
@@ -187,15 +233,19 @@ clean_image:
 	$(DOCKER) rmi -f `$(DOCKER) images $(REGISTRY)/$(TARGET) -a -q` || true
 
 clean:
-	rm -f $(TARGET)
-	rm -f Dockerfile-*
+	rm -f $(TARGET); \
+	rm Dockerfile-*; \
+	rm DockerfileWindows-*; \
 	rm -rf build
 
 	for arch in $(LINUX_ARCH); do \
 		$(MAKE) clean_image TARGET=$(TARGET)-$$arch; \
 	done
+	for arch in $(WIN_ARCH); do \
+		$(MAKE) clean_image TARGET=$(TARGET)-win-$$arch; \
+	done
 
-deploy_kind: containers
+deploy_kind: linux_containers
 	kind load docker-image --name $(KIND_CLUSTER) $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) || true
 
 # kind_images will build the kind-node image. Generally building the base image is not necessary

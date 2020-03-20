@@ -1,4 +1,5 @@
-version: 2
+version: 2.1
+
 jobs:
   check_go_mod:
     docker:
@@ -30,6 +31,10 @@ jobs:
       enabled: true
     steps:
       - checkout
+      - run:
+          name: Load images into docker from workspace
+          command: |
+            docker load -i /home/circleci/project/sonobuoyImages.tar.gz
       - run: ./scripts/ci/publish.sh
 
   build_clients:
@@ -45,7 +50,6 @@ jobs:
           paths: 
             - build/linux/amd64/*
             - build/linux/arm64/*
-            - build/linux/windows/amd64/*
 
   build_containers:
     machine:
@@ -57,7 +61,7 @@ jobs:
       - run:
           name: "Build Sonobuoy container images"
           command: |
-            make containers
+            make linux_containers
       - run:
           name: Save as tar files to persist to next step
           command: |
@@ -119,10 +123,10 @@ workflows:
       - check_go_mod
       - check_readme_sync
       - build_clients
+      - unit_tests
       - build_containers:
           requires:
             - build_clients
-      - unit_tests
       - integration_tests:
           requires:
             - build_clients
