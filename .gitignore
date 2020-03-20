@@ -16,6 +16,7 @@ heptio-images-c14f11347d8b.json
 # Dynamic Dockerfiles
 Dockerfile-amd64
 Dockerfile-arm64
+DockerfileWindows-amd64
 
 # Images or results that may get downloaded
 *.tar.gz

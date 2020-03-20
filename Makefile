@@ -204,7 +204,7 @@ endif
 push_manifest: gen_manifest
 	./manifest-tool push from-spec ./build/manifest_spec.yaml
 
-push: #pre
+push: pre
 	# Assumes you have the images built or loaded already. Not
 	# added as dependency due to having both Linux/Windows
 	# prereqs which can't be done on the same machine.
