@@ -31,6 +31,8 @@ jobs:
       enabled: true
     steps:
       - checkout
+      - attach_workspace:
+          at: /home/circleci/project
       - run:
           name: Load images into docker from workspace
           command: |
