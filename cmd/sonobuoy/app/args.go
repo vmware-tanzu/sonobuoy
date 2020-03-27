@@ -107,16 +107,6 @@ func AddSystemdLogsImage(image *string, flags *pflag.FlagSet) {
 		image, "systemd-logs-image", config.DefaultSystemdLogsImage,
 		"Container image override for the systemd-logs plugin image.",
 	)
-
-	// The flag for overriding the systemd-logs image was mistakenly defined as
-	// systemd-logs-flag. This flag remains but is marked as hidden and deprecated
-	// to prevent breaking the behaviour for existing users.
-	flags.StringVar(
-		image, "systemd-logs-flag", config.DefaultSystemdLogsImage,
-		"Container image override for the systemd-logs plugin image.",
-	)
-	flags.MarkHidden("systemd-logs-flag")
-	flags.MarkDeprecated("systemd-logs-flag", "please use --systemd-logs-image instead")
 }
 
 // AddKubeConformanceImageVersion initialises an image version flag.
