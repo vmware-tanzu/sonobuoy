@@ -67,7 +67,7 @@ jobs:
       - run:
           name: Save as tar files to persist to next step
           command: |
-            docker save -o sonobuoyImages.tar.gz sonobuoy/sonobuoy
+            docker save -o sonobuoyImages.tar.gz sonobuoy/sonobuoy sonobuoy/sonobuoy-amd64 sonobuoy/sonobuoy-arm64
       - persist_to_workspace:
           root: /home/circleci/project
           paths:
