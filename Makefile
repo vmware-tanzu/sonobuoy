@@ -186,7 +186,7 @@ push_images:
 	fi
 
 gen_manifest:
-	mkdir build
+	mkdir -p build
 
 ifeq ($(PUSH_WINDOWS),true)
 	sed -e 's|TAG|$(IMAGE_VERSION)|g' \
