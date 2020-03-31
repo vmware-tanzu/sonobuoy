@@ -107,7 +107,7 @@ vet:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(VET)'
 
 pre:
-	wget https://github.com/estesp/manifest-tool/releases/download/v0.9.0/manifest-tool-linux-amd64 \
+	wget https://github.com/estesp/manifest-tool/releases/download/v1.0.1/manifest-tool-linux-amd64 \
 	  -O manifest-tool && \
 	 chmod +x ./manifest-tool
 	echo $(DOCKERHUB_TOKEN) | docker login --username sonobuoybot --password-stdin
@@ -189,13 +189,13 @@ gen_manifest:
 	mkdir -p build
 
 ifeq ($(PUSH_WINDOWS),true)
-	sed -e 's|TAG|$(IMAGE_VERSION)|g' \
+	sed -e 's|TAG|$(VERSION)|g' \
 	-e 's|REGISTRY|$(REGISTRY)|g' \
 	-e 's/WIN_ONLY//g' \
 	manifest_spec.yaml.tmpl > ./build/manifest_spec.yaml;
 else
 	echo '$$PUSH_WINDOWS not set, not including Windows in manifest'
-	sed -e 's|TAG|$(IMAGE_VERSION)|g' \
+	sed -e 's|TAG|$(VERSION)|g' \
 	-e 's|REGISTRY|$(REGISTRY)|g' \
 	-e '/^WIN_ONLY/d' \
 	manifest_spec.yaml.tmpl > ./build/manifest_spec.yaml;
