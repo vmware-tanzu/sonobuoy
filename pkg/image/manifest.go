@@ -35,6 +35,7 @@ const (
 	googleContainerRegistry = "gcr.io/google-containers"
 	invalidRegistry         = "invalid.com/invalid"
 	privateRegistry         = "gcr.io/k8s-authenticated-test"
+	promoterE2eRegistry     = "us.gcr.io/k8s-artifacts-prod/e2e-test-images"
 	quayIncubator           = "quay.io/kubernetes_incubator"
 	quayK8sCSI              = "quay.io/k8scsi"
 	sampleRegistry          = "gcr.io/google-samples"
@@ -52,6 +53,7 @@ type RegistryList struct {
 	GoogleContainerRegistry string `yaml:"googleContainerRegistry,omitempty"`
 	InvalidRegistry         string `yaml:"invalidRegistry,omitempty"`
 	PrivateRegistry         string `yaml:"privateRegistry,omitempty"`
+	PromoterE2eRegistry     string `yaml:"promoterE2eRegistry"`
 	QuayIncubator           string `yaml:"quayIncubator,omitempty"`
 	QuayK8sCSI              string `yaml:"quayK8sCSI,omitempty"`
 	SampleRegistry          string `yaml:"sampleRegistry,omitempty"`
@@ -125,6 +127,8 @@ func (r *RegistryList) getImageConfigs() (map[string]Config, error) {
 			return r.v1_16(), nil
 		case 17:
 			return r.v1_17(), nil
+		case 18:
+			return r.v1_18(), nil
 		}
 	}
 	return map[string]Config{}, fmt.Errorf("No matching configuration for k8s version: %v", r.K8sVersion)
@@ -233,6 +237,23 @@ func GetDefaultImageRegistries(version string) (*RegistryList, error) {
 				QuayIncubator:           quayIncubator,
 
 				// The following keys are used in the v1.17 registry list however their images
+				// cannot be pulled as they are used as part of tests for checking image pull
+				// behavior. They are omitted from the resulting config.
+				// InvalidRegistry:         invalidRegistry,
+				// GcAuthenticatedRegistry: gcAuthenticatedRegistry,
+				// PrivateRegistry:         privateRegistry,
+			}, nil
+		case 18:
+			return &RegistryList{
+				E2eRegistry:             e2eRegistry,
+				DockerLibraryRegistry:   dockerLibraryRegistry,
+				GcRegistry:              gcRegistry,
+				GoogleContainerRegistry: googleContainerRegistry,
+				DockerGluster:           dockerGluster,
+				QuayIncubator:           quayIncubator,
+				PromoterE2eRegistry:     promoterE2eRegistry,
+
+				// The following keys are used in the v1.18 registry list however their images
 				// cannot be pulled as they are used as part of tests for checking image pull
 				// behavior. They are omitted from the resulting config.
 				// InvalidRegistry:         invalidRegistry,
