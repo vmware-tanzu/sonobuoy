@@ -85,6 +85,7 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 		QuayIncubator:           quayIncubator,
 		QuayK8sCSI:              quayK8sCSI,
 		SampleRegistry:          sampleRegistry,
+		PromoterE2eRegistry:     promoterE2eRegistry,
 	}
 
 	// Load in a config file
