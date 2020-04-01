@@ -122,13 +122,28 @@ workflows:
   version: 2
   checks:
     jobs:
-      - check_go_mod
-      - check_readme_sync
-      - build_clients
-      - unit_tests
+      - check_go_mod:
+          filters:
+            tags:
+              only: /^v.*/
+      - check_readme_sync:
+          filters:
+            tags:
+              only: /^v.*/
+      - build_clients:
+          filters:
+            tags:
+              only: /^v.*/
+      - unit_tests:
+          filters:
+            tags:
+              only: /^v.*/
       - build_containers:
           requires:
             - build_clients
+          filters:
+            tags:
+              only: /^v.*/
       - integration_tests:
           requires:
             - build_clients
