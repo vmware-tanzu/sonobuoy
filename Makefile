@@ -146,7 +146,7 @@ windows_containers: build/windows/amd64/sonobuoy.exe
 			sed -e 's|BASEIMAGE|$(WIN_IMAGE)|g' \
 			-e 's|BINARY|build/windows/amd64/sonobuoy.exe|g' DockerfileWindows > DockerfileWindows-$$arch; \
 			$(MAKE) build_container DOCKERFILE=DockerfileWindows-$$arch; \
-			$(MAKE) build_container DOCKERFILE="DockerfileWindows-$$arch" TARGET="sonobuoy-windows-$$arch"; \
+			$(MAKE) build_container DOCKERFILE="DockerfileWindows-$$arch" TARGET="sonobuoy-win-$$arch"; \
 		else \
 			echo "Windows ARCH unknown"; \
         fi \
@@ -208,15 +208,15 @@ push: pre
 	# Assumes you have the images built or loaded already. Not
 	# added as dependency due to having both Linux/Windows
 	# prereqs which can't be done on the same machine.
-	for arch in $(LINUX_ARCH); do \
-		$(MAKE) push_images TARGET="sonobuoy-$$arch"; \
-	done
 ifeq ($(PUSH_WINDOWS),true)
 	for arch in $(WIN_ARCH); do \
 		$(MAKE) push_images TARGET="sonobuoy-win-$$arch"; \
 	done
 else
 	echo '$$PUSH_WINDOWS not set, not pushing Windows images'
+	for arch in $(LINUX_ARCH); do \
+		$(MAKE) push_images TARGET="sonobuoy-$$arch"; \
+	done
 endif
 
 	$(MAKE) push_manifest VERSION=$(IMAGE_BRANCH) TARGET="sonobuoy"
