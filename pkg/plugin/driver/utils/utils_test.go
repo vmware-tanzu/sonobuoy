@@ -78,6 +78,21 @@ func TestPodFailing(t *testing.T) {
 				return p
 			}),
 		}, {
+			desc:          "Does not panic if StartTime is nil when container status is waiting",
+			expectFailing: false,
+			expectMsg:     "",
+			pod: fromGoodPod(func(p *corev1.Pod) *corev1.Pod {
+				p.Status.StartTime = nil
+				p.Status.ContainerStatuses = []corev1.ContainerStatus{
+					{State: corev1.ContainerState{
+						Waiting: &corev1.ContainerStateWaiting{
+							Reason: "ImagePullBackOff",
+						},
+					}},
+				}
+				return p
+			}),
+		}, {
 			desc:          "ImagePullBackOff is not considered a failure if elapsed time within wait window",
 			expectFailing: false,
 			expectMsg:     "",
