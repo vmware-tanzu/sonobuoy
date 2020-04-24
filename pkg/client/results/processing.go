@@ -23,6 +23,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
@@ -74,9 +75,10 @@ const (
 // ResultFormat constants are the supported values for the resultFormat field
 // which enables post processing.
 const (
-	ResultFormatJUnit = "junit"
-	ResultFormatE2E   = "e2e"
-	ResultFormatRaw   = "raw"
+	ResultFormatJUnit  = "junit"
+	ResultFormatE2E    = "e2e"
+	ResultFormatRaw    = "raw"
+	ResultFormatManual = "manual"
 )
 
 // postProcessor is a function which takes two strings: the plugin directory and the
@@ -128,6 +130,52 @@ func (i *Item) GetSubTreeByName(root string) *Item {
 	}
 
 	return nil
+}
+
+// manualResultsAggregation is custom logic just for aggregating results for the top level summary
+// when the plugin is providing the YAML results manually. This is required in (at least) some cases
+// such as daemonsets when each plugin-node will have a result that needs bubbled up to a single,
+// summary Item. This is so that in large clusters you don't have a single plugin have results that
+// scale linearly with the number of nodes and may become unreasonable to show the user.
+//
+// If there is only one top level item, its status is returned. Otherwise a human readable string
+// is produced to show the counts of various values. E.g. "passed: 3, failed: 2, custom msg: 1".
+// Avoiding complete aggregation to avoid forcing a narrow set of use-cases from dominating.
+func manualResultsAggregation(items ...Item) string {
+	// Avoid the situation where we get 0 results (because the plugin partially failed to run)
+	// but we report it as passed.
+	if len(items) == 0 {
+		return StatusUnknown
+	}
+
+	results := map[string]int{}
+	var keys []string
+
+	for i := range items {
+		s := items[i].Status
+		if s == "" {
+			s = StatusUnknown
+		}
+
+		if _, exists := results[s]; !exists {
+			keys = append(keys, s)
+		}
+		results[s]++
+	}
+
+	if len(keys) == 1 {
+		return keys[0]
+	}
+
+	// Sort to keep ensure result ordering is consistent.
+	sort.Strings(keys)
+
+	var parts []string
+	for _, k := range keys {
+		parts = append(parts, fmt.Sprintf("%v: %v", k, results[k]))
+	}
+
+	return fmt.Sprintf(strings.Join(parts, ", "))
 }
 
 // aggregateStatus defines the aggregation rules for status. Failures bubble
@@ -192,13 +240,15 @@ func PostProcessPlugin(p plugin.Interface, dir string) (Item, []error) {
 		i, errs = processPluginWithProcessor(p, dir, junitProcessFile, fileOrExtension(p.GetResultFiles(), ".xml"))
 	case ResultFormatRaw:
 		i, errs = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
+	case ResultFormatManual:
+		// Only process the specified plugin result files or a Sonobuoy results file.
+		i, errs = processPluginWithProcessor(p, dir, manualProcessFile, fileOrDefault(p.GetResultFiles(), PostProcessedResultsFile))
 	default:
 		// Default to raw format so that consumers can still expect the aggregate file to exist and
 		// can navigate the output of the plugin more easily.
 		i, errs = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
 	}
 
-	i.Status = aggregateStatus(i.Items...)
 	return i, errs
 }
 
@@ -231,6 +281,7 @@ func processNodesWithProcessor(p plugin.Interface, baseDir, dir string, processo
 		if err != nil {
 			logrus.Warningf("Error processing results entries for node %v, plugin %v: %v", nodeDirInfo.Name(), p.GetName(), err)
 		}
+
 		results = append(results, nodeItem)
 	}
 
@@ -244,41 +295,61 @@ func processPluginWithProcessor(p plugin.Interface, baseDir string, processor po
 	pdir := path.Join(baseDir, PluginsDir, p.GetName())
 	pResultsDir := path.Join(pdir, ResultsDir)
 	pErrorsDir := path.Join(pdir, ErrorsDir)
-	errs := []error{}
-
+	var errs []error
+	var items, errItems []Item
+	var err error
 	_, isDS := p.(*daemonset.Plugin)
+
+	if isDS {
+		items, err = processNodesWithProcessor(p, baseDir, pResultsDir, processor, selector)
+		if err != nil {
+			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pResultsDir))
+		}
+		errItems, err = processNodesWithProcessor(p, baseDir, pErrorsDir, errProcessor, errSelector())
+		if err != nil {
+			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pErrorsDir))
+		}
+	} else {
+		items, err = processDir(p, pdir, pResultsDir, processor, selector)
+		if err != nil {
+			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pResultsDir))
+		}
+
+		errItems, err = processDir(p, pdir, pErrorsDir, errProcessor, errSelector())
+		if err != nil && !os.IsNotExist(err) {
+			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pErrorsDir))
+		}
+	}
+
 	results := Item{
 		Name:     p.GetName(),
 		Metadata: map[string]string{metadataTypeKey: metadataTypeSummary},
 	}
 
-	if isDS {
-		items, err := processNodesWithProcessor(p, baseDir, pResultsDir, processor, selector)
-		if err != nil {
-			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pResultsDir))
-		}
-		errItems, err := processNodesWithProcessor(p, baseDir, pErrorsDir, errProcessor, errSelector())
-		if err != nil {
-			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pErrorsDir))
-		}
+	results.Items = append(results.Items, items...)
+	results.Items = append(results.Items, errItems...)
 
-		results.Items = append(results.Items, items...)
-		results.Items = append(results.Items, errItems...)
+	if p.GetResultFormat() == ResultFormatManual {
+		// The user provided most of the data which we don't want to interfere with; we just want to get the
+		// status value for the summary object we wrap their results with.
+
+		// If the plugin is a DaemonSet plugin, we want to consider all result files from all nodes.
+		// Iterate over every node, gather each result file and aggregate the status over all those items.
+		// Also produce an aggregate status for each node using each node's result files.
+		if isDS {
+			var itemsForStatus []Item
+			for i, item := range results.Items {
+				itemsForStatus = append(itemsForStatus, item.Items...)
+				results.Items[i].Status = manualResultsAggregation(item.Items...)
+			}
+			results.Status = manualResultsAggregation(itemsForStatus...)
+		} else {
+			results.Status = manualResultsAggregation(results.Items...)
+		}
 	} else {
-		items, err := processDir(p, pdir, pResultsDir, processor, selector)
-		if err != nil {
-			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pResultsDir))
-		}
-		results.Items = items
-
-		items, err = processDir(p, pdir, pErrorsDir, errProcessor, errSelector())
-		if err != nil && !os.IsNotExist(err) {
-			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pErrorsDir))
-		}
-		results.Items = append(results.Items, items...)
+		results.Status = aggregateStatus(results.Items...)
 	}
 
-	results.Status = aggregateStatus(results.Items...)
 	return results, errs
 }
 
@@ -363,6 +434,24 @@ func sliceContains(set []string, val string) bool {
 		}
 	}
 	return false
+}
+
+// fileOrDefault returns a function which will return true for a filename that matches
+// the name of any file in the given list of files.
+// If no files are provided to search against, then the returned function will return
+// true for a filename that matches the given default filename.
+func fileOrDefault(files []string, defaultFile string) fileSelector {
+	return func(fPath string, info os.FileInfo) bool {
+		if info == nil || info.IsDir() {
+			return false
+		}
+
+		filename := filepath.Base(fPath)
+		if len(files) > 0 {
+			return sliceContains(files, filename)
+		}
+		return filename == defaultFile
+	}
 }
 
 // fileOrExtension returns a function which will return true for files

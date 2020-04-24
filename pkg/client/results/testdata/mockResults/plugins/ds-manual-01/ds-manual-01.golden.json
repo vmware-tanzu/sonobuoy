@@ -1,0 +1,23 @@
+{
+"name": "ds-manual-01",
+"status": "unknown",
+"meta": {
+"type": "summary"
+},
+"items": [
+{
+"name": "node1",
+"status": "unknown",
+"meta": {
+"type": "node"
+}
+},
+{
+"name": "node2",
+"status": "unknown",
+"meta": {
+"type": "node"
+}
+}
+]
+}

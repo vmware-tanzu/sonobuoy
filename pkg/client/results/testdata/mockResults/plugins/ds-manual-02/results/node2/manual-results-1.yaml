@@ -1,0 +1,13 @@
+name: ds-manual-plugin
+status: status-from-manual-results-1
+meta:
+  type: summary
+items:
+- name: a test file
+  status: status 1
+  meta:
+    file: results/global/junit_01.xml
+    type: file
+  items:
+  - name: Manual suite name
+    status: status 2

@@ -1,0 +1,16 @@
+name: manual-plugin
+status: custom status
+meta:
+  type: summary
+items:
+- name: Another test file
+  status: status 1
+  meta:
+    file: results/global/junit_02.xml
+    type: file
+  items:
+  - name: Manual suite name
+    status: status 2
+    items:
+    - name: Manual test name
+      status: passed
