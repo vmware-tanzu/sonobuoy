@@ -1,6 +1,6 @@
 module github.com/vmware-tanzu/sonobuoy
 
-go 1.13
+go 1.14
 
 require (
 	cloud.google.com/go v0.41.0 // indirect
