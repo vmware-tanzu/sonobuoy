@@ -20,4 +20,4 @@ kind load docker-image --name $cluster $testImage
 
 # Build and load the sonobuoy image and run integration tests
 make -C $DIR KIND_CLUSTER=$cluster deploy_kind
-KUBECONFIG="$(kind get kubeconfig-path --name="$cluster")" VERBOSE=true make -C $DIR int
+KUBECONFIG=${HOME}/.kube/config VERBOSE=true make -C $DIR int

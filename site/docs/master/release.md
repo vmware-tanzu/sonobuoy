@@ -99,12 +99,16 @@ working appropriately:
 1. Go to the [GitHub release page](https://github.com/vmware-tanzu/sonobuoy/releases) and download the release binaries and make sure the version matches the expected values.
 2. Run a [Kind](https://github.com/kubernetes-sigs/kind) cluster locally and ensure that you can run `sonobuoy run --mode quick`.
    If this release corresponds to a new Kubernetes release as well, ensure:
+    - you're using the correct Kubernetes context by checking the output from:
+      ```
+      kubectl config current-context
+      ```
+      and verifying that it is set to the context for the Kind cluster just created (`kind-kind` or `kind-<custom_cluster_name>`)
     - you're testing with the new Kind images by checking the output from:
       ```
-      export KUBECONFIG="$(kind get kubeconfig-path --name="kind")"
       kubectl version --short
       ```
-      and verify that the server version matches the intended Kubernetes version.
+      and verifying that the server version matches the intended Kubernetes version.
     - you can run `sonobuoy images` and get a list of test images as expected
 2. Update the release notes if desired on GitHub by editing the newly created release.
 
