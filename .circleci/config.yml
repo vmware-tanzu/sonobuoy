@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   check_go_mod:
     docker:
-      - image: golang:1.13
+      - image: golang:1.14
     steps:
       - checkout
       - run:
@@ -12,7 +12,7 @@ jobs:
 
   check_readme_sync:
     docker:
-      - image: golang:1.13
+      - image: golang:1.14
     steps:
       - checkout
       - run:
@@ -21,7 +21,7 @@ jobs:
 
   github-release:
     docker:
-      - image: circleci/golang:1.13.1
+      - image: circleci/golang:1.14
     steps:
       - checkout
       - run: curl -sL https://git.io/goreleaser | bash

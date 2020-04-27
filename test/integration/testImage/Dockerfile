@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.13.0-stretch AS base
+FROM golang:1.14-stretch AS base
 WORKDIR /src
 
 # Handle the go modules first to take advantage of Docker cache.
