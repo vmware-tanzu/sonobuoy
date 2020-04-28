@@ -99,7 +99,7 @@ jobs:
       - run:
           name: "Create kind cluster"
           command: |
-            kind create cluster --config kind-config.yaml
+            kind create cluster --config kind-config.yaml -v 1
       - attach_workspace:
           at: /home/circleci/project
       - run:
