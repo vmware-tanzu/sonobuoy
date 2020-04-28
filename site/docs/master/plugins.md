@@ -83,11 +83,16 @@ to present results metadata to the end user such as the number of passed/failed 
 the number of files gathered.
 
 This inspection process is informed by the YAML that described the plugin defintion. The
-`result-type` field can be set to either `raw` or `junit`.
+`result-type` field can be set to either `raw`, `junit`, or `manual`.
 
 When set to `junit`, Sonobuoy will look for XML files and process them as junit test results.
 
 When set to `raw`, Sonobuoy will simply inspect all the files and record the number of files generated.
+
+When set to `manual`, Sonobuoy will process files that use the Sonobuoy results metadata format.
+This option allows you to specify your own results metadata directly, rather than having Sonobuoy generate it.
+To use this option, the files to process must be specified directly in `result-files` array field in the plugin definition, or the plugin must write a `sonobuoy_results.yaml` file.
+To find out more about using this format, see the [results][results] page.
 
 The data that Sonobuoy gathers during this step makes it possible for a user to do a few different tasks:
 
