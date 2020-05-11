@@ -38,6 +38,27 @@ func ExampleNewCmdResults() {
 	// [sig-storage] CSI Volumes CSI Topology test using GCE PD driver [Serial] should fail to schedule a pod with a zone missing from AllowedTopologies; PD is provisioned with immediate volume binding
 }
 
+func ExampleNewCmdResults_custom() {
+	cmd := NewCmdResults()
+	cmd.SetArgs([]string{
+		filepath.Join("testdata", "testResultsOutputCustomStatuses.tar.gz"),
+		"--plugin=custom-status",
+	})
+	cmd.Execute()
+	// Output:
+	// Plugin: custom-status
+	// Status: custom-overall-status
+	// Total: 7
+	// Passed: 1
+	// Failed: 1
+	// Skipped: 1
+	// complete: 2
+	// custom: 2
+	//
+	// Failed tests:
+	// [sig-storage] CSI Volumes CSI Topology test using GCE PD driver [Serial] should fail to schedule a pod with a zone missing from AllowedTopologies; PD is provisioned with immediate volume binding
+}
+
 func ExampleNewCmdResults_detailed() {
 	cmd := NewCmdResults()
 	cmd.SetArgs([]string{

@@ -23,6 +23,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -248,44 +249,65 @@ func printResultsDetails(treePath []string, o *results.Item, input resultsInput)
 }
 
 func printResultsSummary(o *results.Item) error {
-	p, f, s, failList := walkForSummary(o, 0, 0, 0, []string{})
+	statusCounts := map[string]int{}
+	var failedList []string
 
-	fmt.Printf(`Plugin: %v
-Status: %v
-Total: %v
-Passed: %v
-Failed: %v
-Skipped: %v
-`, o.Name, o.Status, p+f+s, p, f, s)
+	statusCounts, failedList = walkForSummary(o, statusCounts, failedList)
 
-	if len(failList) > 0 {
+	total := 0
+	for _, v := range statusCounts {
+		total += v
+	}
+
+	fmt.Println("Plugin:", o.Name)
+	fmt.Println("Status:", o.Status)
+	fmt.Println("Total:", total)
+
+	// We want to print the built-in status type results first before printing any custom statuses, so print first then delete.
+	fmt.Println("Passed:", statusCounts[results.StatusPassed])
+	fmt.Println("Failed:", statusCounts[results.StatusFailed]+statusCounts[results.StatusTimeout])
+	fmt.Println("Skipped:", statusCounts[results.StatusSkipped])
+
+	delete(statusCounts, results.StatusPassed)
+	delete(statusCounts, results.StatusFailed)
+	delete(statusCounts, results.StatusTimeout)
+	delete(statusCounts, results.StatusSkipped)
+
+	// We want the custom statuses to always be printed in order so sort them before proceeding
+	keys := []string{}
+	for k := range statusCounts {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		fmt.Printf("%v: %v\n", k, statusCounts[k])
+	}
+
+	if len(failedList) > 0 {
 		fmt.Print("\nFailed tests:\n")
-		fmt.Print(strings.Join(failList, "\n"))
+		fmt.Print(strings.Join(failedList, "\n"))
 		fmt.Println()
 	}
 
 	return nil
 }
 
-func walkForSummary(o *results.Item, p, f, s int, failList []string) (numPassed, numFailed, numSkipped int, failed []string) {
-	if len(o.Items) > 0 {
-		for _, v := range o.Items {
-			p, f, s, failList = walkForSummary(&v, p, f, s, failList)
+func walkForSummary(result *results.Item, statusCounts map[string]int, failList []string) (map[string]int, []string) {
+	if len(result.Items) > 0 {
+		for _, item := range result.Items {
+			statusCounts, failList = walkForSummary(&item, statusCounts, failList)
 		}
-		return p, f, s, failList
+		return statusCounts, failList
 	}
 
-	switch o.Status {
-	case results.StatusPassed:
-		p++
-	case results.StatusFailed, results.StatusTimeout:
-		f++
-		failList = append(failList, o.Name)
-	case results.StatusSkipped:
-		s++
+	statusCounts[result.Status]++
+
+	if result.Status == results.StatusFailed || result.Status == results.StatusTimeout {
+		failList = append(failList, result.Name)
 	}
 
-	return p, f, s, failList
+	return statusCounts, failList
 }
 
 func getFileFromMeta(m map[string]string) string {
