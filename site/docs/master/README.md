@@ -29,7 +29,7 @@ Sonobuoy supports 3 Kubernetes minor versions: the current release and 2 minor v
 * For some advanced workflows it may be required to have `kubectl` installed. See [installing via Homebrew (MacOS)][brew] or [building
   the binary (Linux)][linux].
 
-* The `sonobuoy images` subcommand requires [Docker](https://www.docker.com) to be installed. See [installing Docker](docker).
+* The `sonobuoy images` subcommand requires [Docker](https://www.docker.com) to be installed. See [installing Docker][docker].
 
 ## Installation
 
@@ -155,7 +155,7 @@ See [the list of releases][releases] to find out about feature changes.
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
 [coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
-[docker]: https://docs.docker.com/install
+[docker]: https://docs.docker.com/get-docker/
 [docs]: https://sonobuoy.io/docs/master
 [e2ePlugin]: e2eplugin
 [customPlugins]: plugins
