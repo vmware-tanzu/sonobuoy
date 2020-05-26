@@ -24,6 +24,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 	kubeerror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -35,7 +36,6 @@ const (
 	clusterRoleFieldNamespace = "namespace"
 	clusterRoleFieldValue     = "sonobuoy"
 	spinnerMode               = "Spinner"
-	e2eNamespacePrefix        = "e2e-"
 	pollFreq                  = 5 * time.Second
 )
 
@@ -176,15 +176,25 @@ func deleteRBAC(client kubernetes.Interface, cfg *DeleteConfig) (wait.ConditionF
 	return rbacDeleteCondition, nil
 }
 
+func isE2ENamespace(ns v1.Namespace) bool {
+	// E2E namespaces are identified by looking for the "e2e-framework" and "e2e-run" labels.
+	_, hasE2EFrameworkLabel := ns.Labels["e2e-framework"]
+	_, hasE2ERunLabel := ns.Labels["e2e-run"]
+
+	return hasE2EFrameworkLabel && hasE2ERunLabel
+}
+
 func cleanupE2E(client kubernetes.Interface) (wait.ConditionFunc, error) {
 	// Delete any dangling E2E namespaces
+	// There currently isn't a way to associate namespaces with a particular test run so this
+	// will delete namespaces associated with any e2e test run by checking the namespace's labels.
 	e2eNamespaceCondition := func() (bool, error) {
 		namespaces, err := client.CoreV1().Namespaces().List(metav1.ListOptions{})
 		if err != nil {
 			return false, errors.Wrap(err, "failed to list namespaces")
 		}
 		for _, namespace := range namespaces.Items {
-			if strings.HasPrefix(namespace.Name, e2eNamespacePrefix) {
+			if isE2ENamespace(namespace) {
 				return false, nil
 			}
 		}
@@ -197,7 +207,7 @@ func cleanupE2E(client kubernetes.Interface) (wait.ConditionFunc, error) {
 	}
 
 	for _, namespace := range namespaces.Items {
-		if strings.HasPrefix(namespace.Name, e2eNamespacePrefix) {
+		if isE2ENamespace(namespace) {
 			log := logrus.WithFields(logrus.Fields{
 				"kind":      "namespace",
 				"namespace": namespace.Name,
