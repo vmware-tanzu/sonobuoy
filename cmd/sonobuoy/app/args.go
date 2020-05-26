@@ -266,7 +266,7 @@ func AddSkipPreflightFlag(flag *bool, flags *pflag.FlagSet) {
 func AddDeleteAllFlag(flag *bool, flags *pflag.FlagSet) {
 	flags.BoolVar(
 		flag, "all", false,
-		"In addition to deleting Sonobuoy namespaces, also clean up dangling e2e- namespaces.",
+		"In addition to deleting Sonobuoy namespaces, also clean up dangling e2e namespaces (those with 'e2e-framework' and 'e2e-run' labels).",
 	)
 }
 
