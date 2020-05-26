@@ -87,7 +87,7 @@ func (m *Mode) Get() *ModeConfig {
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
 				Focus:    `\[Conformance\]`,
-				Parallel: "1",
+				Parallel: "false",
 			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
@@ -99,7 +99,7 @@ func (m *Mode) Get() *ModeConfig {
 			E2EConfig: E2EConfig{
 				Focus:    `\[Conformance\]`,
 				Skip:     nonDisruptiveSkipList,
-				Parallel: "1",
+				Parallel: "false",
 			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
@@ -110,7 +110,7 @@ func (m *Mode) Get() *ModeConfig {
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
 				Focus:    "Pods should be submitted and removed",
-				Parallel: "1",
+				Parallel: "false",
 			},
 			Selectors: []plugin.Selection{
 				{Name: "e2e"},
