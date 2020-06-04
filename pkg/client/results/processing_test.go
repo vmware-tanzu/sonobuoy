@@ -194,6 +194,14 @@ func TestPostProcessPlugin(t *testing.T) {
 			desc:   "DS Manual results with no file specified and default sonobuoy_results, default file processed",
 			key:    "ds-manual-04",
 			plugin: getPlugin("ds-manual-04", "daemonset", "manual", []string{}),
+		}, {
+			desc:   "Job Manual results with arbitrary details",
+			key:    "job-manual-arbitrary-details",
+			plugin: getPlugin("job-manual-arbitrary-details", "job", "manual", []string{"manual-results-arbitrary-details.yaml"}),
+		}, {
+			desc:   "DS Manual results with arbitrary details",
+			key:    "ds-manual-arbitrary-details",
+			plugin: getPlugin("ds-manual-arbitrary-details", "daemonset", "manual", []string{"manual-results-arbitrary-details.yaml"}),
 		},
 	}
 	for _, tc := range testCases {

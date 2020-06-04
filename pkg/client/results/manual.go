@@ -58,6 +58,7 @@ func manualProcessFile(pluginDir, currentFile string) (Item, error) {
 
 	rootObj.Status = resultObj.Status
 	rootObj.Items = resultObj.Items
+	rootObj.Details = resultObj.Details
 
 	return rootObj, nil
 }

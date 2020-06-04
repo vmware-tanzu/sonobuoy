@@ -1,0 +1,19 @@
+sonobuoy-config:
+  driver: Job
+  plugin-name: manual-with-arbitrary-details
+  result-format: manual
+  result-files:
+    - manual-results-with-arbitrary-details.yaml
+spec:
+  args:
+  - single-file
+  - /resources/manual-results-with-arbitrary-details.yaml
+  command:
+  - testImage
+  image: sonobuoy/testimage:v0.1
+  name: plugin
+  resources: {}
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
+

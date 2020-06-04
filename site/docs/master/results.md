@@ -113,7 +113,7 @@ Each result `item` comprises:
  * `name`: string
  * `status`: string
  * `meta`: map of string to string
- * `details`: map of string to string
+ * `details`: map of string to interface{}
  * `items`: array of `item`
 
 An example of this format is given below:
@@ -131,6 +131,9 @@ items:
     status: custom-status-1
     details:
       stdout: "stdout from the test"
+      messages:
+        - message from the test
+        - another message
   - name: Another manual test
     status: custom-status-2
     details:

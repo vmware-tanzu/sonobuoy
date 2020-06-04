@@ -1,0 +1,15 @@
+name: manual-results
+status: status-from-manual-results
+meta:
+  type: summary
+items:
+  - name: a test file
+    status: status 1
+    meta:
+      file: results/global/junit_01.xml
+      type: file
+  - name: another test file
+    status: status 2
+    meta:
+      file: results/global/junit_01.xml
+      type: file

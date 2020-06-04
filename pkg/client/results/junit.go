@@ -251,7 +251,7 @@ func junitProcessReader(r io.Reader, name string, metadata map[string]string) (I
 			case JUnitSkipped(t):
 				status = StatusSkipped
 			}
-			testItem := Item{Name: t.Name, Status: status, Details: map[string]string{}, Metadata: map[string]string{}}
+			testItem := Item{Name: t.Name, Status: status, Details: map[string]interface{}{}, Metadata: map[string]string{}}
 
 			// Different JUnit implementations build the objects in slightly different ways.
 			// Some will only use contents, some only the message attribute. Here we just concat

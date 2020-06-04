@@ -1,0 +1,11 @@
+name: manual-results
+status: status-from-manual-results
+meta:
+  type: summary
+details:
+  arbitrary-data:
+    key: value
+    array-of-integers:
+      - 1
+      - 2
+      - 3

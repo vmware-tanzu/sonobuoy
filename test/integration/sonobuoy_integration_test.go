@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -318,6 +319,42 @@ func TestManualResultsDaemonSet(t *testing.T) {
 	expectedStatus := fmt.Sprintf("manual-results-1: %v, manual-results-2: %v", numNodes, numNodes)
 	if resultItem.Status != expectedStatus {
 		t.Errorf("Expected plugin to have status: %v, got %v", expectedStatus, resultItem.Status)
+	}
+}
+
+func TestManualResultsWithNestedDetails(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	ns, cleanup := getNamespace(t)
+	defer cleanup()
+
+	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/manual-with-arbitrary-details.yaml -n %v", ns)
+	mustRunSonobuoyCommandWithContext(ctx, t, args)
+
+	tb := mustDownloadTarball(ctx, t, ns)
+	tb = saveToArtifacts(t, tb)
+
+	// Retrieve the sonobuoy results file from the tarball
+	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tb, "manual-with-arbitrary-details")
+	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, resultsArgs)
+
+	var resultItem results.Item
+	yaml.Unmarshal(resultsYaml.Bytes(), &resultItem)
+
+	if len(resultItem.Items) != 1 {
+		t.Fatalf("unexpected number of Items in results map, expected 1, got %v", len(resultItem.Items))
+	}
+
+	actualDetails := resultItem.Items[0].Details
+	expectedDetails := map[string]interface{}{
+		"nested-data": map[interface{}]interface{}{
+			"nested-key": "value",
+		},
+	}
+
+	if !reflect.DeepEqual(expectedDetails, actualDetails) {
+		t.Errorf("unexpected value for details map, expected %q, got %q", expectedDetails, actualDetails)
 	}
 }
 

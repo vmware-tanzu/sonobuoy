@@ -42,6 +42,7 @@ require (
 	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 	k8s.io/api v0.0.0-20190704095032-f4ca3d3bdf1d
 	k8s.io/apimachinery v0.0.0-20190704094733-8f6ac2502e51
 	k8s.io/client-go v11.0.1-0.20190704100234-640d9f240853+incompatible

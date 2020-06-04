@@ -1,0 +1,7 @@
+name: custom
+status: manual-results-with-arbitrary-details
+meta:
+  type: summary
+details:
+  nested-data:
+    nested-key: value
