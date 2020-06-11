@@ -1,0 +1,79 @@
+{
+"name": "ds-manual-arbitrary-details",
+"status": "status-from-manual-results",
+"meta": {
+"type": "summary"
+},
+"items": [
+{
+"name": "node1",
+"status": "status-from-manual-results",
+"meta": {
+"type": "node"
+},
+"items": [
+{
+"name": "manual-results-arbitrary-details.yaml",
+"status": "status-from-manual-results",
+"meta": {
+"file": "results/node1/manual-results-arbitrary-details.yaml",
+"type": "file"
+},
+"items": [
+{
+"name": "a test file",
+"status": "status 1",
+"meta": {
+"file": "results/global/junit_01.xml",
+"type": "file"
+},
+"details": {
+"array-of-integers": [
+1,
+2,
+3
+],
+"key": "value from node 1"
+}
+}
+]
+}
+]
+},
+{
+"name": "node2",
+"status": "status-from-manual-results",
+"meta": {
+"type": "node"
+},
+"items": [
+{
+"name": "manual-results-arbitrary-details.yaml",
+"status": "status-from-manual-results",
+"meta": {
+"file": "results/node2/manual-results-arbitrary-details.yaml",
+"type": "file"
+},
+"items": [
+{
+"name": "a test file",
+"status": "status 1",
+"meta": {
+"file": "results/global/junit_01.xml",
+"type": "file"
+},
+"details": {
+"array-of-integers": [
+1,
+2,
+3
+],
+"key": "value from node 2"
+}
+}
+]
+}
+]
+}
+]
+}

@@ -41,7 +41,7 @@ func ExampleNewCmdResults() {
 func ExampleNewCmdResults_custom() {
 	cmd := NewCmdResults()
 	cmd.SetArgs([]string{
-		filepath.Join("testdata", "testResultsOutputCustomStatuses.tar.gz"),
+		filepath.Join("testdata", "testResultsOutput.tar.gz"),
 		"--plugin=custom-status",
 	})
 	cmd.Execute()
@@ -126,4 +126,17 @@ func ExampleNewCmdResults_skipPrefix() {
 	cmd.Execute()
 	// Output:
 	// hello world pt2
+}
+
+func ExampleNewCmdResults_pluginDetailedArbitraryDetails() {
+	cmd := NewCmdResults()
+	cmd.SetArgs([]string{
+		filepath.Join("testdata", "testResultsOutput.tar.gz"),
+		"--plugin", "arbitrary-details",
+		"--mode", "detailed",
+	})
+	cmd.Execute()
+	// Output:
+	// {"name":"Item with arbitrary details","status":"complete","meta":{"path":"arbitrary-details|output-file"},"details":{"nested-details":{"key1":"value1","key2":"value2"},"string-array":["string 1","string 2","string 3"]}}
+	// {"name":"Another item with arbitrary details","status":"complete","meta":{"path":"arbitrary-details|output-file"},"details":{"integer-array":[1,2,3],"nested-details":{"key1":"value1","key2":"value2","key3":{"nested-key1":"nested-value1","nested-key2":"nested-value2","nested-key3":{"another-nested-key":"another-nested-value"}}}}}
 }

@@ -94,11 +94,11 @@ type fileSelector func(string, os.FileInfo) bool
 // types can be transformed into this simple format and set at a standard
 // location in our results tarball for simplified processing by any consumer.
 type Item struct {
-	Name     string            `json:"name" yaml:"name"`
-	Status   string            `json:"status" yaml:"status"`
-	Metadata map[string]string `json:"meta,omitempty" yaml:"meta,omitempty"`
-	Details  map[string]string `json:"details,omitempty" yaml:"details,omitempty"`
-	Items    []Item            `json:"items,omitempty" yaml:"items,omitempty"`
+	Name     string                 `json:"name" yaml:"name"`
+	Status   string                 `json:"status" yaml:"status"`
+	Metadata map[string]string      `json:"meta,omitempty" yaml:"meta,omitempty"`
+	Details  map[string]interface{} `json:"details,omitempty" yaml:"details,omitempty"`
+	Items    []Item                 `json:"items,omitempty" yaml:"items,omitempty"`
 }
 
 // Empty returns true if the Item is empty.
@@ -366,7 +366,7 @@ func errProcessor(pluginDir string, currentFile string) (Item, error) {
 		Name:     filepath.Base(currentFile),
 		Status:   StatusFailed,
 		Metadata: map[string]string{"file": relPath},
-		Details:  map[string]string{},
+		Details:  map[string]interface{}{},
 	}
 
 	infile, err := os.Open(currentFile)
@@ -392,7 +392,7 @@ func errProcessor(pluginDir string, currentFile string) (Item, error) {
 	// Surface the error to be the name of the "test" to make the error mode more visible to end users.
 	// Seeing `error.json` wouldn't be helpful.
 	if resultObj.Details["error"] != "" {
-		resultObj.Name = resultObj.Details["error"]
+		resultObj.Name = fmt.Sprint(resultObj.Details["error"])
 	}
 
 	if isTimeoutErr(resultObj) {
@@ -405,7 +405,7 @@ func errProcessor(pluginDir string, currentFile string) (Item, error) {
 // isTimeoutErr is the snippet of logic that determines whether or not a given Item represents
 // a timeout error (i.e. Sonobuoy timed out waiting for results).
 func isTimeoutErr(i Item) bool {
-	return strings.Contains(i.Details["error"], "timeout")
+	return strings.Contains(fmt.Sprint(i.Details["error"]), "timeout")
 }
 
 // processDir will walk the files in a given directory, using the fileSelector function to

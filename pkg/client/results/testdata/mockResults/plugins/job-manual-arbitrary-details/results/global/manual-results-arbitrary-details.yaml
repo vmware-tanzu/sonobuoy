@@ -1,0 +1,16 @@
+name: manual-plugin-arbitrary-details
+status: status-from-manual-results
+meta:
+  type: summary
+items:
+- name: a test file
+  status: status 1
+  meta:
+    file: results/global/junit_01.xml
+    type: file
+  details:
+    key: value
+    array-of-integers:
+      - 1
+      - 2
+      - 3

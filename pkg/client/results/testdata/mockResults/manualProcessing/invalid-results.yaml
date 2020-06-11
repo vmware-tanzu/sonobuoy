@@ -1,0 +1,9 @@
+name: invalid-results
+status: status-from-manual-results
+meta:
+  type: summary
+items:
+  - name: a test file
+    status: status 1
+    meta:
+      - invalid: data

@@ -1,0 +1,35 @@
+{
+"name": "job-manual-arbitrary-details",
+"status": "status-from-manual-results",
+"meta": {
+"type": "summary"
+},
+"items": [
+{
+"name": "manual-results-arbitrary-details.yaml",
+"status": "status-from-manual-results",
+"meta": {
+"file": "results/global/manual-results-arbitrary-details.yaml",
+"type": "file"
+},
+"items": [
+{
+"name": "a test file",
+"status": "status 1",
+"meta": {
+"file": "results/global/junit_01.xml",
+"type": "file"
+},
+"details": {
+"array-of-integers": [
+1,
+2,
+3
+],
+"key": "value"
+}
+}
+]
+}
+]
+}
