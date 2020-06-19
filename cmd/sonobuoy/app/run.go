@@ -80,13 +80,13 @@ func (r *runFlags) Config() (*client.RunConfig, error) {
 	return runcfg, nil
 }
 
-func givenAnyGenConfigFlags(gf *genFlags, whitelistFlagNames []string) bool {
+func givenAnyGenConfigFlags(gf *genFlags, allowedFlagNames []string) bool {
 	changed := false
 	gf.genflags.Visit(func(f *pflag.Flag) {
 		if changed {
 			return
 		}
-		if f.Changed && !stringInList(whitelistFlagNames, f.Name) {
+		if f.Changed && !stringInList(allowedFlagNames, f.Name) {
 			changed = true
 		}
 	})
