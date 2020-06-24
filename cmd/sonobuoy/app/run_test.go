@@ -31,36 +31,36 @@ func TestGivenAnyGenConfigFlags(t *testing.T) {
 	}
 
 	testCases := []struct {
-		desc      string
-		inFlags   *genFlags
-		whitelist []string
-		expect    bool
+		desc         string
+		inFlags      *genFlags
+		allowedFlags []string
+		expect       bool
 	}{
 		{
-			desc:      "Nothing changed return true",
-			inFlags:   getSampleFlagsWithChanged(nil),
-			whitelist: []string{},
-			expect:    false,
+			desc:         "Nothing changed return true",
+			inFlags:      getSampleFlagsWithChanged(nil),
+			allowedFlags: []string{},
+			expect:       false,
 		}, {
-			desc:      "One changed flag return true",
-			inFlags:   getSampleFlagsWithChanged([]string{"kubeconfig"}),
-			whitelist: []string{},
-			expect:    true,
+			desc:         "One changed flag return true",
+			inFlags:      getSampleFlagsWithChanged([]string{"kubeconfig"}),
+			allowedFlags: []string{},
+			expect:       true,
 		}, {
-			desc:      "One changed flag return false if in whitelist",
-			inFlags:   getSampleFlagsWithChanged([]string{"kubeconfig"}),
-			whitelist: []string{"kubeconfig"},
-			expect:    false,
+			desc:         "One changed flag return false if in allowed list",
+			inFlags:      getSampleFlagsWithChanged([]string{"kubeconfig"}),
+			allowedFlags: []string{"kubeconfig"},
+			expect:       false,
 		}, {
-			desc:      "One changed flag return true if not in whitelist",
-			inFlags:   getSampleFlagsWithChanged([]string{"e2e-focus"}),
-			whitelist: []string{"flaga", "flagb", "flagc"},
-			expect:    true,
+			desc:         "One changed flag return true if not in allowed list",
+			inFlags:      getSampleFlagsWithChanged([]string{"e2e-focus"}),
+			allowedFlags: []string{"flaga", "flagb", "flagc"},
+			expect:       true,
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			out := givenAnyGenConfigFlags(tc.inFlags, tc.whitelist)
+			out := givenAnyGenConfigFlags(tc.inFlags, tc.allowedFlags)
 			if out != tc.expect {
 				t.Errorf("Expected %v but got %v", tc.expect, out)
 			}

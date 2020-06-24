@@ -90,9 +90,9 @@ One of the checks that it runs, is checking that all of the nodes are schedulabl
 This check deems any nodes with a taint other than the master node taint (`node-role.kubernetes.io/master`) to be unschedulable.
 This means that any node with a different taint will not be considered ready for testing and will block the tests from starting.
 
-With the release of Kubernetes v1.17.0, you will be able to whitelist node taints so that any node with a whitelisted taint will be deemed schedulable as part of the pre-test checks.
+With the release of Kubernetes v1.17.0, you will be able to provide a list of allowed node taints so that any node with an allowed taint will be deemed schedulable as part of the pre-test checks.
 This will ensure that these nodes will not block the tests from starting.
-If you are running Kubernetes v1.17.0 or greater, you will be able to specify the taints to whitelist using the flag `--non-blocking-taints` which takes a comma-separated list of taints.
+If you are running Kubernetes v1.17.0 or greater, you will be able to specify the taints to allow using the flag `--non-blocking-taints` which takes a comma-separated list of taints.
 To find out how to set this flag via Sonobuoy, please refer to our previous answer on how to set test framework options.
 
 This solution does not enable workloads created by the tests to run on these nodes.
