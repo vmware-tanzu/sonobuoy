@@ -23,6 +23,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/discovery"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -49,9 +50,6 @@ func NewCmdAggregator() *cobra.Command {
 		},
 		Hidden: true,
 		Args:   cobra.ExactArgs(0),
-
-		// Original command but no longer used. Kept for backward compatibility.
-		Aliases: []string{"master"},
 	}
 	cmd.PersistentFlags().BoolVar(
 		&input.noExit, "no-exit", false,
