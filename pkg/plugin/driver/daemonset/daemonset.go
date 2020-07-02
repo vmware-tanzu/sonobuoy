@@ -118,10 +118,11 @@ func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificat
 		annotations[k] = v
 	}
 	labels := map[string]string{
-		"component":       "sonobuoy",
-		"tier":            "analysis",
-		"sonobuoy-run":    p.SessionID,
-		"sonobuoy-plugin": p.GetName(),
+		"component":          "sonobuoy",
+		"sonobuoy-component": "plugin",
+		"sonobuoy-plugin":    p.GetName(),
+		"sonobuoy-run":       p.SessionID,
+		"tier":               "analysis",
 	}
 
 	ds.ObjectMeta = metav1.ObjectMeta{

@@ -113,6 +113,7 @@ metadata:
   labels:
     component: sonobuoy
     run: sonobuoy-master
+    sonobuoy-component: aggregator
     tier: analysis
   name: sonobuoy
   namespace: {{.Namespace}}
@@ -177,8 +178,8 @@ kind: Service
 metadata:
   labels:
     component: sonobuoy
-    run: sonobuoy-master
-  name: sonobuoy-master
+    sonobuoy-component: aggregator
+  name: sonobuoy-aggregator
   namespace: {{.Namespace}}
 spec:
   ports:
@@ -186,6 +187,6 @@ spec:
     protocol: TCP
     targetPort: 8080
   selector:
-    run: sonobuoy-master
+    sonobuoy-component: aggregator
   type: ClusterIP
 `)

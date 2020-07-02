@@ -33,7 +33,6 @@ import (
 
 const (
 	StatusAnnotationName = "sonobuoy.hept.io/status"
-	StatusPodLabel       = "run=sonobuoy-master"
 	DefaultStatusPodName = "sonobuoy"
 )
 
@@ -220,26 +219,45 @@ func GetPatch(annotation string) map[string]interface{} {
 // GetAggregatorPod gets the sonobuoy aggregator pod based on its label.
 // It returns NoPodWithLabelError in the case where a pod with sonobuoy aggregator label could not be found.
 func GetAggregatorPod(client kubernetes.Interface, namespace string) (*v1.Pod, error) {
-	listOptions := metav1.ListOptions{
-		LabelSelector: StatusPodLabel,
+	getPodWithLabel := func(label string) (*v1.Pod, error) {
+		listOptions := metav1.ListOptions{
+			LabelSelector: label,
+		}
+
+		podList, err := client.CoreV1().Pods(namespace).List(listOptions)
+		if err != nil {
+			return nil, errors.Wrapf(err, "unable to list pods with label %q", label)
+		}
+
+		switch {
+		case len(podList.Items) == 0:
+			logrus.Warningf("no pods found with label %q in namespace %s", label, namespace)
+			return nil, NoPodWithLabelError(fmt.Sprintf("no pods found with label %q in namespace %s", label, namespace))
+
+		case len(podList.Items) > 1:
+			logrus.Warningf("Found more than one pod with label %q. Using pod with name %q", label, podList.Items[0].GetName())
+			return &podList.Items[0], nil
+		default:
+			return &podList.Items[0], nil
+		}
 	}
 
-	podList, err := client.CoreV1().Pods(namespace).List(listOptions)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to list pods with label %q", StatusPodLabel)
-	}
+	aggregatorPodLabel := "sonobuoy-component=aggregator"
+	deprecatedAggregatorPodLabel := "run=sonobuoy-master"
 
-	switch {
-	case len(podList.Items) == 0:
-		logrus.Warningf("no pods found with label %q in namespace %s", StatusPodLabel, namespace)
-		return nil, NoPodWithLabelError(fmt.Sprintf("no pods found with label %q in namespace %s", StatusPodLabel, namespace))
+	pod, err := getPodWithLabel(aggregatorPodLabel)
+	if err != nil || pod == nil {
+		if _, ok := err.(NoPodWithLabelError); !ok {
+			// If we encountered an error which doesn't correspond to no pods existing,
+			// log the error as a warning.
+			logrus.Warning(err)
+		}
 
-	case len(podList.Items) > 1:
-		logrus.Warningf("Found more than one pod with label %q. Using pod with name %q", StatusPodLabel, podList.Items[0].GetName())
-		return &podList.Items[0], nil
-	default:
-		return &podList.Items[0], nil
+		// In either case, retry using the deprecated aggregator pod label.
+		logrus.Warningf("retrying with deprecated label %q", deprecatedAggregatorPodLabel)
+		pod, err = getPodWithLabel(deprecatedAggregatorPodLabel)
 	}
+	return pod, err
 }
 
 // GetAggregatorPodName gets the sonobuoy aggregator pod name. It returns the default pod name

@@ -57,18 +57,20 @@ func TestCreateUpdater(t *testing.T) {
 }
 
 func TestGetAggregatorPod(t *testing.T) {
-	createPodWithRunLabel := func(name string) corev1.Pod {
+	createPodWithLabels := func(name string, labels map[string]string) corev1.Pod {
 		return corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   name,
-				Labels: map[string]string{"run": "sonobuoy-master"},
+				Labels: labels,
 			},
 		}
 	}
 
 	testPods := []corev1.Pod{
-		createPodWithRunLabel("sonobuoy-run-pod-1"),
-		createPodWithRunLabel("sonobuoy-run-pod-2"),
+		createPodWithLabels("sonobuoy-run-pod-1", map[string]string{"sonobuoy-component": "aggregator"}),
+		createPodWithLabels("sonobuoy-run-pod-2", map[string]string{"sonobuoy-component": "aggregator"}),
+		createPodWithLabels("sonobuoy-run-pod-3", map[string]string{"run": "sonobuoy-master"}),
+		createPodWithLabels("sonobuoy-run-pod-4", map[string]string{"sonobuoy-component": "aggregator", "run": "sonobuoy-master"}),
 	}
 
 	checkNoError := func(err error) error {
@@ -107,7 +109,7 @@ func TestGetAggregatorPod(t *testing.T) {
 			expectedPod:   nil,
 		},
 		{
-			desc:         "No pods results in no pod and no error",
+			desc:         "No pods results in no pod and no label error",
 			podsOnServer: corev1.PodList{},
 			checkError:   checkNoPodWithLabelError,
 			expectedPod:  nil,
@@ -123,6 +125,18 @@ func TestGetAggregatorPod(t *testing.T) {
 			podsOnServer: corev1.PodList{Items: testPods},
 			checkError:   checkNoError,
 			expectedPod:  &testPods[0],
+		},
+		{
+			desc:         "Only one pod with deprecated label results in that pod being returned",
+			podsOnServer: corev1.PodList{Items: []corev1.Pod{testPods[2]}},
+			checkError:   checkNoError,
+			expectedPod:  &testPods[2],
+		},
+		{
+			desc:         "Aggregator label is prioritised if pods with new and deprecated labels",
+			podsOnServer: corev1.PodList{Items: []corev1.Pod{testPods[2], testPods[3]}},
+			checkError:   checkNoError,
+			expectedPod:  &testPods[3],
 		},
 	}
 
