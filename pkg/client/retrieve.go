@@ -18,6 +18,7 @@ package client
 
 import (
 	"archive/tar"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -121,7 +122,7 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 }
 
 func isPodRunningOnWindowsNode(client kubernetes.Interface, ns, podName string) (bool, error) {
-	pod, err := client.CoreV1().Pods(ns).Get(podName, metav1.GetOptions{})
+	pod, err := client.CoreV1().Pods(ns).Get(context.TODO(), podName, metav1.GetOptions{})
 	if err != nil {
 		return false, errors.Wrapf(err, "unable to get pod %v in namespace %v", podName, ns)
 	}
@@ -131,7 +132,7 @@ func isPodRunningOnWindowsNode(client kubernetes.Interface, ns, podName string) 
 		return false, nil
 	}
 
-	node, err := client.CoreV1().Nodes().Get(nodeName, metav1.GetOptions{})
+	node, err := client.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
 	if err != nil {
 		return false, errors.Wrapf(err, "unable to get node %v", nodeName)
 	}

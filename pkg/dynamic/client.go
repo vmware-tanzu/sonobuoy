@@ -1,6 +1,8 @@
 package dynamic
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -87,7 +89,7 @@ func (a *APIHelper) CreateObject(obj *unstructured.Unstructured) (*unstructured.
 		return nil, errors.New("failed to get a resource interface")
 	}
 	ri := rsc.Namespace(namespace)
-	return ri.Create(obj, metav1.CreateOptions{})
+	return ri.Create(context.TODO(), obj, metav1.CreateOptions{})
 }
 
 func sliceContains(set []string, val string) bool {

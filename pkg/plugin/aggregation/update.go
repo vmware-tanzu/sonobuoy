@@ -17,6 +17,7 @@ limitations under the License.
 package aggregation
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -155,7 +156,7 @@ func (u *updater) Annotate(results map[string]*plugin.Result, progressUpdates ma
 		return errors.Wrap(err, "failed to get name of the aggregator pod to annotate")
 	}
 
-	_, err = u.client.CoreV1().Pods(u.namespace).Patch(podName, types.MergePatchType, bytes)
+	_, err = u.client.CoreV1().Pods(u.namespace).Patch(context.TODO(), podName, types.MergePatchType, bytes, metav1.PatchOptions{})
 	return errors.Wrap(err, "couldn't patch pod annotation")
 }
 
@@ -224,7 +225,7 @@ func GetAggregatorPod(client kubernetes.Interface, namespace string) (*v1.Pod, e
 			LabelSelector: label,
 		}
 
-		podList, err := client.CoreV1().Pods(namespace).List(listOptions)
+		podList, err := client.CoreV1().Pods(namespace).List(context.TODO(), listOptions)
 		if err != nil {
 			return nil, errors.Wrapf(err, "unable to list pods with label %q", label)
 		}

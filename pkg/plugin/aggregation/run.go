@@ -78,7 +78,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// results they'll give.
 	// TODO: there are other places that iterate through the CoreV1.Nodes API
 	// call, we should only do this in one place and cache it.
-	nodes, err := client.CoreV1().Nodes().List(metav1.ListOptions{})
+	nodes, err := client.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return errors.WithStack(err)
 	}

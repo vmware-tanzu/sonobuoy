@@ -17,6 +17,7 @@ limitations under the License.
 package client
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -55,8 +56,8 @@ var (
 	}
 )
 
-type listFunc func(metav1.ListOptions) (*apicorev1.PodList, error)
-type nsGetFunc func(string, metav1.GetOptions) (*apicorev1.Namespace, error)
+type listFunc func(context.Context, metav1.ListOptions) (*apicorev1.PodList, error)
+type nsGetFunc func(context.Context, string, metav1.GetOptions) (*apicorev1.Namespace, error)
 
 // PreflightChecks runs all preflight checks in order, returning the first error encountered.
 func (c *SonobuoyClient) PreflightChecks(cfg *PreflightConfig) []error {
@@ -99,7 +100,7 @@ func dnsCheck(listPods listFunc, dnsNamespace string, dnsLabels ...string) error
 	var nPods = 0
 	for _, label := range dnsLabels {
 
-		obj, err := listPods(metav1.ListOptions{LabelSelector: label})
+		obj, err := listPods(context.TODO(), metav1.ListOptions{LabelSelector: label})
 		if err != nil {
 			return errors.Wrap(err, "could not retrieve list of pods")
 		}
@@ -154,7 +155,7 @@ func preflightExistingNamespace(client kubernetes.Interface, cfg *PreflightConfi
 }
 
 func nsCheck(getter nsGetFunc, ns string) error {
-	_, err := getter(ns, metav1.GetOptions{})
+	_, err := getter(context.TODO(), ns, metav1.GetOptions{})
 	switch {
 	case apierrors.IsNotFound(err):
 		return nil

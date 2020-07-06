@@ -17,21 +17,21 @@ limitations under the License.
 package discovery
 
 import (
+	"context"
 	"os"
 	"path"
 	"time"
 
-	"k8s.io/client-go/kubernetes"
-
-	"github.com/vmware-tanzu/sonobuoy/pkg/dynamic"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/dynamic"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -176,7 +176,7 @@ func QueryResources(
 	for _, gvr := range resources {
 		lister := func() (*unstructured.UnstructuredList, error) {
 			resourceClient := client.Client.Resource(gvr)
-			resources, err := resourceClient.List(opts)
+			resources, err := resourceClient.List(context.TODO(), opts)
 
 			return resources, errors.Wrapf(err, "listing resource %v", gvr)
 		}
@@ -310,7 +310,7 @@ func QueryHostData(kubeClient kubernetes.Interface, recorder *QueryRecorder, cfg
 	start := time.Now()
 
 	// TODO(chuckha) look at FieldSelector for list options{}
-	nodeList, err := kubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
+	nodeList, err := kubeClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get node list")
 	}

@@ -42,7 +42,7 @@ const (
 	waitOutputFlag      = "wait-output"
 	customRegistryFlag  = "custom-registry"
 	kubeconfig          = "kubeconfig"
-	context             = "context"
+	kubecontext         = "context"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
@@ -122,7 +122,7 @@ func AddKubeConformanceImageVersion(imageVersion *image.ConformanceImageVersion,
 func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	// The default is the empty string (look in the environment)
 	flags.Var(cfg, "kubeconfig", "Path to explicit kubeconfig file.")
-	flags.StringVar(&cfg.Context, "context", "", "Context in the kubeconfig to use.")
+	flags.StringVar(&cfg.Context, kubecontext, "", "Context in the kubeconfig to use.")
 }
 
 // AddE2ERegistryConfigFlag adds a e2eRegistryConfigFlag flag to the provided command.

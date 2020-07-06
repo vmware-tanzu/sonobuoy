@@ -1,6 +1,7 @@
 package dynamic_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -66,31 +67,31 @@ type testNamespaceableResourceInterface struct {
 func (t *testNamespaceableResourceInterface) Namespace(string) dynamic.ResourceInterface {
 	return &testResourceInterface{}
 }
-func (t *testResourceInterface) Create(obj *unstructured.Unstructured, opts metav1.CreateOptions, subresources ...string) (*unstructured.Unstructured, error) {
+func (t *testResourceInterface) Create(ctx context.Context, obj *unstructured.Unstructured, opts metav1.CreateOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return obj, nil
 }
-func (t *testResourceInterface) Update(obj *unstructured.Unstructured, opts metav1.UpdateOptions, subresources ...string) (*unstructured.Unstructured, error) {
+func (t *testResourceInterface) Update(ctx context.Context, obj *unstructured.Unstructured, opts metav1.UpdateOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
-func (t *testResourceInterface) UpdateStatus(obj *unstructured.Unstructured, opts metav1.UpdateOptions) (*unstructured.Unstructured, error) {
+func (t *testResourceInterface) UpdateStatus(ctx context.Context, obj *unstructured.Unstructured, opts metav1.UpdateOptions) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
-func (t *testResourceInterface) Delete(name string, options *metav1.DeleteOptions, subresources ...string) error {
+func (t *testResourceInterface) Delete(ctx context.Context, name string, options metav1.DeleteOptions, subresources ...string) error {
 	return nil
 }
-func (t *testResourceInterface) DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
+func (t *testResourceInterface) DeleteCollection(ctx context.Context, options metav1.DeleteOptions, listOptions metav1.ListOptions) error {
 	return nil
 }
-func (t *testResourceInterface) Get(name string, options metav1.GetOptions, subresources ...string) (*unstructured.Unstructured, error) {
+func (t *testResourceInterface) Get(ctx context.Context, name string, options metav1.GetOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
-func (t *testResourceInterface) List(opts metav1.ListOptions) (*unstructured.UnstructuredList, error) {
+func (t *testResourceInterface) List(ctx context.Context, opts metav1.ListOptions) (*unstructured.UnstructuredList, error) {
 	return nil, nil
 }
-func (t *testResourceInterface) Watch(opts metav1.ListOptions) (watch.Interface, error) {
+func (t *testResourceInterface) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return nil, nil
 }
-func (t *testResourceInterface) Patch(name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*unstructured.Unstructured, error) {
+func (t *testResourceInterface) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
 
