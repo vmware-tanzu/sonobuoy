@@ -1,9 +1,9 @@
-# v2 Worker-Master communications
+# v2 Worker-Aggregator communications
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
-- [v2 Worker-Master communications](#v2-worker-master-communications)
+- [v2 Worker-Aggregator communications](#v2-worker-aggregator-communications)
     - [How it works now](#how-it-works-now)
     - [Summary](#summary)
     - [Objectives](#objectives)
@@ -17,30 +17,30 @@
 
 ## How it works now 
 
-Sonobuoy uses a worker-master model, where a master delegates tasks to worker
+Sonobuoy uses a worker-aggregator model, where an aggregator delegates tasks to worker
 pods. When those pods have finished, they need to report the results of their
-work back to the master. Presently this is done over an ill-defined, ad hoc
+work back to the aggregator. Presently this is done over an ill-defined, ad hoc
 REST-ish client/server model embedded in the server.
 
-The data passed back to the master is pretty much completely opaque. PUT
+The data passed back to the aggregator is pretty much completely opaque. PUT
 receives a path like /results/node1/systemd, and a blob of data as the body.
 That data is written out, unexamined, to a file like node1/systemd in the
 finished tarball.
 
 The worker is given JSON config blob which tells it where and how to report its
-results. This contains, amongst other things, the URL of the master where those
+results. This contains, amongst other things, the URL of the aggregator where those
 results will be sent.
 
 The plugins themselves use a two-container model. One container, that created by
 the plugin author, outputs its results in a shared directory. It touches a
 `done` file with the name of the file it created. The other container is
-responsible for submitting these results back to the master. It watches for the
+responsible for submitting these results back to the aggregator. It watches for the
 `done` file, then uses the config JSON to `PUT` those results back to the
-master.
+aggregator.
 
 ## Summary
 
-The interaction between the master and worker is ad hoc and poorly documented.
+The interaction between the aggregator and worker is ad hoc and poorly documented.
 All data is also transmitted plain text over HTTP with no authentication or
 verification.
 
@@ -54,7 +54,7 @@ existing users.
 
 * Secure and authenticate the channel between the consumer and the producer
 * Formalise and document the communication channel between the worker container
-  and the master
+  and the aggregator
 * Extract and clean up the worker client so other projects can vendor it
   directly
 * (Ancillary) Prevent simultaneous or poorly-cleaned up Sonobuoy runs from
@@ -80,7 +80,7 @@ authenticate the client through an individually assigned client certificates.
 
 The CA certificate and client certificate will be added to the JSON config blob
 all nodes are defined, not baked into the images themselves. The node private
-key will be transmitted as a Kubernetes secret. Every master run should create a
+key will be transmitted as a Kubernetes secret. Every aggregator run should create a
 brand-new certificate authority and credentials. This ensures duplicate or
 overlapping runs cannot interfere with each other.
 
