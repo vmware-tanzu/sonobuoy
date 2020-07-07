@@ -195,7 +195,7 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 				Value: b.GetName(),
 			},
 			{
-				Name:  "MASTER_URL",
+				Name:  "AGGREGATOR_URL",
 				Value: aggregatorURL,
 			},
 			{

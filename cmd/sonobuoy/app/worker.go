@@ -104,8 +104,8 @@ func loadAndValidateConfig() (*plugin.WorkerConfig, error) {
 	}
 
 	var errlst []string
-	if cfg.MasterURL == "" {
-		errlst = append(errlst, "MasterURL not set")
+	if cfg.AggregatorURL == "" {
+		errlst = append(errlst, "AggregatorURL not set")
 	}
 	if cfg.ResultsDir == "" {
 		errlst = append(errlst, "ResultsDir not set")
@@ -163,13 +163,13 @@ func runGather(global bool) error {
 		return errors.Wrap(err, "getting HTTP client")
 	}
 
-	resultURL, err := url.Parse(cfg.MasterURL)
+	resultURL, err := url.Parse(cfg.AggregatorURL)
 	if err != nil {
-		return errors.Wrap(err, "parsing MasterURL")
+		return errors.Wrap(err, "parsing AggregatorURL")
 	}
-	progressURL, err := url.Parse(cfg.MasterURL)
+	progressURL, err := url.Parse(cfg.AggregatorURL)
 	if err != nil {
-		return errors.Wrap(err, "parsing MasterURL")
+		return errors.Wrap(err, "parsing AggregatorURL")
 	}
 
 	if global {
