@@ -26,6 +26,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	pluginloader "github.com/vmware-tanzu/sonobuoy/pkg/plugin/loader"
+
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 )

@@ -168,7 +168,7 @@ func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate, progres
 			Value: b.GetName(),
 		},
 		{
-			Name:  "MASTER_URL",
+			Name:  "AGGREGATOR_URL",
 			Value: hostname,
 		},
 		{
