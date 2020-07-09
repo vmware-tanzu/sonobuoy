@@ -17,4 +17,4 @@ MAINTAINER John Schnake "jschnake@vmware.com"
 
 ADD BINARY /sonobuoy.exe
 WORKDIR /
-CMD /sonobuoy.exe master --no-exit -v 3 --logtostderr
+CMD /sonobuoy.exe aggregator --no-exit -v 3 --logtostderr
