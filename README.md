@@ -163,7 +163,7 @@ See [the list of releases][releases] to find out about feature changes.
 [issue]: https://github.com/vmware-tanzu/sonobuoy/issues
 [k8s]: https://github.com/kubernetes/kubernetes
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
-[oview]: https://youtu.be/k-P4hXdruRs?t=9m27s
+[oview]: https://youtu.be/8QK-Hg2yUd4
 [plugins]: https://sonobuoy.io/docs/plugins
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
 [releases]: https://github.com/vmware-tanzu/sonobuoy/releases
