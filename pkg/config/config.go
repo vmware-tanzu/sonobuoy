@@ -35,7 +35,7 @@ const (
 	DefaultKubeConformanceImageURL = "gcr.io/heptio-images/kube-conformance"
 	// UpstreamKubeConformanceImageURL is the URL of the docker image to run for
 	// the kube conformance tests which is maintained by upstream Kubernetes.
-	UpstreamKubeConformanceImageURL = "gcr.io/google-containers/conformance"
+	UpstreamKubeConformanceImageURL = "k8s.gcr.io/conformance"
 	// DefaultKubeConformanceImageTag is the default tag of the conformance image
 	DefaultKubeConformanceImageTag = "latest"
 	// DefaultAggregationServerBindPort is the default port for the aggregation server to bind to.

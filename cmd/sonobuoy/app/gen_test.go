@@ -58,15 +58,15 @@ func TestResolveConformanceImage(t *testing.T) {
 		}, {
 			name:             "v1.14.1 and after uses upstream and major.minor.patch",
 			requestedVersion: "v1.14.1",
-			expected:         "gcr.io/google-containers/conformance:v1.14.1",
+			expected:         "k8s.gcr.io/conformance:v1.14.1",
 		}, {
 			name:             "v1.14.0 and after uses upstream and major.minor.patch",
 			requestedVersion: "v1.15.1",
-			expected:         "gcr.io/google-containers/conformance:v1.15.1",
+			expected:         "k8s.gcr.io/conformance:v1.15.1",
 		}, {
 			name:             "latest should use upstream image",
 			requestedVersion: "latest",
-			expected:         "gcr.io/google-containers/conformance:latest",
+			expected:         "k8s.gcr.io/conformance:latest",
 		}, {
 			name:             "explicit version before v1.14.0 should use heptio image and given version",
 			requestedVersion: "v1.12+.0.alpha+",
@@ -74,7 +74,7 @@ func TestResolveConformanceImage(t *testing.T) {
 		}, {
 			name:             "explicit version after v1.14.0 should use upstream and use given version",
 			requestedVersion: "v1.14.1",
-			expected:         "gcr.io/google-containers/conformance:v1.14.1",
+			expected:         "k8s.gcr.io/conformance:v1.14.1",
 		},
 	}
 

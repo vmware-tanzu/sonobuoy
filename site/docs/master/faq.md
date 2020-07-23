@@ -44,7 +44,7 @@ For example: Did any of the nodes have memory pressure? Did the scheduler pod go
 As a final resort, you can also read the upstream test code to determine what actions were being performed at the point when the test failed.
 If you decide to take this approach, you must ensure that you are reading the version of the test code that corresponds to your test image.
 You can verify which version of the test image was used by inspecting the plugin definition which is available in the results tarball in `plugins/e2e/definition.json` under the key `Definition.spec.image`.
-For example, if the test image was `gcr.io/google-containers/conformance:v1.15.3`, you should read the code at the corresponding [v1.15.3 tag in GitHub][kubernetes-1.15.3].
+For example, if the test image was `k8s.gcr.io/conformance:v1.15.3`, you should read the code at the corresponding [v1.15.3 tag in GitHub][kubernetes-1.15.3].
 All the tests can be found within the `test/e2e` directory in the Kubernetes repository.
 
 ### How can I run the E2E tests with certain test framework options set? What are the available options?
@@ -54,7 +54,7 @@ To view the available options that you can set when running the tests, you can r
 
 ```
 KUBE_VERSION=<Kubernetes version you are using>
-docker run -it gcr.io/google-containers/conformance:$KUBE_VERSION ./e2e.test --help
+docker run -it k8s.gcr.io/conformance:$KUBE_VERSION ./e2e.test --help
 ```
 
 You can also view the definitions of these test framework flags in the [Kubernetes repository][framework-flags].

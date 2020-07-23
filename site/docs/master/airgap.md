@@ -40,8 +40,8 @@ To ensure you use the correct version of the conformance image, check your serve
 PRIVATE_REG=<private registry>
 CLUSTER_VERSION=<version of k8s you are targeting; e.g. v1.16.0>
 
-docker pull gcr.io/google-containers/conformance:$CLUSTER_VERSION
-docker tag gcr.io/google-containers/conformance:$CLUSTER_VERSION $PRIVATE_REG/conformance:$CLUSTER_VERSION
+docker pull k8s.gcr.io/conformance:$CLUSTER_VERSION
+docker tag k8s.gcr.io/conformance:$CLUSTER_VERSION $PRIVATE_REG/conformance:$CLUSTER_VERSION
 docker push $PRIVATE_REG/conformance:$CLUSTER_VERSION
 ```
 
