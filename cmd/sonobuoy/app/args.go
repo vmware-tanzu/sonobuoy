@@ -283,7 +283,7 @@ func AddDeleteWaitFlag(flag *int, flags *pflag.FlagSet) {
 func AddRunWaitFlag(flag *int, flags *pflag.FlagSet) {
 	flags.IntVar(
 		flag, "wait", 0,
-		"Wait for sonobuoy run to be completed (or fail). 0 indicates do not wait. By providing --wait the default is to wait for 1 day.",
+		"How long (in minutes) to wait for sonobuoy run to be completed or fail, where 0 indicates do not wait. If specified, the default wait time is 1 day.",
 	)
 	flags.Lookup("wait").NoOptDefVal = "1440"
 }
