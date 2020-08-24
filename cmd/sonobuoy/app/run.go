@@ -40,7 +40,7 @@ type runFlags struct {
 var (
 	runflags runFlags
 
-	allowedGenFlagsWithRunFile = []string{kubeconfig, context}
+	allowedGenFlagsWithRunFile = []string{kubeconfig, kubecontext}
 )
 
 func RunFlagSet(cfg *runFlags) *pflag.FlagSet {

@@ -17,12 +17,14 @@ limitations under the License.
 package discovery
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path"
 	"time"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -41,12 +43,12 @@ func getPodLogOptions(cfg *config.Config) *v1.PodLogOptions {
 	podLogLimits := &cfg.Limits.PodLogs
 
 	options := &v1.PodLogOptions{
-		Previous: podLogLimits.Previous,
+		Previous:     podLogLimits.Previous,
 		SinceSeconds: podLogLimits.SinceSeconds,
-		SinceTime: podLogLimits.SinceTime,
-		Timestamps: podLogLimits.Timestamps,
-		TailLines: podLogLimits.TailLines,
-		LimitBytes: podLogLimits.LimitBytes,
+		SinceTime:    podLogLimits.SinceTime,
+		Timestamps:   podLogLimits.Timestamps,
+		TailLines:    podLogLimits.TailLines,
+		LimitBytes:   podLogLimits.LimitBytes,
 	}
 
 	// Only set values if they have values greater than 0 (as in they user specified).
@@ -70,7 +72,7 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 	visitedPods map[string]struct{}) error {
 
 	// 1 - Collect the list of pods
-	podlist, err := kubeClient.CoreV1().Pods(ns).List(opts)
+	podlist, err := kubeClient.CoreV1().Pods(ns).List(context.TODO(), opts)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -91,7 +93,7 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 		}
 		for _, container := range pod.Spec.Containers {
 			podLogOptions.Container = container.Name
-			body, err := kubeClient.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, podLogOptions).DoRaw()
+			body, err := kubeClient.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, podLogOptions).DoRaw(context.TODO())
 			if err != nil {
 				return errors.WithStack(err)
 			}

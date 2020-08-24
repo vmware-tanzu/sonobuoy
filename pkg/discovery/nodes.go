@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
+
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
@@ -42,13 +43,12 @@ func getNodeEndpoint(client rest.Interface, nodeName, endpoint string) (rest.Res
 	defer cancel()
 	req := client.
 		Get().
-		Context(ctx).
 		Resource("nodes").
 		Name(nodeName).
 		SubResource("proxy").
 		Suffix(endpoint)
 
-	result := req.Do()
+	result := req.Do(ctx)
 	if result.Error() != nil {
 		logrus.Warningf("Could not get %v endpoint for node %v: %v", endpoint, nodeName, result.Error())
 	}

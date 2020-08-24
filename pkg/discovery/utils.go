@@ -17,6 +17,7 @@ limitations under the License.
 package discovery
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -33,7 +34,7 @@ import (
 func FilterNamespaces(kubeClient kubernetes.Interface, filter string) ([]string, error) {
 	var validns []string
 	re := regexp.MustCompile(filter)
-	nslist, err := kubeClient.CoreV1().Namespaces().List(metav1.ListOptions{})
+	nslist, err := kubeClient.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

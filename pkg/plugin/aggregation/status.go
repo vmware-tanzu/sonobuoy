@@ -17,6 +17,7 @@ limitations under the License.
 package aggregation
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -107,7 +108,7 @@ func (s *Status) updateStatus() error {
 // does not exist, is not running, or is missing the status annotation, an error
 // is returned.
 func GetStatus(client kubernetes.Interface, namespace string) (*Status, error) {
-	if _, err := client.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{}); err != nil {
+	if _, err := client.CoreV1().Namespaces().Get(context.TODO(), namespace, metav1.GetOptions{}); err != nil {
 		return nil, errors.Wrapf(err, "failed to get namespace %v", namespace)
 	}
 
@@ -117,7 +118,7 @@ func GetStatus(client kubernetes.Interface, namespace string) (*Status, error) {
 		return nil, errors.Wrap(err, "failed to get the name of the aggregator pod to get the status from")
 	}
 
-	pod, err := client.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
+	pod, err := client.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.New("could not retrieve sonobuoy pod")
 	}

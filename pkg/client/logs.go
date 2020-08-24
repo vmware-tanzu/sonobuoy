@@ -17,6 +17,7 @@ limitations under the License.
 package client
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"sync"
@@ -152,7 +153,7 @@ func getPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh chan
 		listOptions = metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)}
 	}
 
-	podList, err := client.CoreV1().Pods(cfg.Namespace).List(listOptions)
+	podList, err := client.CoreV1().Pods(cfg.Namespace).List(context.TODO(), listOptions)
 	if err != nil {
 		return errors.Wrap(err, "failed to list pods")
 	}
@@ -178,7 +179,7 @@ func watchPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh ch
 		listOptions = metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)}
 	}
 
-	watcher, err := client.CoreV1().Pods(cfg.Namespace).Watch(listOptions)
+	watcher, err := client.CoreV1().Pods(cfg.Namespace).Watch(context.TODO(), listOptions)
 	if err != nil {
 		return errors.Wrap(err, "failed to watch pods")
 	}
@@ -321,7 +322,7 @@ func isContainerRunning(statuses *[]v1.ContainerStatus, containerName string) bo
 func (l *logStreamer) waitForContainerRunning() error {
 	backoffSeconds := 1 * time.Second
 	for {
-		pod, err := l.client.CoreV1().Pods(l.ns).Get(l.pod, metav1.GetOptions{})
+		pod, err := l.client.CoreV1().Pods(l.ns).Get(context.TODO(), l.pod, metav1.GetOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to get pod [%s/%s]", l.ns, l.pod)
 		}
@@ -350,7 +351,7 @@ func (l *logStreamer) stream() {
 	}
 
 	req := l.client.CoreV1().Pods(l.ns).GetLogs(l.pod, l.logOpts)
-	readCloser, err := req.Stream()
+	readCloser, err := req.Stream(context.TODO())
 	if err != nil {
 		l.errc <- errors.Wrapf(err, "error streaming logs from container [%v]", l.container)
 		return

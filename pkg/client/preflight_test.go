@@ -17,6 +17,7 @@ limitations under the License.
 package client
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -141,7 +142,7 @@ func TestDNSCheck(t *testing.T) {
 	}{
 		{
 			desc: "Needs only a single pod",
-			lister: func(metav1.ListOptions) (*apicorev1.PodList, error) {
+			lister: func(context.Context, metav1.ListOptions) (*apicorev1.PodList, error) {
 				return &apicorev1.PodList{
 					Items: []apicorev1.Pod{
 						apicorev1.Pod{},
@@ -152,7 +153,7 @@ func TestDNSCheck(t *testing.T) {
 			dnsLabels:    []string{"foo"},
 		}, {
 			desc: "Multiple pods OK",
-			lister: func(metav1.ListOptions) (*apicorev1.PodList, error) {
+			lister: func(context.Context, metav1.ListOptions) (*apicorev1.PodList, error) {
 				return &apicorev1.PodList{
 					Items: []apicorev1.Pod{
 						apicorev1.Pod{},
@@ -164,7 +165,7 @@ func TestDNSCheck(t *testing.T) {
 			dnsLabels:    []string{"foo"},
 		}, {
 			desc: "Requires at least one pod",
-			lister: func(metav1.ListOptions) (*apicorev1.PodList, error) {
+			lister: func(context.Context, metav1.ListOptions) (*apicorev1.PodList, error) {
 				return &apicorev1.PodList{}, nil
 			},
 			dnsNamespace: "dns-namespace",
@@ -172,7 +173,7 @@ func TestDNSCheck(t *testing.T) {
 			expectErr:    "no dns pods found with the labels [foo] in namespace dns-namespace",
 		}, {
 			desc: "Skipped if no labels required",
-			lister: func(metav1.ListOptions) (*apicorev1.PodList, error) {
+			lister: func(context.Context, metav1.ListOptions) (*apicorev1.PodList, error) {
 				return &apicorev1.PodList{}, nil
 			},
 		},
@@ -202,24 +203,24 @@ func TestNamespaceCheck(t *testing.T) {
 	}{
 		{
 			desc: "Namespace and no error indicates it exists",
-			getter: func(string, metav1.GetOptions) (*apicorev1.Namespace, error) {
+			getter: func(context.Context, string, metav1.GetOptions) (*apicorev1.Namespace, error) {
 				return &apicorev1.Namespace{}, nil
 			},
 			expectErr: "namespace already exists",
 		}, {
 			desc: "Random error bubbled up",
-			getter: func(string, metav1.GetOptions) (*apicorev1.Namespace, error) {
+			getter: func(context.Context, string, metav1.GetOptions) (*apicorev1.Namespace, error) {
 				return nil, errors.New("test")
 			},
 			expectErr: "error checking for namespace: test",
 		}, {
 			desc: "Does not exist errors pass the check",
-			getter: func(string, metav1.GetOptions) (*apicorev1.Namespace, error) {
+			getter: func(context.Context, string, metav1.GetOptions) (*apicorev1.Namespace, error) {
 				return nil, &statusErr{err: "test", status: metav1.Status{Reason: metav1.StatusReasonNotFound}}
 			},
 		}, {
 			desc: "Other API status errors still bubble up",
-			getter: func(string, metav1.GetOptions) (*apicorev1.Namespace, error) {
+			getter: func(context.Context, string, metav1.GetOptions) (*apicorev1.Namespace, error) {
 				return nil, &statusErr{err: "test", status: metav1.Status{Reason: metav1.StatusReasonBadRequest}}
 			},
 			expectErr: "error checking for namespace: test",

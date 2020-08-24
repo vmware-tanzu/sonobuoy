@@ -17,6 +17,7 @@ limitations under the License.
 package discovery
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -38,6 +39,7 @@ import (
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	"github.com/viniciuschiele/tarx"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -410,6 +412,6 @@ func setPodStatusAnnotation(client kubernetes.Interface, namespace string, statu
 		return errors.Wrap(err, "failed to get the name of the aggregator pod to set the status on")
 	}
 
-	_, err = client.CoreV1().Pods(namespace).Patch(podName, types.MergePatchType, patchBytes)
+	_, err = client.CoreV1().Pods(namespace).Patch(context.TODO(), podName, types.MergePatchType, patchBytes, metav1.PatchOptions{})
 	return err
 }
