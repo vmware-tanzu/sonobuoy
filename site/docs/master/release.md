@@ -18,6 +18,7 @@ working appropriately:
     For an example of the outcome of this process, see the [change corresponding to the Kubernetes v1.14 release](https://github.com/vmware-tanzu/sonobuoy/commit/68f15a260e60a288f91bc40347c817b382a3d45c).
       1. Within `pkg/image/`, copy the latest `v1.x.go` file to a file which corresponds to the new Kubernetes release number.
          For example, if the new Sonobuoy release corresponds to Kubernetes `v1.15`, copy the `v1.14.go` file to `v1.15.go`.
+
          ```
          cp pkg/image/v1.{14,15}.go
          ```
@@ -46,6 +47,7 @@ working appropriately:
     For example, for the Kubernetes 1.15.0 release, the `MinimumKubeVersion` would become `1.13.0` and the `MaximumKubeVersion` would become `1.15.99`.
 1. Commit and open/merge a pull request with these changes.
 1. Create an annotated tag for the commit once the changes are merged:
+
     ```
     git tag -a v0.x.y -m "Release v0.x.y"
     ```
@@ -54,11 +56,13 @@ working appropriately:
 
 1. Push the tag to the [`github.com/vmware-tanzu/sonobuoy`](https://github.com/vmware-tanzu/sonobuoy/) repository.
    * To ensure that the tag is pushed to the correct repository, check which remote corresponds to that repository using the following command:
+
      ```
      git remote -v
      ```
      The output of this command should include at least two configured remotes, typically `origin`, which refers to your personal fork, and `upstream` which refers to the upstream Sonobuoy repository.
      For example:
+
      ```
      origin	git@github.com:<username>/sonobuoy.git (fetch)
      origin	git@github.com:<username>/sonobuoy.git (push)
@@ -74,10 +78,12 @@ working appropriately:
      git push upstream --tags
      ```
      To push just one tag, use the following command format (replacing `v0.x.y` with the tag created in the previous step):
+
      ```
      git push upstream refs/tags/v0.x.y
      ```
      If there is a problem and you need to remove the tag, run the following commands:
+
      ```
      git tag -d v0.x.y
      git push upstream :refs/tags/v0.x.y
@@ -92,6 +98,7 @@ working appropriately:
 1. Open a browser tab and go to: https://circleci.com/gh/vmware-tanzu/sonobuoy and verify go releaser for tag v0.x.y completes successfully.
 1. Upon successful completion of build job above, check the [releases tab of Sonobuoy](https://github.com/vmware-tanzu/sonobuoy/releases) and verify the artifacts and changelog were published correctly.
 1. Run the following command to make sure the image was pushed correctly to [Docker Hub][dockerhub]:
+
    ```
    docker run -it sonobuoy/sonobuoy:v0.x.y /sonobuoy version
    ```
@@ -99,21 +106,27 @@ working appropriately:
 1. Go to the [GitHub release page](https://github.com/vmware-tanzu/sonobuoy/releases) and download the release binaries and make sure the version matches the expected values.
 2. Run a [Kind](https://github.com/kubernetes-sigs/kind) cluster locally and ensure that you can run `sonobuoy run --mode quick`.
    If this release corresponds to a new Kubernetes release as well, ensure:
-    - you're using the correct Kubernetes context by checking the output from:
+
+    * you're using the correct Kubernetes context by checking the output from:
+
       ```
       kubectl config current-context
       ```
+
       and verifying that it is set to the context for the Kind cluster just created (`kind-kind` or `kind-<custom_cluster_name>`)
-    - you're testing with the new Kind images by checking the output from:
+    * you're testing with the new Kind images by checking the output from:
+
       ```
       kubectl version --short
       ```
+
       and verifying that the server version matches the intended Kubernetes version.
-    - you can run `sonobuoy images` and get a list of test images as expected
+    * you can run `sonobuoy images` and get a list of test images as expected
 2. Update the release notes if desired on GitHub by editing the newly created release.
 
 ### Generating a new set of versioned docs
 The changes for this can almost all be completed by running the command:
+
 ```
 ./scripts/update_docs.sh v0.x.y
 ```
