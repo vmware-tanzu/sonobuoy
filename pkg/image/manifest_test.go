@@ -38,23 +38,23 @@ func TestGetDefaultImageRegistryVersionValidation(t *testing.T) {
 			expect:  "\"not-a-valid-version\" is invalid",
 		},
 		{
-			name:    "v1.13 is valid",
-			version: "v1.13.0",
-			error:   false,
-		},
-		{
-			name:    "v1.14 is valid",
-			version: "v1.14.0",
-			error:   false,
-		},
-		{
-			name:    "v1.15 is valid",
-			version: "v1.15.0",
-			error:   false,
-		},
-		{
-			name:    "v1.16 is valid",
+			name:    "v1.16 is not valid",
 			version: "v1.16.0",
+			error:   true,
+		},
+		{
+			name:    "v1.17 is valid",
+			version: "v1.17.0",
+			error:   false,
+		},
+		{
+			name:    "v1.18 is valid",
+			version: "v1.18.0",
+			error:   false,
+		},
+		{
+			name:    "v1.19 is valid",
+			version: "v1.19.0",
 			error:   false,
 		},
 		{
@@ -111,15 +111,15 @@ func TestGetE2EImages(t *testing.T) {
 	}
 
 	// Check one of the returned image names to ensure correct format
-	registryImage := expectedRegistry["Agnhost"]
+	registryImage := expectedRegistry[Agnhost]
 	registryImageName := registryImage.GetFullyQualifiedImageName()
 	if !contains(imageNames, registryImageName) {
 		t.Errorf("Expected result of GetImageNames to contain registry image %q", registryImageName)
 	}
 }
 
-func createTestRegistryConfig(customRegistry string) (string, error) {
-	registries, err := GetDefaultImageRegistries("v1.15.0")
+func createTestRegistryConfig(customRegistry, version string) (string, error) {
+	registries, err := GetDefaultImageRegistries(version)
 	if err != nil {
 		return "", err
 	}
@@ -146,9 +146,9 @@ func createTestRegistryConfig(customRegistry string) (string, error) {
 }
 
 func TestGetE2EImageTagPairs(t *testing.T) {
-	version := "v1.15.0"
+	version := "v1.17.0"
 	customRegistry := "my-custom/registry"
-	customRegistries, err := createTestRegistryConfig(customRegistry)
+	customRegistries, err := createTestRegistryConfig(customRegistry, version)
 	if err != nil {
 		t.Fatalf("unexpected error creating temp registry config: %q", err)
 	}
@@ -162,7 +162,7 @@ func TestGetE2EImageTagPairs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error from NewRegistryList: %q", err)
 	}
-	expectedDefaultRegistry := defaultRegistry.v1_15()
+	expectedDefaultRegistry := defaultRegistry.v1_17()
 	if len(imageTagPairs) != len(expectedDefaultRegistry) {
 		t.Fatalf("Unexpected number of image tag pairs returned, expected %v, got %v", len(expectedDefaultRegistry), len(imageTagPairs))
 	}
