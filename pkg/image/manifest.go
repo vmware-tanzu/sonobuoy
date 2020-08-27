@@ -25,9 +25,103 @@ import (
 )
 
 const (
+	// Agnhost image
+	Agnhost = iota
+	// AgnhostPrivate image
+	AgnhostPrivate
+	// APIServer image
+	APIServer
+	// AppArmorLoader image
+	AppArmorLoader
+	// AuthenticatedAlpine image
+	AuthenticatedAlpine
+	// AuthenticatedWindowsNanoServer image
+	AuthenticatedWindowsNanoServer
+	// BusyBox image
+	BusyBox
+	// CheckMetadataConcealment image
+	CheckMetadataConcealment
+	// CudaVectorAdd image
+	CudaVectorAdd
+	// CudaVectorAdd2 image
+	CudaVectorAdd2
+	// Dnsutils image
+	Dnsutils
+	// DebianIptables Image
+	DebianIptables
+	// EchoServer image
+	EchoServer
+	// Etcd image
+	Etcd
+	// GlusterDynamicProvisioner image
+	GlusterDynamicProvisioner
+	// Httpd image
+	Httpd
+	// HttpdNew image
+	HttpdNew
+	// InvalidRegistryImage image
+	InvalidRegistryImage
+	// IpcUtils image
+	IpcUtils
+	// JessieDnsutils image
+	JessieDnsutils
+	// Kitten image
+	Kitten
+	// Mounttest image
+	Mounttest
+	// MounttestUser image
+	MounttestUser
+	// Nautilus image
+	Nautilus
+	// NFSProvisioner image
+	NFSProvisioner
+	// Nginx image
+	Nginx
+	// NginxNew image
+	NginxNew
+	// Nonewprivs image
+	Nonewprivs
+	// NonRoot runs with a default user of 1234
+	NonRoot
+	// Pause - when these values are updated, also update cmd/kubelet/app/options/container_runtime.go
+	// Pause image
+	Pause
+	// Perl image
+	Perl
+	// PrometheusDummyExporter image
+	PrometheusDummyExporter
+	// PrometheusToSd image
+	PrometheusToSd
+	// Redis image
+	Redis
+	// RegressionIssue74839 image
+	RegressionIssue74839
+	// ResourceConsumer image
+	ResourceConsumer
+	// ResourceController image
+	ResourceController
+	// SdDummyExporter image
+	SdDummyExporter
+	// StartupScript image
+	StartupScript
+	// TestWebserver image
+	TestWebserver
+	// VolumeNFSServer image
+	VolumeNFSServer
+	// VolumeISCSIServer image
+	VolumeISCSIServer
+	// VolumeGlusterServer image
+	VolumeGlusterServer
+	// VolumeRBDServer image
+	VolumeRBDServer
+)
+
+const (
+	buildImageRegistry      = "k8s.gcr.io/build-image"
 	dockerGluster           = "docker.io/gluster"
 	dockerLibraryRegistry   = "docker.io/library"
 	e2eRegistry             = "gcr.io/kubernetes-e2e-test-images"
+	e2eVolumeRegistry       = "gcr.io/kubernetes-e2e-test-images/volume"
 	etcdRegistry            = "quay.io/coreos"
 	gcAuthenticatedRegistry = "gcr.io/authenticated-image-pulling"
 	gcRegistry              = "k8s.gcr.io"
@@ -35,17 +129,20 @@ const (
 	googleContainerRegistry = "gcr.io/google-containers"
 	invalidRegistry         = "invalid.com/invalid"
 	privateRegistry         = "gcr.io/k8s-authenticated-test"
-	promoterE2eRegistry     = "us.gcr.io/k8s-artifacts-prod/e2e-test-images"
+	promoterE2eRegistry     = "k8s.gcr.io/e2e-test-images"
 	quayIncubator           = "quay.io/kubernetes_incubator"
 	quayK8sCSI              = "quay.io/k8scsi"
 	sampleRegistry          = "gcr.io/google-samples"
+	sigStorageRegistry      = "k8s.gcr.io/sig-storage"
 )
 
 // RegistryList holds public and private image registries
 type RegistryList struct {
+	BuildImageRegistry      string `yaml:"buildImageRegistry"`
 	DockerGluster           string `yaml:"dockerGluster,omitempty"`
 	DockerLibraryRegistry   string `yaml:"dockerLibraryRegistry,omitempty"`
 	E2eRegistry             string `yaml:"e2eRegistry,omitempty"`
+	E2eVolumeRegistry       string `yaml:"e2eVolumeRegistry"`
 	EtcdRegistry            string `yaml:"etcdRegistry,omitempty"`
 	GcAuthenticatedRegistry string `yaml:"gcAuthenticatedRegistry,omitempty"`
 	GcRegistry              string `yaml:"gcRegistry,omitempty"`
@@ -57,6 +154,7 @@ type RegistryList struct {
 	QuayIncubator           string `yaml:"quayIncubator,omitempty"`
 	QuayK8sCSI              string `yaml:"quayK8sCSI,omitempty"`
 	SampleRegistry          string `yaml:"sampleRegistry,omitempty"`
+	SigStorageRegistry      string `yaml:"sigStorageRegistry"`
 
 	K8sVersion *version.Version `yaml:"-"`
 	Images     map[int]Config   `yaml:"-"`
@@ -72,9 +170,11 @@ type Config struct {
 // NewRegistryList returns a default registry or one that matches a config file passed
 func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 	registry := &RegistryList{
+		BuildImageRegistry:      buildImageRegistry,
 		DockerGluster:           dockerGluster,
 		DockerLibraryRegistry:   dockerLibraryRegistry,
 		E2eRegistry:             e2eRegistry,
+		E2eVolumeRegistry:       e2eVolumeRegistry,
 		EtcdRegistry:            etcdRegistry,
 		GcAuthenticatedRegistry: gcAuthenticatedRegistry,
 		GcRegistry:              gcRegistry,
@@ -84,8 +184,9 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 		PrivateRegistry:         privateRegistry,
 		QuayIncubator:           quayIncubator,
 		QuayK8sCSI:              quayK8sCSI,
-		SampleRegistry:          sampleRegistry,
 		PromoterE2eRegistry:     promoterE2eRegistry,
+		SampleRegistry:          sampleRegistry,
+		SigStorageRegistry:      sigStorageRegistry,
 	}
 
 	// Load in a config file
@@ -114,25 +215,21 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 }
 
 // getImageConfigs returns the map of image Config for the registry version
-func (r *RegistryList) getImageConfigs() (map[string]Config, error) {
+func (r *RegistryList) getImageConfigs() (map[int]Config, error) {
 	switch r.K8sVersion.Segments()[0] {
 	case 1:
 		switch r.K8sVersion.Segments()[1] {
-		case 13:
-			return r.v1_13(), nil
-		case 14:
-			return r.v1_14(), nil
-		case 15:
-			return r.v1_15(), nil
-		case 16:
-			return r.v1_16(), nil
+		case 13, 14, 15, 16:
+			return nil, fmt.Errorf("version not supported for this build: %v", r.K8sVersion)
 		case 17:
 			return r.v1_17(), nil
 		case 18:
 			return r.v1_18(), nil
+		case 19:
+			return r.v1_19(), nil
 		}
 	}
-	return map[string]Config{}, fmt.Errorf("No matching configuration for k8s version: %v", r.K8sVersion)
+	return map[int]Config{}, fmt.Errorf("no matching configuration for k8s version: %v", r.K8sVersion)
 
 }
 
@@ -199,35 +296,8 @@ func GetDefaultImageRegistries(version string) (*RegistryList, error) {
 	switch v.Segments()[0] {
 	case 1:
 		switch v.Segments()[1] {
-		case 13, 14:
-			return &RegistryList{
-				DockerLibraryRegistry: dockerLibraryRegistry,
-				E2eRegistry:           e2eRegistry,
-				EtcdRegistry:          etcdRegistry,
-				GcRegistry:            gcRegistry,
-				SampleRegistry:        sampleRegistry,
-			}, nil
-		case 15:
-			return &RegistryList{
-				DockerLibraryRegistry: dockerLibraryRegistry,
-				E2eRegistry:           e2eRegistry,
-				GcRegistry:            gcRegistry,
-				SampleRegistry:        sampleRegistry,
-			}, nil
-		case 16:
-			return &RegistryList{
-				DockerLibraryRegistry:   dockerLibraryRegistry,
-				E2eRegistry:             e2eRegistry,
-				GcRegistry:              gcRegistry,
-				GoogleContainerRegistry: googleContainerRegistry,
-				SampleRegistry:          sampleRegistry,
-
-				// The following keys are used in the v1.16 registry list however their images
-				// cannot be pulled as they are used as part of tests for checking image pull
-				// behavior. They are omitted from the resulting config.
-				// InvalidRegistry:         invalidRegistry,
-				// GcAuthenticatedRegistry: gcAuthenticatedRegistry,
-			}, nil
+		case 13, 14, 15, 16:
+			return nil, fmt.Errorf("version not supported for this build: %s", version)
 		case 17:
 			return &RegistryList{
 				E2eRegistry:             e2eRegistry,
@@ -255,6 +325,24 @@ func GetDefaultImageRegistries(version string) (*RegistryList, error) {
 				PromoterE2eRegistry:     promoterE2eRegistry,
 
 				// The following keys are used in the v1.18 registry list however their images
+				// cannot be pulled as they are used as part of tests for checking image pull
+				// behavior. They are omitted from the resulting config.
+				// InvalidRegistry:         invalidRegistry,
+				// GcAuthenticatedRegistry: gcAuthenticatedRegistry,
+				// PrivateRegistry:         privateRegistry,
+			}, nil
+		case 19:
+			return &RegistryList{
+				BuildImageRegistry:    buildImageRegistry,
+				E2eRegistry:           e2eRegistry,
+				E2eVolumeRegistry:     e2eVolumeRegistry,
+				DockerLibraryRegistry: dockerLibraryRegistry,
+				GcRegistry:            gcRegistry,
+				DockerGluster:         dockerGluster,
+				PromoterE2eRegistry:   promoterE2eRegistry,
+				SigStorageRegistry:    sigStorageRegistry,
+
+				// The following keys are used in the v1.19 registry list however their images
 				// cannot be pulled as they are used as part of tests for checking image pull
 				// behavior. They are omitted from the resulting config.
 				// InvalidRegistry:         invalidRegistry,

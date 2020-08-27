@@ -2,8 +2,8 @@ kind: Cluster
 apiVersion: kind.sigs.k8s.io/v1alpha3
 nodes:
 - role: control-plane
-  image: sonobuoy/kind-node:v1.18.0
+  image: sonobuoy/kind-node:v1.19.0
 - role: worker
-  image: sonobuoy/kind-node:v1.18.0
+  image: sonobuoy/kind-node:v1.19.0
 - role: worker
-  image: sonobuoy/kind-node:v1.18.0
+  image: sonobuoy/kind-node:v1.19.0
