@@ -29,11 +29,6 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// ConfigValidator allows the command configurations to be validated.
-type validator interface {
-	Validate() error
-}
-
 // LogConfig are the input options for viewing a Sonobuoy run's logs.
 type LogConfig struct {
 	// Follow determines if the logs should be followed or not (tail -f).

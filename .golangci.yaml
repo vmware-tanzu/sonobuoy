@@ -1,0 +1,5 @@
+run:
+  tests: false
+linters-settings:
+  errcheck:
+    exclude: ./.errcheck.list

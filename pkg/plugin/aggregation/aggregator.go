@@ -362,8 +362,7 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 	resultFile := filepath.Join(resultsDir, result.Filename)
 
 	if err := os.MkdirAll(resultsDir, 0755); err != nil {
-		errors.Wrapf(err, "couldn't create directory %q", resultsDir)
-		return err
+		return errors.Wrapf(err, "couldn't create directory %q", resultsDir)
 	}
 
 	outFile, err := os.Create(resultFile)
@@ -373,8 +372,7 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 	defer outFile.Close()
 
 	if _, err = io.Copy(outFile, result.Body); err != nil {
-		err = errors.Wrapf(err, "could not write body to file %q", resultFile)
-		return err
+		return errors.Wrapf(err, "could not write body to file %q", resultFile)
 	}
 
 	return nil

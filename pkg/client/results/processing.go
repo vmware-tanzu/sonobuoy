@@ -175,7 +175,7 @@ func manualResultsAggregation(items ...Item) string {
 		parts = append(parts, fmt.Sprintf("%v: %v", k, results[k]))
 	}
 
-	return fmt.Sprintf(strings.Join(parts, ", "))
+	return strings.Join(parts, ", ")
 }
 
 // aggregateStatus defines the aggregation rules for status. Failures bubble
@@ -232,7 +232,7 @@ func isFailureStatus(s string) bool {
 // passed/failed (if junit) or record what files were produced (if raw) and return
 // that information in an Item object. All errors encountered are returned.
 func PostProcessPlugin(p plugin.Interface, dir string) (Item, []error) {
-	i := Item{}
+	var i Item
 	var errs []error
 
 	switch p.GetResultFormat() {

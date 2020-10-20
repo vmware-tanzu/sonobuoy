@@ -26,15 +26,8 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 
 	"github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 )
-
-type nodeData struct {
-	APIResource   v1.Node                `json:"apiResource,omitempty"`
-	ConfigzOutput map[string]interface{} `json:"configzOutput,omitempty"`
-	HealthzStatus int                    `json:"healthzStatus,omitempty"`
-}
 
 // getNodeEndpoint returns the response from pinging a node endpoint
 func getNodeEndpoint(client rest.Interface, nodeName, endpoint string) (rest.Result, error) {
@@ -80,7 +73,7 @@ func gatherNodeData(nodeNames []string, restclient rest.Interface, cfg *config.C
 			if err != nil {
 				return data, err
 			}
-			json.Unmarshal(resultBytes, &data)
+			err = json.Unmarshal(resultBytes, &data)
 			return data, err
 		})
 		if err != nil {

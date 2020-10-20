@@ -23,9 +23,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/sethgrid/pester"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 )
 
 // DoRequest calls the given callback which returns an io.Reader, and submits

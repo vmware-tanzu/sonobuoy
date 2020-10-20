@@ -59,7 +59,6 @@ func (p *pluginList) String() string {
 	pluginNames := make(
 		[]string,
 		len(p.DynamicPlugins)+len(p.StaticPlugins),
-		len(p.DynamicPlugins)+len(p.StaticPlugins),
 	)
 	for i := range p.StaticPlugins {
 		pluginNames[i] = p.StaticPlugins[i].SonobuoyConfig.PluginName

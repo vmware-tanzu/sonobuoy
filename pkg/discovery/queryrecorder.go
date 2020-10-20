@@ -23,8 +23,8 @@ import (
 	"path"
 	"time"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 )
 
 // QueryRecorder records a sequence of queries

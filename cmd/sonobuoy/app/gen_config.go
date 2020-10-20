@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 )
 
 // NewCmdGenConfig creates the `config` command which will print out

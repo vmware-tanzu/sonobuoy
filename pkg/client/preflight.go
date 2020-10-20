@@ -33,21 +33,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-const (
-	kubeSystemNamespace = "kube-system"
-	kubeDNSLabelKey     = "k8s-app"
-	kubeDNSLabelValue   = "kube-dns"
-	coreDNSLabelValue   = "coredns"
-)
-
 var (
 	minimumKubeVersion = version.Must(version.NewVersion(buildinfo.MinimumKubeVersion))
 	maximumKubeVersion = version.Must(version.NewVersion(buildinfo.MaximumKubeVersion))
-
-	expectedDNSLabels = []string{
-		kubeDNSLabelValue,
-		coreDNSLabelValue,
-	}
 
 	preflightChecks = []func(kubernetes.Interface, *PreflightConfig) error{
 		preflightDNSCheck,

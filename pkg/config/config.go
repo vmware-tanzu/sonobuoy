@@ -386,8 +386,3 @@ func New() *Config {
 func (cfg *Config) addPlugin(plugin plugin.Interface) {
 	cfg.LoadedPlugins = append(cfg.LoadedPlugins, plugin)
 }
-
-// getPlugins gets the list of plugins selected for this configuration.
-func (cfg *Config) getPlugins() []plugin.Interface {
-	return cfg.LoadedPlugins
-}

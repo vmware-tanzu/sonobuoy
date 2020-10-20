@@ -187,14 +187,12 @@ func watchPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh ch
 
 	go func() {
 		for {
-			select {
-			case v := <-ch:
-				if v.Type == watch.Added && v.Object != nil {
-					switch t := v.Object.(type) {
-					case *v1.Pod:
-						podCh <- t
-					default:
-					}
+			v := <-ch
+			if v.Type == watch.Added && v.Object != nil {
+				switch t := v.Object.(type) {
+				case *v1.Pod:
+					podCh <- t
+				default:
 				}
 			}
 		}

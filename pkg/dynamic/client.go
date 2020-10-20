@@ -92,15 +92,6 @@ func (a *APIHelper) CreateObject(obj *unstructured.Unstructured) (*unstructured.
 	return ri.Create(context.TODO(), obj, metav1.CreateOptions{})
 }
 
-func sliceContains(set []string, val string) bool {
-	for _, v := range set {
-		if v == val {
-			return true
-		}
-	}
-	return false
-}
-
 // Name returns the name of the kubernetes object.
 func (a *APIHelper) Name(obj *unstructured.Unstructured) (string, error) {
 	return a.Accessor.Name(obj)

@@ -136,6 +136,9 @@ func result(input resultsInput) error {
 		// capabilities.
 		r, cleanup, err := getReader(input.archive)
 		defer cleanup()
+		if err != nil {
+			lastErr = err
+		}
 
 		err = printSinglePlugin(input, r)
 		if err != nil {

@@ -112,7 +112,7 @@ func AddSystemdLogsImage(image *string, flags *pflag.FlagSet) {
 // AddKubeConformanceImageVersion initialises an image version flag.
 func AddKubeConformanceImageVersion(imageVersion *image.ConformanceImageVersion, flags *pflag.FlagSet) {
 	help := "Use default Conformance image, but override the version. "
-	help += fmt.Sprintf("Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise.")
+	help += "Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise."
 
 	*imageVersion = image.ConformanceImageVersionAuto
 	flags.Var(imageVersion, "kube-conformance-image-version", help)
@@ -309,7 +309,7 @@ func AddShowDefaultPodSpecFlag(flag *bool, flags *pflag.FlagSet) {
 func AddWaitOutputFlag(mode *WaitOutputMode, flags *pflag.FlagSet, defaultMode WaitOutputMode) {
 	*mode = defaultMode
 	flags.Var(
-		mode, "wait-output",
+		mode, waitOutputFlag,
 		"Whether to enable spinner on Sonobuoy. Valid modes are Silent and Spinner")
 }
 
@@ -328,7 +328,7 @@ func AddImagePullPolicyFlag(policy *ImagePullPolicy, flags *pflag.FlagSet) {
 func AddSSHKeyPathFlag(path *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		path, "ssh-key", "",
-		fmt.Sprintf("Path to the private key enabling SSH to cluster nodes."),
+		"Path to the private key enabling SSH to cluster nodes.",
 	)
 }
 
@@ -337,7 +337,7 @@ func AddSSHKeyPathFlag(path *string, flags *pflag.FlagSet) {
 func AddSSHUserFlag(user *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		user, "ssh-user", "",
-		fmt.Sprintf("SSH user for ssh-key."),
+		"SSH user for ssh-key.",
 	)
 }
 
@@ -363,7 +363,7 @@ func AddPluginListFlag(p *[]string, flags *pflag.FlagSet) {
 func AddKubernetesVersionFlag(version *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		version, "kubernetes-version", "",
-		fmt.Sprintf("Version to assume for Kubernetes. If empty, the cluster will be queried for its version"),
+		"Version to assume for Kubernetes. If empty, the cluster will be queried for its version",
 	)
 }
 

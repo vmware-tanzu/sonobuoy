@@ -17,8 +17,8 @@ limitations under the License.
 package docker
 
 import (
-	"github.com/vmware-tanzu/sonobuoy/pkg/image/exec"
 	log "github.com/sirupsen/logrus"
+	"github.com/vmware-tanzu/sonobuoy/pkg/image/exec"
 )
 
 type Docker interface {

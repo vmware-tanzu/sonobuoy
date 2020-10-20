@@ -1,18 +1,11 @@
 package app
 
 import (
-	"time"
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	sonodynamic "github.com/vmware-tanzu/sonobuoy/pkg/dynamic"
 
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
-)
-
-var (
-	spinnerType     int           = 14
-	spinnerDuration time.Duration = 2000 * time.Millisecond
-	spinnerColor                  = "red"
 )
 
 func getSonobuoyClient(cfg *rest.Config) (*client.SonobuoyClient, error) {

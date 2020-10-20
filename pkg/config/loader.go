@@ -41,7 +41,7 @@ const (
 func LoadConfig() (*Config, error) {
 	cfg := &Config{}
 
-	pathsToTry := []string{}
+	var pathsToTry []string
 	envCfgFileName := os.Getenv("SONOBUOY_CONFIG")
 	if envCfgFileName != "" {
 		pathsToTry = []string{envCfgFileName}
@@ -56,6 +56,9 @@ func LoadConfig() (*Config, error) {
 	defer jsonFile.Close()
 
 	b, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		return nil, errors.Wrapf(err, "read config file %q", fpath)
+	}
 	err = json.Unmarshal(b, cfg)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unmarshal config file %q", fpath)

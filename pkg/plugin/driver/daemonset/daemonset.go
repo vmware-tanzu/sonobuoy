@@ -367,7 +367,7 @@ func (p *Plugin) monitorOnce(kubeclient kubernetes.Interface, availableNodes []v
 				"error": fmt.Sprintf(
 					"No pod was scheduled on node %v within %v. Check tolerations for plugin %v",
 					node.Name,
-					time.Now().Sub(ds.CreationTimestamp.Time),
+					time.Since(ds.CreationTimestamp.Time),
 					p.GetName(),
 				),
 			}, node.Name))

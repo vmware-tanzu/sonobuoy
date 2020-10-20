@@ -29,7 +29,6 @@ func (r *RegistryList) v1_19() map[int]Config {
 	sigStorageRegistry := r.SigStorageRegistry
 	e2eVolumeRegistry := r.E2eVolumeRegistry
 
-
 	configs := map[int]Config{}
 	configs[Agnhost] = Config{promoterE2eRegistry, "agnhost", "2.20"}
 	configs[AgnhostPrivate] = Config{privateRegistry, "agnhost", "2.6"}

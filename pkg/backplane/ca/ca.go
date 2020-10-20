@@ -33,7 +33,6 @@ import (
 )
 
 const (
-	rsaBits  = 2048
 	validFor = 48 * time.Hour
 	caName   = "sonobuoy-ca"
 )

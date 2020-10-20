@@ -68,7 +68,7 @@ func IsPodFailing(pod *v1.Pod) (bool, string) {
 
 		// Check if it can't fetch its image within the maximum wait time
 		if waiting := cstatus.State.Waiting; waiting != nil && pod.Status.StartTime != nil {
-			elapsedPodTime := time.Now().Sub(pod.Status.StartTime.Time)
+			elapsedPodTime := time.Since(pod.Status.StartTime.Time)
 			if elapsedPodTime > maxWaitForImageTime && (waiting.Reason == "ImagePullBackOff" || waiting.Reason == "ErrImagePull") {
 				errstr := fmt.Sprintf("Failed to pull image for container %v within %v. Container is in state %v", cstatus.Name, maxWaitForImageTime, waiting.Reason)
 				return true, errstr
@@ -78,7 +78,7 @@ func IsPodFailing(pod *v1.Pod) (bool, string) {
 		// Container terminated without reporting results.
 		if cstatus.State.Terminated != nil {
 			// Ensure we give some time to process the results.
-			if time.Now().Sub(cstatus.State.Terminated.FinishedAt.Time) > terminatedContainerWindow {
+			if time.Since(cstatus.State.Terminated.FinishedAt.Time) > terminatedContainerWindow {
 				errstr := fmt.Sprintf("Container %v is in a terminated state (exit code %v) due to reason: %v: %v",
 					cstatus.Name,
 					cstatus.State.Terminated.ExitCode,

@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 )
 
 const (
@@ -69,11 +69,9 @@ const (
 
 var (
 	// Only used for route reversals
-	r                   = mux.NewRouter()
-	nodeRoute           = r.Path(resultsByNode).BuildOnly()
-	globalRoute         = r.Path(resultsGlobal).BuildOnly()
-	progressRouteByNode = r.Path(progressByNode).BuildOnly()
-	progressRouteGlobal = r.Path(progressGlobal).BuildOnly()
+	r           = mux.NewRouter()
+	nodeRoute   = r.Path(resultsByNode).BuildOnly()
+	globalRoute = r.Path(resultsGlobal).BuildOnly()
 )
 
 // Handler is a net/http Handler that can handle API requests for aggregation of

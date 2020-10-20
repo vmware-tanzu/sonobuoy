@@ -20,9 +20,9 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 )
 
 // SonobuoyConfig is a config.Config that implements pflag.Value from a file path
