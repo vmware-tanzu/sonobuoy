@@ -20,6 +20,11 @@ import (
 	"testing"
 )
 
+// ConfigValidator allows the command configurations to be validated.
+type validator interface {
+	Validate() error
+}
+
 func TestConfigValidation(t *testing.T) {
 	testcases := []struct {
 		desc          string

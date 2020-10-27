@@ -32,11 +32,11 @@ import (
 	"testing/iotest"
 	"time"
 
+	"github.com/kylelemons/godebug/pretty"
+	"github.com/viniciuschiele/tarx"
 	"github.com/vmware-tanzu/sonobuoy/pkg/backplane/ca/authtest"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	pluginutils "github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/utils"
-	"github.com/kylelemons/godebug/pretty"
-	"github.com/viniciuschiele/tarx"
 )
 
 func TestAggregation(t *testing.T) {

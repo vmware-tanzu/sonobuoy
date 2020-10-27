@@ -141,7 +141,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	ctxAnnotation, cancelAnnotation := context.WithCancel(context.TODO())
 	pluginsdone := false
 	defer func() {
-		if pluginsdone == false {
+		if !pluginsdone {
 			logrus.Info("Last update to annotations on exit")
 			// This is the async exit cleanup function.
 			// 1. Stop the annotation updater

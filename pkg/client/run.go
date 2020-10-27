@@ -121,6 +121,12 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 				seenStatus = true
 			}
 
+			// if nil below was added for coverage on staticcheck
+			// TODO: ensure this is the desired behavior
+			if status == nil {
+				return false, nil
+			}
+
 			switch {
 			case status.Status == aggregation.CompleteStatus:
 				return true, nil
@@ -131,8 +137,7 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 		}
 
 		if strings.Compare(cfg.WaitOutput, spinnerMode) == 0 {
-			var s *spinner.Spinner
-			s = getSpinnerInstance()
+			var s *spinner.Spinner = getSpinnerInstance()
 			s.Start()
 			defer s.Stop()
 		}

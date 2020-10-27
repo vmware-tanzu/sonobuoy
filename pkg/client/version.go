@@ -19,8 +19,8 @@ package client
 import (
 	"os"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 )
 
 // Version gets the Kubernetes API version

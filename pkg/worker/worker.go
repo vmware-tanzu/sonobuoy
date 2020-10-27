@@ -35,7 +35,10 @@ const (
 )
 
 func init() {
-	mime.AddExtensionType(".gz", "application/gzip")
+	err := mime.AddExtensionType(".gz", "application/gzip")
+	if err != nil {
+		logrus.Error(err)
+	}
 }
 
 // RelayProgressUpdates start listening to the given port and will use the client to post progressUpdates
@@ -82,11 +85,11 @@ func relayProgress(aggregatorURL string, client *http.Client) func(w http.Respon
 // 3. The done file contains a single string of the results to be sent to the aggregator
 func GatherResults(waitfile string, url string, client *http.Client, stopc <-chan struct{}) error {
 	logrus.WithField("waitfile", waitfile).Info("Waiting for waitfile")
-	ticker := time.Tick(1 * time.Second)
+	ticker := time.NewTicker(time.Duration(1) * time.Second)
 	// TODO(chuckha) evaluate wait.Until [https://github.com/kubernetes/apimachinery/blob/e9ff529c66f83aeac6dff90f11ea0c5b7c4d626a/pkg/util/wait/wait.go]
 	for {
 		select {
-		case <-ticker:
+		case <-ticker.C:
 			if resultFile, err := ioutil.ReadFile(waitfile); err == nil {
 				resultFile = bytes.TrimSpace(resultFile)
 				logrus.WithField("resultFile", string(resultFile)).Info("Detected done file, transmitting result file")

@@ -31,7 +31,6 @@ const (
 	kindContainer string = "container"
 	kindVolume    string = "volume"
 	kindManifest  string = "manifest"
-	kindPodSpec   string = "podSpec"
 )
 
 // Encoder is a runtime.Encoder for Sonobuoy's manifest objects

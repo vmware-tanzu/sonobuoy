@@ -27,6 +27,11 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 )
 
+// getPlugins gets the list of plugins selected for this configuration.
+func (cfg *Config) getPlugins() []plugin.Interface {
+	return cfg.LoadedPlugins
+}
+
 func TestOpenConfigFile(t *testing.T) {
 
 	// Set up 3 files with contents matching their path for this test. Cleanup afterwards.

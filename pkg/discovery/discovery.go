@@ -153,6 +153,10 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// 5. Run the queries
 	recorder := NewQueryRecorder()
 	clusterResources, nsResources, err := getAllFilteredResources(apiHelper, cfg.Resources)
+	if err != nil {
+		errlog.LogError(errors.Wrap(err, "unable to filter resources"))
+		return errCount + 1
+	}
 
 	trackErrorsFor("querying cluster resources")(
 		QueryHostData(kubeClient, recorder, cfg),
@@ -224,7 +228,9 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		}
 
 		// Update the plugin status with this post-processed information.
-		updatePluginStatus(kubeClient, cfg.Namespace, p.GetName(), item)
+		if err := updatePluginStatus(kubeClient, cfg.Namespace, p.GetName(), item); err != nil {
+			logrus.Errorf("Failed to update status for plugin %v: %v", p.GetName(), err)
+		}
 	}
 
 	// Saving plugin definitions in their respective folders for easy reference.
@@ -281,7 +287,6 @@ func statusCounts(item *results.Item, startingCounts map[string]int) {
 		return
 	}
 	startingCounts[item.Status]++
-	return
 }
 
 func getFileInfo(path string) (pluginaggregation.TarInfo, error) {

@@ -93,8 +93,7 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 		}
 
 		if strings.Compare(cfg.WaitOutput, spinnerMode) == 0 {
-			var s *spinner.Spinner
-			s = getSpinnerInstance()
+			var s *spinner.Spinner = getSpinnerInstance()
 			s.Start()
 			defer s.Stop()
 		}

@@ -54,12 +54,9 @@ const (
 	// Is written into the ErrorsDir directory.
 	DefaultErrFile = "error.json"
 
-	hostsDir                  = "hosts/"
 	namespacedResourcesDir    = "resources/ns/"
 	nonNamespacedResourcesDir = "resources/cluster/"
-	podLogs                   = "podlogs/"
 	metadataDir               = "meta/"
-	defaultServicesFile       = "Services.json"
 	defaultNodesFile          = "Nodes.json"
 	defaultServerVersionFile  = "serverversion.json"
 	defaultServerGroupsFile   = "servergroups.json"
@@ -375,7 +372,7 @@ func (r *Reader) FileReader(filename string) (io.Reader, error) {
 	found := false
 	err := r.WalkFiles(
 		func(path string, info os.FileInfo, err error) error {
-			if err != nil || found == true {
+			if err != nil || found {
 				return err
 			}
 

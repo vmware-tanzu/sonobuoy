@@ -211,15 +211,6 @@ func checkPluginsUnique(plugins []*manifest.Manifest) error {
 	return nil
 }
 
-func includes(set []plugin.Selection, s string) bool {
-	for _, v := range set {
-		if s == v.Name {
-			return true
-		}
-	}
-	return false
-}
-
 // mergeEnv will combine the values from two env var sets with priority being
 // given to values in the first set in case of collision. Afterwards, any env
 // var with a name in the removal set will be removed.

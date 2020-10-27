@@ -51,9 +51,11 @@ func getPodLogOptions(cfg *config.Config) *v1.PodLogOptions {
 		LimitBytes:   podLogLimits.LimitBytes,
 	}
 
+	// TODO: investigate using LimitBytes (SizeLimitBytes is deprecated)
+	//       and SinceSeconds (TimeLimitDuration is deprecated)
 	// Only set values if they have values greater than 0 (as in they user specified).
-	limitBytes := podLogLimits.SizeLimitBytes(0)
-	sinceSeconds := int64(podLogLimits.TimeLimitDuration(0) / time.Second)
+	limitBytes := podLogLimits.SizeLimitBytes(0)                           //nolint:staticcheck
+	sinceSeconds := int64(podLogLimits.TimeLimitDuration(0) / time.Second) //nolint:staticcheck
 	if limitBytes > 0 {
 		options.LimitBytes = &limitBytes
 	}

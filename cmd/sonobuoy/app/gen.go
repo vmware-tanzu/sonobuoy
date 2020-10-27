@@ -48,7 +48,6 @@ type genFlags struct {
 	sshUser                     string
 	kubeConformanceImageVersion imagepkg.ConformanceImageVersion
 	imagePullPolicy             ImagePullPolicy
-	e2eRepoList                 string
 	timeoutSeconds              int
 	showDefaultPodSpec          bool
 

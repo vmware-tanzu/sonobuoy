@@ -22,11 +22,11 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/daemonset"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/job"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
-	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 )
 

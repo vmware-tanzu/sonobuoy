@@ -19,10 +19,10 @@ package app
 import (
 	"fmt"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
-	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 )
 
 type versionFlags struct {
@@ -52,10 +52,10 @@ func runVersion(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	fmt.Println(fmt.Sprintf("Sonobuoy Version: %s", buildinfo.Version))
-	fmt.Println(fmt.Sprintf("MinimumKubeVersion: %s", buildinfo.MinimumKubeVersion))
-	fmt.Println(fmt.Sprintf("MaximumKubeVersion: %s", buildinfo.MaximumKubeVersion))
-	fmt.Println(fmt.Sprintf("GitSHA: %s", buildinfo.GitSHA))
+	fmt.Printf("Sonobuoy Version: %s\n", buildinfo.Version)
+	fmt.Printf("MinimumKubeVersion: %s\n", buildinfo.MinimumKubeVersion)
+	fmt.Printf("MaximumKubeVersion: %s\n", buildinfo.MaximumKubeVersion)
+	fmt.Printf("GitSHA: %s\n", buildinfo.GitSHA)
 
 	// Get Kubernetes version, this is last so that the regular version information
 	// will be shown even if the API server cannot be contacted and throws an error

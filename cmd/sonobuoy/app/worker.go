@@ -133,8 +133,9 @@ func runGatherGlobal(cmd *cobra.Command, args []string) error {
 // for the specified amount of seconds.
 func runGatherSingleNode(sleep *int64) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := runGather(false)
-
+		if err := runGather(false); err != nil {
+			return err
+		}
 		switch {
 		case sleep == nil || *sleep == 0:
 			// No sleep.
@@ -148,7 +149,7 @@ func runGatherSingleNode(sleep *int64) func(cmd *cobra.Command, args []string) e
 			logrus.Infof("Results transmitted to aggregator. Sleeping for %v seconds", *sleep)
 			time.Sleep(time.Duration(*sleep) * time.Second)
 		}
-		return err
+		return nil
 	}
 }
 

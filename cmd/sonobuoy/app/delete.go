@@ -20,10 +20,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/client"
-	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 )
 
 var deleteFlags struct {

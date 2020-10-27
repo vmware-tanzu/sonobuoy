@@ -25,9 +25,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results/e2e"
-	"github.com/pkg/errors"
 )
 
 // GetTests extracts the junit results from a sonobuoy archive and returns the requested tests.
