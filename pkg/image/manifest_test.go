@@ -164,21 +164,28 @@ func TestGetE2EImageTagPairs(t *testing.T) {
 	}
 	expectedDefaultRegistry := defaultRegistry.v1_17()
 	if len(imageTagPairs) != len(expectedDefaultRegistry) {
-		t.Fatalf("Unexpected number of image tag pairs returned, expected %v, got %v", len(expectedDefaultRegistry), len(imageTagPairs))
+		t.Fatalf("unexpected number of image tag pairs returned, expected %v, got %v", len(expectedDefaultRegistry), len(imageTagPairs))
 	}
 
-	// Check one of the returned image pairs to ensure correct format
-	imageTagPair := imageTagPairs[0]
-	if strings.HasPrefix(imageTagPair.Src, customRegistry) {
-		t.Errorf("Src image should not have custom registry prefix: %q", imageTagPair.Src)
+	// As a sample, check one of the images for E2E and assert their mapping
+	var e2eImageTagPair TagPair
+	for _, imageTagPair := range imageTagPairs {
+		if strings.Contains(imageTagPair.Src, "e2e") {
+			e2eImageTagPair = imageTagPair
+			break
+		}
 	}
 
-	imageComponents := strings.SplitAfter(imageTagPair.Src, "/")
-	if !strings.HasPrefix(imageTagPair.Dst, customRegistry) {
-		t.Errorf("Expected Dst image to have prefix %q, got %q", customRegistry, imageTagPair.Dst)
+	if strings.HasPrefix(e2eImageTagPair.Src, customRegistry) {
+		t.Errorf("src image should not have custom registry prefix: %q", e2eImageTagPair.Src)
 	}
-	if !strings.HasSuffix(imageTagPair.Dst, imageComponents[len(imageComponents)-1]) {
-		t.Errorf("Expected Dst image to have suffix %q, got %q", imageComponents[len(imageComponents)-1], imageTagPair.Dst)
+
+	imageComponents := strings.SplitAfter(e2eImageTagPair.Src, "/")
+	if !strings.HasPrefix(e2eImageTagPair.Dst, customRegistry) {
+		t.Errorf("expected Dst image to have prefix %q, got %q", customRegistry, e2eImageTagPair.Dst)
+	}
+	if !strings.HasSuffix(e2eImageTagPair.Dst, imageComponents[len(imageComponents)-1]) {
+		t.Errorf("expected Dst image to have suffix %q, got %q", imageComponents[len(imageComponents)-1], e2eImageTagPair.Dst)
 	}
 }
 
