@@ -176,6 +176,9 @@ func TestGetE2EImageTagPairs(t *testing.T) {
 		}
 	}
 
+	if e2eImageTagPair == (TagPair{}) {
+		t.Errorf("no e2eImageTagPair is found")
+	}
 	if strings.HasPrefix(e2eImageTagPair.Src, customRegistry) {
 		t.Errorf("src image should not have custom registry prefix: %q", e2eImageTagPair.Src)
 	}
