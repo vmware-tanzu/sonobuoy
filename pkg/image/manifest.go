@@ -254,7 +254,7 @@ func GetE2EImages(e2eRegistryConfig, version string) ([]string, error) {
 	return imageNames, nil
 }
 
-// GetE2EImagePairs gets a list of E2E image tag pairs from the default src to custom destination
+// GetE2EImageTagPairs gets a list of E2E image tag pairs from the default src to custom destination
 func GetE2EImageTagPairs(e2eRegistryConfig, version string) ([]TagPair, error) {
 	defaultImageRegistry, err := NewRegistryList("", version)
 	if err != nil {
