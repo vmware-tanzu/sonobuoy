@@ -1,0 +1,28 @@
+name: CI Lint and Sync
+on: [push, pull_request]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint run
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.31
+  go-mod-tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+      - name: go mod tidy
+        run: |
+          ./scripts/ci/check_go_modules.sh
+  sync-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: sync readme
+        run: |
+          ./scripts/ci/check_readme_in_sync.sh
