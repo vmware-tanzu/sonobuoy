@@ -20,9 +20,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strings"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/vmware-tanzu/sonobuoy/pkg/image"
 
@@ -32,10 +30,9 @@ import (
 
 // Number times to retry docker commands before giving up
 const (
-	numDockerRetries     = 1
-	defaultE2ERegistries = ""
-	e2ePlugin            = "e2e"
-	systemdLogsPlugin    = "systemd-logs"
+	numDockerRetries  = 1
+	e2ePlugin         = "e2e"
+	systemdLogsPlugin = "systemd-logs"
 )
 
 type imagesFlags struct {
@@ -54,7 +51,18 @@ func NewCmdImages() *cobra.Command {
 		Use:   "images",
 		Short: "Manage images used in a plugin. Supported plugins are: 'e2e'",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := listImages(flags.plugins, flags.kubeconfig, flags.k8sVersion); err != nil {
+			var client image.Client
+			if flags.dryRun {
+				client = image.DryRunClient{}
+			} else {
+				client = image.NewDockerClient()
+			}
+			version, err := getClusterVersion(flags.k8sVersion, flags.kubeconfig)
+			if err != nil {
+				errlog.LogError(err)
+				os.Exit(1)
+			}
+			if err := listImages(flags.plugins, version, client); err != nil {
 				errlog.LogError(err)
 				os.Exit(1)
 			}
@@ -87,8 +95,12 @@ func pullCmd() *cobra.Command {
 			} else {
 				client = image.NewDockerClient()
 			}
-
-			if errs := pullImages(flags.plugins, flags.kubeconfig, flags.e2eRegistryConfig, flags.k8sVersion, client); len(errs) > 0 {
+			version, err := getClusterVersion(flags.k8sVersion, flags.kubeconfig)
+			if err != nil {
+				errlog.LogError(err)
+				os.Exit(1)
+			}
+			if errs := pullImages(flags.plugins, flags.e2eRegistryConfig, version, client); len(errs) > 0 {
 				for _, err := range errs {
 					errlog.LogError(err)
 				}
@@ -113,7 +125,7 @@ func pushCmd() *cobra.Command {
 		Short: "Pushes images to docker registry for a specific plugin",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if contains(flags.plugins, e2ePlugin) && len(flags.e2eRegistryConfig) == 0 {
-				return fmt.Errorf("Required flag %q not set", e2eRegistryConfigFlag)
+				return fmt.Errorf("required flag %q not set", e2eRegistryConfigFlag)
 			}
 			return nil
 		},
@@ -124,8 +136,12 @@ func pushCmd() *cobra.Command {
 			} else {
 				client = image.NewDockerClient()
 			}
-
-			if errs := pushImages(flags.plugins, flags.kubeconfig, flags.customRegistry, flags.e2eRegistryConfig, flags.k8sVersion, client); len(errs) > 0 {
+			version, err := getClusterVersion(flags.k8sVersion, flags.kubeconfig)
+			if err != nil {
+				errlog.LogError(err)
+				os.Exit(1)
+			}
+			if errs := pushImages(flags.plugins, flags.customRegistry, flags.e2eRegistryConfig, version, client); len(errs) > 0 {
 				for _, err := range errs {
 					errlog.LogError(err)
 				}
@@ -157,8 +173,12 @@ func downloadCmd() *cobra.Command {
 			} else {
 				client = image.NewDockerClient()
 			}
-
-			if err := downloadImages(flags.plugins, flags.kubeconfig, flags.e2eRegistryConfig, flags.k8sVersion, client); err != nil {
+			version, err := getClusterVersion(flags.k8sVersion, flags.kubeconfig)
+			if err != nil {
+				errlog.LogError(err)
+				os.Exit(1)
+			}
+			if err := downloadImages(flags.plugins, flags.e2eRegistryConfig, version, client); err != nil {
 				errlog.LogError(err)
 				os.Exit(1)
 			}
@@ -225,170 +245,87 @@ func getClusterVersion(k8sVersion string, kubeconfig Kubeconfig) (string, error)
 	return version, nil
 }
 
-func listImages(plugins []string, kubeconfig Kubeconfig, k8sVersion string) error {
-	images := []string{
-		config.DefaultImage,
+func listImages(plugins []string, k8sVersion string, client image.Client) error {
+	images, err := collectPluginsImages(plugins, k8sVersion, client)
+	if err != nil {
+		return errors.Wrap(err, "unable to collect images of plugins")
 	}
-	for _, plugin := range plugins {
-		switch plugin {
-		case systemdLogsPlugin:
-			images = append(images, config.DefaultSystemdLogsImage)
-		case e2ePlugin:
-			version, err := getClusterVersion(k8sVersion, kubeconfig)
-			if err != nil {
-				return errors.Wrap(err, "failed to get cluster version")
-			}
-
-			e2eImages, err := image.GetE2EImages(defaultE2ERegistries, version)
-			if err != nil {
-				return errors.Wrap(err, "couldn't get images")
-			}
-
-			images = append(images, resolveConformanceImage(version))
-			images = append(images, e2eImages...)
-		default:
-			return errors.Errorf("Unsupported plugin: %v", plugin)
-		}
-	}
-
 	sort.Strings(images)
 	for _, image := range images {
 		fmt.Println(image)
 	}
-
 	return nil
 }
 
-func pullImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
-	images := []string{
-		config.DefaultImage,
+func pullImages(plugins []string, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
+	images, err := collectPluginsImages(plugins, k8sVersion, client)
+	if err != nil {
+		return []error{err, errors.Errorf("unable to collect images of plugins")}
 	}
-	for _, plugin := range plugins {
-		switch plugin {
-		case systemdLogsPlugin:
-			images = append(images, config.DefaultSystemdLogsImage)
-		case e2ePlugin:
-			version, err := getClusterVersion(k8sVersion, kubeconfig)
-			if err != nil {
-				return []error{errors.Wrap(err, "failed to get cluster version")}
-			}
-
-			e2eImages, err := image.GetE2EImages(e2eRegistryConfig, version)
-			if err != nil {
-				return []error{errors.Wrap(err, "couldn't get images")}
-			}
-			images = append(images, resolveConformanceImage(version))
-			images = append(images, e2eImages...)
-
-		default:
-			return []error{errors.Errorf("Unsupported plugin: %v", plugin)}
+	if e2eRegistryConfig != "" {
+		imagePairs, err := convertImagesToPairs(images, "", e2eRegistryConfig, k8sVersion)
+		if err != nil {
+			return []error{err}
+		}
+		images = []string{}
+		for _, imagePair := range imagePairs {
+			images = append(images, imagePair.Dst)
 		}
 	}
-
 	return client.PullImages(images, numDockerRetries)
 }
 
-func downloadImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig, k8sVersion string, client image.Client) error {
-	for _, plugin := range plugins {
-		switch plugin {
-		case e2ePlugin:
-			version, err := getClusterVersion(k8sVersion, kubeconfig)
-			if err != nil {
-				return errors.Wrap(err, "failed to get cluster version")
-			}
-
-			images, err := image.GetE2EImages(e2eRegistryConfig, version)
-			if err != nil {
-				return errors.Wrap(err, "couldn't get images")
-			}
-
-			fileName, err := client.DownloadImages(images, version)
-			if err != nil {
-				return err
-			}
-
-			fmt.Println(fileName)
-
-		default:
-			return errors.Errorf("Unsupported plugin: %v", plugin)
+func downloadImages(plugins []string, e2eRegistryConfig, k8sVersion string, client image.Client) error {
+	images, err := collectPluginsImages(plugins, k8sVersion, client)
+	if err != nil {
+		return errors.Wrapf(err, "unable to collect images of plugins")
+	}
+	if e2eRegistryConfig != "" {
+		imagePairs, err := convertImagesToPairs(images, "", e2eRegistryConfig, k8sVersion)
+		if err != nil {
+			return err
+		}
+		images = []string{}
+		for _, imagePair := range imagePairs {
+			images = append(images, imagePair.Dst)
 		}
 	}
-
+	filename, err := client.DownloadImages(images, k8sVersion)
+	if err != nil {
+		return errors.Wrap(err, "unable to download images")
+	}
+	fmt.Println(filename)
 	return nil
 }
 
-func pushImages(plugins []string, kubeconfig Kubeconfig, customRegistry, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
-	imagePairs := []image.TagPair{
-		{
-			Src: config.DefaultImage,
-			Dst: substituteRegistry(config.DefaultImage, customRegistry),
-		},
+func pushImages(plugins []string, customRegistry, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
+	images, err := collectPluginsImages(plugins, k8sVersion, client)
+	if err != nil {
+		return []error{err, errors.Errorf("unable to collect images of plugins")}
 	}
-	for _, plugin := range plugins {
-		switch plugin {
-		case systemdLogsPlugin:
-			imagePairs = append(imagePairs, image.TagPair{
-				Src: config.DefaultSystemdLogsImage,
-				Dst: substituteRegistry(config.DefaultSystemdLogsImage, customRegistry),
-			})
-		case e2ePlugin:
-			version, err := getClusterVersion(k8sVersion, kubeconfig)
-			if err != nil {
-				return []error{errors.Wrap(err, "failed to get cluster version")}
-			}
-
-			tagPairs, err := image.GetE2EImageTagPairs(e2eRegistryConfig, version)
-			if err != nil {
-				return []error{errors.Wrap(err, "couldn't...something")}
-			}
-
-			conformanceImage := resolveConformanceImage(version)
-			imagePairs = append(imagePairs, image.TagPair{
-				Src: conformanceImage,
-				Dst: substituteRegistry(conformanceImage, customRegistry),
-			})
-			imagePairs = append(imagePairs, tagPairs...)
-		default:
-			return []error{errors.Errorf("Unsupported plugin: %v", plugin)}
-		}
+	imagePairs, err := convertImagesToPairs(images, customRegistry, e2eRegistryConfig, k8sVersion)
+	if err != nil {
+		return []error{err}
 	}
-
 	return client.PushImages(imagePairs, numDockerRetries)
 }
 
 func deleteImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
-	images := []string{
-		config.DefaultImage,
+	images, err := collectPluginsImages(plugins, k8sVersion, client)
+	if err != nil {
+		return []error{err, errors.Errorf("unable to collect images of plugins")}
 	}
-	for _, plugin := range plugins {
-		switch plugin {
-		case systemdLogsPlugin:
-			images = append(images, config.DefaultSystemdLogsImage)
-		case e2ePlugin:
-			version, err := getClusterVersion(k8sVersion, kubeconfig)
-			if err != nil {
-				return []error{errors.Wrap(err, "failed to get cluster version")}
-			}
-
-			e2eImages, err := image.GetE2EImages(e2eRegistryConfig, version)
-			if err != nil {
-				return []error{errors.Wrap(err, "couldn't get images")}
-			}
-
-			images = append(images, resolveConformanceImage(version))
-			images = append(images, e2eImages...)
-		default:
-			return []error{errors.Errorf("Unsupported plugin: %v", plugin)}
+	if e2eRegistryConfig != "" {
+		imagePairs, err := convertImagesToPairs(images, "", e2eRegistryConfig, k8sVersion)
+		if err != nil {
+			return []error{err}
+		}
+		images = []string{}
+		for _, imagePair := range imagePairs {
+			images = append(images, imagePair.Dst)
 		}
 	}
-
 	return client.DeleteImages(images, numDockerRetries)
-}
-
-func substituteRegistry(image string, customRegistry string) string {
-	trimmedRegistry := strings.TrimRight(customRegistry, "/")
-	components := strings.SplitAfter(image, "/")
-	return fmt.Sprintf("%s/%s", trimmedRegistry, components[len(components)-1])
 }
 
 func contains(set []string, val string) bool {
