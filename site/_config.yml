@@ -10,7 +10,9 @@ twitter:
   card: summary
 vm_logo: vm-logo.png
 gh_repo: https://github.com/vmware-tanzu/sonobuoy
-markdown: redcarpet
+markdown: kramdown
+kramdown:
+  syntax_highlighter: rouge
 hero:
   background-color: med-blue
 footer:
@@ -283,6 +285,3 @@ exclude:
   - CNAME
   - Runbook.docx
   - '*.sh'
-
-redcarpet:
-    extensions: ["no_intra_emphasis", "tables", "autolink", "strikethrough", "with_toc_data"]
