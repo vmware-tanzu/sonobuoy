@@ -20,7 +20,6 @@ import (
 	"io/ioutil"
 
 	version "github.com/hashicorp/go-version"
-	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -212,76 +211,6 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 	registry.K8sVersion = version
 
 	return registry, nil
-}
-
-// getImageConfigs returns the map of image Config for the registry version
-func (r *RegistryList) getImageConfigs() (map[int]Config, error) {
-	switch r.K8sVersion.Segments()[0] {
-	case 1:
-		switch r.K8sVersion.Segments()[1] {
-		case 13, 14, 15, 16:
-			return nil, fmt.Errorf("version not supported for this build: %v", r.K8sVersion)
-		case 17:
-			return r.v1_17(), nil
-		case 18:
-			return r.v1_18(), nil
-		case 19:
-			return r.v1_19(), nil
-		}
-	}
-	return map[int]Config{}, fmt.Errorf("no matching configuration for k8s version: %v", r.K8sVersion)
-
-}
-
-// GetE2EImages gets a list of E2E image names
-func GetE2EImages(e2eRegistryConfig, version string) ([]string, error) {
-	// Get list of upstream images that match the version
-	reg, err := NewRegistryList(e2eRegistryConfig, version)
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't create image registry list")
-	}
-
-	imgConfigs, err := reg.getImageConfigs()
-	if err != nil {
-		return []string{}, errors.Wrap(err, "couldn't get images for version")
-	}
-
-	imageNames := []string{}
-	for _, imageConfig := range imgConfigs {
-		imageNames = append(imageNames, imageConfig.GetFullyQualifiedImageName())
-
-	}
-	return imageNames, nil
-}
-
-// GetE2EImageTagPairs gets a list of E2E image tag pairs from the default src to custom destination
-func GetE2EImageTagPairs(e2eRegistryConfig, version string) ([]TagPair, error) {
-	defaultImageRegistry, err := NewRegistryList("", version)
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't create image registry list")
-	}
-	defaultImageConfigs, err := defaultImageRegistry.getImageConfigs()
-	if err != nil {
-		return []TagPair{}, errors.Wrap(err, "couldn't get images for version")
-	}
-
-	customImageRegistry, err := NewRegistryList(e2eRegistryConfig, version)
-	if err != nil {
-		return nil, errors.Wrap(err, "couldn't create image registry list")
-	}
-	customImageConfigs, err := customImageRegistry.getImageConfigs()
-	if err != nil {
-		return []TagPair{}, errors.Wrap(err, "couldn't get images for version")
-	}
-
-	var imageTagPairs []TagPair
-	for name, cfg := range defaultImageConfigs {
-		imageTagPairs = append(imageTagPairs, TagPair{
-			Src: cfg.GetFullyQualifiedImageName(),
-			Dst: customImageConfigs[name].GetFullyQualifiedImageName(),
-		})
-	}
-	return imageTagPairs, nil
 }
 
 // GetDefaultImageRegistries returns the default default image registries used for

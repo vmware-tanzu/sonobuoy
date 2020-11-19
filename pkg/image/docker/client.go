@@ -28,9 +28,17 @@ type Docker interface {
 	Tag(src, dest string, retries int) error
 	Rmi(image string, retries int) error
 	Save(images []string, filename string) error
+	Run(image string, args ...string) ([]string, error)
 }
 
 type LocalDocker struct {
+}
+
+func (l LocalDocker) Run(image string, args ...string) ([]string, error) {
+	dockerArgs := []string{"run", "--rm", image}
+	dockerArgs = append(dockerArgs, args...)
+	cmd := exec.Command("docker", dockerArgs...)
+	return exec.CombinedOutputLines(cmd)
 }
 
 // PullIfNotPresent will pull an image if it is not present locally

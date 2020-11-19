@@ -93,31 +93,6 @@ func TestFullQualifiedImageName(t *testing.T) {
 	}
 }
 
-func TestGetE2EImages(t *testing.T) {
-	version := "v1.17.0"
-	registry, err := NewRegistryList("", version)
-	if err != nil {
-		t.Fatalf("unexpected error from NewRegistryList: %q", err)
-	}
-
-	imageNames, err := GetE2EImages("", version)
-	if err != nil {
-		t.Fatalf("unexpected error from GetE2EImages: %q", err)
-	}
-
-	expectedRegistry := registry.v1_17()
-	if len(imageNames) != len(expectedRegistry) {
-		t.Fatalf("Unexpected number of images returned, expected %v, got %v", len(expectedRegistry), len(imageNames))
-	}
-
-	// Check one of the returned image names to ensure correct format
-	registryImage := expectedRegistry[Agnhost]
-	registryImageName := registryImage.GetFullyQualifiedImageName()
-	if !contains(imageNames, registryImageName) {
-		t.Errorf("Expected result of GetImageNames to contain registry image %q", registryImageName)
-	}
-}
-
 func createTestRegistryConfig(customRegistry, version string) (string, error) {
 	registries, err := GetDefaultImageRegistries(version)
 	if err != nil {
@@ -143,53 +118,6 @@ func createTestRegistryConfig(customRegistry, version string) (string, error) {
 		return "", err
 	}
 	return tmpfile.Name(), nil
-}
-
-func TestGetE2EImageTagPairs(t *testing.T) {
-	version := "v1.17.0"
-	customRegistry := "my-custom/registry"
-	customRegistries, err := createTestRegistryConfig(customRegistry, version)
-	if err != nil {
-		t.Fatalf("unexpected error creating temp registry config: %q", err)
-	}
-
-	imageTagPairs, err := GetE2EImageTagPairs(customRegistries, version)
-	if err != nil {
-		t.Fatalf("unexpected error from GetE2ETagPairs: %q", err)
-	}
-
-	defaultRegistry, err := NewRegistryList("", version)
-	if err != nil {
-		t.Fatalf("unexpected error from NewRegistryList: %q", err)
-	}
-	expectedDefaultRegistry := defaultRegistry.v1_17()
-	if len(imageTagPairs) != len(expectedDefaultRegistry) {
-		t.Fatalf("unexpected number of image tag pairs returned, expected %v, got %v", len(expectedDefaultRegistry), len(imageTagPairs))
-	}
-
-	// As a sample, check one of the images for E2E and assert their mapping
-	var e2eImageTagPair TagPair
-	for _, imageTagPair := range imageTagPairs {
-		if strings.Contains(imageTagPair.Src, "e2e") {
-			e2eImageTagPair = imageTagPair
-			break
-		}
-	}
-
-	if e2eImageTagPair == (TagPair{}) {
-		t.Errorf("no e2eImageTagPair is found")
-	}
-	if strings.HasPrefix(e2eImageTagPair.Src, customRegistry) {
-		t.Errorf("src image should not have custom registry prefix: %q", e2eImageTagPair.Src)
-	}
-
-	imageComponents := strings.SplitAfter(e2eImageTagPair.Src, "/")
-	if !strings.HasPrefix(e2eImageTagPair.Dst, customRegistry) {
-		t.Errorf("expected Dst image to have prefix %q, got %q", customRegistry, e2eImageTagPair.Dst)
-	}
-	if !strings.HasSuffix(e2eImageTagPair.Dst, imageComponents[len(imageComponents)-1]) {
-		t.Errorf("expected Dst image to have suffix %q, got %q", imageComponents[len(imageComponents)-1], e2eImageTagPair.Dst)
-	}
 }
 
 func contains(set []string, val string) bool {

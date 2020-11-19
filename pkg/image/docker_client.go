@@ -109,6 +109,14 @@ func (i DockerClient) DeleteImages(images []string, retries int) []error {
 	return errs
 }
 
+func (i DockerClient) RunImage(image string, args ...string) ([]string, error) {
+	output, err := i.dockerClient.Run(image, args...)
+	if err != nil {
+		return []string{}, err
+	}
+	return output, nil
+}
+
 // getTarFileName returns a filename matching the version of Kubernetes images are exported
 func getTarFileName(version string) string {
 	return fmt.Sprintf("kubernetes_e2e_images_%s.tar", version)
