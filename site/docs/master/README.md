@@ -115,6 +115,34 @@ issue][issue].
 
 ## Known Issues
 
+### Docker Hub rate limit
+
+We're planning to release v0.20.0 with a better user interface. Until then, this is the usable workaround.
+
+#### Sonobuoy Pod
+
+Sonobuoy by default pulls from Docker Hub for [`sonobuoy/sonobuoy` image](https://hub.docker.com/r/sonobuoy/sonobuoy). If you're encountering rate limit on this, you can use VMware-provided mirror with:
+
+```bash
+sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:v0.19.0
+```
+
+#### Conformance
+
+Kubernetes end-to-end conformance test pulls several images from Docker Hub as part of testing. To override this, save the following file locally (e.g. `conformance-image-config.yaml`):
+
+```yaml
+dockerLibraryRegistry: mirror.gcr.io/library
+```
+
+Then on running conformance:
+
+```bash
+sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:v0.19.0 --e2e-repo-config conformance-image-config.yaml
+```
+
+Technically `dockerGluster` is also a registry pulling from Docker Hub, but it's not part of Conformance test suite at the moment, so overriding `dockerLibraryRegistry` should be enough.
+
 ### Leaked End-to-end namespaces
 
 There are some Kubernetes e2e tests that may leak resources. Sonobuoy can
