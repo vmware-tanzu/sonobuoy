@@ -118,7 +118,7 @@ const (
 const (
 	buildImageRegistry      = "k8s.gcr.io/build-image"
 	dockerGluster           = "docker.io/gluster"
-	dockerLibraryRegistry   = "docker.io/library"
+	dockerLibraryRegistry   = "mirror.gcr.io/library"
 	e2eRegistry             = "gcr.io/kubernetes-e2e-test-images"
 	e2eVolumeRegistry       = "gcr.io/kubernetes-e2e-test-images/volume"
 	etcdRegistry            = "quay.io/coreos"
