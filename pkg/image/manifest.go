@@ -24,98 +24,6 @@ import (
 )
 
 const (
-	// Agnhost image
-	Agnhost = iota
-	// AgnhostPrivate image
-	AgnhostPrivate
-	// APIServer image
-	APIServer
-	// AppArmorLoader image
-	AppArmorLoader
-	// AuthenticatedAlpine image
-	AuthenticatedAlpine
-	// AuthenticatedWindowsNanoServer image
-	AuthenticatedWindowsNanoServer
-	// BusyBox image
-	BusyBox
-	// CheckMetadataConcealment image
-	CheckMetadataConcealment
-	// CudaVectorAdd image
-	CudaVectorAdd
-	// CudaVectorAdd2 image
-	CudaVectorAdd2
-	// Dnsutils image
-	Dnsutils
-	// DebianIptables Image
-	DebianIptables
-	// EchoServer image
-	EchoServer
-	// Etcd image
-	Etcd
-	// GlusterDynamicProvisioner image
-	GlusterDynamicProvisioner
-	// Httpd image
-	Httpd
-	// HttpdNew image
-	HttpdNew
-	// InvalidRegistryImage image
-	InvalidRegistryImage
-	// IpcUtils image
-	IpcUtils
-	// JessieDnsutils image
-	JessieDnsutils
-	// Kitten image
-	Kitten
-	// Mounttest image
-	Mounttest
-	// MounttestUser image
-	MounttestUser
-	// Nautilus image
-	Nautilus
-	// NFSProvisioner image
-	NFSProvisioner
-	// Nginx image
-	Nginx
-	// NginxNew image
-	NginxNew
-	// Nonewprivs image
-	Nonewprivs
-	// NonRoot runs with a default user of 1234
-	NonRoot
-	// Pause - when these values are updated, also update cmd/kubelet/app/options/container_runtime.go
-	// Pause image
-	Pause
-	// Perl image
-	Perl
-	// PrometheusDummyExporter image
-	PrometheusDummyExporter
-	// PrometheusToSd image
-	PrometheusToSd
-	// Redis image
-	Redis
-	// RegressionIssue74839 image
-	RegressionIssue74839
-	// ResourceConsumer image
-	ResourceConsumer
-	// ResourceController image
-	ResourceController
-	// SdDummyExporter image
-	SdDummyExporter
-	// StartupScript image
-	StartupScript
-	// TestWebserver image
-	TestWebserver
-	// VolumeNFSServer image
-	VolumeNFSServer
-	// VolumeISCSIServer image
-	VolumeISCSIServer
-	// VolumeGlusterServer image
-	VolumeGlusterServer
-	// VolumeRBDServer image
-	VolumeRBDServer
-)
-
-const (
 	buildImageRegistry      = "k8s.gcr.io/build-image"
 	dockerGluster           = "docker.io/gluster"
 	dockerLibraryRegistry   = "docker.io/library"
@@ -213,74 +121,30 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 	return registry, nil
 }
 
-// GetDefaultImageRegistries returns the default default image registries used for
-// a given version of the Kubernetes E2E tests
+// GetDefaultImageRegistries returns the default default image registries
 func GetDefaultImageRegistries(version string) (*RegistryList, error) {
 	// Init images for k8s version & repos configured
-	v, err := validateVersion(version)
+	_, err := validateVersion(version)
 	if err != nil {
 		return nil, err
 	}
+	return &RegistryList{
+		BuildImageRegistry:    buildImageRegistry,
+		E2eRegistry:           e2eRegistry,
+		E2eVolumeRegistry:     e2eVolumeRegistry,
+		DockerLibraryRegistry: dockerLibraryRegistry,
+		GcRegistry:            gcRegistry,
+		DockerGluster:         dockerGluster,
+		PromoterE2eRegistry:   promoterE2eRegistry,
+		SigStorageRegistry:    sigStorageRegistry,
 
-	switch v.Segments()[0] {
-	case 1:
-		switch v.Segments()[1] {
-		case 13, 14, 15, 16:
-			return nil, fmt.Errorf("version not supported for this build: %s", version)
-		case 17:
-			return &RegistryList{
-				E2eRegistry:             e2eRegistry,
-				DockerLibraryRegistry:   dockerLibraryRegistry,
-				GcRegistry:              gcRegistry,
-				GoogleContainerRegistry: googleContainerRegistry,
-				DockerGluster:           dockerGluster,
-				QuayIncubator:           quayIncubator,
-
-				// The following keys are used in the v1.17 registry list however their images
-				// cannot be pulled as they are used as part of tests for checking image pull
-				// behavior. They are omitted from the resulting config.
-				// InvalidRegistry:         invalidRegistry,
-				// GcAuthenticatedRegistry: gcAuthenticatedRegistry,
-				// PrivateRegistry:         privateRegistry,
-			}, nil
-		case 18:
-			return &RegistryList{
-				E2eRegistry:             e2eRegistry,
-				DockerLibraryRegistry:   dockerLibraryRegistry,
-				GcRegistry:              gcRegistry,
-				GoogleContainerRegistry: googleContainerRegistry,
-				DockerGluster:           dockerGluster,
-				QuayIncubator:           quayIncubator,
-				PromoterE2eRegistry:     promoterE2eRegistry,
-
-				// The following keys are used in the v1.18 registry list however their images
-				// cannot be pulled as they are used as part of tests for checking image pull
-				// behavior. They are omitted from the resulting config.
-				// InvalidRegistry:         invalidRegistry,
-				// GcAuthenticatedRegistry: gcAuthenticatedRegistry,
-				// PrivateRegistry:         privateRegistry,
-			}, nil
-		case 19:
-			return &RegistryList{
-				BuildImageRegistry:    buildImageRegistry,
-				E2eRegistry:           e2eRegistry,
-				E2eVolumeRegistry:     e2eVolumeRegistry,
-				DockerLibraryRegistry: dockerLibraryRegistry,
-				GcRegistry:            gcRegistry,
-				DockerGluster:         dockerGluster,
-				PromoterE2eRegistry:   promoterE2eRegistry,
-				SigStorageRegistry:    sigStorageRegistry,
-
-				// The following keys are used in the v1.19 registry list however their images
-				// cannot be pulled as they are used as part of tests for checking image pull
-				// behavior. They are omitted from the resulting config.
-				// InvalidRegistry:         invalidRegistry,
-				// GcAuthenticatedRegistry: gcAuthenticatedRegistry,
-				// PrivateRegistry:         privateRegistry,
-			}, nil
-		}
-	}
-	return nil, fmt.Errorf("No matching configuration for k8s version: %v", v)
+		// The following keys are used in the v1.19 registry list however their images
+		// cannot be pulled as they are used as part of tests for checking image pull
+		// behavior. They are omitted from the resulting config.
+		// InvalidRegistry:         invalidRegistry,
+		// GcAuthenticatedRegistry: gcAuthenticatedRegistry,
+		// PrivateRegistry:         privateRegistry,
+	}, nil
 }
 
 // GetFullyQualifiedImageName returns the fully qualified URI to an image (including tag)
