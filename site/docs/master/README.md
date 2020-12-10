@@ -181,7 +181,7 @@ welcome pull requests. Feel free to dig through the [issues][issue] and jump in.
 
 See [the list of releases][releases] to find out about feature changes.
 
-[decoupling-sonobuoy-k8s]: /decoupling-sonobuoy-and-kubernetes
+[decoupling-sonobuoy-k8s]: https://sonobuoy.io/decoupling-sonobuoy-and-kubernetes
 [airgap]: airgap
 [brew]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
