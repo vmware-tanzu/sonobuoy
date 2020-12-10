@@ -18,7 +18,7 @@ for the following use cases:
 Starting v0.20, Sonobuoy supports Kubernetes v1.17 or later.
 Sonobuoy no longer follows Kubernetes release cycle -- this means that Sonobuoy releases in the future may not follow the same cadence as Kubernetes releases.
 Sonobuoy will continually ensure that new releases continue to work functionally.
-Read more about the new release cycles in [Sonobuoy v0.20 release notes](0.20-release-notes).
+Read more about the new release cycles in [our blog][decoupling-sonobuoy-k8s].
 
 > Note: You can skip this version enforcement by running Sonobuoy with the `--skip-preflight` flag.
 
@@ -181,6 +181,7 @@ welcome pull requests. Feel free to dig through the [issues][issue] and jump in.
 
 See [the list of releases][releases] to find out about feature changes.
 
+[decoupling-sonobuoy-k8s]: https://sonobuoy.io/decoupling-sonobuoy-and-kubernetes
 [airgap]: https://sonobuoy.io/docs/airgap
 [brew]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
