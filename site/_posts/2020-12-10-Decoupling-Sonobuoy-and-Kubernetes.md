@@ -1,6 +1,6 @@
 ---
 title: Decoupling Sonobuoy and Kubernetes
-excerpt: Sonobuoy v0.20.0 release and the future of Sonobuoy project
+excerpt: Sonobuoy 0.20.0 release and the future of Sonobuoy project
 author_name: Wilson Husin
 author_url: https://github.com/wilsonehusin
 author_avatar: https://avatars3.githubusercontent.com/u/14004487
