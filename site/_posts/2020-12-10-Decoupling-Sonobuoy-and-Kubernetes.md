@@ -1,6 +1,6 @@
 ---
 title: Decoupling Sonobuoy and Kubernetes
-excerpt: Check which subjects have RBAC permissions to perform actions in your cluster with the new who-can plugin.
+excerpt: Sonobuoy v0.20.0 release and the future of Sonobuoy project
 author_name: Wilson Husin
 author_url: https://github.com/wilsonehusin
 author_avatar: https://avatars3.githubusercontent.com/u/14004487
