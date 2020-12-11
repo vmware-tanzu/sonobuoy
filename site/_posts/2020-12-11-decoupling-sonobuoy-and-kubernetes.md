@@ -22,5 +22,5 @@ Specifically, `sonobuoy images list` now runs `docker exec` under the hood. This
 
 ## Future of Sonobuoy
 
-We have future plans for Sonobuoy beyond conformance testing which we're excited to announce. Stay tuned!
+We have future plans for Sonobuoy beyond conformance testing which we're excited to announce. [Find out about our roadmap here](/the-road-to-v1).
 
