@@ -1,7 +1,6 @@
 ---
 title: The Road to Sonobuoy version 1.0
-# image: https://placehold.it/200x200
-excerpt: With the release of version 0.20, Sunobuoy starts its journey toward 1.0. Let's see what it will take to get there.
+excerpt: With the release of version 0.20, Sunobuoy starts its journey toward 1.0 -- let's see what it will take to get there.
 author_name: Vladimir Vivien
 author_url: https://github.com/vladimirvivien
 author_avatar: /img/contributors/vladimir-vivien.png
@@ -15,8 +14,7 @@ After numerous releases, the Sonobuoy project has planted itself as a permanent 
 ## Decoupling Sonobuoy releases from that of Kubernetes
 One of the first improvements (introduced in version 0.20) is the ability to release Sonobuoy without relying directly on code from the main Kubernetes project.  Prior to release v0.20, Sonobuoy used code copied and pasted from upstream Kubernetes to support features that rely on test image dependencies baked in Kubernetes packages. This forced the Sonobuoy team to do a release after each Kubernetes release to ensure compatibility.  
 
-With the 0.20 release, the code has been enhanced to dynamically generate image dependency information without relying directly on Kubernetes code.  This allows Sonobuoy to have its own release cadence while it is still able to run conformance tests for current and future versions of Kubernetes.
-> Read more about this feature here.
+With the 0.20 release, the code has been enhanced to dynamically generate image dependency information without relying directly on Kubernetes code.  This allows Sonobuoy to have its own release cadence while it is still able to run conformance tests for current and future versions of Kubernetes. [Read more about this feature here](/decoupling-sonobuoy-and-kubernetes).
 
 ## Sonobuoy Plugin Framework Enhancements
 Sonobuoy plugins are a way to expand the capabilities of the base project.  The plugin model uses Kubernetes pods as abstraction for a pluggable architecture.  There are several Sonobuoy plugins already published upstream here (with more to come).  As a step toward 1.0, it is crucial to consider re-implementing the Sonobuoy plugin control mechanism using the Controller pattern with CRDs.  This may introduce new capabilities not currently supported such as:

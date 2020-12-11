@@ -38,11 +38,6 @@ func TestGetDefaultImageRegistryVersionValidation(t *testing.T) {
 			expect:  "\"not-a-valid-version\" is invalid",
 		},
 		{
-			name:    "v1.16 is not valid",
-			version: "v1.16.0",
-			error:   true,
-		},
-		{
 			name:    "v1.17 is valid",
 			version: "v1.17.0",
 			error:   false,
@@ -56,12 +51,6 @@ func TestGetDefaultImageRegistryVersionValidation(t *testing.T) {
 			name:    "v1.19 is valid",
 			version: "v1.19.0",
 			error:   false,
-		},
-		{
-			name:    "v1.12 is not valid",
-			version: "v1.12.0",
-			error:   true,
-			expect:  "No matching configuration for k8s version: 1.12",
 		},
 	}
 

@@ -1,4 +1,4 @@
-# <img src="site/docs/master/img/sonobuoy-logo.png" width="400px" alt="Sonobuoy logo" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
+# <img src="img/sonobuoy-logo.png" width="400px" alt="Sonobuoy logo" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 ## [Overview][oview]
 
@@ -181,24 +181,24 @@ welcome pull requests. Feel free to dig through the [issues][issue] and jump in.
 See [the list of releases][releases] to find out about feature changes.
 
 [decoupling-sonobuoy-k8s]: https://sonobuoy.io/decoupling-sonobuoy-and-kubernetes
-[airgap]: https://sonobuoy.io/docs/airgap
+[airgap]: airgap
 [brew]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
 [coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
 [docker]: https://docs.docker.com/get-docker/
-[docs]: https://sonobuoy.io/docs
-[e2ePlugin]: https://sonobuoy.io/docs/e2eplugin
-[customPlugins]: https://sonobuoy.io/docs/plugins
-[gen]: https://sonobuoy.io/docs/gen
+[docs]: https://sonobuoy.io/docs/v0.20.0
+[e2ePlugin]: e2eplugin
+[customPlugins]: plugins
+[gen]: gen
 [issue]: https://github.com/vmware-tanzu/sonobuoy/issues
 [k8s]: https://github.com/kubernetes/kubernetes
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
 [oview]: https://youtu.be/8QK-Hg2yUd4
-[plugins]: https://sonobuoy.io/docs/plugins
+[plugins]: plugins
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
 [releases]: https://github.com/vmware-tanzu/sonobuoy/releases
-[results]: https://sonobuoy.io/docs/results
+[results]: results
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
-[snapshot]:https://sonobuoy.io/docs/snapshot
-[sonobuoyconfig]: https://sonobuoy.io/docs/sonobuoy-config
+[snapshot]:snapshot
+[sonobuoyconfig]: sonobuoy-config

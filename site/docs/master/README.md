@@ -15,7 +15,9 @@ for the following use cases:
 * Workload debugging
 * Custom data collection via extensible plugins
 
-Sonobuoy supports 3 Kubernetes minor versions: the current release and 2 minor versions before. Sonobuoy is currently versioned to track the Kubernetes minor version to clarify the support matrix. For example, Sonobuoy v0.14.x would support Kubernetes 1.14.x, 1.13.x, and 1.12.x.
+Starting v0.20, Sonobuoy supports Kubernetes v1.17 or later.
+Sonobuoy releases will be independent of Kubernetes release, while ensuring that new releases continue to work functionally across different versions of Kubernetes.
+Read more about the new release cycles in [our blog][decoupling-sonobuoy-k8s].
 
 > Note: You can skip this version enforcement by running Sonobuoy with the `--skip-preflight` flag.
 
@@ -113,23 +115,21 @@ sonobuoy logs
 If you encounter any problems that the documentation does not address, [file an
 issue][issue].
 
-## Known Issues
+## Docker Hub rate limit
 
-### Docker Hub rate limit
+This year, Docker has started rate limiting image pulls from Docker Hub. We're planning a future release with a better user interface to work around this. Until then, this is the recommended approach.
 
-We're planning to release v0.20.0 with a better user interface. Until then, this is the usable workaround.
-
-#### Sonobuoy Pod
+### Sonobuoy Pod
 
 Sonobuoy by default pulls from Docker Hub for [`sonobuoy/sonobuoy` image](https://hub.docker.com/r/sonobuoy/sonobuoy). If you're encountering rate limit on this, you can use VMware-provided mirror with:
 
 ```bash
-sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:v0.19.0
+sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:v0.20.0
 ```
 
-#### Conformance
+### Conformance
 
-Kubernetes end-to-end conformance test pulls several images from Docker Hub as part of testing. To override this, save the following file locally (e.g. `conformance-image-config.yaml`):
+Kubernetes end-to-end conformance test pulls several images from Docker Hub as part of testing. To override this, you will need to create a registry manifest file locally (e.g. `conformance-image-config.yaml`) containing the following:
 
 ```yaml
 dockerLibraryRegistry: mirror.gcr.io/library
@@ -138,10 +138,12 @@ dockerLibraryRegistry: mirror.gcr.io/library
 Then on running conformance:
 
 ```bash
-sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:v0.19.0 --e2e-repo-config conformance-image-config.yaml
+sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:v0.20.0 --e2e-repo-config conformance-image-config.yaml
 ```
 
 Technically `dockerGluster` is also a registry pulling from Docker Hub, but it's not part of Conformance test suite at the moment, so overriding `dockerLibraryRegistry` should be enough.
+
+## Known Issues
 
 ### Leaked End-to-end namespaces
 
@@ -178,6 +180,7 @@ welcome pull requests. Feel free to dig through the [issues][issue] and jump in.
 
 See [the list of releases][releases] to find out about feature changes.
 
+[decoupling-sonobuoy-k8s]: https://sonobuoy.io/decoupling-sonobuoy-and-kubernetes
 [airgap]: airgap
 [brew]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
