@@ -112,6 +112,7 @@ pre:
 	 chmod +x ./manifest-tool
 	echo $(DOCKERHUB_TOKEN) | docker login --username sonobuoybot --password-stdin
 
+# TODO: Make it easy to build single container for a specific arch
 build_container:
 	$(DOCKER) build \
        -t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \

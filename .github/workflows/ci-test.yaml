@@ -13,3 +13,19 @@ jobs:
           VERBOSE: true
         run: |
           make local-test
+  stress-test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: make stress-test
+        env:
+          VERBOSE: true
+        run: |
+          make stress
+  integration-test-on-kind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: run tests
+        run: |
+          SONOBUOY_CLI=../../build/linux/amd64/sonobuoy ./scripts/run_integration_tests.sh
