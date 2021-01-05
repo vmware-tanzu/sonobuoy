@@ -48,7 +48,7 @@ VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
 BUILD_IMAGE ?= golang:1.15-buster
-AMD_IMAGE ?= debian:buster-slim
+AMD_IMAGE ?= gcr.io/distroless/static-debian10:latest
 ARM_IMAGE ?= arm64v8/ubuntu:16.04
 WIN_IMAGE ?= mcr.microsoft.com/windows/servercore:1809
 
