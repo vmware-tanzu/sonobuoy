@@ -13,7 +13,6 @@
 # limitations under the License.
 
 FROM BASEIMAGE
-MAINTAINER John Schnake "jschnake@vmware.com"
 
 ADD BINARY /sonobuoy.exe
 WORKDIR /
