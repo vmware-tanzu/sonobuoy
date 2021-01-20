@@ -22,9 +22,10 @@ RUN go mod download
 
 # Get the rest of the files and build.
 COPY src .
-RUN go build -o /go/bin/testImage ./...
+RUN CGO_ENABLED=0 go build -o /go/bin/testImage ./...
 
-FROM gcr.io/distroless/static-debian10
+FROM gcr.io/distroless/static-debian10:latest
+WORKDIR /
 COPY --from=base /go/bin/testImage /testImage
 COPY resources /resources
 CMD [ "/testImage" ]
