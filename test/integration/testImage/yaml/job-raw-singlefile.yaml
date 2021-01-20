@@ -7,7 +7,7 @@ spec:
   - single-file
   - /resources/hello-world.txt
   command:
-  - testImage
+  - /testImage
   image: sonobuoy/testimage:v0.1
   name: plugin
   resources: {}
