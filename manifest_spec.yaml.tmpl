@@ -10,6 +10,11 @@ manifests:
     platform:
       architecture: arm64
       os: linux
+  -
+    image: REGISTRY/sonobuoy-mips64le:TAG
+    platform:
+      architecture: mips64le
+      os: linux
 WIN_ONLY  -
 WIN_ONLY    image: REGISTRY/sonobuoy-win-amd64:TAG
 WIN_ONLY    platform:

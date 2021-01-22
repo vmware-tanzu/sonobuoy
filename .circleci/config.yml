@@ -46,12 +46,13 @@ jobs:
       - checkout
       - run:
           name: "Build Sonobuoy binaries"
-          command: make build/linux/amd64/sonobuoy build/linux/arm64/sonobuoy
+          command: make build/linux/amd64/sonobuoy build/linux/arm64/sonobuoy build/linux/mips64le/sonobuoy
       - persist_to_workspace:
           root: ~/project
           paths: 
             - build/linux/amd64/*
             - build/linux/arm64/*
+            - build/linux/mips64le/* 
 
   build_containers:
     machine:
@@ -67,7 +68,7 @@ jobs:
       - run:
           name: Save as tar files to persist to next step
           command: |
-            docker save -o sonobuoyImages.tar.gz sonobuoy/sonobuoy sonobuoy/sonobuoy-amd64 sonobuoy/sonobuoy-arm64
+            docker save -o sonobuoyImages.tar.gz sonobuoy/sonobuoy sonobuoy/sonobuoy-amd64 sonobuoy/sonobuoy-arm64 sonobuoy/sonobuoy-mips64le
       - persist_to_workspace:
           root: /home/circleci/project
           paths:

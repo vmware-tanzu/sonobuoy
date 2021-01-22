@@ -24,7 +24,7 @@ REGISTRY ?= sonobuoy
 IMAGE = $(REGISTRY)/$(TARGET)
 DIR := ${CURDIR}
 DOCKER ?= docker
-LINUX_ARCH := amd64 arm64
+LINUX_ARCH := amd64 arm64 mips64le
 WIN_ARCH := amd64
 DOCKERFILE :=
 KIND_CLUSTER = kind
@@ -50,6 +50,7 @@ BUILDMNT = /go/src/$(GOTARGET)
 BUILD_IMAGE ?= golang:1.15-buster
 AMD_IMAGE ?= debian:buster-slim
 ARM_IMAGE ?= arm64v8/ubuntu:16.04
+MIPS_IMAGE ?= debian:buster	
 WIN_IMAGE ?= mcr.microsoft.com/windows/servercore:1809
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
@@ -122,7 +123,7 @@ build_container:
        -f $(DOCKERFILE) \
 		.
 
-linux_containers: build/linux/arm64/sonobuoy build/linux/amd64/sonobuoy
+linux_containers: build/linux/arm64/sonobuoy build/linux/amd64/sonobuoy build/linux/mips64le/sonobuoy
 	for arch in $(LINUX_ARCH); do \
 		if [ $$arch = amd64 ]; then \
 			sed -e 's|BASEIMAGE|$(AMD_IMAGE)|g' \
@@ -130,10 +131,15 @@ linux_containers: build/linux/arm64/sonobuoy build/linux/amd64/sonobuoy
 			-e 's|BINARY|build/linux/amd64/sonobuoy|g' Dockerfile > Dockerfile-$$arch; \
 			$(MAKE) build_container DOCKERFILE=Dockerfile-$$arch; \
 			$(MAKE) build_container DOCKERFILE="Dockerfile-$$arch" TARGET="sonobuoy-$$arch"; \
-	elif [ $$arch = arm64 ]; then \
+	    elif [ $$arch = arm64 ]; then \
 			sed -e 's|BASEIMAGE|$(ARM_IMAGE)|g' \
 			-e 's|CMD1||g' \
 			-e 's|BINARY|build/linux/arm64/sonobuoy|g' Dockerfile > Dockerfile-$$arch; \
+			$(MAKE) build_container DOCKERFILE="Dockerfile-$$arch" TARGET="sonobuoy-$$arch"; \
+	    elif [ $$arch = mips64le ]; then \
+			sed -e 's|BASEIMAGE|$(MIPS_IMAGE)|g' \
+			-e 's|CMD1||g' \
+			-e 's|BINARY|build/linux/mips64le/sonobuoy|g' Dockerfile > Dockerfile-$$arch; \
 			$(MAKE) build_container DOCKERFILE="Dockerfile-$$arch" TARGET="sonobuoy-$$arch"; \
 		else \
 			echo "Linux ARCH unknown"; \
@@ -165,6 +171,11 @@ build/linux/amd64/sonobuoy:
 	echo Building: linux/amd64
 	mkdir -p build/linux/amd64
 	$(MAKE) build_sonobuoy GO_SYSTEM_FLAGS="GOOS=linux GOARCH=amd64" BINARY=$@
+
+build/linux/mips64le/sonobuoy:
+	echo Building: linux/mips64le
+	mkdir -p build/linux/mips64le
+	$(MAKE) build_sonobuoy GO_SYSTEM_FLAGS="GOOS=linux GOARCH=mips64le" BINARY=$@
 
 build/windows/amd64/sonobuoy.exe:
 	echo Building: windows/amd64
