@@ -133,6 +133,11 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
+    args:
+      - "aggregator"
+      - "--no-exit"
+      - "-v9"
+      - "--logtostderr"
     image: {{.SonobuoyImage}}
     imagePullPolicy: {{.ImagePullPolicy}}
     name: kube-sonobuoy

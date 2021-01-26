@@ -51,7 +51,7 @@ const (
 	// AggregatorResultsPath is the location in the main container of the aggregator pod where results will be archived.
 	AggregatorResultsPath = "/tmp/sonobuoy"
 	// DefaultSonobuoyPullPolicy is the default pull policy used in the Sonobuoy config.
-	DefaultSonobuoyPullPolicy = "IfNotPresent"
+	DefaultSonobuoyPullPolicy = "Always"
 	// DefaultQueryQPS is the number of queries per second Sonobuoy will make when gathering data.
 	DefaultQueryQPS = 30
 	// DefaultQueryBurst is the peak number of queries per second Sonobuoy will make when gathering data.

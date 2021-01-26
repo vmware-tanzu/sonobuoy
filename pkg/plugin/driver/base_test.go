@@ -141,7 +141,6 @@ func envContains(env []v1.EnvVar, item v1.EnvVar) bool {
 func TestCreateWorkerContainerDefinition(t *testing.T) {
 	aggregatorURL := "aggregatorUrl"
 	cert := &tls.Certificate{Certificate: [][]byte{}}
-	command := []string{"sonobuoy"}
 	args := []string{"worker", "--global"}
 
 	b := &Base{
@@ -155,7 +154,7 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 		SessionID:       "sessionID",
 	}
 
-	wc := b.CreateWorkerContainerDefintion(aggregatorURL, cert, command, args, "")
+	wc := b.CreateWorkerContainerDefintion(aggregatorURL, cert, args, "")
 
 	checkFields := func(container v1.Container) error {
 		if container.Name != "sonobuoy-worker" {
@@ -168,12 +167,6 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 
 		if container.ImagePullPolicy != v1.PullNever {
 			return fmt.Errorf("expected worker container pull policy to be %q, but got %q", v1.PullNever, container.ImagePullPolicy)
-		}
-
-		for i, c := range container.Command {
-			if c != command[i] {
-				return fmt.Errorf("expected command item %v to be %q, got %q", i, command[i], c)
-			}
 		}
 
 		for i, arg := range container.Args {

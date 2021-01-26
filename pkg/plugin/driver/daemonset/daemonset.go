@@ -158,7 +158,7 @@ func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificat
 
 	podSpec.Containers = append(podSpec.Containers,
 		p.Definition.Spec.Container,
-		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/sonobuoy", "worker", "single-node", "-v=5", "--logtostderr", "--sleep=" + defaultSleepSeconds}, []string{}, progressPort),
+		p.CreateWorkerContainerDefintion(hostname, cert, []string{"worker", "single-node", "-v=5", "--logtostderr", "--sleep=" + defaultSleepSeconds}, progressPort),
 	)
 
 	if len(p.ImagePullSecrets) > 0 {
