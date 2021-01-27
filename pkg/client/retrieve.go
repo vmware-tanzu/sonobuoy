@@ -18,6 +18,7 @@ package client
 
 import (
 	"archive/tar"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
@@ -44,10 +45,9 @@ const (
 
 var (
 	linuxTarCommand = []string{
-		"/usr/bin/env",
-		"bash",
-		"-c",
-		fmt.Sprintf("tar cf - %s/*.tar.gz", config.AggregatorResultsPath),
+		"/sonobuoy",
+		"splat",
+		config.AggregatorResultsPath,
 	}
 
 	winTarCommand = []string{
@@ -158,8 +158,14 @@ func isPodRunningOnWindowsNode(client kubernetes.Interface, ns, podName string) 
 func UntarAll(reader io.Reader, destFile, prefix string) (filenames []string, returnErr error) {
 	entrySeq := -1
 	filenames = []string{}
-	// TODO: use compression here?
-	tarReader := tar.NewReader(reader)
+	// Adding compression per `splat` subcommand implementation
+	gzReader, err := gzip.NewReader(reader)
+	if err != nil {
+		returnErr = err
+		return
+	}
+	defer gzReader.Close()
+	tarReader := tar.NewReader(gzReader)
 
 	// Ensure the reader gets drained. Tar on some platforms doesn't
 	// seem to consume the end-of-archive marker (long string of 0s).
