@@ -18,4 +18,4 @@ CMD1
 
 ADD BINARY /sonobuoy
 WORKDIR /
-CMD /sonobuoy aggregator --no-exit -v 3 --logtostderr
+CMD ["/sonobuoy", "aggregator", "--no-exit", "-v", "3", "--logtostderr"]

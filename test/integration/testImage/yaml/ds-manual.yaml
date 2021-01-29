@@ -11,7 +11,7 @@ spec:
   - /resources/manual-results-1.yaml
   - /resources/manual-results-2.yaml
   command:
-  - testImage
+  - /testImage
   image: sonobuoy/testimage:v0.1
   name: plugin
   resources: {}

@@ -57,6 +57,7 @@ func NewSonobuoyCommand() *cobra.Command {
 	cmds.AddCommand(NewCmdRun())
 	cmds.AddCommand(NewCmdImages())
 	cmds.AddCommand(NewCmdResults())
+	cmds.AddCommand(NewCmdSplat())
 
 	klog.InitFlags(nil)
 	cmds.PersistentFlags().AddGoFlagSet(flag.CommandLine)
