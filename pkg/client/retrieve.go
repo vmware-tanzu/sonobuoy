@@ -45,7 +45,7 @@ const (
 
 var (
 	linuxTarCommand = []string{
-		"/sonobuoy",
+		"sonobuoy",
 		"splat",
 		config.AggregatorResultsPath,
 	}

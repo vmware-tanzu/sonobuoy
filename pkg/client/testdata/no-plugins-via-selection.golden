@@ -49,13 +49,18 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
+    args:
+      - "aggregator"
+      - "--no-exit"
+      - "-v9"
+      - "--logtostderr"
     image: sonobuoy/sonobuoy:static-version-for-testing
     imagePullPolicy: IfNotPresent
     name: kube-sonobuoy
     volumeMounts:
     - mountPath: /etc/sonobuoy
       name: sonobuoy-config-volume
-    - mountPath: /plugins.d
+    - mountPath: /etc/sonobuoy/plugins.d
       name: sonobuoy-plugins-volume
     - mountPath: /tmp/sonobuoy
       name: output-volume

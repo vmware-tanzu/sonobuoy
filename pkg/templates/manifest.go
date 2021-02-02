@@ -144,7 +144,7 @@ spec:
     volumeMounts:
     - mountPath: /etc/sonobuoy
       name: sonobuoy-config-volume
-    - mountPath: /plugins.d
+    - mountPath: /etc/sonobuoy/plugins.d
       name: sonobuoy-plugins-volume
     - mountPath: /tmp/sonobuoy
       name: output-volume
