@@ -136,6 +136,10 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, own
 		podSpec.Volumes = append(podSpec.Volumes, v.Volume)
 	}
 
+	// TODO revise this once we support windows nodes, https://github.com/vmware-tanzu/sonobuoy/issues/732
+	pod.Spec.NodeSelector = map[string]string{
+			"kubernetes.io/os": "linux",
+	}
 	pod.Spec = podSpec
 	return pod
 }
