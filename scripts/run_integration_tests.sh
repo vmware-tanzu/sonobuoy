@@ -18,6 +18,5 @@ fi
 make -C $DIR/test/integration/testImage
 kind load docker-image --name $cluster $testImage
 
-# Build and load the sonobuoy image and run integration tests
-make -C $DIR KIND_CLUSTER=$cluster deploy_kind
-KUBECONFIG=${HOME}/.kube/config VERBOSE=true make -C $DIR int
+# Run integration tests
+KO_FLAGS='--platform=linux/amd64' KUBECONFIG=${HOME}/.kube/config VERBOSE=true make -C $DIR int

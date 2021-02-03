@@ -30,7 +30,7 @@ DOCKERFILE :=
 KIND_CLUSTER = kind
 
 KO ?= ko
-KO_FLAGS = --platform=all --base-import-paths
+KO_FLAGS ?= --platform=all
 
 # Not used for pushing images, just for local building on other GOOS. Defaults to
 # grabbing from the local go env but can be set manually to avoid that requirement.
@@ -69,10 +69,6 @@ STRESS_TEST= $(TEST_CMD) $(STRESS_TEST_PKGS)
 
 VET = go vet $(TEST_PKGS)
 
-# Vendor this someday
-GOLINT_FLAGS ?= -set_exit_status
-LINT = golint $(GOLINT_FLAGS) $(TEST_PKGS)
-
 DOCKER_FLAGS =
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(DOCKER_FLAGS) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 GO_BUILD ?= CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)
@@ -97,18 +93,22 @@ test:
 stress:
 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(STRESS_TEST)'
 
-# # Integration tests
-# int: DOCKER_FLAGS=-v $(KUBECONFIG):/root/.kube/kubeconfig -v /tmp/artifacts:/tmp/artifacts --env ARTIFACTS_DIR=/tmp/artifacts --env KUBECONFIG=/root/.kube/kubeconfig --network host --env SONOBUOY_CLI=$(SONOBUOY_CLI)
-# int: TESTARGS= $(VERBOSE_FLAG) -timeout 3m
-# int:
-# 	$(DOCKER_BUILD) 'CGO_ENABLED=0 $(INT_TEST)'
-#
-# lint:
-# 	$(DOCKER_BUILD) '$(LINT)'
+build_sonobuoy:
+	$(DOCKER_BUILD) '$(GO_BUILD)'
 
-# TODO: Make it easy to build single container for a specific arch
+# Integration tests
+int: ARTIFACTS_DIR=/tmp/artifacts KUBECONFIG=$(KUBECONFIG) SONOBUOY_CLI=$(SONOBUOY_CLI)
+int: TESTARGS=$(VERBOSE_FLAG) -timeout 3m
+int: native
+	KO_DOCKER_REPO=ko.local \
+	KIND_CLUSTER_NAME=$(KIND_CLUSTER) \
+	$(KO) publish --platform=linux/amd64 --tags $(GIT_VERSION) --base-import-paths github.com/vmware-tanzu/sonobuoy
+	docker tag ko.local/sonobuoy:$(GIT_VERSION) sonobuoy/sonobuoy:$(GIT_VERSION)
+	kind load docker-image sonobuoy/sonobuoy:$(GIT_VERSION)
+	CGO_ENABLED=0 $(INT_TEST)
+
 build_container:
-	$(KO) publish $(KO_FLAGS) \
+	$(KO) publish $(KO_FLAGS) --base-import-paths \
 		github.com/vmware-tanzu/sonobuoy
 
 native:
@@ -117,7 +117,7 @@ native:
 deploy_kind:
 	KO_DOCKER_REPO=kind.local \
 	KIND_CLUSTER_NAME=$(KIND_CLUSTER) \
-	$(KO) publish $(KO_FLAGS) \
+	$(KO) publish $(KO_FLAGS) --base-import-paths \
 		github.com/vmware-tanzu/sonobuoy
 
 
