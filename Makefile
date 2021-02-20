@@ -29,9 +29,6 @@ WIN_ARCH := amd64
 DOCKERFILE :=
 KIND_CLUSTER = kind
 
-KO ?= ko
-KO_FLAGS ?= --platform=all
-
 # Not used for pushing images, just for local building on other GOOS. Defaults to
 # grabbing from the local go env but can be set manually to avoid that requirement.
 HOST_GOOS ?= $(shell go env GOOS)
@@ -45,6 +42,9 @@ IMAGE_TAG := $(shell echo $(IMAGE_VERSION) | cut -d. -f1,2)
 IMAGE_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF_SHORT = $(shell git rev-parse --short=8 --verify HEAD)
 GIT_REF_LONG = $(shell git rev-parse --verify HEAD)
+
+KO ?= GOROOT=$(go env GOROOT) ko
+KO_FLAGS ?= --platform=all --tags $(IMAGE_VERSION),$(IMAGE_BRANCH)
 
 ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
@@ -72,6 +72,7 @@ VET = go vet $(TEST_PKGS)
 DOCKER_FLAGS =
 DOCKER_BUILD ?= $(DOCKER) run --rm -v $(DIR):$(BUILDMNT) $(DOCKER_FLAGS) -w $(BUILDMNT) $(BUILD_IMAGE) /bin/sh -c
 GO_BUILD ?= CGO_ENABLED=0 $(GO_SYSTEM_FLAGS) go build -o $(BINARY) $(VERBOSE_FLAG) -ldflags="-s -w -X $(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -X $(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)" $(GOTARGET)
+BUILD_FLAGS ?= CGO_ENABLED=0 GOFLAGS="-ldflags=-X=$(GOTARGET)/pkg/buildinfo.Version=$(GIT_VERSION) -ldflags=-X=$(GOTARGET)/pkg/buildinfo.GitSHA=$(GIT_REF_LONG)"
 PUSH_WINDOWS ?= false
 
 # Kind images
@@ -107,8 +108,8 @@ int: native
 	kind load docker-image sonobuoy/sonobuoy:$(GIT_VERSION)
 	CGO_ENABLED=0 $(INT_TEST)
 
-build_container:
-	$(KO) publish $(KO_FLAGS) --base-import-paths \
+publish_container:
+	$(BUILD_FLAGS) $(KO) publish $(KO_FLAGS) --base-import-paths \
 		github.com/vmware-tanzu/sonobuoy
 
 native:
@@ -119,6 +120,3 @@ deploy_kind:
 	KIND_CLUSTER_NAME=$(KIND_CLUSTER) \
 	$(KO) publish $(KO_FLAGS) --base-import-paths \
 		github.com/vmware-tanzu/sonobuoy
-
-
-# sonobuoy run --sonobuoy-image azd2k.azurecr.io/sonobuoy:latest
