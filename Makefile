@@ -47,9 +47,9 @@ ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
-BUILD_IMAGE ?= golang:1.15-buster
-AMD_IMAGE ?= gcr.io/distroless/static-debian10:latest
-ARM_IMAGE ?= arm64v8/ubuntu:16.04
+BUILD_IMAGE ?= golang:1.16
+AMD_IMAGE ?= gcr.io/distroless/static:nonroot
+ARM_IMAGE ?= gcr.io/distroless/static:nonroot-arm64
 WIN_IMAGE ?= mcr.microsoft.com/windows/servercore:1809
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
