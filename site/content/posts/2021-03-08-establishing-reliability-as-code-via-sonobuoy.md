@@ -8,9 +8,10 @@ This article provides a walk-through of the components usedby the initial set of
 Probes are periodic checks against containers that run our services and notify the kubelet when the container is alive and ready to accept traffic. Probes help Kubernetes make more informed decisions about the current status of one or many particular Pods behind a Service. 
 
 There are three kinds of probes: 
-startupProbe -  confirms the application within the container is available
-livelinessProbe confirms the container is in a running state
-readinessProbe - confirms the container is ready to respond to requests 
+
+- `startupProbe`: confirms the application within the container is available
+- `livelinessProbe`: confirms the container is in a running state
+- `readinessProbe`: confirms the container is ready to respond to requests 
 
 The reliability scanner checks allow Kubernetes cluster operators to report Pods that are missing the liveliness and readiness  probes, as part of the Sonobuoy report.  Currently only liveliness and readiness checks are recommended by the VMware CRE team, however this check could extend to include startupProbe, if necessary, for your clusters.  Additionally, a potential improvement in future releases would be to add a labeling capability for operators to specify which Pods to skip.
 
