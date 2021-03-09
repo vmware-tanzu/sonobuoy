@@ -68,7 +68,7 @@ pod/test created
 
 
 
-To run the reliability scanner, use command make run (run make clean to clean up any  previous run).  Once it’s complete, you can use make results to view the output.  The scanner will send its results to the Sonobuoy aggregator to be collected using the command sonobuoy result. 
+To run the reliability scanner, use command `make run` (run `make clean` to clean up any previous run). Once it’s complete, you can use `make results` to view the output.  The scanner will send its results to the Sonobuoy aggregator to be collected using the command `sonobuoy result`. 
 
 Based on our defined check, we have two configuration options: minimum_desired_qos_class and include_detail. Both options are telling us that for our report, we will fail any check that does not meet the minimum QoS class defined here. The included detail configuration option allows for the report runner to return the current QoS class of the Pod being assessed.
 
