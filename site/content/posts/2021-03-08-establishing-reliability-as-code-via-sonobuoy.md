@@ -41,7 +41,7 @@ name: ”Pod QOS check”
      include_detail: true # includes the actual Pod QoS in the report
 ```
 
-Next, some Golang code must be written which actually does the check we need.  As a starting point, the check will have to satisfy the [Querier](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/api/v1alpha1/pod/qos/qos.go) Go interface ( the project comes with a default [QoS implementation](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/api/v1alpha1/pod/qos/qos.go) of the Querier interface), and a mapping must be made in the [scanner.go](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/cmd/reliability-scanner/scanner.go) file.
+Next, some Golang code must be written which actually does the check we need.  As a starting point, the check will have to satisfy the [Querier](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/api/v1alpha1/pod/qos/qos.go) Go interface (the project comes with a default [QoS implementation](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/api/v1alpha1/pod/qos/qos.go) of the Querier interface), and a mapping must be made in the [scanner.go](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/cmd/reliability-scanner/scanner.go) file.
 
 ### Testing the new check
 The QoS check, defined above, allows the scanner to look across the cluster to report back on the current state of a Pod within the cluster to understand workloads that do not define our minimum [QoS class](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/).
