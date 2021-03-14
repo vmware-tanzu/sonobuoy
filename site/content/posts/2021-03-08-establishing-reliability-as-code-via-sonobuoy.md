@@ -33,12 +33,12 @@ First, make sure that [Sonobuoy CLI](https://github.com/vmware-tanzu/sonobuoy), 
 The reliability scanner is ready to be used to scan your cluster. However, a cluster operator who is interested in creating a customized reliability check, will need to make modifications in two places in order to create a new customized reliability check.  First, the new check must be defined by name, description, kind, and spec, in a [YAML configuration file](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/plugin/reliability-scanner-custom-values.lib.yml) as shown below:
 
 ```
-name: ”Pod QOS check”
+name: "Pod QOS check"
    description: Checks each pod to see if the minimum desired QOS is defined
-   kind: v1alpha1/pod/qos # location of the check logic
-   spec: # configurable by cluster operators
+   kind: v1alpha1/pod/qos                  # location of the check logic
+   spec:                                   # configurable by cluster operators
      minimum_desired_qos_class: Guaranteed # defines minimum expected QoS
-     include_detail: true # includes the actual Pod QoS in the report
+     include_detail: true                  # includes the actual Pod QoS in the report
 ```
 
 Next, some Golang code must be written which actually does the check we need.  As a starting point, the check will have to satisfy the [Querier](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/api/v1alpha1/pod/qos/qos.go) Go interface (the project comes with a default [QoS implementation](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/api/v1alpha1/pod/qos/qos.go) of the Querier interface), and a mapping must be made in the [scanner.go](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/cmd/reliability-scanner/scanner.go) file.
@@ -63,9 +63,12 @@ spec:
         memory: "200Mi"
         cpu: "100Mi"
 EOF
-pod/test created
 ```
 
+We can expect the following response from `kubectl`:
+```
+pod/test created
+```
 
 
 To run the reliability scanner, use command `make run` (run `make clean` to clean up any previous run). Once it’s complete, you can use `make results` to view the output.  The scanner will send its results to the Sonobuoy aggregator to be collected using the command `sonobuoy result`. 
@@ -80,8 +83,8 @@ $ make results
 - name: qos
    status: failed # overall test status
    meta:
-     file: “”
-     type: “”
+     file: ""
+     type: ""
    items:
    - name: default/test
      status: passed # subtest status
