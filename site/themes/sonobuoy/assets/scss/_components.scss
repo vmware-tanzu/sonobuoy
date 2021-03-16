@@ -18,10 +18,20 @@
         }
     }
     &.homepage {
+        width: 100%;
+        margin: 0 auto;
+        box-sizing: border-box;
         background-image: url(/img/heroes/sonobuoy.png);
-        background-position: center center;
+        background-size: 61% 100%;
+        background-position: center 0;  
         background-repeat: no-repeat;
-        //background-size: cover;
+        border-width: 0 100% 0 100%;
+        border-style: solid;
+        border-image-source: url(/img/heroes/sonobuoy.png);
+        border-image-slice: 2;
+        border-image-width: 7px 20%;
+        border-image-repeat: stretch;
+        border-image-outset: 2px;
         padding-bottom: 80px;
         h1 {
             font-size: 36px;
