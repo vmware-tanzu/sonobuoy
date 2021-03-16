@@ -67,7 +67,7 @@
                 font-size: 22px;
             }
             p {
-                color: $grey;
+                color: $darkgrey;
             }
         }
     }
@@ -81,7 +81,7 @@
             margin: 0px;
             font-size: 16px;
             &.strong {
-                color: $black;
+                color: $darkgrey;
             }
         }
     }
@@ -216,6 +216,14 @@
     background-repeat: no-repeat;
     background-size: cover;
     padding-bottom: 140px;
+
+    h1 {
+        font-size: 46px;
+        text-align: center;
+        @include breakpoint(small) {
+            font-size: 26px;
+        }
+    }
 }
 
 .experimental {
@@ -311,7 +319,7 @@
             font-weight: 600;
         }
         a {
-            font-size: 14px;
+            font-size: 16px;
         }
         ul {
             list-style-type: disc;
@@ -321,9 +329,12 @@
                 display: list-item;
                 margin-bottom: 10px;
                 font-size: 14px;
-                color: $grey;
+                color: $darkgrey;
                 line-height: 1.6em;
                 list-style-image: url(/img/arrow.svg);
+                &:first-child {
+                    margin-top: 10px;
+                }
             }
         }
         ol {
@@ -331,12 +342,16 @@
                 list-style-type: decimal;
                 display: list-item;
                 margin-bottom: 10px;
-                font-size: 14px;
-                color: $grey;
+                font-size: 16px;
+                color: $darkgrey;
+                &:first-child {
+                    margin-top: 10px;
+                }
             }
         }
         code {
             border: 2px solid #EFEFEF;
+            color: $darkgrey;
             padding: 2px 8px;
         }
         pre {
@@ -350,6 +365,9 @@
         }
         img {
             max-width: 100%;
+        }
+        strong {
+            font-family: $metropolis-medium;
         }
     }
 }
@@ -479,7 +497,7 @@
                     li {
                         margin-bottom: 10px;
                         display: list-item;
-                        color: #777;
+                        color: $darkgrey;
                         font-size: 1rem;
                         line-height: 1.6em;
                         list-style-image: url(/img/arrow.svg);
@@ -487,7 +505,7 @@
                 }
                 p {
                     font-size: 1rem;
-                    color: #777;
+                    color: $darkgrey;
                     &.title {
                         font-weight: 500;
                         margin: 0px;
@@ -528,7 +546,7 @@
                 display: list-item;
                 margin-bottom: 15px;
                 a {
-                    color: $grey;
+                    color: $darkgrey;
                     font-size: 14px;
                     &.active {
                         color: $blue;
@@ -562,7 +580,7 @@
         }
         .dropdown-menu {
             position: absolute;
-            border: 1px solid $grey;
+            border: 1px solid $darkgrey;
             border-radius: 5px;
             top: 30px;
             left: 0px;
@@ -586,7 +604,7 @@
             padding: .375rem .75rem;
             font-size: 1.125rem;
             line-height: 1.5;
-            color: $grey;
+            color: $darkgrey;
             background-color: #fff;
             border: 1px solid #cecece;
             background-image: url(/img/search-icon.svg);
@@ -629,10 +647,13 @@
                 list-style-type: unset;
                 display: list-item;
                 margin-bottom: 10px;
-                font-size: 14px;
-                color: $grey;
+                font-size: 16px;
+                color: $darkgrey;
                 line-height: 1.6em;
                 list-style-image: url(/img/arrow.svg);
+                &:first-child {
+                    margin-top: 10px;
+                }
             }
         }
         ol {
@@ -640,12 +661,16 @@
                 list-style-type: decimal;
                 display: list-item;
                 margin-bottom: 10px;
-                font-size: 14px;
-                color: $grey;
+                font-size: 16px;
+                color: $darkgrey;
+                &:first-child {
+                    margin-top: 10px;
+                }
             }
         }
         code {
             border: 2px solid #EFEFEF;
+            color: $darkgrey;
             padding: 2px 8px;
         }
         pre {
