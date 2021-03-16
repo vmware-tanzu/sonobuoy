@@ -9,6 +9,7 @@ categories: [kubernetes]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team', 'John Schnake']
 date: 2019-04-02
+slug: isolated-to-conformant
 ---
 _Previously posted on the [VMware Cloud Native Apps blog](https://blogs.vmware.com/cloudnative/)_
 

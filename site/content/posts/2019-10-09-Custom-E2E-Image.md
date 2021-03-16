@@ -9,6 +9,7 @@ categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team', 'John Schnake']
 date: 2019-10-09
+slug: custom-e2e-image
 ---
 
 # Simple Approaches to Customizing the Kubernetes E2E Tests

@@ -9,6 +9,7 @@ categories: [kubernetes, sonobuoy]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team', 'Bridget McErlean']
 date: 2020-05-15
+slug: who-can-plugin
 ---
 
 The Sonobuoy team is continuing to expand its range of custom plugins and we would like to introduce the latest plugin in our collection: [who-can](https://github.com/vmware-tanzu/sonobuoy-plugins/tree/master/who-can).

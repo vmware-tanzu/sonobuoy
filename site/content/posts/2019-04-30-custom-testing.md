@@ -9,6 +9,7 @@ categories: [kubernetes]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team', 'John Schnake']
 date: 2019-04-30
+slug: custom-testing
 ---
 _Previously posted on the [VMware Cloud Native Apps blog](https://blogs.vmware.com/cloudnative/)_
 

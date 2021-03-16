@@ -9,6 +9,7 @@ categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team', 'Bridget McErlean']
 date: 2019-09-16
+slug: customizing-plugin-podspecs
 ---
 
 The [Sonobuoy][github] team is continuing to work on one of our main goals: improving the experience for users who want to create their own custom plug-ins.

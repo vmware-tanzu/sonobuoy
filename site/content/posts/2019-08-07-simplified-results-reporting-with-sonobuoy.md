@@ -9,6 +9,7 @@ categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team', 'John Schnake']
 date: 2019-08-07
+slug: simplified-results-reporting-with-sonobuoy
 ---
 
 [Sonobuoy](github) 0.15.1 introduces an entirely new feature that promises to make it easier than ever to see the results of your plug-ins.

@@ -9,6 +9,7 @@ categories: [kubernetes]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team', 'John Schnake']
 date: 2019-06-26
+slug: env-vars-on-the-fly
 ---
 With the release of [Sonobuoy][first-blog] 0.15.0, we continue to support one of our top roadmap goals: enhanced support for custom plugins. It is now possible to easily modify the environment variables of any plugin without editing a YAML file.
 

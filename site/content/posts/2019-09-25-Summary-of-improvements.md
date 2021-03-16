@@ -9,6 +9,7 @@ categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team', 'John Schnake']
 date: 2019-09-25
+slug: summary-of-improvements
 ---
 
 With the recent release of [Sonobuoy][github] 0.16.0, we thought it would be a good time to recap all the improvements made to Sonobuoy in our recent releases.

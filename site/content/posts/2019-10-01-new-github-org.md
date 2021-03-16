@@ -9,6 +9,7 @@ categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team', 'John Schnake']
 date: 2019-10-01
+slug: new-github-org
 ---
 
 ## Big news!

@@ -9,6 +9,7 @@ categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team', 'John Schnake']
 date: 2019-12-06
+slug: conformance-testing-with-progress-updates
 ---
 
 # Does Testing Kubernetes Conformance Leave You in the Dark? Get Progress Updates as Tests Run

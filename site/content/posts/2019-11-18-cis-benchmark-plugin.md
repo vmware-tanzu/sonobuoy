@@ -9,6 +9,7 @@ categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team', 'John Schnake']
 date: 2019-11-18
+slug: cis-benchmark-plugin
 ---
 
 Sonobuoy was always designed to facilitate third-party plugins in order to accommodate custom testing requirements but, until recently, the design of Sonobuoy made some advanced plugins impossible to create.
