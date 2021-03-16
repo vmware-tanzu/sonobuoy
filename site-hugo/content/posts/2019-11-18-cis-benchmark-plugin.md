@@ -1,5 +1,6 @@
 ---
 title: A Sonobuoy Plugin to Check Cluster Security with the CIS Kubernetes Benchmark
+image: /img/sonobuoy.svg
 excerpt: Check your cluster's security configuration with the new CIS Kubernetes Benchmark plugin.
 author_name: John Schnake
 author_url: https://github.com/johnschnake
@@ -7,6 +8,7 @@ author_avatar: /img/contributors/john-schnake.png
 categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
+date: 2019-11-18
 ---
 
 Sonobuoy was always designed to facilitate third-party plugins in order to accommodate custom testing requirements but, until recently, the design of Sonobuoy made some advanced plugins impossible to create.

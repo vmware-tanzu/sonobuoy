@@ -8,6 +8,7 @@ author_avatar: /img/contributors/john-schnake.png
 categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
+date: 2019-10-01
 ---
 
 ## Big news!

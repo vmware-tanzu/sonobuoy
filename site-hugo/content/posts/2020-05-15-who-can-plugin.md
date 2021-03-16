@@ -1,5 +1,6 @@
 ---
 title: Who has access to your Kubernetes cluster?
+image: /img/sonobuoy.svg
 excerpt: Check which subjects have RBAC permissions to perform actions in your cluster with the new who-can plugin.
 author_name: Bridget McErlean
 author_url: https://github.com/zubron
@@ -7,6 +8,7 @@ author_avatar: /img/contributors/bridget-mcerlean.png
 categories: [kubernetes, sonobuoy]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
+date: 2020-05-15
 ---
 
 The Sonobuoy team is continuing to expand its range of custom plugins and we would like to introduce the latest plugin in our collection: [who-can](https://github.com/vmware-tanzu/sonobuoy-plugins/tree/master/who-can).

@@ -1,5 +1,6 @@
 ---
 title: The Road to Sonobuoy version 1.0
+image: /img/sonobuoy.svg
 excerpt: With the release of version 0.20, Sunobuoy starts its journey toward 1.0 -- let's see what it will take to get there.
 author_name: Vladimir Vivien
 author_url: https://github.com/vladimirvivien
@@ -7,6 +8,7 @@ author_avatar: /img/contributors/vladimir-vivien.png
 categories: [kubernetes, sonobuoy, roadmap]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
+date: 2020-12-11
 ---
 
 After numerous releases, the Sonobuoy project has planted itself as a permanent and useful fixture in the cloud native community.  The release of version 0.20 marks the start of a vision to take the project toward a 1.0 release.  There are many enhancements, however, that need to be put in place before the project can get to this coveted milestone.  This blog is part roadmap and part vision statement to the community of where the team would like to take the project to get to 1.0.

@@ -1,6 +1,6 @@
 ---
 title: Recent Improvements in Sonobuoy
-# image: https://placehold.it/200x200
+image: /img/sonobuoy.svg
 excerpt: Now with support for Kubernetes 1.16.0, let's review all the recent improvements to Sonobuoy.
 author_name: John Schnake
 author_url: https://github.com/johnschnake
@@ -8,6 +8,7 @@ author_avatar: /img/contributors/john-schnake.png
 categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
+date: 2019-09-25
 ---
 
 With the recent release of [Sonobuoy][github] 0.16.0, we thought it would be a good time to recap all the improvements made to Sonobuoy in our recent releases.

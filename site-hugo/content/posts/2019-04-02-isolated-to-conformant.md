@@ -1,6 +1,6 @@
 ---
 title: Isolated to Conformant - Testing Air-Gapped Kubernetes with Sonobuoy 0.14
-# image: https://placehold.it/200x200
+image: /img/sonobuoy.svg
 excerpt: With support for running Kubernetes end-to-end tests in air-gapped environments, it is now possible to run the end-to-end suite and validate your cluster’s state without Internet connectivity.
 author_name: John Schnake
 author_url: https://github.com/johnschnake
@@ -8,8 +8,9 @@ author_avatar: /img/contributors/john-schnake.png
 categories: [kubernetes]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
+date: 2019-04-02
 ---
-_Previously posted on the [VMware Cloud Native Apps blog](https://blogs.vmware.com/cloudnative/_
+_Previously posted on the [VMware Cloud Native Apps blog](https://blogs.vmware.com/cloudnative/)_
 
 Today we are releasing Sonobuoy 0.14.0, which delivers on one of our top roadmap goals: support for running Kubernetes end-to-end tests in air-gapped environments. It is now possible to run the end-to-end suite and validate your cluster’s state without Internet connectivity or investment in a custom, ad hoc work around.
 

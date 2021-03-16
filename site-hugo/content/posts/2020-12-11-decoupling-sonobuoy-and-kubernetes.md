@@ -1,5 +1,6 @@
 ---
 title: Decoupling Sonobuoy and Kubernetes
+image: /img/sonobuoy.svg
 excerpt: Sonobuoy 0.20.0 release and the future of Sonobuoy project
 author_name: Wilson Husin
 author_url: https://github.com/wilsonehusin
@@ -7,6 +8,7 @@ author_avatar: https://avatars3.githubusercontent.com/u/14004487
 categories: [kubernetes, sonobuoy]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
+date: 2020-12-11
 ---
 
 Historically, we have been following Kubernetes releases to ensure the usability of Sonobuoy with the most recent Kubernetes version. We are excited to announce that beginning Sonobuoy 0.20, Sonobuoy releases will no longer be attached to Kubernetes releases.

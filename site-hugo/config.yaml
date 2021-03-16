@@ -4,6 +4,7 @@ title: "Sonobuoy"
 theme: "sonobuoy"
 outputs:
   home: [ "HTML", "REDIRECTS" ]
+  posts: [ "HTML", "RSS" ]
 pygmentsCodefences: true
 pygmentsStyle: "pygments"
 markup:
@@ -67,3 +68,6 @@ outputFormats:
   REDIRECTS:
     mediaType: "text/netlify"
     baseName: "_redirects"
+  RSS:
+    mediatype: "application/rss"
+    baseName: "feed"

@@ -1,6 +1,6 @@
 ---
 title: Fast and Easy Sonobuoy Plugins for Custom Testing of Almost Anything
-# image: https://placehold.it/200x200
+image: /img/sonobuoy.svg
 excerpt: It is now possible to easily create a plugin from a Docker image and run it within Sonobuoy without manually editing any YAML files.
 author_name: John Schnake
 author_url: https://github.com/johnschnake
@@ -8,8 +8,9 @@ author_avatar: /img/contributors/john-schnake.png
 categories: [kubernetes]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
+date: 2019-04-30
 ---
-_Previously posted on the [VMware Cloud Native Apps blog](https://blogs.vmware.com/cloudnative/_
+_Previously posted on the [VMware Cloud Native Apps blog](https://blogs.vmware.com/cloudnative/)_
 
 Today we are releasing Sonobuoy 0.14.2, which delivers on one of our top roadmap goals: increased support for custom plugins, allowing developers and operators to extend Sonobuoy with additional tests and data gathering. It is now possible to easily create a plugin from a Docker image and run it within Sonobuoy without manually editing any YAML files.
 

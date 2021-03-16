@@ -5,10 +5,8 @@ id: plugins
 
 ---
 
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit.
+Sonobuoy was always designed to facilitate third-party plugins in order to accommodate custom testing requirements, and recently, the work on Sonobuoy made some advanced plugins possible to create.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing [link 1][1], elit sed do eiusmod tempor [link 2][2], incididunt ut labore et dolore magna aliqua[link 3][3].
+Read more about the first Sonobuoy plugins [here][1].
 
-[1]: https://github.com/vmware-tanzu
-[2]: https://github.com/vmware-tanzu
-[3]: https://github.com/vmware-tanzu
+[1]: http://127.0.0.1:4000/cis-benchmark-plugin/

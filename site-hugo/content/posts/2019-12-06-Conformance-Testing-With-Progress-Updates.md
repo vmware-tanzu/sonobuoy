@@ -1,5 +1,6 @@
 ---
 title: Does Testing Kubernetes Conformance Leave You in the Dark? Get Progress Updates as Tests Run
+image: /img/sonobuoy.svg
 excerpt: Get real-time progress updates from the long-running conformance tests.
 author_name: John Schnake
 author_url: https://github.com/johnschnake
@@ -7,6 +8,7 @@ author_avatar: /img/contributors/john-schnake.png
 categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
+date: 2019-12-06
 ---
 
 # Does Testing Kubernetes Conformance Leave You in the Dark? Get Progress Updates as Tests Run

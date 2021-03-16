@@ -7,6 +7,7 @@ author_name: Sonobuoy Team
 categories: [kubernetes]
 # Tag should match author to drive author pages
 tags: ['Sonobuoy Team']
+date: 2019-05-15
 ---
 There are many ways to create Kubernetes clusters and many environments that can host them. As a result, platform operators find it difficult to determine whether a cluster is properly configured and whether it is working as it should.
 
