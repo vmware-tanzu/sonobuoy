@@ -7,7 +7,7 @@ author_url: https://github.com/johnschnake
 author_avatar: /img/contributors/john-schnake.png
 categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
-tags: ['Sonobuoy Team']
+tags: ['Sonobuoy Team', 'John Schnake']
 date: 2019-08-07
 ---
 

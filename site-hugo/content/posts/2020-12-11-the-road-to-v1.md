@@ -7,7 +7,7 @@ author_url: https://github.com/vladimirvivien
 author_avatar: /img/contributors/vladimir-vivien.png
 categories: [kubernetes, sonobuoy, roadmap]
 # Tag should match author to drive author pages
-tags: ['Sonobuoy Team']
+tags: ['Sonobuoy Team', 'Vladimir Vivien']
 date: 2020-12-11
 ---
 

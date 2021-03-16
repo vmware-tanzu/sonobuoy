@@ -7,7 +7,7 @@ author_url: https://github.com/wilsonehusin
 author_avatar: https://avatars3.githubusercontent.com/u/14004487
 categories: [kubernetes, sonobuoy]
 # Tag should match author to drive author pages
-tags: ['Sonobuoy Team']
+tags: ['Sonobuoy Team', 'Wilson Husin']
 date: 2020-12-11
 ---
 

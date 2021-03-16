@@ -7,7 +7,7 @@ author_url: https://github.com/zubron
 author_avatar: /img/contributors/bridget-mcerlean.png
 categories: [kubernetes, sonobuoy, conformance]
 # Tag should match author to drive author pages
-tags: ['Sonobuoy Team']
+tags: ['Sonobuoy Team', 'Bridget McErlean']
 date: 2019-09-16
 ---
 
