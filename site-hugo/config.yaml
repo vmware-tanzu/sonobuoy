@@ -25,6 +25,7 @@ params:
   github_url: "https://github.com/vmware-tanzu/sonobuoy"
   slack_url: "https://kubernetes.slack.com/messages/sonobuoy"
   github_base_url: "https://github.com/vmware-tanzu/sonobuoy/site"
+  rss_url: "/feed.xml"
   use_advanced_docs: true
   docs_right_sidebar: true
   docs_search: false
