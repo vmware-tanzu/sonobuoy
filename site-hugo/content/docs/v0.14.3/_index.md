@@ -1,4 +1,9 @@
-# <img src="img/sonobuoy-logo.png" alt="Sonobuoy logo" width="400px" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
+---
+version: v0.14.3
+cascade:
+  layout: docs
+---
+# ![Sonobuoy logo](img/sonobuoy-logo.png) [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 ## [Overview][oview]
 

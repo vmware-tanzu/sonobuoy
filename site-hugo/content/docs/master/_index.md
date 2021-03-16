@@ -3,7 +3,7 @@ version: master
 cascade:
   layout: docs
 ---
-# <img src="img/sonobuoy-logo.png" width="400px" alt="Sonobuoy logo" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
+# ![Sonobuoy logo](img/sonobuoy-logo.png) [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 ## [Overview][oview]
 

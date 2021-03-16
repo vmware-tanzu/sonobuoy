@@ -20,7 +20,7 @@ In addition to querying API objects, Sonobuoy also supports a plugin model. In t
 ![sonobuoy plugins diagram][diagram]
 
 
-[diagram]: img/sonobuoy-plugins.png
+[diagram]: /img/sonobuoy-plugins.png
 
 Two main components specify plugin behavior:
 

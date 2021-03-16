@@ -1,4 +1,9 @@
-# <img src="img/sonobuoy-logo.png" width="400px" alt="Sonobuoy logo" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
+---
+version: v0.16.5
+cascade:
+  layout: docs
+---
+# ![Sonobuoy logo](img/sonobuoy-logo.png) [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 ## [Overview][oview]
 
@@ -29,18 +34,25 @@ Sonobuoy supports 3 Kubernetes minor versions: the current release and 2 minor v
 * For some advanced workflows it may be required to have `kubectl` installed. See [installing via Homebrew (MacOS)][brew] or [building
   the binary (Linux)][linux].
 
-* The `sonobuoy images` subcommand requires [Docker](https://www.docker.com) to be installed. See [installing Docker][docker].
+* The `sonobuoy images` subcommand requires [Docker](https://www.docker.com) to be installed. See [installing Docker](docker).
 
-## Installation
+## Installing
 
-1. Download the [latest release][releases] for your client platform.
-2. Extract the tarball:
+We recommend installing Sonobuoy via downloading one of the releases directly from [here][releases].
 
-   ```
-   tar -xvf <RELEASE_TARBALL_NAME>.tar.gz
-   ```
+You can use the web UI to download a release or from the terminal:
 
-   Move the extracted `sonobuoy` executable to somewhere on your `PATH`.
+```
+$ VERSION=0.16.1 OS=darwin && \
+    curl -L "https://github.com/vmware-tanzu/sonobuoy/releases/download/v${VERSION}/sonobuoy_${VERSION}_${OS}_amd64.tar.gz" --output $HOME/bin/sonobuoy.tar.gz && \
+    tar -xzf $HOME/bin/sonobuoy.tar.gz -C $HOME/bin && \
+    chmod +x $HOME/bin/sonobuoy && \
+    rm $HOME/bin/sonobuoy.tar.gz
+```
+
+> Note: Be sure to update the OS to your local value. Supported values are: "linux", "darwin", and "windows".
+
+If building locally, you should clone the repository and run `make`. To build locally, Docker is required.
 
 ## Getting Started
 
@@ -155,19 +167,19 @@ See [the list of releases][releases] to find out about feature changes.
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
 [coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
-[docker]: https://docs.docker.com/get-docker/
-[docs]: https://sonobuoy.io/docs/v0.18.4
+[docker]: https://docs.docker.com/install
+[docs]: https://sonobuoy.io/docs/v0.16.5
 [e2ePlugin]: e2eplugin
 [customPlugins]: plugins
 [gen]: gen
 [issue]: https://github.com/vmware-tanzu/sonobuoy/issues
 [k8s]: https://github.com/kubernetes/kubernetes
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
-[oview]: https://youtu.be/8QK-Hg2yUd4
+[oview]: https://youtu.be/k-P4hXdruRs?t=9m27s
 [plugins]: plugins
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
 [releases]: https://github.com/vmware-tanzu/sonobuoy/releases
-[results]: results
+[results]: results.md
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 [snapshot]:snapshot
 [sonobuoyconfig]: sonobuoy-config

@@ -1,4 +1,9 @@
-# <img src="img/sonobuoy-logo.png" width="400px" alt="Sonobuoy logo" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
+---
+version: v0.15.3
+cascade:
+  layout: docs
+---
+# ![Sonobuoy logo](img/sonobuoy-logo.png) [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 ## [Overview][oview]
 
@@ -11,7 +16,7 @@ about your cluster.
 Its selective data dumps of Kubernetes resource objects and cluster nodes allow
 for the following use cases:
 
-* Integrated end-to-end (e2e) [conformance-testing][e2ePlugin]
+* Integrated end-to-end (e2e) [conformance-testing][e2e]
 * Workload debugging
 * Custom data collection via extensible plugins
 
@@ -31,16 +36,18 @@ Sonobuoy supports 3 Kubernetes minor versions: the current release and 2 minor v
 
 * The `sonobuoy images` subcommand requires [Docker](https://www.docker.com) to be installed. See [installing Docker](docker).
 
-## Installation
+## Installing
 
-1. Download the [latest release][releases] for your client platform.
-2. Extract the tarball:
+Download one of the releases directly from [here][releases].
 
-   ```
-   tar -xvf <RELEASE_TARBALL_NAME>.tar.gz
-   ```
+Alternatively, you can install the CLI by running:
 
-   Move the extracted `sonobuoy` executable to somewhere on your `PATH`.
+```bash
+go get -u -v github.com/vmware-tanzu/sonobuoy
+```
+
+Golang version 1.12 or greater is recommended. Golang can be installed via
+[gimme][gimme].
 
 ## Getting Started
 
@@ -61,17 +68,15 @@ results=$(sonobuoy retrieve)
 Inspect results for test failures.  This will list the number of tests failed and their names:
 
 ```bash
-sonobuoy results $results
+sonobuoy e2e $results
 ```
-
-> Note: The `results` command has lots of useful options for various situations. See the [results page][results] for more details.
 
 You can also extract the entire contents of the file to get much more [detailed data][snapshot] about your cluster.
 
 Sonobuoy creates a few resources in order to run and expects to run within its
 own namespace.
 
-Deleting Sonobuoy entails removing its namespace as well as a few cluster
+Deleting Sonobuoy entails removing it's namespace as well as a few cluster
 scoped resources.
 
 ```bash
@@ -79,20 +84,6 @@ sonobuoy delete --wait
 ```
 
 > Note: The --wait option ensures the Kubernetes namespace is deleted, avoiding conflicts if another Sonobuoy run is started quickly.
-
-### Other Tests
-
-By default, `sonobuoy run` runs the Kubernetes conformance tests but this can easily be configured. The same plugin that has the conformance tests has all the Kubernetes end-to-end tests which include other tests such as:
-
-* tests for specific storage features
-* performance tests
-* scaling tests
-* provider specific tests
-* and many more
-
-To modify which tests you want to run, checkout our page on the [e2e plugin][e2ePlugin].
-
-If you want to run other tests or tools which are not a part of the Kubernetes end-to-end suite, refer to our documentation on [custom plugins][customPlugins].
 
 ### Monitoring Sonobuoy during a run
 
@@ -107,6 +98,16 @@ You can also inspect the logs of all Sonobuoy containers:
 ```bash
 sonobuoy logs
 ```
+
+## More information
+
+[The documentation][docs] provides further information about:
+
+* [conformance tests][conformance]
+* [plugins][plugins]
+* Testing of [air gapped clusters][airgap].
+* [Customization][gen] of YAML prior to running.
+* The [Sonobuoy config file][sonobuoyconfig] file and how to edit it.
 
 ## Troubleshooting
 
@@ -155,11 +156,12 @@ See [the list of releases][releases] to find out about feature changes.
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
 [coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
+[conformance]: conformance-testing
 [docker]: https://docs.docker.com/install
-[docs]: https://sonobuoy.io/docs/v0.18.2
-[e2ePlugin]: e2eplugin
-[customPlugins]: plugins
+[docs]: https://sonobuoy.io/docs/v0.15.3/
+[e2e]: conformance-testing
 [gen]: gen
+[gimme]: https://github.com/travis-ci/gimme
 [issue]: https://github.com/vmware-tanzu/sonobuoy/issues
 [k8s]: https://github.com/kubernetes/kubernetes
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
@@ -167,7 +169,6 @@ See [the list of releases][releases] to find out about feature changes.
 [plugins]: plugins
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
 [releases]: https://github.com/vmware-tanzu/sonobuoy/releases
-[results]: results
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
-[snapshot]:snapshot
+[snapshot]: snapshot
 [sonobuoyconfig]: sonobuoy-config

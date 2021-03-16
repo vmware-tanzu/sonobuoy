@@ -1,4 +1,9 @@
-# <img src="img/sonobuoy-logo.png" alt="Sonobuoy logo" width="400px" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
+---
+version: v0.17.2
+cascade:
+  layout: docs
+---
+# ![Sonobuoy logo](img/sonobuoy-logo.png) [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 ## [Overview][oview]
 
@@ -163,7 +168,7 @@ See [the list of releases][releases] to find out about feature changes.
 [coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
 [docker]: https://docs.docker.com/install
-[docs]: https://sonobuoy.io/docs/v0.16.2
+[docs]: https://sonobuoy.io/docs/v0.17.2
 [e2ePlugin]: e2eplugin
 [customPlugins]: plugins
 [gen]: gen
@@ -174,7 +179,7 @@ See [the list of releases][releases] to find out about feature changes.
 [plugins]: plugins
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
 [releases]: https://github.com/vmware-tanzu/sonobuoy/releases
-[results]: results.md
+[results]: results
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 [snapshot]:snapshot
 [sonobuoyconfig]: sonobuoy-config

@@ -1,4 +1,9 @@
-# <img src="img/sonobuoy-logo.png" alt="Sonobuoy logo" width="400px" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
+---
+version: v0.14.2
+cascade:
+  layout: docs
+---
+# ![Sonobuoy logo](img/sonobuoy-logo.png) [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 ## [Overview][oview]
 
@@ -15,9 +20,7 @@ for the following use cases:
 * Workload debugging
 * Custom data collection via extensible plugins
 
-Sonobuoy supports 3 Kubernetes minor versions: the current release and 2 minor versions before. Sonobuoy is currently versioned to track the Kubernetes minor version to clarify the support matrix. For example, Sonobuoy v0.14.x would support Kubernetes 1.14.x, 1.13.x, and 1.12.x.
-
-> Note: You can skip this version enforcement by running Sonobuoy with the `--skip-preflight` flag.
+Sonobuoy supports Kubernetes versions 1.11, 1.12 and 1.13.
 
 ## Prerequisites
 
@@ -88,7 +91,6 @@ sonobuoy logs
 ## More information
 
 [The documentation][docs] provides further information about:
-
  * [conformance tests][conformance]
  * [plugins][plugins]
  * Testing of [air gapped clusters][airgap].
@@ -142,7 +144,7 @@ See [the list of releases][releases] to find out about feature changes.
 [coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
 [conformance]: conformance-testing.md
-[docs]: https://sonobuoy.io/docs/v0.15.0/
+[docs]: https://github.com/vmware-tanzu/sonobuoy/tree/master/docs
 [e2e]: conformance-testing.md
 [gen]: gen.md
 [gimme]: https://github.com/travis-ci/gimme

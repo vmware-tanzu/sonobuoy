@@ -119,10 +119,10 @@ This looks like the following:
 `/serverversion.json` contains the output from querying the server's version, including the major and minor version, git commit, etc.
 
 [1]: #meta
-[3]: img/snapshot-00-overview.png
-[4]: img/snapshot-10-resources.png
-[5]: img/snapshot-20-hosts.png
-[6]: img/snapshot-30-podlogs.png
-[7]: img/snapshot-40-plugins.png
-[8]: img/snapshot-50-meta.png
+[3]: /snapshot-00-overview.png
+[4]: /img/snapshot-10-resources.png
+[5]: /img/snapshot-20-hosts.png
+[6]: /img/snapshot-30-podlogs.png
+[7]: /img/snapshot-40-plugins.png
+[8]: /img/snapshot-50-meta.png
 [results]: results.md

@@ -1,4 +1,9 @@
-# <img src="img/sonobuoy-logo.png" alt="Sonobuoy logo" width="400px" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
+---
+version: v0.16.0
+cascade:
+  layout: docs
+---
+# ![Sonobuoy logo](img/sonobuoy-logo.png) [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 ## [Overview][oview]
 
@@ -63,10 +68,8 @@ results=$(sonobuoy retrieve)
 Inspect results for test failures.  This will list the number of tests failed and their names:
 
 ```bash
-sonobuoy results $results
+sonobuoy e2e $results
 ```
-
-> Note: The `results` command has lots of useful options for various situations. See the [results page][results] for more details.
 
 You can also extract the entire contents of the file to get much more [detailed data][snapshot] about your cluster.
 
@@ -155,7 +158,7 @@ See [the list of releases][releases] to find out about feature changes.
 [contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
 [conformance]: conformance-testing
 [docker]: https://docs.docker.com/install
-[docs]: https://sonobuoy.io/docs/v0.16.1
+[docs]: https://sonobuoy.io/docs/v0.16.0
 [e2e]: conformance-testing
 [gen]: gen
 [gimme]: https://github.com/travis-ci/gimme
@@ -166,7 +169,6 @@ See [the list of releases][releases] to find out about feature changes.
 [plugins]: plugins
 [quickstart]: https://aws.amazon.com/quickstart/architecture/vmware-kubernetes/
 [releases]: https://github.com/vmware-tanzu/sonobuoy/releases
-[results]: results.md
 [slack]: https://kubernetes.slack.com/messages/sonobuoy
 [snapshot]:snapshot
 [sonobuoyconfig]: sonobuoy-config

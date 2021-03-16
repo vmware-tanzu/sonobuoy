@@ -64,7 +64,8 @@ The Sonobuoy sidecar waits for the `done` file to be present, then transmits the
 file back to the aggregator.
 
 ![sonobuoy plugins diagram][diagram]
-[diagram]: img/plugin-contract.png
+
+[diagram]: /img/plugin-contract.png
 
 ### Writing your own plugin
 

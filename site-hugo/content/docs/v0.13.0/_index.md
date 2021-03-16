@@ -1,3 +1,8 @@
+---
+version: v0.13.0
+cascade:
+  layout: docs
+---
 # Sonobuoy
 
 **Maintainers:** [Heptio][heptio]
@@ -62,7 +67,7 @@ viewing your scan results.
 ![tarball overview screenshot][screenshot]
 
 [scanner]: https://scanner.heptio.com/
-[screenshot]: img/scanner.png
+[screenshot]: /img/scanner.png
 
 ## Using the CLI
 

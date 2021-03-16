@@ -1,4 +1,9 @@
-# <img src="img/sonobuoy-logo.png" width="400px" alt="Sonobuoy logo" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
+---
+version: v0.18.0
+cascade:
+  layout: docs
+---
+# ![Sonobuoy logo](img/sonobuoy-logo.png) [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 
 ## [Overview][oview]
 
@@ -31,23 +36,16 @@ Sonobuoy supports 3 Kubernetes minor versions: the current release and 2 minor v
 
 * The `sonobuoy images` subcommand requires [Docker](https://www.docker.com) to be installed. See [installing Docker](docker).
 
-## Installing
+## Installation
 
-We recommend installing Sonobuoy via downloading one of the releases directly from [here][releases].
+1. Download the [latest release][releases] for your client platform.
+2. Extract the tarball:
 
-You can use the web UI to download a release or from the terminal:
+   ```
+   tar -xvf <RELEASE_TARBALL_NAME>.tar.gz
+   ```
 
-```
-$ VERSION=0.16.1 OS=darwin && \
-    curl -L "https://github.com/vmware-tanzu/sonobuoy/releases/download/v${VERSION}/sonobuoy_${VERSION}_${OS}_amd64.tar.gz" --output $HOME/bin/sonobuoy.tar.gz && \
-    tar -xzf $HOME/bin/sonobuoy.tar.gz -C $HOME/bin && \
-    chmod +x $HOME/bin/sonobuoy && \
-    rm $HOME/bin/sonobuoy.tar.gz
-```
-
-> Note: Be sure to update the OS to your local value. Supported values are: "linux", "darwin", and "windows".
-
-If building locally, you should clone the repository and run `make`. To build locally, Docker is required.
+   Move the extracted `sonobuoy` executable to somewhere on your `PATH`.
 
 ## Getting Started
 
@@ -163,7 +161,7 @@ See [the list of releases][releases] to find out about feature changes.
 [coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
 [docker]: https://docs.docker.com/install
-[docs]: https://sonobuoy.io/docs/v0.17.1
+[docs]: https://sonobuoy.io/docs/v0.18.0
 [e2ePlugin]: e2eplugin
 [customPlugins]: plugins
 [gen]: gen

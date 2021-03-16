@@ -106,9 +106,9 @@ For each type of result in a Sonobuoy tarball, the file extension indicates how 
 
 [1]: #meta
 [2]: #file-formats
-[3]: img/snapshot-00-overview.png
-[4]: img/snapshot-10-resources.png
-[5]: img/snapshot-20-hosts.png
-[6]: img/snapshot-30-podlogs.png
-[7]: img/snapshot-40-plugins.png
-[8]: img/snapshot-50-meta.png
+[3]: /img/snapshot-00-overview.png
+[4]: /img/snapshot-10-resources.png
+[5]: /img/snapshot-20-hosts.png
+[6]: /img/snapshot-30-podlogs.png
+[7]: /img/snapshot-40-plugins.png
+[8]: /img/snapshot-50-meta.png
