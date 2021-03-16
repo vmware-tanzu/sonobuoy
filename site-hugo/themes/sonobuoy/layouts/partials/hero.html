@@ -1,10 +1,11 @@
+{{ $latest := (cond (.Site.Params.docs_versioning) .Site.Params.docs_latest "") }}
 <div class="hero homepage">
 	<div class="wrapper">
 		<div class="text-block">
 			<h1>Validate your Kubernetes configuration</h1>
 			<p>Sonobuoy is a diagnostic tool that makes it easier to understand the state of a Kubernetes cluster by running a choice of configuration tests in an accessible and non-destructive manner.</p>
 			<div class="buttons">
-                <a class="button" href="/docs/">Get Started with Sonobuoy</a>
+                <a class="button" href="/docs/{{ $latest }}">Get Started with Sonobuoy</a>
                 <a class="button secondary" href="https://github.com/vmware-tanzu/sonobuoy/releases/latest">Download Latest Release</a>
             </div>
 		</div>
