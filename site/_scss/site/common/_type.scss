@@ -54,3 +54,13 @@ pre {
     word-break: normal;
   }
 }
+
+h1, h2, h3 {
+  font-family: $font-family-header;
+  font-weight: 300;
+}
+
+p {
+  font-size: 16px;
+  color: #777;
+}

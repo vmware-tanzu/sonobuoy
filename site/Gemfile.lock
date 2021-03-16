@@ -76,6 +76,7 @@ GEM
 
 PLATFORMS
   ruby
+  x86_64-darwin-19
 
 DEPENDENCIES
   jekyll (~> 4.0)
@@ -90,4 +91,4 @@ DEPENDENCIES
   jekyll-titles-from-headings (~> 0.5.3)
 
 BUNDLED WITH
-   2.1.4
+   2.2.2

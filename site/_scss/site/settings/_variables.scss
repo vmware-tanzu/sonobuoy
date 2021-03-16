@@ -21,6 +21,7 @@ $card-border-width: 1px;
 $card-border-color: $border-color;
 
 $font-family-base: "Metropolis", Helvetica, Arial, sans-serif;
+$font-family-header: "Metropolis-light", Helvetica, sans-serif;
 $font-size-base: 1.125rem; // 18px
 
 $link-color: #007AB8;
@@ -79,7 +80,8 @@ $field-backgrounds: (
   'med-blue': #0091DA,
   'dark-blue': #1D428A,
   'darkest-blue': #002538,
-  'green': #78BE20
+  'green': #78BE20,
+  'grey': #F2F2F2
 );
 
 @each $name, $hex in $field-backgrounds {

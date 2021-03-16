@@ -1,13 +1,13 @@
-<div class="section section-background-darkest-blue">
+<div class="section section-background-grey getting-started">
     <div class="section-content">
         <div class="row">
             <div class="col-xs-12 col-sm-6 col-lg-8">
-                <h5>{{ site.footer.title }}</h5>
+                <h2>{{ site.footer.title }}</h2>
                 <p>{{ site.footer.content }}</p>
             </div>
             <div class="col-xs-12 col-sm-6 col-lg-3 offset-lg-1">
                 <p><strong>{{ site.footer.cta_title }}</strong></p>
-                <a href="{{ site.footer.cta_url }}" class="btn btn-sm btn-primary btn-no-border">{{ site.footer.cta_text }}</a>
+                <a href="{{ site.footer.cta_url }}" class="btn btn-sm btn-primary">{{ site.footer.cta_text }}</a>
             </div>
         </div>
     </div>
@@ -28,14 +28,10 @@
                 </ul>
             </div>
             <div class="col-12 col-md-7 text-center text-md-right">
-              <a href="/" aria-label="Sonobuoy homepage" ><img src="/img/{{ site.logo }}" class="logo" alt="Homepage" /></a>
+                <p class="copyright">&copy; {{ site.time | date: '%Y' }} {{ site.author }},</p>
+                <a href="{{ site.footer.vm-link }}" class="vm-logo">A VMware-backed project.</a>
+                <a href="/" aria-label="Sonobuoy homepage"><img src="/img/{{ site.logo }}" class="logo" alt="Homepage" /></a>
             </div>
-        </div>
-        <div class="row align-items-center">
-          <div class="col copyright text-center text-md-right mt-4">
-            &copy; {{ site.time | date: '%Y' }} {{ site.author }}.
-            <a href="{{ site.footer.vm-link }}" class="vm-logo">A VMware-backed project. <img src="/img/{{ site.vm_logo }}" alt="VMware logo" /></a>
-          </div>
         </div>
     </div>
 </footer>
