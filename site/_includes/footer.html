@@ -17,7 +17,7 @@
     <div class="section-content">
         <div class="row justify-content-between align-items-center">
             <div class="col-12 col-md-5 mb-3 mb-md-0">
-                <ul class="social-links text-center text-md-left">
+                <ul class="social-links text-md-left">
                     {% for link in site.footer_social_links %}
                     <li>
                       {% if(link[1].fa_icon != false) %}
@@ -27,7 +27,7 @@
                     {% endfor %}
                 </ul>
             </div>
-            <div class="col-12 col-md-7 text-center text-md-right">
+            <div class="col-12 col-md-7 text-md-right">
                 <p class="copyright">&copy; {{ site.time | date: '%Y' }} {{ site.author }},</p>
                 <a href="{{ site.footer.vm-link }}" class="vm-logo">A VMware-backed project.</a>
                 <a href="/" aria-label="Sonobuoy homepage"><img src="/img/{{ site.logo }}" class="logo" alt="Homepage" /></a>

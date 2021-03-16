@@ -1,16 +1,15 @@
-@import 'mixins';
 .grid.three {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr;
     row-gap: 20px;
     column-gap: 20px;
-    @include breakpoint(small) {
-        grid-template-columns: 1fr;
+    @include media-breakpoint-up(md) {
+        grid-template-columns: 1fr 1fr 1fr;
     }
 }
 .sub-page {
     background-color: #fff;
-    h3 {
+    h2 {
         font-size: 22px;
         margin: 1.5rem 0;
     }
@@ -18,6 +17,9 @@
         margin-top: 3rem;
         font-weight: 600;
         font-size: 20px;
+    }
+    .embed-responsive {
+        margin-bottom: 1rem;
     }
     .grid {
         .col {
@@ -91,6 +93,10 @@
 .post-single-hero {
     h1, h2, h3 {
         text-align: left;
+    }
+    h1 {
+        margin-bottom: 2rem;
+        font-size: 2.25rem;
     }
 }
 .getting-started {
