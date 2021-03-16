@@ -2,6 +2,7 @@
 version: v0.19.0
 cascade:
   layout: docs
+  gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.19.0
 ---
 # ![Sonobuoy logo](img/sonobuoy-logo.png) [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
 

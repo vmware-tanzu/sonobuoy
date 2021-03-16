@@ -2,6 +2,7 @@
 version: v0.13.0
 cascade:
   layout: docs
+  gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.13.0
 ---
 # Sonobuoy
 

@@ -14,8 +14,13 @@
                 <ul>
                     {{ range .subfolderitems }}
                     <li>
-                        {{ $url :=  (index (print "/docs/" $version .url "/"))  }}
-                        <a href="{{ $url }}" {{ if (eq  $.Page.RelPermalink $url)  }}class="active"{{ end }}>{{ .page }}</a>
+                        {{ if .github }}
+                            {{ $gh := $.Page.Params.gh }}
+                            <a href="{{ $gh }}{{ .url }}" target="_blank">{{ .page }}</a>
+                        {{ else }}
+                            {{ $url :=  (index (print "/docs/" $version .url "/"))  }}
+                            <a href="{{ $url }}" {{ if (eq  $.Page.RelPermalink $url)  }}class="active"{{ end }}>{{ .page }}</a>
+                        {{ end }}
                     </li>
                     {{ end }}
                 </ul>
