@@ -1,0 +1,30 @@
+toc:
+  - title: Setting up
+    subfolderitems:
+      - page: Getting started
+        url: /index.html
+      - page: Config
+        url: /sonobuoy-config
+      - page: Snapshot layout
+        url: /snapshot
+      - page: Viewing Results
+        url: /results
+      - page: ImagePullSecrects
+        url: /pullsecrets
+  - title: Use cases
+    subfolderitems:
+      - page: Conformance testing
+        url: /conformance-testing
+      - page: Custom Registries & Airgap Testing
+        url: /airgap
+      - page: Plugins
+        url: /plugins
+  - title: Next steps
+    subfolderitems:
+      - page: Customization
+        url: /gen
+      - page: Make your own plugins
+        url: /examples
+        github: true
+      - page: Cut a Release
+        url: /release
