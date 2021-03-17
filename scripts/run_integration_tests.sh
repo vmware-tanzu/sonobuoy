@@ -9,7 +9,7 @@ cluster="kind"
 testImage="sonobuoy/testimage:v0.1"
 
 if ! kind get clusters | grep -q "^$cluster$"; then
-    kind create cluster --name $cluster
+    kind create cluster --name $cluster --config $DIR/kind-config.yaml
     # Although the cluster has been created, not all the pods in kube-system are created/available
     sleep 20
 fi

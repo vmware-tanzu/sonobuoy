@@ -47,16 +47,16 @@ ifneq ($(VERBOSE),)
 VERBOSE_FLAG = -v
 endif
 BUILDMNT = /go/src/$(GOTARGET)
-BUILD_IMAGE ?= golang:1.15-buster
-AMD_IMAGE ?= debian:buster-slim
-ARM_IMAGE ?= arm64v8/ubuntu:16.04
+BUILD_IMAGE ?= golang:1.16
+AMD_IMAGE ?= gcr.io/distroless/static:nonroot
+ARM_IMAGE ?= gcr.io/distroless/static:nonroot-arm64
 WIN_IMAGE ?= mcr.microsoft.com/windows/servercore:1809
 
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
 COVERARGS ?= -coverprofile=coverage.txt -covermode=atomic
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
-TEST_CMD = go test $(TESTARGS)
-TEST = GODEBUG=x509ignoreCN=0 $(TEST_CMD) $(COVERARGS) $(TEST_PKGS)
+TEST_CMD = GODEBUG=x509ignoreCN=0 go test $(TESTARGS)
+TEST = $(TEST_CMD) $(COVERARGS) $(TEST_PKGS)
 
 INT_TEST_PKGS ?= $(GOTARGET)/test/integration/...
 INT_TEST= $(TEST_CMD) $(INT_TEST_PKGS) -tags=integration
@@ -112,6 +112,7 @@ pre:
 	 chmod +x ./manifest-tool
 	echo $(DOCKERHUB_TOKEN) | docker login --username sonobuoybot --password-stdin
 
+# TODO: Make it easy to build single container for a specific arch
 build_container:
 	$(DOCKER) build \
        -t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \
