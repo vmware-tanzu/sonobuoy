@@ -1,44 +1,23 @@
 <div class="team">
-    <div class="wrapper">
-        <h2>Imperdiet sed euismod nisi:</h2>
-        <div class="grid three">
-            <div class="bio">
-                <div class="image"><img src="/img/team-placeholder.png" /></div>
-                <div class="info">
-                    <p class="name">Lorem Ipsum</p>
-                    <p class="position">dolor</p>
+        <div class="wrapper">
+                <h2>The Sonobuoy Team</h2>
+                <p>
+                Sonobuoy is released as open source software and provides community support through our GitHub project page. If you encounter an issue or have a question, feel free to reach out on the <strong><a href="https://github.com/vmware-tanzu/sonobuoy">GitHub issues page</a></strong> for Sonobuoy.
+                </p>
+                <p>
+                The Sonobuoy project team welcomes contributions from the community — please see our <strong><a href="https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md">contributing</a></strong> documentation.
+                </p>
+                <div class="grid three">
+                        {{ $contributors := .Site.GetPage "/contributors" }}
+                        {{ range $contributors.Resources }}
+                        <div class="bio">
+                                <div class="image"><img class="rounded-circle" src="{{ .Params.image }}" /></div>
+                                <div class="info">
+                                        <a class="name" href="https://github.com/{{ .Params.github_handle }}">{{ .Params.first_name }} {{ .Params.last_name }}</a>
+                                        <p class="position">{{ .Content }}</p>
+                                </div>
+                        </div>
+                        {{ end }}
                 </div>
-            </div>
-            <div class="bio">
-                <div class="image"><img src="/img/team-placeholder.png" /></div>
-                <div class="info">
-                    <p class="name">Lorem Ipsum</p>
-                    <p class="position">dolor</p>
-                </div>
-            </div>
-            <div class="bio">
-                <div class="image"><img src="/img/team-placeholder.png" /></div>
-                <div class="info">
-                    <p class="name">Lorem Ipsum</p>
-                    <p class="position">dolor</p>
-                </div>
-            </div>
-            <div class="bio">
-                <div class="image"><img src="/img/team-placeholder.png" /></div>
-                <div class="info">
-                    <p class="name">Lorem Ipsum</p>
-                    <p class="position">dolor</p>
-                </div>
-            </div>
-            <div class="bio">
-                <div class="image"><img src="/img/team-placeholder.png" /></div>
-                <div class="info">
-                    <p class="name">Lorem Ipsum</p>
-                    <p class="position">dolor</p>
-                </div>
-            </div>
         </div>
-        <h3>Lorem Ipsum:</h3>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor <a href="#">incididunt ut labore</a> et dolore magna aliqua.</p>
-    </div>
 </div>
