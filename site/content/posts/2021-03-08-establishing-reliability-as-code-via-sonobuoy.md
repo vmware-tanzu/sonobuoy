@@ -1,4 +1,16 @@
-# Establishing Reliability-As-Code via Sonobuoy
+---
+title: Establishing Reliability-As-Code via Sonobuoy
+image: /img/sonobuoy.svg
+excerpt: Reliability Scanner Project as a Sonobuoy Plugin allows you to assess reliability risks using an extensible set of policies.
+author_name: Kalai Wei
+author_url: https://github.com/madamkiwi
+categories: [kubernetes, sonobuoy, plugins]
+# Tag should match author to drive author pages
+tags: ['Sonobuoy Team', 'VMware Tanzu CRE', 'Kalai Wei']
+date: 2021-03-18
+slug: reliability-scanner-kubernetes-clusters
+---
+
 
 We are happy to introduce the [Reliability Scanner for Kubernetes as a Sonobuoy Plugin](https://github.com/vmware-tanzu/sonobuoy-plugins/tree/master/reliability-scanner)! It is a light-weight Go program that includes an extensible set of reliability assessments, or checks, performed against various components of a cluster, such as Pods, Namespaces, Services, etc. The Reliability Scanner runs as a container that serves as a Sonobuoy plugin and uses a configuration file to define customized checks. Kubernetes cluster operators can then configure appropriate constraints to run reliability scanner checks against their clusters. This project is based upon efforts and practices of [VMware’s Customer Reliability Engineering (CRE) team](https://tanzu.vmware.com/content/blog/hello-world-meet-vmware-cre).
 
