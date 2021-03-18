@@ -19,7 +19,6 @@ package app
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -30,7 +29,6 @@ import (
 )
 
 var (
-	prefix        = filepath.Join("tmp", "sonobuoy")
 	defaultOutDir = "."
 )
 
@@ -77,7 +75,7 @@ func retrieveResults(cmd *cobra.Command, args []string) {
 	eg := &errgroup.Group{}
 	eg.Go(func() error { return <-ec })
 	eg.Go(func() error {
-		filesCreated, err := client.UntarAll(reader, outDir, prefix)
+		filesCreated, err := client.UntarAll(reader, outDir, "")
 		if err != nil {
 			return err
 		}

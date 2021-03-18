@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.14-stretch AS base
+FROM golang:1.15-buster AS base
 WORKDIR /src
 
 # Handle the go modules first to take advantage of Docker cache.
@@ -22,10 +22,10 @@ RUN go mod download
 
 # Get the rest of the files and build.
 COPY src .
-RUN go build -o /go/bin/testImage ./...
+RUN CGO_ENABLED=0 go build -o /go/bin/testImage ./...
 
-FROM debian:stretch-slim
-MAINTAINER John Schnake "jschnake@vmware.com"
-COPY --from=base /go/bin/testImage /bin/testImage
+FROM gcr.io/distroless/static-debian10:latest
+WORKDIR /
+COPY --from=base /go/bin/testImage /testImage
 COPY resources /resources
-CMD [ "testImage" ]
+CMD [ "/testImage" ]

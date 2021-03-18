@@ -1,0 +1,76 @@
+baseURL: "https://sonobuoy.io/"
+languageCode: "en-us"
+title: "Sonobuoy"
+theme: "sonobuoy"
+outputs:
+  home: [ "HTML", "REDIRECTS" ]
+  posts: [ "HTML", "RSS" ]
+pygmentsCodefences: true
+pygmentsStyle: "pygments"
+markup:
+  highlight:
+    anchorLineNos: false
+    codeFences: true
+    guessSyntax: false
+    hl_Lines: ""
+    lineAnchors: ""
+    lineNoStart: 1
+    lineNos: false
+    lineNumbersInTable: true
+    noClasses: true
+    style: native
+    tabWidth: 4
+params:
+  twitter_url: "https://twitter.com/projectsonobuoy"
+  github_url: "https://github.com/vmware-tanzu/sonobuoy"
+  slack_url: "https://kubernetes.slack.com/messages/sonobuoy"
+  github_base_url: "https://github.com/vmware-tanzu/sonobuoy/site"
+  rss_url: "/blog/feed.xml"
+  use_advanced_docs: true
+  docs_right_sidebar: true
+  docs_search: false
+  docs_search_index_name: index_name
+  docs_search_api_key: api_key
+  docs_versioning: true
+  docs_latest: v0.20.0
+  docs_versions:
+    - master
+    - v0.20.0
+    - v0.19.0
+    - v0.18.5
+    - v0.18.4
+    - v0.18.3
+    - v0.18.2
+    - v0.18.1
+    - v0.18.0
+    - v0.17.2
+    - v0.17.1
+    - v0.17.0
+    - v0.16.5
+    - v0.16.4
+    - v0.16.3
+    - v0.16.2
+    - v0.16.1
+    - v0.16.0
+    - v0.15.4
+    - v0.15.3
+    - v0.15.2
+    - v0.15.1
+    - v0.15.0
+    - v0.14.3
+    - v0.14.2
+    - v0.14.1
+    - v0.14.0
+    - v0.13.0
+mediaTypes:
+  "text/netlify":
+    delimiter: ""
+outputFormats:
+  REDIRECTS:
+    mediaType: "text/netlify"
+    baseName: "_redirects"
+  RSS:
+    mediatype: "application/rss"
+    baseName: "feed"
+permalinks:
+  posts: /:slug
