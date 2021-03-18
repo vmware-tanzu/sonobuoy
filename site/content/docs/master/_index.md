@@ -4,7 +4,7 @@ cascade:
   layout: docs
   gh: https://github.com/vmware-tanzu/sonobuoy/tree/master
 ---
-# <img src="img/sonobuoy-logo.png" width="400px" alt="Sonobuoy logo" >
+# ![Sonobuoy Logo](img/sonobuoy-logo.png)
 
 [![Test](https://github.com/vmware-tanzu/sonobuoy/actions/workflows/ci-test.yaml/badge.svg)](https://github.com/vmware-tanzu/sonobuoy/actions/workflows/ci-test.yaml/badge.svg)
 [![Lint](https://github.com/vmware-tanzu/sonobuoy/actions/workflows/ci-lint.yaml/badge.svg)](https://github.com/vmware-tanzu/sonobuoy/actions/workflows/ci-lint.yaml/badge.svg)

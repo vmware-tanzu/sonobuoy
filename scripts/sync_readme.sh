@@ -19,7 +19,7 @@ FRONTMATTER=$DIR/site/content/docs/master/index-frontmatter.yaml
 #  - use relative path to images
 #  - use relative path to other pages (e.g. foo instead of sonobuoy.io/docs/foo)
 #  - link to master docs instead of "docs" (which will go to the latest tagged version)
-sed 's/img src="site\/themes\/sonobuoy\/static\/img/img src="img/' $ROOT_README |
+sed 's/site\/themes\/sonobuoy\/static\/img/img/' $ROOT_README |
 sed 's/https:\/\/sonobuoy.io\/docs\///' |
 sed 's/sonobuoy.io\/docs/sonobuoy.io\/docs\/master/' > $MODIFIED_README
 
