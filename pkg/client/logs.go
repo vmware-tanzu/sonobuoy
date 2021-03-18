@@ -28,6 +28,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
+	watchtool "k8s.io/client-go/tools/watch"
 )
 
 const (
@@ -173,15 +175,30 @@ func getPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh chan
 // or no plugin has been specified, retrieve all pods within the namespace. It will return an error if unable to create the watcher
 // but will continue to add pods to the channel in a separate go routine.
 func watchPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh chan *v1.Pod) error {
-	listOptions := metav1.ListOptions{}
+	var timeoutSeconds int64 = 5
+	listOptions := metav1.ListOptions{TimeoutSeconds: &timeoutSeconds}
 	if cfg.Plugin != "" {
 		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, "sonobuoy-plugin", cfg.Plugin)
 		listOptions = metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)}
 	}
 
-	watcher, err := client.CoreV1().Pods(cfg.Namespace).Watch(context.TODO(), listOptions)
+	lw := &cache.ListWatch{
+		WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			return client.CoreV1().Pods(cfg.Namespace).Watch(context.TODO(), listOptions)
+		},
+	}
+
+	// You must get an initial resource version for the watcher; the retry watcher can't simply
+	// start at "now". It will err if given "", or "0" and API instructs users to not assume
+	// numerical or sequential access.
+	initVersionObj, err := client.CoreV1().Pods(cfg.Namespace).List(context.TODO(), listOptions)
 	if err != nil {
-		return errors.Wrap(err, "failed to watch pods")
+		return errors.Wrap(err, "failed to obtain initial resource version for retry watcher")
+	}
+
+	watcher, err := watchtool.NewRetryWatcher(initVersionObj.GetResourceVersion(), lw)
+	if err != nil {
+		return errors.Wrap(err, "failed to create retry watcher")
 	}
 	ch := watcher.ResultChan()
 
