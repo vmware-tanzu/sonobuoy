@@ -127,7 +127,7 @@ This year, Docker has started rate limiting image pulls from Docker Hub. We're p
 Sonobuoy by default pulls from Docker Hub for [`sonobuoy/sonobuoy` image](https://hub.docker.com/r/sonobuoy/sonobuoy). If you're encountering rate limit on this, you can use VMware-provided mirror with:
 
 ```bash
-sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:v0.20.0
+sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:<VERSION>
 ```
 
 ### Conformance
@@ -141,7 +141,7 @@ dockerLibraryRegistry: mirror.gcr.io/library
 Then on running conformance:
 
 ```bash
-sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:v0.20.0 --e2e-repo-config conformance-image-config.yaml
+sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:<VERSION> --e2e-repo-config conformance-image-config.yaml
 ```
 
 Technically `dockerGluster` is also a registry pulling from Docker Hub, but it's not part of Conformance test suite at the moment, so overriding `dockerLibraryRegistry` should be enough.
