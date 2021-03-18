@@ -1,0 +1,6 @@
+---
+version: master
+cascade:
+  layout: docs
+  gh: https://github.com/vmware-tanzu/sonobuoy/tree/master
+---

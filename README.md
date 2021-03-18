@@ -1,4 +1,7 @@
-# <img src="site/docs/master/img/sonobuoy-logo.png" width="400px" alt="Sonobuoy logo" > [![CircleCI](https://circleci.com/gh/vmware-tanzu/sonobuoy.svg?style=svg)](https://circleci.com/gh/vmware-tanzu/sonobuoy)
+# <img src="site/themes/sonobuoy/static/img/sonobuoy-logo.png" width="400px" alt="Sonobuoy logo" >
+
+[![Test](https://github.com/vmware-tanzu/sonobuoy/actions/workflows/ci-test.yaml/badge.svg)](https://github.com/vmware-tanzu/sonobuoy/actions/workflows/ci-test.yaml/badge.svg)
+[![Lint](https://github.com/vmware-tanzu/sonobuoy/actions/workflows/ci-lint.yaml/badge.svg)](https://github.com/vmware-tanzu/sonobuoy/actions/workflows/ci-lint.yaml/badge.svg)
 
 ## [Overview][oview]
 
