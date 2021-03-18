@@ -1,8 +1,8 @@
 ---
-version: master
+version: v0.50.0
 cascade:
   layout: docs
-  gh: https://github.com/vmware-tanzu/sonobuoy/tree/master
+  gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.50.0
 ---
 # ![Sonobuoy Logo](img/sonobuoy-logo.png)
 
@@ -196,7 +196,7 @@ See [the list of releases][releases] to find out about feature changes.
 [coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
 [contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
 [docker]: https://docs.docker.com/get-docker/
-[docs]: https://sonobuoy.io/docs/master
+[docs]: https://sonobuoy.io/docs/v0.50.0
 [e2ePlugin]: e2eplugin
 [customPlugins]: plugins
 [gen]: gen
