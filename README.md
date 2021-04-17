@@ -191,7 +191,7 @@ See [the list of releases][releases] to find out about feature changes.
 [contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
 [docker]: https://docs.docker.com/get-docker/
 [docs]: https://sonobuoy.io/docs
-[e2ePlugin]: https://sonobuoy.io/docs/e2eplugin
+[e2ePlugin]: https://sonobuoy.io/docs/master/e2eplugin/
 [customPlugins]: https://sonobuoy.io/docs/plugins
 [gen]: https://sonobuoy.io/docs/gen
 [issue]: https://github.com/vmware-tanzu/sonobuoy/issues
