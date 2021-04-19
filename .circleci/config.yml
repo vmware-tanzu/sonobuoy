@@ -112,10 +112,6 @@ jobs:
             SONOBUOY_CLI=../../build/linux/amd64/sonobuoy ./scripts/run_integration_tests.sh
       - store_artifacts:
           path: /tmp/artifacts
-      - run:
-          name: "Upload codecov results"
-          command: bash <(curl -s https://codecov.io/bash)
-
 
 workflows:
   version: 2
