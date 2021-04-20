@@ -18,10 +18,13 @@ package image
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 
 	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"k8s.io/client-go/discovery"
 )
 
@@ -36,8 +39,12 @@ var (
 const (
 	// ConformanceImageVersionAuto represents detecting the server's kubernetes version.
 	ConformanceImageVersionAuto = "auto"
-	// ConformanceImageVersionLatest represents always using the server's latest version.
+	// ConformanceImageVersionLatest represents always using the server's latest dev version.
 	ConformanceImageVersionLatest = "latest"
+
+	// DevVersionURL is the URL which should respond with a simple text of the latest version for devs.
+	DevVersionURL      = "https://storage.googleapis.com/k8s-release-dev/ci/latest.txt"
+	DevVersionImageURL = "gcr.io/k8s-staging-ci-images/conformance"
 )
 
 // String needed for pflag.Value.
@@ -69,22 +76,53 @@ func (c *ConformanceImageVersion) Set(str string) error {
 	return nil
 }
 
-// Get retrieves the preset version if there is one, or queries client if the ConformanceImageVersion is set to `auto`.
+// Get retrieves the preset version if there is one, queries client if the ConformanceImageVersion is set to `auto`,
+// or finds the latest dev image published.
 // kubernetes.Interface.Discovery() provides ServerVersionInterface.
 // Don't require the entire kubernetes.Interface to simplify the required test mocks
-func (c *ConformanceImageVersion) Get(client discovery.ServerVersionInterface) (string, error) {
-	if *c == ConformanceImageVersionAuto {
+func (c *ConformanceImageVersion) Get(client discovery.ServerVersionInterface, latestURL string) (registry, version string, returnErr error) {
+	switch *c {
+	case ConformanceImageVersionAuto:
 		if client == nil {
-			return "", ErrImageVersionNoClient
+			return "", "", ErrImageVersionNoClient
 		}
 		version, err := client.ServerVersion()
 		if err != nil {
-			return "", errors.Wrap(err, "couldn't retrieve server version")
+			return "", "", errors.Wrap(err, "couldn't retrieve server version")
 		}
 
-		return conformanceTagFromSemver(version.GitVersion)
+		ver, err := conformanceTagFromSemver(version.GitVersion)
+		return config.UpstreamKubeConformanceImageURL, ver, err
+	case ConformanceImageVersionLatest:
+		version, err := getLatestDevVersion(latestURL)
+		if err != nil {
+			return "", "", errors.Wrap(err, "couldn't identify latest dev image")
+		}
+
+		return DevVersionImageURL, version, nil
 	}
-	return string(*c), nil
+	return config.UpstreamKubeConformanceImageURL, string(*c), nil
+}
+
+// getLatestDevVersion just GETs a known URL which holds the reference to the latest dev version.
+func getLatestDevVersion(url string) (string, error) {
+	r, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	if r == nil || r.Body == nil {
+		return "", errors.New("no body present when querying latest dev version")
+	}
+	defer r.Body.Close()
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return "", errors.Wrap(err, "error reading body of latest dev version")
+	}
+
+	// Metadata is added as part of the tag prefixed with an underscore instead of a plus
+	// e.g. X.Y.z-alpha0.123+ef839g is tagged as X.Y.z-alpha0.123_ef839g
+	version := strings.Replace(string(b), "+", "_", 1)
+	return version, nil
 }
 
 // conformanceTagFromSemver uses the gitversion to choose the proper conformance image to use.

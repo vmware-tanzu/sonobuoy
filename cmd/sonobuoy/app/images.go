@@ -407,7 +407,7 @@ func collectPluginsImages(plugins []string, k8sVersion string, client image.Clie
 		case systemdLogsPlugin:
 			images = append(images, config.DefaultSystemdLogsImage)
 		case e2ePlugin:
-			conformanceImage := resolveConformanceImage(k8sVersion)
+			conformanceImage := fmt.Sprintf("%v:%v", config.UpstreamKubeConformanceImageURL, k8sVersion)
 			images = append(images, conformanceImage)
 			logrus.Info("conformance image to be used: ", conformanceImage)
 

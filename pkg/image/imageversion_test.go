@@ -17,11 +17,15 @@ limitations under the License.
 package image
 
 import (
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/discovery"
 )
@@ -128,11 +132,17 @@ func TestGetConformanceImageVersion(t *testing.T) {
 		err: errors.New("can't connect"),
 	}
 
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "latest-dev-version+meta")
+	}))
+	defer ts.Close()
+
 	tests := []struct {
 		name          string
 		version       ConformanceImageVersion
 		serverVersion discovery.ServerVersionInterface
 		expected      string
+		expectedReg   string
 		error         bool
 	}{
 		{
@@ -140,6 +150,7 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			version:       "auto",
 			serverVersion: workingServerVersion,
 			expected:      "v1.14.1",
+			expectedReg:   config.UpstreamKubeConformanceImageURL,
 		},
 		{
 			name:          "auto returns error if upstream fails",
@@ -152,30 +163,35 @@ func TestGetConformanceImageVersion(t *testing.T) {
 			version:       "v1.11.2",
 			serverVersion: workingServerVersion,
 			expected:      "v1.11.2",
+			expectedReg:   config.UpstreamKubeConformanceImageURL,
 		},
 		{
 			name:          "set version ignores server version and can be anything",
 			version:       "foo",
 			serverVersion: workingServerVersion,
 			expected:      "foo",
+			expectedReg:   config.UpstreamKubeConformanceImageURL,
 		},
 		{
 			name:          "set version doesn't call server so ignores errors",
 			version:       "v1.11.2",
 			serverVersion: brokenServerVersion,
 			expected:      "v1.11.2",
+			expectedReg:   config.UpstreamKubeConformanceImageURL,
 		},
 		{
-			name:          "latest ignores server version",
+			name:          "latest ignores server version and prefixes metadata with underscore",
 			version:       "latest",
 			serverVersion: workingServerVersion,
-			expected:      "latest",
+			expected:      "latest-dev-version_meta",
+			expectedReg:   DevVersionImageURL,
 		},
 		{
 			name:          "latest doesn't call server so ignores errors",
 			version:       "latest",
 			serverVersion: brokenServerVersion,
-			expected:      "latest",
+			expected:      "latest-dev-version_meta",
+			expectedReg:   DevVersionImageURL,
 		},
 		{
 			name:          "nil serverVersion",
@@ -187,7 +203,7 @@ func TestGetConformanceImageVersion(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			v, err := test.version.Get(test.serverVersion)
+			reg, v, err := test.version.Get(test.serverVersion, ts.URL)
 			if test.error && err == nil {
 				t.Fatalf("expected error, got nil")
 			} else if !test.error && err != nil {
@@ -196,6 +212,9 @@ func TestGetConformanceImageVersion(t *testing.T) {
 
 			if v != test.expected {
 				t.Errorf("expected version %q, got %q", test.expected, v)
+			}
+			if reg != test.expectedReg {
+				t.Errorf("expected registry %q, got %q", test.expectedReg, reg)
 			}
 		})
 	}

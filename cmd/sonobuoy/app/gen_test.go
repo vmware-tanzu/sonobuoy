@@ -34,60 +34,6 @@ const (
 	rawInput = "not nil"
 )
 
-// TestResolveConformanceImage tests the temporary logic of ensuring that given
-// a certain string version, the proper conformance image is used (upstream
-// vs Heptio).
-func TestResolveConformanceImage(t *testing.T) {
-	tcs := []struct {
-		name             string
-		requestedVersion string
-		expected         string
-	}{
-		{
-			name:             "Comparison is lexical",
-			requestedVersion: "foo",
-			expected:         "gcr.io/heptio-images/kube-conformance:foo",
-		}, {
-			name:             "Prior to v1.14.0 uses heptio and major.minor",
-			requestedVersion: "v1.13.99",
-			expected:         "gcr.io/heptio-images/kube-conformance:v1.13.99",
-		}, {
-			name:             "v1.14.0 uses heptio and major.minor",
-			requestedVersion: "v1.14.0",
-			expected:         "gcr.io/heptio-images/kube-conformance:v1.14.0",
-		}, {
-			name:             "v1.14.1 and after uses upstream and major.minor.patch",
-			requestedVersion: "v1.14.1",
-			expected:         "k8s.gcr.io/conformance:v1.14.1",
-		}, {
-			name:             "v1.14.0 and after uses upstream and major.minor.patch",
-			requestedVersion: "v1.15.1",
-			expected:         "k8s.gcr.io/conformance:v1.15.1",
-		}, {
-			name:             "latest should use upstream image",
-			requestedVersion: "latest",
-			expected:         "k8s.gcr.io/conformance:latest",
-		}, {
-			name:             "explicit version before v1.14.0 should use heptio image and given version",
-			requestedVersion: "v1.12+.0.alpha+",
-			expected:         "gcr.io/heptio-images/kube-conformance:v1.12+.0.alpha+",
-		}, {
-			name:             "explicit version after v1.14.0 should use upstream and use given version",
-			requestedVersion: "v1.14.1",
-			expected:         "k8s.gcr.io/conformance:v1.14.1",
-		},
-	}
-
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			out := resolveConformanceImage(tc.requestedVersion)
-			if out != tc.expected {
-				t.Errorf("Expected image %q but got %q", tc.expected, out)
-			}
-		})
-	}
-}
-
 func TestResolveConfig(t *testing.T) {
 	defaultPluginSearchPath := config.New().PluginSearchPath
 	defaultAggr := plugin.AggregationConfig{TimeoutSeconds: 10800}
