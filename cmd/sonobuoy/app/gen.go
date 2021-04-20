@@ -142,7 +142,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 
 		// Only the `auto`  value requires the discovery client to be non-nil
 		// if discoveryClient is needed, ErrImageVersionNoClient will be returned and that error can be reported back up
-		imageVersion, err := g.kubeConformanceImageVersion.Get(discoveryClient)
+		imageRegistry, imageVersion, err := g.kubeConformanceImageVersion.Get(discoveryClient, imagepkg.DevVersionURL)
 		if err != nil {
 			if errors.Cause(err) == imagepkg.ErrImageVersionNoClient {
 				return nil, errors.Wrap(err, kubeError.Error())
@@ -150,7 +150,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 			return nil, err
 		}
 
-		image = resolveConformanceImage(imageVersion)
+		image = fmt.Sprintf("%v:%v", imageRegistry, imageVersion)
 	}
 
 	return &client.GenConfig{
@@ -168,28 +168,6 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		ShowDefaultPodSpec:   g.showDefaultPodSpec,
 		NodeSelectors:        g.nodeSelectors,
 	}, nil
-}
-
-// resolveConformanceImage maps versions before 1.14.0 to Heptio's image and otherwise
-// to the upstream cnoformance image. Latest is always mapped to the upstream
-// regardless. The comparison is just lexical, e.g. "foo" <= "v1.14.0" and "zip" >
-// "v1.14.0". These are a-typical and not given more support at this time.
-func resolveConformanceImage(imageVersion string) string {
-	// TODO(johnschnake): This logic should be temporary and is only
-	// required as we phase in the use of the upstream k8s kube-conformance
-	// image instead of our own heptio/kube-conformance one. They started
-	// publishing it for v1.14.1. (https://github.com/kubernetes/kubernetes/pull/76101)
-	var imageURL string
-	switch {
-	case imageVersion == imagepkg.ConformanceImageVersionLatest:
-		imageURL = config.UpstreamKubeConformanceImageURL
-	case imageVersion < "v1.14.1":
-		imageURL = config.DefaultKubeConformanceImageURL
-	default:
-		imageURL = config.UpstreamKubeConformanceImageURL
-	}
-	return fmt.Sprintf("%v:%v", imageURL, imageVersion)
-
 }
 
 func NewCmdGen() *cobra.Command {

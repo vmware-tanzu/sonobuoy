@@ -113,6 +113,7 @@ func AddSystemdLogsImage(image *string, flags *pflag.FlagSet) {
 func AddKubeConformanceImageVersion(imageVersion *image.ConformanceImageVersion, flags *pflag.FlagSet) {
 	help := "Use default Conformance image, but override the version. "
 	help += "Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise."
+	help += "You can also choose 'latest' which will find the latest dev image upstream."
 
 	*imageVersion = image.ConformanceImageVersionAuto
 	flags.Var(imageVersion, "kube-conformance-image-version", help)
