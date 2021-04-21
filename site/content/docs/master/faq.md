@@ -164,7 +164,7 @@ The following SIG tags exist within the E2E tests:
 [sig-list]: https://github.com/kubernetes/community/blob/master/sig-list.md
 [jq]: https://stedolan.github.io/jq/
 [kubernetes-1.15.3]: https://github.com/kubernetes/kubernetes/tree/v1.15.3
-[kubernetes-conformance]: https://github.com/kubernetes/kubernetes/blob/master/test/conformance/testdata/conformance.txt
+[kubernetes-conformance]: https://github.com/kubernetes/kubernetes/blob/master/test/conformance/testdata/conformance.yaml
 [airgap]: airgap.md
 [e2ePlugin]: e2eplugin.md
 [customPlugins]: plugins.md
