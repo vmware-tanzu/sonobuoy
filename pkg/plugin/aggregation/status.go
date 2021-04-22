@@ -20,10 +20,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -101,6 +103,27 @@ func (s *Status) updateStatus() error {
 		}
 	}
 	s.Status = status
+
+	// WIP/POC for cloudEvents. Could insert them in other locations as well or differently label everything.
+	c, err := cloudevents.NewClientHTTP()
+	if err != nil {
+		log.Fatalf("failed to create client, %v", err)
+	}
+
+	// Create an Event.
+	event := cloudevents.NewEvent()
+	event.SetSource("sonobuoy")
+	event.SetType("sonobuoy.status")
+	event.SetData(cloudevents.ApplicationJSON, status)
+
+	// Set a target.
+	ctx := cloudevents.ContextWithTarget(context.Background(), "http://localhost:8080/")
+
+	// Send that Event.
+	if result := c.Send(ctx, event); cloudevents.IsUndelivered(result) {
+		log.Fatalf("failed to send, %v", result)
+	}
+
 	return nil
 }
 
