@@ -31,7 +31,7 @@ BUILD_IMAGE=golang:1.16
 AMD_IMAGE=gcr.io/distroless/static:nonroot
 ARM_IMAGE=gcr.io/distroless/static:nonroot-arm64
 WIN_IMAGE=mcr.microsoft.com/windows/servercore:1809
-TEST_IMAGE="sonobuoy/testimage:v0.1"
+TEST_IMAGE=testimage:v0.1
 
 unit_local() {
 	GODEBUG=x509ignoreCN=0 go test ${VERBOSE:+-v} -timeout 60s -coverprofile=coverage.txt -covermode=atomic $GOTARGET/cmd/... $GOTARGET/pkg/...
@@ -72,13 +72,8 @@ vet() {
     "CGO_ENABLED=0 go vet ${VERBOSE:+-v} -timeout 60s $GOTARGET/cmd/... $GOTARGET/pkg/..."
 }
 
-pre() {
-	wget https://github.com/estesp/manifest-tool/releases/download/v1.0.1/manifest-tool-linux-amd64 \
-        -O manifest-tool
-	chmod +x ./manifest-tool
-	echo "$DOCKERHUB_TOKEN" | docker login --username sonobuoybot --password-stdin
-}
-
+# Builds a container given the dockerfile and image name (not registry).
+# Dockerfiles typically generated via another method.
 build_container_dockerfile_image() {
 	docker build \
         -t "$REGISTRY/$2:$IMAGE_VERSION" \
@@ -89,6 +84,7 @@ build_container_dockerfile_image() {
 		.
 }
 
+# Generates a dockerfile given the os and arch (the 2 and only arguments).
 gen_dockerfile_for_os_arch(){
     if [ "$1" = "linux" ]; then
         if [ "$2" = "amd64" ]; then
@@ -116,27 +112,29 @@ gen_dockerfile_for_os_arch(){
     fi
 }
 
+# Builds the image given just the os, arch, and image name.
 build_container_os_arch_image(){
     gen_dockerfile_for_os_arch "$1" "$2"
     if [ "$1" = "windows" ]; then dockerfile=DockerfileWindows ; else dockerfile=Dockerfile ; fi
     build_container_dockerfile_image "$dockerfile-$2" "$3"
 }
 
+# Builds all linux images. Assumes binaries are available.
 linux_containers() {
 	for arch in "${LINUX_ARCH[@]}"; do
-        build_container_os_arch_image linux "$arch" sonobuoy
         build_container_os_arch_image linux "$arch" sonobuoy-"$arch"
         build_container_dockerfile_image Dockerfile-"$arch" sonobuoy-"$arch"
 	done
 }
 
+# Builds the windows images. Assumes binary is available.
 windows_containers() {
 	for arch in "${WIN_ARCH[@]}"; do
-        build_container_dockerfile_image DockerfileWindows-"$arch" sonobuoy
         build_container_dockerfile_image DockerfileWindows-"$arch" sonobuoy-win-"$arch"
 	done
 }
 
+# Builds a binary for a specific goos/goarch.
 build_binary_GOOS_GOARCH() {
 	LDFLAGS="-s -w -X $GOTARGET/pkg/buildinfo.Version=$GIT_VERSION -X $GOTARGET/pkg/buildinfo.GitSHA=$GIT_REF_LONG"
     args=(${VERBOSE:+-v} -ldflags "${LDFLAGS}" "$GOTARGET")
@@ -157,6 +155,7 @@ build_binary_GOOS_GOARCH() {
         go build -o build/"$1"/"$2"/"$BINARY" "${args[@]}" "$GOTARGET"
 }
 
+# Builds all linux and windows binaries.
 build_binaries() {
     for arch in "${LINUX_ARCH[@]}"; do
         build_binary_GOOS_GOARCH linux "$arch"
@@ -166,50 +165,49 @@ build_binaries() {
     done
 }
 
+# Builds sonobuoy using the local goos/goarch.
 native() {
     LDFLAGS="-s -w -X $GOTARGET/pkg/buildinfo.Version=$GIT_VERSION -X $GOTARGET/pkg/buildinfo.GitSHA=$GIT_REF_LONG"
     args=("${VERBOSE:+-v}" -ldflags "${LDFLAGS}" "$GOTARGET")
     CGO_ENABLED=0 GOOS="$HOST_GOOS" GOARCH="$HOST_GOARCH" go build -o sonobuoy "${args[@]}"
 }
 
+# Pushes sonobuoy images. Usually by branch/ref but by tag/latest if it is a new tag.
 push_images() {
-	docker push "$REGISTRY/$TARGET:$IMAGE_BRANCH"
-	docker push "$REGISTRY/$TARGET:$GIT_REF_SHORT"
-	if git describe --tags --exact-match >/dev/null 2>&1; then
-		docker tag "$REGISTRY/$TARGET:$IMAGE_VERSION" "$REGISTRY/$TARGET:$IMAGE_TAG"
-		docker tag "$REGISTRY/$TARGET:$IMAGE_VERSION" "$REGISTRY/$TARGET:latest"
-		docker push "$REGISTRY/$TARGET:$IMAGE_VERSION"
-		docker push "$REGISTRY/$TARGET:$IMAGE_TAG"
-		docker push "$REGISTRY/$TARGET:latest"
-	fi
+    for arch in "${LINUX_ARCH[@]}"; do
+        docker push "$REGISTRY/$TARGET-$arch:$IMAGE_BRANCH"
+        docker push "$REGISTRY/$TARGET-$arch:$GIT_REF_SHORT"
+    done
+    # Currently not building windows images.
+    #for arch in "${WIN_ARCH[@]}"; do
+    #    docker push "$REGISTRY/$TARGET-win-$arch:$IMAGE_BRANCH"
+    #    docker push "$REGISTRY/$TARGET-win-$arch:$GIT_REF_SHORT"
+    #done
 }
 
+# Generates the multi-os manifest for sonobuoy. First argument
+# is the tag for the manifest, 2nd is the image tags. 2nd value
+# defaults to GIT_REF_SHORT since that should always be pushed.
 gen_manifest_with_tag() {
-	mkdir -p build
-
-    if [ "$PUSH_WINDOWS" ]; then
-        sed -e "s|TAG|$1|g" \
-        -e "s|REGISTRY|$REGISTRY|g" \
-        -e 's/WIN_ONLY//g' \
-        manifest_spec.yaml.tmpl > ./build/manifest_spec.yaml;
-    else
-        echo 'PUSH_WINDOWS not set, not including Windows in manifest'
-        sed -e "s|TAG|$1|g" \
-        -e "s|REGISTRY|$REGISTRY|g" \
-        -e '/^WIN_ONLY/d' \
-        manifest_spec.yaml.tmpl > ./build/manifest_spec.yaml;
-    fi
+    imgTag="${2:-$GIT_REF_SHORT}"
+	docker manifest create \
+    "$REGISTRY/$TARGET:$1" \
+    --amend "$REGISTRY/$TARGET-amd64:$imgTag" \
+    --amend "$REGISTRY/$TARGET-arm64:$imgTag" 
 }
 
+# Pushes the multi-os manifest for sonobuoy; must be generated first.
 push_manifest_with_tag() {
     gen_manifest_with_tag "$1"
-	./manifest-tool push from-spec ./build/manifest_spec.yaml
+	docker manifest push "$REGISTRY/$TARGET:$1"
 }
 
-push() {
-	# Assumes you have the images built or loaded already. Not
-	# added as dependency due to having both Linux/Windows
-	# prereqs which can't be done on the same machine.
+# Pushes all images and the manifest.
+# Assumes you have the images built or loaded already. Not
+# added as dependency due to having both Linux/Windows
+# prereqs which can't be done on the same machine.
+gen_manifest_and_push_all() {
+	# Pushes the images first
     if [ "$PUSH_WINDOWS" ] ; then
         for arch in "${WIN_ARCH[@]}"; do
             push_images TARGET="sonobuoy-win-$arch"
@@ -221,20 +219,25 @@ push() {
         done
     fi
 
-	push_manifest_with_tag "$IMAGE_BRANCH"
-	push_manifest_with_tag "$GIT_REF_SHORT"
-
 	if git describe --tags --exact-match >/dev/null 2>&1 ; then
 		push_manifest_with_tag "$IMAGE_VERSION"
 		push_manifest_with_tag latest
 		push_manifest_with_tag "$IMAGE_TAG"
+        push_manifest_with_tag "$GIT_REF_SHORT"
+    else
+        push_manifest_with_tag "$GIT_REF_SHORT"
+        push_manifest_with_tag "$IMAGE_BRANCH"
 	fi
 }
 
+# Removes a given image from docker. Image name (not registry) should be the first
+# and only argument.
 remove-image() {
 	docker rmi -f "$(docker images "$REGISTRY/$1" -a -q)" || true
 }
 
+# Removes temp files, built images, etc so the next build and repo are
+# in a pristine state.
 clean() {
     # Best effort for clean; don't exit if failure.
     set +e
@@ -281,6 +284,7 @@ check-kind-env() {
 	echo --kube-root="$K8S_PATH" tagging as --image "$REGISTRY/kind-node:$KIND_K8S_TAG"
 }
 
+# Creates the kind cluster if it does not already exist.
 setup_kind_cluster(){
     if ! kind get clusters | grep -q "^$KIND_CLUSTER$"; then
         kind create cluster --name "$KIND_CLUSTER" --config kind-config.yaml
@@ -289,22 +293,32 @@ setup_kind_cluster(){
     fi
 }
 
-# High level function; composes functions above and additional functionality. Typically just used by CI.
-prepare_and_run_integration() {
-    clean
-    setup_kind_cluster
-    
-    # Build the test images
+# Builds the test image for integration tests.
+build_test_image(){
     (
         cd test/integration/testImage
         ./build.sh
     )
-    build_binaries
-    linux_containers
+}
 
-    # Load images into kind cluster. Assume sonobuoy images already built.
-    kind load docker-image --name "$KIND_CLUSTER" "$REGISTRY/$TARGET:$IMAGE_VERSION" || true
-    kind load docker-image --name "$KIND_CLUSTER" "$TEST_IMAGE"
+# Saves the images which we persist in CI and use for testing/publishing.
+save_images_to_tar(){
+    # testimage is always built for sonobuoy since it never gets really pushed anywhere.
+    docker save -o sonobuoyImages.tar "$REGISTRY/$TARGET-amd64" "$REGISTRY/$TARGET-arm64" sonobuoy/testimage
+}
 
-    VERBOSE=true SONOBUOY_CLI=../../build/linux/amd64/sonobuoy integration
+# Loads sonobuoy image and the testing image into the kind cluster. Generally use
+# the tar version instead.
+load_images_into_cluster(){
+    kind load docker-image --name $KIND_CLUSTER sonobuoy/$TARGET:$IMAGE_VERSION
+    kind load docker-image --name $KIND_CLUSTER sonobuoy/$TEST_IMAGE
+}
+
+# Loads the images from the tar file into the kind cluster for testing.
+load_images_from_tar_into_cluster(){
+    docker load -i $1
+    # Manifest doesn't get created until publishing, so just tag one locally for testing.
+    # Also tagging test image with sonobuoy repo in case the $REGISTRY is different for dev.
+    docker tag $REGISTRY/$TARGET-amd64:$IMAGE_VERSION sonobuoy/$TARGET:$IMAGE_VERSION
+    load_images_into_cluster
 }
