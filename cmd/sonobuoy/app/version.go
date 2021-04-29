@@ -68,7 +68,6 @@ func runVersion(cmd *cobra.Command, args []string) {
 }
 
 func getK8Sversion() (string, bool) {
-
 	if versionflags.kubecfg.String() != "" {
 		sbc, err := getSonobuoyClientFromKubecfg(versionflags.kubecfg)
 		if err != nil {
