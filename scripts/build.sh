@@ -9,5 +9,7 @@ set -o pipefail
 # Getting the scripts directory can be hard when dealing with sourcing bash files.
 # Github actions has this env var set already and locally you can just source the
 # build_func.sh yourself. This is just a best effort for local dev.
-GITHUB_WORKSPACE=${GITHUB_WORKSPACE:-$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)}
-source $GITHUB_WORKSPACE/scripts/build_funcs.sh
+GITHUB_WORKSPACE=${GITHUB_WORKSPACE:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}
+
+# shellcheck source=/dev/null
+source "$GITHUB_WORKSPACE"/scripts/build_funcs.sh

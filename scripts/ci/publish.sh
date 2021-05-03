@@ -9,11 +9,11 @@ if [ -z "$CIRCLECI" ]; then
 fi
 
 function image_push() {
-    echo ${DOCKERHUB_TOKEN} | docker login --username sonobuoybot --password-stdin
+    echo "${DOCKERHUB_TOKEN}" | docker login --username sonobuoybot --password-stdin
     make push
 }
 
-if [ ! -z "$CIRCLE_TAG" ]; then
+if [ -n "$CIRCLE_TAG" ]; then
     image_push
 else
     echo "CIRCLE_TAG not set, not running goreleaser"
