@@ -2,10 +2,13 @@
 
 set -x
 
-SCRIPTS_DIR="$( cd "$( dirname "$0" )" >/dev/null 2>&1 && pwd )"
-DIR=$(cd $SCRIPTS_DIR; cd ..; pwd)
-VERSION=$1
-TOC_NAME=$(echo ${VERSION}toc|sed s/\\./-/g)
+# Getting the scripts directory can be hard when dealing with sourcing bash files.
+# Github actions has this env var set already and locally you can just source the
+# build_func.sh yourself. This is just a best effort for local dev.
+GITHUB_WORKSPACE=${GITHUB_WORKSPACE:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}
+DIR="$(cd "$GITHUB_WORKSPACE" || exit; cd ..; pwd)"
+VERSION="$1"
+TOC_NAME="$(echo "${VERSION}"toc|sed s/\\./-/g)"
 
 read -r -d '' CONFIG_VERSION_BLOCK << EOM
   docs_latest: v.*
@@ -76,7 +79,7 @@ then
         echo "Should be called with version as first argument. No argument given, not creating docs."
 else
     docker run --rm \
-        -v ${DIR}:/root \
+        -v "${DIR}":/root \
         debian:stretch-slim \
         /bin/sh -c \
         "rm -rf /root/site/content/docs/${VERSION} && \

@@ -15,7 +15,7 @@ jobs:
           source ./scripts/build.sh; unit_local
   stress-test-linux:
     runs-on: ubuntu-latest
-    steps:
+    steps:      
       - uses: actions/checkout@v2
       - name: Run stress tests
         env:

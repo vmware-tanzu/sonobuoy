@@ -9,6 +9,14 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.31
+  bash-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Shellcheck
+        uses: azohra/shell-linter@v0.4.0
+        with:
+          severity: "error"
   go-mod-tidy:
     runs-on: ubuntu-latest
     steps:
