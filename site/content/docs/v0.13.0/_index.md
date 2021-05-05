@@ -59,7 +59,9 @@ tests, plugins, etc.
 
 ## Getting Started
 
-The browser-based [Sonobuoy Scanner tool][scanner] is the quickest way to get
+> Note: The Sonobuoy scanner has been deprecated and is no longer supported.
+
+The browser-based Sonobuoy Scanner tool is the quickest way to get
 started with Sonobuoy. Sonobuoy Scanner also provides a user-friendly way of
 viewing your scan results.
 
@@ -67,7 +69,6 @@ viewing your scan results.
 
 ![tarball overview screenshot][screenshot]
 
-[scanner]: https://scanner.heptio.com/
 [screenshot]: /img/scanner.png
 
 ## Using the CLI
