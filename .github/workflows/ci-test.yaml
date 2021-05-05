@@ -38,7 +38,7 @@ jobs:
             sonobuoyImages.tar
   stress-test-linux:
     runs-on: ubuntu-latest
-    steps:      
+    steps:
       - uses: actions/checkout@v2
       - name: Run stress tests
         env:
@@ -49,10 +49,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, unit-test-linux]
     steps:
-      - uses: actions/checkout@v2  
+      - uses: actions/checkout@v2
       - name: Prepare cluster for tests
         run: |
-          source ./scripts/build.sh; 
+          source ./scripts/build.sh;
           clean
           setup_kind_cluster
       - name: Download binaries and prebuilt images
@@ -78,6 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build, unit-test-linux, integration-test-on-kind, stress-test-linux]
     steps:
+      - uses: actions/checkout@v2
       - name: Download binaries and prebuilt images
         uses: actions/download-artifact@v2
         with:
