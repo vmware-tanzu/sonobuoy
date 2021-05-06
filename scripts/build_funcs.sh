@@ -34,17 +34,17 @@ WIN_IMAGE=mcr.microsoft.com/windows/servercore:1809
 TEST_IMAGE=testimage:v0.1
 
 unit_local() {
-	GODEBUG=x509ignoreCN=0 go test ${VERBOSE:+-v} -timeout 60s -coverprofile=coverage.txt -covermode=atomic $GOTARGET/cmd/... $GOTARGET/pkg/...
+	go test ${VERBOSE:+-v} -timeout 60s -coverprofile=coverage.txt -covermode=atomic $GOTARGET/cmd/... $GOTARGET/pkg/...
 }
 
 unit() {
 	docker run --rm -v "$(pwd)":$BUILDMNT -w $BUILDMNT $BUILD_IMAGE /bin/sh -c \
-    "GODEBUG=x509ignoreCN=0 go test ${VERBOSE:+-v} -timeout 60s -coverprofile=coverage.txt -covermode=atomic $GOTARGET/cmd/... $GOTARGET/pkg/..."
+    "go test ${VERBOSE:+-v} -timeout 60s -coverprofile=coverage.txt -covermode=atomic $GOTARGET/cmd/... $GOTARGET/pkg/..."
 }
 
 stress() {
 	docker run --rm -v "$(pwd)":$BUILDMNT -w $BUILDMNT $BUILD_IMAGE /bin/sh -c \
-    "GODEBUG=x509ignoreCN=0 go test ${VERBOSE:+-v} -timeout 60s -coverprofile=coverage.txt -covermode=atomic $GOTARGET/test/stress/..."
+    "go test ${VERBOSE:+-v} -timeout 60s -coverprofile=coverage.txt -covermode=atomic $GOTARGET/test/stress/..."
 }
 
 integration() {
@@ -56,7 +56,6 @@ integration() {
         -w "$BUILDMNT" \
         --env ARTIFACTS_DIR=/tmp/artifacts \
         --env SONOBUOY_CLI="$SONOBUOY_CLI" \
-        --env GODEBUG=x509ignoreCN=0 \
         --network host \
         "$BUILD_IMAGE" \
     go test ${VERBOSE:+-v} -timeout 3m -tags=integration "$GOTARGET"/test/integration/...

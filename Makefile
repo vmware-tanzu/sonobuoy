@@ -55,7 +55,7 @@ WIN_IMAGE ?= mcr.microsoft.com/windows/servercore:1809
 TESTARGS ?= $(VERBOSE_FLAG) -timeout 60s
 COVERARGS ?= -coverprofile=coverage.txt -covermode=atomic
 TEST_PKGS ?= $(GOTARGET)/cmd/... $(GOTARGET)/pkg/...
-TEST_CMD = GODEBUG=x509ignoreCN=0 go test $(TESTARGS)
+TEST_CMD = go test $(TESTARGS)
 TEST = $(TEST_CMD) $(COVERARGS) $(TEST_PKGS)
 
 INT_TEST_PKGS ?= $(GOTARGET)/test/integration/...
