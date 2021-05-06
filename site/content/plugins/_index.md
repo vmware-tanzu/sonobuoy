@@ -9,4 +9,4 @@ Sonobuoy was always designed to facilitate third-party plugins in order to accom
 
 Read more about the first Sonobuoy plugins [here][1].
 
-[1]: http://127.0.0.1:4000/cis-benchmark-plugin/
+[1]: https://sonobuoy.io/cis-benchmark-plugin/
