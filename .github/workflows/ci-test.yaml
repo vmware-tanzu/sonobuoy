@@ -17,11 +17,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Inspect builder
+        run: |
+          echo "Name:      ${{ steps.buildx.outputs.name }}"
+          echo "Endpoint:  ${{ steps.buildx.outputs.endpoint }}"
+          echo "Status:    ${{ steps.buildx.outputs.status }}"
+          echo "Flags:     ${{ steps.buildx.outputs.flags }}"
+          echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
       - name: Build binaries and images
         run: |
           source ./scripts/build.sh
           build_binaries
           linux_containers
+          windows_containers
           build_test_image
       - name: Save images to tar
         run: |
@@ -30,12 +49,9 @@ jobs:
       - name: Save artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: sonobuoy-binaries-images-${{ github.run_id }}
+          name: sonobuoy-build-${{ github.run_id }}
           path: |
-            build/linux/amd64/sonobuoy
-            build/linux/arm64/sonobuoy
-            build/windows/amd64/sonobuoy.exe
-            sonobuoyImages.tar
+            build
   stress-test-linux:
     runs-on: ubuntu-latest
     steps:
@@ -58,7 +74,8 @@ jobs:
       - name: Download binaries and prebuilt images
         uses: actions/download-artifact@v2
         with:
-          name: sonobuoy-binaries-images-${{ github.run_id }}
+          name: sonobuoy-build-${{ github.run_id }}
+          path: build
       - name: Ensure binaries are executable
         run: |
           chmod +x build/linux/amd64/sonobuoy
@@ -69,9 +86,11 @@ jobs:
           find ./build
       - name: Build test image, load images, and run tests
         run: |
-          source ./scripts/build.sh
-          load_images_from_tar_into_cluster sonobuoyImages.tar
+          docker load -i build/testimage-${{ github.run_id }}.tar
+          docker load -i build/linux/amd64/sonobuoy-img-linux-amd64-${{ github.run_id }}.tar
           docker image ls
+          source ./scripts/build.sh
+          load_test_images_into_cluster
           VERBOSE=true SONOBUOY_CLI=../../build/linux/amd64/sonobuoy integration
   push-images:
     if: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
@@ -82,17 +101,24 @@ jobs:
       - name: Download binaries and prebuilt images
         uses: actions/download-artifact@v2
         with:
-          name: sonobuoy-binaries-images-${{ github.run_id }}
+          name: sonobuoy-build-${{ github.run_id }}
+          path: build
+          # TODO: Load only what is needed
       - name: Load images and verify
         run: |
-          docker load -i sonobuoyImages.tar
-          docker images
+          docker load -i build/testimage.tar
+          docker load -i build/linux/amd64/sonobuoy-img-linux-amd64-${{ github.run_id }}.tar
+          docker load -i build/linux/arm64/sonobuoy-img-linux-arm64-${{ github.run_id }}.tar
+          docker image ls
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Push images
+        env:
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           source ./scripts/build.sh
           gen_manifest_and_push_all
