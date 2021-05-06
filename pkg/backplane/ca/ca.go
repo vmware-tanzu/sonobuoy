@@ -71,7 +71,7 @@ func NewAuthority() (*Authority, error) {
 	cert, err := auth.makeCert(privKey.Public(), func(cert *x509.Certificate) {
 		cert.IsCA = true
 		cert.KeyUsage = x509.KeyUsageCertSign
-		cert.Subject.CommonName = caName
+		cert.DNSNames = []string{caName}
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "couldn't create certificate authority root certificate")
@@ -82,7 +82,6 @@ func NewAuthority() (*Authority, error) {
 
 // makeCert takes a public key and a function to mutate the certificate template with updated parameters
 func (a *Authority) makeCert(pub crypto.PublicKey, mut func(*x509.Certificate)) (*x509.Certificate, error) {
-
 	serialNumber := a.nextSerial()
 	validFrom := time.Now()
 	tmpl := x509.Certificate{
@@ -189,7 +188,7 @@ func (a *Authority) MakeServerConfig(name string) (*tls.Config, error) {
 func (a *Authority) ClientKeyPair(name string) (*tls.Certificate, error) {
 	cert, err := a.makeLeafCert(func(cert *x509.Certificate) {
 		cert.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}
-		cert.Subject.CommonName = name
+		cert.DNSNames = []string{name}
 	})
 	return cert, errors.Wrap(err, "couldn't make client certificate")
 }
