@@ -4,7 +4,7 @@ This directory contains the code to build a Docker image which can be run as a S
 
 ## Prerequisites
 
-To build the image you need to have a Windows machine (or VM) available. One example of how to set up a Windows VM and utilize it as your Docker context in [StefanScherer/windows-docker-machine](https://github.com/StefanScherer/windows-docker-machine).
+The preferred method of building the image (when on a Mac or Linux machine) is to utilize `docker buildx` to build the Windows image. Alternatively, you can use a Windows machine (or VM). One example of how to set up a Windows VM and utilize it as your Docker context in [StefanScherer/windows-docker-machine](https://github.com/StefanScherer/windows-docker-machine).
 
 To run the plugin you need to have a Kubernetes cluster with Windows nodes. The Windows nodes should have the label `kubernetes.io/os=windows`. There are multiple ways to set up such a cluster; one example is to add a Windows node group to an EKS cluster as described on this [page](https://docs.aws.amazon.com/eks/latest/userguide/windows-support.html).
 
