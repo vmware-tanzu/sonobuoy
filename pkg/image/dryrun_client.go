@@ -17,8 +17,9 @@ limitations under the License.
 package image
 
 import (
-	"github.com/sirupsen/logrus"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 // DryRunClient is an implementation of Client that logs the image operations that would
@@ -65,7 +66,7 @@ gcr.io/kubernetes-e2e-test-images/kitten:1.0
 k8s.gcr.io/sig-storage/nfs-provisioner:v2.2.2
 `
 
-func (i DryRunClient) RunImage(image string, args ...string) ([]string, error) {
+func (i DryRunClient) RunImage(entrypoint string, image string, args ...string) ([]string, error) {
 	return strings.Split(v1_19_images, "\n"), nil
 }
 
