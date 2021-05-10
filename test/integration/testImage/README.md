@@ -5,4 +5,4 @@ This test image is meant to support our integration suite by easily producing va
 The various important components are:
  - the source code in the `src` directory
  - the static results files in the `resources` directory
- - the Dockerfile/Makefile in this parent directory
+ - the Dockerfile/build script in this parent directory
