@@ -161,7 +161,7 @@ func TestQuick(t *testing.T) {
 
 	checkStatusForPluginErrors(ctx, t, ns, "e2e", 0)
 	tb := mustDownloadTarball(ctx, t, ns)
-	tb = saveToArtifacts(t, tb)
+	tb = saveToArtifacts(t, tb, t.Name()+".tar.gz")
 
 	checkTarballPluginForErrors(t, tb, "e2e", 0)
 }
@@ -220,19 +220,24 @@ func checkTarballPluginForErrors(t *testing.T, tarball, plugin string, failCount
 	}
 }
 
-func saveToArtifacts(t *testing.T, p string) (newPath string) {
+func saveToArtifacts(t *testing.T, targetFile, newFilename string) (newPath string) {
 	artifactsDir := os.Getenv("ARTIFACTS_DIR")
 	if artifactsDir == "" {
-		t.Logf("Skipping saving artifact %v since ARTIFACTS_DIR is unset.", p)
-		return p
+		t.Logf("Skipping saving artifact %v since ARTIFACTS_DIR is unset.", targetFile)
+		return targetFile
 	}
 
-	artifactFile := filepath.Join(artifactsDir, filepath.Base(p))
-	origFile := filepath.Join(pwd(t), filepath.Base(p))
+	// Default to the same filename.
+	if newFilename == "" {
+		newFilename = targetFile
+	}
+
+	artifactFile := filepath.Join(artifactsDir, filepath.Base(newFilename))
+	origFile := filepath.Join(pwd(t), filepath.Base(targetFile))
 
 	if err := os.MkdirAll(artifactsDir, 0755); err != nil {
 		t.Logf("Error creating directory %v: %v", artifactsDir, err)
-		return p
+		return targetFile
 	}
 
 	var stdout, stderr bytes.Buffer
@@ -247,7 +252,7 @@ func saveToArtifacts(t *testing.T, p string) (newPath string) {
 	if err := cmd.Run(); err != nil {
 		t.Logf("Error saving tarball to artifacts directory: %v", err)
 		t.Logf("  stdout: %v stderr: %v", stdout.String(), stderr.String())
-		return p
+		return targetFile
 	}
 
 	t.Logf("Moved tarball from %q to %q for artifact preservation", origFile, artifactFile)
@@ -280,7 +285,7 @@ func TestManualResultsJob(t *testing.T) {
 	mustRunSonobuoyCommandWithContext(ctx, t, args)
 
 	tb := mustDownloadTarball(ctx, t, ns)
-	tb = saveToArtifacts(t, tb)
+	tb = saveToArtifacts(t, tb, t.Name()+".tar.gz")
 
 	// Retrieve the sonobuoy results file from the tarball
 	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tb, "job-manual")
@@ -304,7 +309,7 @@ func TestManualResultsDaemonSet(t *testing.T) {
 	mustRunSonobuoyCommandWithContext(ctx, t, args)
 
 	tb := mustDownloadTarball(ctx, t, ns)
-	tb = saveToArtifacts(t, tb)
+	tb = saveToArtifacts(t, tb, t.Name()+".tar.gz")
 
 	// Retrieve the sonobuoy results file from the tarball
 	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tb, "ds-manual")
@@ -333,7 +338,7 @@ func TestManualResultsWithNestedDetails(t *testing.T) {
 	mustRunSonobuoyCommandWithContext(ctx, t, args)
 
 	tb := mustDownloadTarball(ctx, t, ns)
-	tb = saveToArtifacts(t, tb)
+	tb = saveToArtifacts(t, tb, t.Name()+".tar.gz")
 
 	// Retrieve the sonobuoy results file from the tarball
 	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tb, "manual-with-arbitrary-details")

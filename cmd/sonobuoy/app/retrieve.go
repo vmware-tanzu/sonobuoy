@@ -41,8 +41,8 @@ var rcvFlags retrieveFlags
 
 func NewCmdRetrieve() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "retrieve [path]",
-		Short: "Retrieves the results of a sonobuoy run to a specified path",
+		Use:   "retrieve [target directory]",
+		Short: "Retrieves the results of a sonobuoy run to a specified path. Outputs the name of the downloaded file.",
 		Run:   retrieveResults,
 		Args:  cobra.MaximumNArgs(1),
 	}

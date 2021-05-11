@@ -1,18 +1,18 @@
 name: CI Test
 on: [push, pull_request]
 jobs:
-  unit-test-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.15
-      - name: Run unit tests
-        env:
-          VERBOSE: true
-        run: |
-          source ./scripts/build.sh; unit_local
+#  unit-test-linux:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: actions/setup-go@v2
+#        with:
+#          go-version: 1.15
+#      - name: Run unit tests
+#        env:
+#          VERBOSE: true
+#        run: |
+#          source ./scripts/build.sh; unit_local
   build:
     runs-on: ubuntu-latest
     steps:
@@ -61,41 +61,103 @@ jobs:
           VERBOSE: true
         run: |
           source ./scripts/build.sh; stress
-  integration-test-on-kind:
-    runs-on: ubuntu-latest
-    needs: [build, unit-test-linux]
+#  integration-test-on-kind:
+#    runs-on: ubuntu-latest
+#    needs: [build, unit-test-linux]
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Prepare cluster for tests
+#        run: |
+#          source ./scripts/build.sh;
+#          clean
+#          setup_kind_cluster
+#      - name: Download binaries and prebuilt images
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: sonobuoy-build-${{ github.run_id }}
+#          path: build
+#      - name: Ensure binaries are executable
+#        run: |
+#          chmod +x build/linux/amd64/sonobuoy
+#      - name: Show downloaded file info
+#        run: |
+#          pwd
+#          ls -lah
+#          find ./build
+#      - name: Build test image, load images, and run tests
+#        env:
+#          ARTIFACTS_DIR: ${{ runner.temp }}/artifacts
+#        run: |
+#          docker load -i build/testimage-${{ github.run_id }}.tar
+#          docker load -i build/linux/amd64/sonobuoy-img-linux-amd64-${{ github.run_id }}.tar
+#          docker image ls
+#          source ./scripts/build.sh
+#          load_test_images_into_cluster
+#          VERBOSE=true SONOBUOY_CLI=../../build/linux/amd64/sonobuoy integration
+#      - name: Save artifacts
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: integration-artifacts-${{ github.run_id }}
+#          path: |
+#            ${{ runner.temp }}/artifacts
+  windows-tests:
+    runs-on: windows-latest
+#    needs: [integration-test-on-kind]
+    needs: [build]
+#    defaults:
+#      run:
+#        shell: bash
     steps:
       - uses: actions/checkout@v2
-      - name: Prepare cluster for tests
-        run: |
-          source ./scripts/build.sh;
-          clean
-          setup_kind_cluster
       - name: Download binaries and prebuilt images
+        id: download
         uses: actions/download-artifact@v2
         with:
           name: sonobuoy-build-${{ github.run_id }}
           path: build
-      - name: Ensure binaries are executable
-        run: |
-          chmod +x build/linux/amd64/sonobuoy
+#      - name: Download binaries and prebuilt images
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: integration-artifacts-${{ github.run_id }}
+#          path: artifacts
       - name: Show downloaded file info
         run: |
-          pwd
-          ls -lah
-          find ./build
-      - name: Build test image, load images, and run tests
+          tree ${{ steps.download.outputs.download-path }} /f /a
+      - name: Run tests
+        continue-on-error: true
+        env:
+          ARTIFACTS_DIR: ${{ runner.temp }}/artifacts
         run: |
-          docker load -i build/testimage-${{ github.run_id }}.tar
-          docker load -i build/linux/amd64/sonobuoy-img-linux-amd64-${{ github.run_id }}.tar
+          cd ${{ steps.download.outputs.download-path }}\windows\amd64\1809;
+          echo "Getting tree";
+          tree /f /a;
+          $IMG_LOAD_OUTPUT = docker load -q -i sonobuoy-img-win-amd64-1809-${{ github.run_id }}.tar
+          $IMG_ID = $IMG_LOAD_OUTPUT.Substring(17)
+          echo $IMG_LOAD_OUTPUT;
+          echo $IMG_ID;
           docker image ls
-          source ./scripts/build.sh
-          load_test_images_into_cluster
-          VERBOSE=true SONOBUOY_CLI=../../build/linux/amd64/sonobuoy integration
+          docker tag $IMG_ID sonobuoy/sonobuoy:latest
+          docker image ls
+          docker version
+          docker run --pull=never --rm sonobuoy/sonobuoy sonobuoy.exe version
+          docker run --pull=never --rm sonobuoy/sonobuoy sonobuoy.exe --help
+      - name: check on next step
+        continue-on-error: true
+        run: |
+          docker image ls;
+          docker run --pull=never --rm sonobuoy/sonobuoy sonobuoy.exe version;
+          docker run --pull=never --rm sonobuoy/sonobuoy sonobuoy.exe --help;
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: integration-artifacts-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/artifacts
   push-images:
     if: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
-    needs: [build, unit-test-linux, integration-test-on-kind, stress-test-linux]
+#    needs: [build, unit-test-linux, integration-test-on-kind, stress-test-linux]
+    needs: [windows-tests]
     steps:
       - uses: actions/checkout@v2
       - name: Download binaries and prebuilt images

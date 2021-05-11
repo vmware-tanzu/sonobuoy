@@ -8,12 +8,13 @@ BINARY=sonobuoy
 TARGET=sonobuoy
 GOTARGET=github.com/vmware-tanzu/"$TARGET"
 GOPATH=$(go env GOPATH)
-REGISTRY=sonobuoy
+REGISTRY=schnake
 LINUX_ARCH=(amd64 arm64)
 
 # Currently only under a single arch, can iterate over these and still assume arch value.
 WIN_ARCH=amd64
-WINVERSIONS=("1809" "1903" "1909" "2004" "20H2")
+#WINVERSIONS=("1809" "1903" "1909" "2004" "20H2")
+WINVERSIONS=("1809")
 
 # Not used for pushing images, just for local building on other GOOS. Defaults to
 # grabbing from the local go env but can be set manually to avoid that requirement.
@@ -52,7 +53,7 @@ stress() {
 integration() {
     docker run --rm \
         -v "$(pwd)":$BUILDMNT \
-        -v /tmp/artifacts:/tmp/artifacts \
+        -v "${ARTIFACTS_DIR}":/tmp/artifacts \
         -v "${HOME}"/.kube/config:/root/.kube/kubeconfig \
         --env KUBECONFIG=/root/.kube/kubeconfig \
         -w "$BUILDMNT" \
@@ -182,7 +183,7 @@ build_binaries() {
 # Builds sonobuoy using the local goos/goarch.
 native() {
     LDFLAGS="-s -w -X $GOTARGET/pkg/buildinfo.Version=$GIT_VERSION -X $GOTARGET/pkg/buildinfo.GitSHA=$GIT_REF_LONG"
-    args=("${VERBOSE:+-v}" -ldflags "${LDFLAGS}" "$GOTARGET")
+    args=(-ldflags "${LDFLAGS}" "$GOTARGET")
     CGO_ENABLED=0 GOOS="$HOST_GOOS" GOARCH="$HOST_GOARCH" go build -o sonobuoy "${args[@]}"
 }
 

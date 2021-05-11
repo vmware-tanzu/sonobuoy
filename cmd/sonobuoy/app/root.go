@@ -22,7 +22,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 
 	"github.com/spf13/cobra"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 func NewSonobuoyCommand() *cobra.Command {
