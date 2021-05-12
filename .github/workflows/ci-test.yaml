@@ -106,7 +106,6 @@ jobs:
           # TODO: Load only what is needed
       - name: Load images and verify
         run: |
-          docker load -i build/testimage.tar
           docker load -i build/linux/amd64/sonobuoy-img-linux-amd64-${{ github.run_id }}.tar
           docker load -i build/linux/arm64/sonobuoy-img-linux-arm64-${{ github.run_id }}.tar
           docker image ls
