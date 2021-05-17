@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASEIMAGE
-FROM ${BASEIMAGE}
+ARG VERSION
+FROM mcr.microsoft.com/windows/servercore:$VERSION as core
+FROM mcr.microsoft.com/windows/nanoserver:$VERSION
+COPY --from=core /Windows/System32/netapi32.dll /Windows/System32/netapi32.dll
 
 ADD build/windows/amd64/sonobuoy.exe /sonobuoy.exe
 WORKDIR /
