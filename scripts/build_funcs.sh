@@ -85,13 +85,12 @@ build_container_dockerfile_arch() {
 }
 
 buildx_container_windows_version(){
-    BASEIMAGE="$WIN_AMD64_BASEIMAGE:$1"
     mkdir -p "build/windows/$WIN_ARCH/$VERSION"
     docker buildx build --pull \
         --output=type=oci,dest=build/windows/$WIN_ARCH/$VERSION/sonobuoy-img-win-$WIN_ARCH-$VERSION-$GITHUB_RUN_ID.tar \
         --platform windows/amd64 \
         -t $REGISTRY/$TARGET:win-$WIN_ARCH-$VERSION-$IMAGE_VERSION \
-        --build-arg BASEIMAGE=$BASEIMAGE \
+        --build-arg VERSION=$1 \
         -f build/windows/$WIN_ARCH/Dockerfile \
         .
 }
