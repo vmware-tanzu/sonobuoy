@@ -24,7 +24,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -34,11 +33,11 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	pluginaggregation "github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
+	"github.com/vmware-tanzu/sonobuoy/pkg/tarball"
 
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
-	"github.com/viniciuschiele/tarx"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -81,8 +80,8 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// 1. Create the directory which will store the results, including the
 	// `meta` directory inside it (which we always need regardless of
 	// config)
-	outpath := path.Join(cfg.ResultsDir, cfg.UUID)
-	metapath := path.Join(outpath, MetaLocation)
+	outpath := filepath.Join(cfg.ResultsDir, cfg.UUID)
+	metapath := filepath.Join(outpath, MetaLocation)
 	err = os.MkdirAll(metapath, 0755)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create directory to store results"))
@@ -92,7 +91,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// Write logs to the configured results location. All log levels
 	// should write to the same log file
 	pathmap := make(lfshook.PathMap)
-	logfile := path.Join(metapath, "run.log")
+	logfile := filepath.Join(metapath, "run.log")
 	for _, level := range logrus.AllLevels {
 		pathmap[level] = logfile
 	}
@@ -135,7 +134,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 
 	// 3. Dump the config.json we used to run our test
 	if blob, err := json.Marshal(cfg); err == nil {
-		if err = ioutil.WriteFile(path.Join(metapath, "config.json"), blob, 0644); err != nil {
+		if err = ioutil.WriteFile(filepath.Join(metapath, "config.json"), blob, 0644); err != nil {
 			errlog.LogError(errors.Wrap(err, "could not write config.json file"))
 			return errCount + 1
 		}
@@ -209,7 +208,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 
 	// 6. Dump the query times
 	trackErrorsFor("recording query times")(
-		recorder.DumpQueryData(path.Join(metapath, "query-time.json")),
+		recorder.DumpQueryData(filepath.Join(metapath, "query-time.json")),
 	)
 
 	// 7. Clean up after the plugins
@@ -245,13 +244,14 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	blob, err := json.Marshal(runInfo)
 	trackErrorsFor("marshalling run info")(err)
 	if err == nil {
-		err = ioutil.WriteFile(path.Join(metapath, results.InfoFile), blob, 0644)
+		err = ioutil.WriteFile(filepath.Join(metapath, results.InfoFile), blob, 0644)
 		trackErrorsFor("saving" + results.InfoFile)(err)
 	}
 
 	// 8. tarball up results YYYYMMDDHHMM_sonobuoy_UID.tar.gz
-	tb := cfg.ResultsDir + "/" + t.Format("200601021504") + "_sonobuoy_" + cfg.UUID + ".tar.gz"
-	err = tarx.Compress(tb, outpath, &tarx.CompressOptions{Compression: tarx.Gzip})
+	filename := fmt.Sprintf("%v_sonobuoy_%v.tar.gz", t.Format("200601021504"), cfg.UUID)
+	tb := filepath.Join(cfg.ResultsDir, filename)
+	err = tarball.DirToTarball(outpath, tb, true)
 	if err == nil {
 		defer os.RemoveAll(outpath)
 	}

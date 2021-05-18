@@ -29,7 +29,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.4.0
-	github.com/viniciuschiele/tarx v0.0.0-20151205142357-6e3da540444d
 	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	gopkg.in/yaml.v2 v2.2.8

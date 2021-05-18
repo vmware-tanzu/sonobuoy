@@ -19,7 +19,7 @@ package discovery
 import (
 	"context"
 	"os"
-	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
@@ -149,9 +149,9 @@ func QueryResources(
 	}
 
 	// 1. Create the parent directory we will use to store the results
-	outdir := path.Join(cfg.OutputDir(), ClusterResourceLocation)
+	outdir := filepath.Join(cfg.OutputDir(), ClusterResourceLocation)
 	if ns != nil {
-		outdir = path.Join(cfg.OutputDir(), NSResourceLocation, *ns)
+		outdir = filepath.Join(cfg.OutputDir(), NSResourceLocation, *ns)
 	}
 
 	if err := os.MkdirAll(outdir, 0755); err != nil {
@@ -189,7 +189,7 @@ func QueryResources(
 
 		query := func() (time.Duration, error) {
 			return timedListQuery(
-				outdir+"/",
+				outdir,
 				groupText+"_"+gvr.Version+"_"+gvr.Resource+".json",
 				lister,
 			)

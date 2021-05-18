@@ -33,10 +33,10 @@ import (
 	"time"
 
 	"github.com/kylelemons/godebug/pretty"
-	"github.com/viniciuschiele/tarx"
 	"github.com/vmware-tanzu/sonobuoy/pkg/backplane/ca/authtest"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	pluginutils "github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/utils"
+	"github.com/vmware-tanzu/sonobuoy/pkg/tarball"
 )
 
 func TestAggregation(t *testing.T) {
@@ -491,7 +491,7 @@ func makeTarWithContents(t *testing.T, filename string, fileContents []byte) (ta
 		return
 	}
 
-	err = tarx.Compress(tarfile, tardir, &tarx.CompressOptions{Compression: tarx.Gzip})
+	err = tarball.DirToTarball(tardir, tarfile, true)
 	if err != nil {
 		t.Fatalf("Could not create tar file %v: %v", tarfile, err)
 		return
