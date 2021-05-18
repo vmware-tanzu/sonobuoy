@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -131,7 +132,7 @@ func TestDecodeTarball(t *testing.T) {
 				t.Fatalf("Unexpected error %v", err)
 			}
 
-			contents, err := ioutil.ReadFile(path.Join(dir, dirName, fileName))
+			contents, err := ioutil.ReadFile(filepath.Join(dir, dirName, fileName))
 			if err != nil {
 				t.Fatalf("Unexpected error %v", err)
 			}
@@ -139,7 +140,7 @@ func TestDecodeTarball(t *testing.T) {
 			if !reflect.DeepEqual(contents, testData) {
 				t.Errorf("Expected %s, got %s", testData, contents)
 			}
-			contents, err = ioutil.ReadFile(path.Join(dir, dirName, symLinkName))
+			contents, err = ioutil.ReadFile(filepath.Join(dir, dirName, symLinkName))
 			if err != nil {
 				t.Fatalf("Unexpected error %v", err)
 			}
