@@ -36,7 +36,7 @@ const (
 
 func TestResolveConfig(t *testing.T) {
 	defaultPluginSearchPath := config.New().PluginSearchPath
-	defaultAggr := plugin.AggregationConfig{TimeoutSeconds: 10800}
+	defaultAggr := plugin.AggregationConfig{TimeoutSeconds: 21600}
 	dynamicConfigFileName := "*determinedAtRuntime*"
 
 	tcs := []struct {
@@ -90,7 +90,7 @@ func TestResolveConfig(t *testing.T) {
 				Aggregation: plugin.AggregationConfig{
 					BindAddress:    "10.0.0.1",
 					BindPort:       config.DefaultAggregationServerBindPort,
-					TimeoutSeconds: 10800,
+					TimeoutSeconds: 21600,
 				},
 				PluginSearchPath: defaultPluginSearchPath,
 				Resources:        config.DefaultResources,

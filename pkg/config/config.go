@@ -43,7 +43,7 @@ const (
 	// DefaultAggregationServerBindAddress is the default address for the aggregation server to bind to.
 	DefaultAggregationServerBindAddress = "0.0.0.0"
 	// DefaultAggregationServerTimeoutSeconds is the default amount of time the aggregation server will wait for all plugins to complete.
-	DefaultAggregationServerTimeoutSeconds = 10800 // 180 min
+	DefaultAggregationServerTimeoutSeconds = 21600 // 360 min
 	// AggregatorPodName is the name of the main pod that runs plugins and collects results.
 	AggregatorPodName = "sonobuoy"
 	// AggregatorContainerName is the name of the main container in the aggregator pod.
