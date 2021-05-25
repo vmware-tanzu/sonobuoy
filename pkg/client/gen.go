@@ -30,6 +30,7 @@ import (
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	manifesthelper "github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest/helper"
 	"github.com/vmware-tanzu/sonobuoy/pkg/templates"
@@ -313,6 +314,10 @@ func E2EManifest(cfg *GenConfig) *manifest.Manifest {
 			},
 		},
 	}
+	m.PodSpec = &manifest.PodSpec{
+		PodSpec: driver.DefaultPodSpec(m.SonobuoyConfig.Driver),
+	}
+	m.PodSpec.PodSpec.NodeSelector = map[string]string{"kubernetes.io/os": "linux"}
 
 	// Add volume mount, volume, and env var for custom registries.
 	if len(cfg.E2EConfig.CustomRegistries) > 0 {

@@ -53,6 +53,11 @@ type GenPluginDefConfig struct {
 	// Allows validation during flag parsing by having a custom type.
 	driver pluginDriver
 
+	// nodeSelector is the node selectors to put into the podSpec for the plugin.
+	// Separate field here since the default podSpec is nil but we also have to deal
+	// with defaults. Easy to reconcile this way.
+	nodeSelector map[string]string
+
 	// If set, the default pod spec used by Sonobuoy will be included in the output
 	showDefaultPodSpec bool
 }
@@ -87,6 +92,11 @@ func NewCmdGenPluginDef() *cobra.Command {
 	genPluginSet.StringVarP(
 		&genPluginOpts.def.SonobuoyConfig.ResultFormat, "format", "f", results.ResultFormatRaw,
 		"Result format (junit or raw)",
+	)
+
+	genPluginSet.StringToStringVar(
+		&genPluginOpts.nodeSelector, "node-selector", nil,
+		`Node selector for the plugin (key=value). Usually set to specify OS via kubernetes.io/os=windows. Can be set multiple times.`,
 	)
 
 	genPluginSet.StringVarP(
@@ -166,6 +176,14 @@ func genPluginDef(cfg *GenPluginDefConfig) ([]byte, error) {
 		cfg.def.PodSpec = &manifest.PodSpec{
 			PodSpec: driver.DefaultPodSpec(cfg.def.SonobuoyConfig.Driver),
 		}
+	}
+
+	if cfg.nodeSelector != nil {
+		// Initialize podSpec first
+		if cfg.def.PodSpec == nil {
+			cfg.def.PodSpec = &manifest.PodSpec{}
+		}
+		cfg.def.PodSpec.NodeSelector = cfg.nodeSelector
 	}
 
 	yaml, err := kuberuntime.Encode(manifest.Encoder, &cfg.def)

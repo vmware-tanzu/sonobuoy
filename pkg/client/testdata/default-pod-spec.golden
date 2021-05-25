@@ -29,6 +29,8 @@ data:
   plugin-0.yaml: |
     podSpec:
       containers: []
+      nodeSelector:
+        kubernetes.io/os: linux
       restartPolicy: Never
       serviceAccountName: sonobuoy-serviceaccount
       tolerations:
