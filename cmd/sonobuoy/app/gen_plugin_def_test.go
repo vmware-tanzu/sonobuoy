@@ -101,6 +101,32 @@ func TestPluginGenDef(t *testing.T) {
 				},
 			},
 			expectFile: "testdata/pluginDef-default-podspec.golden",
+		}, {
+			desc: "nodeSelectors works if default PodSpec is requested",
+			cfg: GenPluginDefConfig{
+				showDefaultPodSpec: true,
+				nodeSelector:       map[string]string{"foo": "bar", "kubernetes.io/os": "windows"},
+				def: manifest.Manifest{
+					SonobuoyConfig: manifest.SonobuoyConfig{
+						PluginName: "n",
+					},
+					Spec: manifest.Container{},
+				},
+			},
+			expectFile: "testdata/pluginDef-nodeselector-default-podspec.golden",
+		}, {
+			desc: "nodeSelectors works if default PodSpec is not requested",
+			cfg: GenPluginDefConfig{
+				showDefaultPodSpec: true,
+				nodeSelector:       map[string]string{"foo": "bar", "kubernetes.io/os": "windows"},
+				def: manifest.Manifest{
+					SonobuoyConfig: manifest.SonobuoyConfig{
+						PluginName: "n",
+					},
+					Spec: manifest.Container{},
+				},
+			},
+			expectFile: "testdata/pluginDef-nodeselector.golden",
 		},
 	}
 	for _, tC := range testCases {

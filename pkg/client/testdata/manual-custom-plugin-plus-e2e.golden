@@ -27,6 +27,20 @@ metadata:
 apiVersion: v1
 data:
   plugin-0.yaml: |
+    podSpec:
+      containers: []
+      nodeSelector:
+        kubernetes.io/os: linux
+      restartPolicy: Never
+      serviceAccountName: sonobuoy-serviceaccount
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: kubernetes.io/e2e-evict-taint-key
+        operator: Exists
     sonobuoy-config:
       driver: Job
       plugin-name: e2e
