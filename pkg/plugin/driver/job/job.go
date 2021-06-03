@@ -136,12 +136,6 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, own
 		podSpec.Volumes = append(podSpec.Volumes, v.Volume)
 	}
 
-	// Default for jobs to run on linux. If a plugin can run on Windows (the more rare case)
-	// they should specify it in their podSpec. This should avoid more problems than it creates.
-	podSpec.NodeSelector = map[string]string{
-		"kubernetes.io/os": "linux",
-	}
-
 	pod.Spec = podSpec
 	return pod
 }

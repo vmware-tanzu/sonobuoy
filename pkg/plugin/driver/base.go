@@ -276,6 +276,12 @@ func defaultJobPodSpec() v1.PodSpec {
 			},
 		},
 		Volumes: []v1.Volume{},
+
+		// Default for jobs to run on linux. If a plugin can run on Windows (the more rare case)
+		// they should specify it in their podSpec. This should avoid more problems than it creates.
+		NodeSelector: map[string]string{
+			"kubernetes.io/os": "linux",
+		},
 	}
 }
 

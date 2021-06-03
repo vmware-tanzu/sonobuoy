@@ -212,6 +212,10 @@ func TestCreatePodDefinitionUsesDefaultPodSpec(t *testing.T) {
 	if actualNumTolerations != expectedNumTolerations {
 		t.Errorf("expected pod spec to %v tolerations, got %v", expectedNumTolerations, actualNumTolerations)
 	}
+
+	if len(pod.Spec.NodeSelector) != 1 || pod.Spec.NodeSelector["kubernetes.io/os"] != "linux" {
+		t.Errorf("Expected node selector kubernetes.io/os:linux but got %v", pod.Spec.NodeSelector)
+	}
 }
 
 func TestCreatePodDefinitionUsesProvidedPodSpec(t *testing.T) {
@@ -226,7 +230,10 @@ func TestCreatePodDefinitionUsesProvidedPodSpec(t *testing.T) {
 			},
 		},
 		PodSpec: &manifest.PodSpec{
-			PodSpec: corev1.PodSpec{ServiceAccountName: expectedServiceAccountName},
+			PodSpec: corev1.PodSpec{
+				ServiceAccountName: expectedServiceAccountName,
+				NodeSelector:       map[string]string{"foo": "bar"},
+			},
 		},
 	}
 	testPlugin := NewPlugin(m, expectedNamespace, expectedImageName, "Always", "image-pull-secret", map[string]string{})
@@ -240,7 +247,10 @@ func TestCreatePodDefinitionUsesProvidedPodSpec(t *testing.T) {
 
 	if pod.Spec.ServiceAccountName != expectedServiceAccountName {
 		t.Errorf("expected pod spec to have provided service account name %q, got %q", expectedServiceAccountName, pod.Spec.ServiceAccountName)
+	}
 
+	if len(pod.Spec.NodeSelector) != 1 || pod.Spec.NodeSelector["foo"] != "bar" {
+		t.Errorf("Expected node selector foo:bar but got %v", pod.Spec.NodeSelector)
 	}
 }
 

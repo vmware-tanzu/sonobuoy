@@ -1,5 +1,7 @@
 podSpec:
   containers: []
+  nodeSelector:
+    kubernetes.io/os: linux
   restartPolicy: Never
   serviceAccountName: sonobuoy-serviceaccount
   tolerations:
