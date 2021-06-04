@@ -148,6 +148,48 @@ func TestSimpleRun(t *testing.T) {
 	mustRunSonobuoyCommandWithContext(ctx, t, args)
 }
 
+func TestRetrieveAndExtract(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	ns, cleanup := getNamespace(t)
+	defer cleanup()
+
+	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-passing-singlefile.yaml -n %v", ns)
+	mustRunSonobuoyCommandWithContext(ctx, t, args)
+
+	// Create tmpdir and extract contents into it
+	tmpdir, err := ioutil.TempDir("", "TestRetrieveAndExtract")
+	if err != nil {
+		t.Fatal("Failed to create tmp dir")
+	}
+	defer os.RemoveAll(tmpdir)
+	args = fmt.Sprintf("retrieve %v -n %v --extract", tmpdir, ns)
+	mustRunSonobuoyCommandWithContext(ctx, t, args)
+
+	// Check that the files are there. Lots of ways to test this but I'm simply going to check that we have
+	// a "lot" of files.
+	files := []string{}
+	err = filepath.Walk(tmpdir,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			files = append(files, path)
+			return nil
+		})
+	if err != nil {
+		t.Fatalf("Failed to walk path to check: %v", err)
+	}
+
+	// Verbose logging here in case we want to just see if certain files were found. Can remove
+	// this and just log on error if it is too much.
+	t.Logf("Extracted files:\n%v", strings.Join(files, "\n\t-"))
+	if len(files) < 20 {
+		t.Errorf("Expected many files to be extracted into %v, but only got %v", tmpdir, len(files))
+	}
+}
+
 // TestQuick runs a real "--mode quick" check against the cluster to ensure that it passes.
 func TestQuick(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
