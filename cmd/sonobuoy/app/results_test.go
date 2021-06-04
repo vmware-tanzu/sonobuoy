@@ -17,7 +17,43 @@ package app
 
 import (
 	"path/filepath"
+	"testing"
 )
+
+func TestGetFileFromMeta(t *testing.T) {
+	tcs := []struct {
+		desc     string
+		input    map[string]string
+		expected string
+	}{
+		{
+			desc:     "Nil map",
+			input:    nil,
+			expected: "",
+		}, {
+			desc:     "Empty",
+			input:    map[string]string{},
+			expected: "",
+		}, {
+			desc:     "File with slash",
+			input:    map[string]string{"file": "a/b/c"},
+			expected: "a/b/c",
+		}, {
+			desc:     "File with windows seperators",
+			input:    map[string]string{"file": `a\b\c`},
+			expected: "a/b/c",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			out := getFileFromMeta(tc.input)
+			if out != tc.expected {
+				t.Errorf("Expected %v but got %v", tc.expected, out)
+			}
+		})
+	}
+}
 
 func ExampleNewCmdResults() {
 	cmd := NewCmdResults()
