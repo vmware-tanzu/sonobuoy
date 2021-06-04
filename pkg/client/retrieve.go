@@ -43,6 +43,15 @@ var (
 	}
 )
 
+type DeletionError struct {
+	filename string
+	err      error
+}
+
+func (d *DeletionError) Error() string {
+	return errors.Wrapf(d.err, "failed to delete file %q", d.filename).Error()
+}
+
 // RetrieveResults copies results from a sonobuoy run into a Reader in tar format.
 // It also returns a channel of errors, where any errors encountered when writing results
 // will be sent, and an error in the case where the config validation fails.
@@ -208,6 +217,27 @@ func UntarAll(reader io.Reader, destFile, prefix string) (filenames []string, re
 		return filenames, errors.New(errInfo)
 	}
 	return filenames, nil
+}
+
+// UntarFile untars the file, filename, into the given destination directory with the given prefix. If delete
+// is true, it deletes the original file after extraction.
+func UntarFile(filename string, destination string, delete bool) error {
+	f, err := os.Open(filename)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open file %q for extraction after downloading it", filename)
+	}
+	defer f.Close()
+
+	_, err = UntarAll(f, destination, "")
+	if err != nil {
+		return errors.Wrapf(err, "failed to extract file %q after downloading it", filename)
+	}
+	if err := os.Remove(filename); err != nil {
+		// Returning a specific type of error so that consumers can ignore if desired. The file did
+		// get untar'd successfully and so this error has less significance.
+		return &DeletionError{filename: filename, err: err}
+	}
+	return nil
 }
 
 // dirExists checks if a path exists and is a directory.

@@ -390,3 +390,11 @@ func AddDryRunFlag(flag *bool, flags *pflag.FlagSet) {
 func AddNodeSelectorsFlag(p *NodeSelectors, flags *pflag.FlagSet) {
 	flags.Var(p, "aggregator-node-selector", "Node selectors to add to the aggregator. Values can be given multiple times and are in the form key:value")
 }
+
+// AddExtractFlag adds a boolean flag to extract results instead of just downloading the tarball.
+func AddExtractFlag(flag *bool, flags *pflag.FlagSet) {
+	flags.BoolVarP(
+		flag, "extract", "x", false,
+		"If true, extracts the results instead of just downloading the results",
+	)
+}
