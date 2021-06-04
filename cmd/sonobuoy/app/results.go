@@ -44,6 +44,8 @@ const (
 
 	// resultModeDump will just copy the post-processed yaml file to stdout.
 	resultModeDump = "dump"
+
+	windowsSeperator = `\`
 )
 
 type resultsInput struct {
@@ -313,9 +315,19 @@ func walkForSummary(result *results.Item, statusCounts map[string]int, failList 
 	return statusCounts, failList
 }
 
+// getFileFromMeta pulls the file out of the given metadata but also
+// converts it to a slash-based-seperator since that is what is internal
+// to the tar file. The metadata is written by the node and so may use
+// Windows seperators.
 func getFileFromMeta(m map[string]string) string {
 	if m == nil {
 		return ""
 	}
-	return m["file"]
+	return toSlash(m["file"])
+}
+
+// toSlash is a (for our purpose) an improved version of filepath.ToSlash which ignores the
+// current OS seperator and simply converts all windows `\` to `/`.
+func toSlash(path string) string {
+	return strings.ReplaceAll(path, string(windowsSeperator), "/")
 }
