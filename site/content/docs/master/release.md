@@ -13,19 +13,6 @@ Ensure the upstream conformance script is working appropriately:
   * Update the `kind-config.yaml` file with the new image version [here](https://github.com/vmware-tanzu/sonobuoy/blob/master/kind-config.yaml).
   * Run conformance tests
 
-### Setup e2e image registry for new version
-We have [opened an ongoing issue upstream](https://github.com/kubernetes/kubernetes/issues/96475) to make this more elegant.
-Until then, ensuring the registry list did not grow from previous release is somewhat manual.
-
-The important file to keep an eye on is [`test/utils/image/manifest.go` in kubernetes/kubernetes](https://github.com/kubernetes/kubernetes/blob/master/test/utils/image/manifest.go), ensuring the `RegistryList` struct has not changed since previous release.
-
-If you have a local copy of kubernetes/kubernetes repository, here's a quick way to achieve the above:
-  * Ensure that you have kubernetes/kubernetes in one of your remotes (i.e. `git remote -v` and make sure you have more than just your fork)
-  * Ensure you have the recent tags pulled in (i.e. `git fetch --all` or equivalent)
-  * Run `git diff OLD_TAG NEW_TAG -- test/utils/image/manifest.go`
-
-In the event that there are modifications to `RegistryList`, new fields need to be added to [our copy of `RegistryList` in `pkg/image/manifest.go`](https://github.com/vmware-tanzu/sonobuoy/tree/master/pkg/image/manifest.go) while removed fields need to stay for backwards compatibility reasons (e.g. newer version of Sonobuoy running on an older version of Kubernetes).
-
 ## Updating the versioned docs
 Explicit doc changes (if any) should be made to the appropriate files in directory `site/docs/master`.
 
@@ -98,7 +85,7 @@ This step will tag the code and triggers a release.
 
 
 ## Release Validation
-1. Open a browser tab and go to: https://circleci.com/gh/vmware-tanzu/sonobuoy and verify go releaser for tag v0.x.y completes successfully.
+1. Open a browser tab and go to: https://https://github.com/vmware-tanzu/sonobuoy/actions and verify go releaser for tag v0.x.y completes successfully.
 1. Upon successful completion of build job above, check the [releases tab of Sonobuoy](https://github.com/vmware-tanzu/sonobuoy/releases) and verify the artifacts and changelog were published correctly.
 1. Run the following command to make sure the image was pushed correctly to [Docker Hub][dockerhub]:
 
@@ -132,19 +119,3 @@ This step will tag the code and triggers a release.
 
 [gendocs]: #generating-a-new-set-of-versioned-docs
 [dockerhub]: https://cloud.docker.com/u/sonobuoy/repository/docker/sonobuoy/sonobuoy/tags
-
-2. If you are building a Windows release you must currently build/push the Windows image outside of CI and push the manifest to also include it. To do this you must:
-
- - Have built the Windows binaries (can be done on a Linux box and should be the default now)
- - Have a Windows machine available for the build. The steps below will assume a `docker context` which is a Windows machine.
- - (Recommended) Build the sample Windows plugin (in our examples directory) to test the image
- - (Recommended) Have a cluster with Windows available for testing
-
-```
-docker context use default
-make build/windows/amd64/sonobuoy.exe
-docker context use 2019-box
-make windows_containers
-PUSH_WINDOWS=true make push
-
-```
