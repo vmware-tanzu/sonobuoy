@@ -5,6 +5,7 @@
 # Below is a commented out example of what this may look like:
 
 master: master-toc
+v0.51.0: v0-51-0toc
 v0.50.0: v0-50-0toc
 v0.20.0: v0-20-0toc
 v0.19.0: v0-19-0toc

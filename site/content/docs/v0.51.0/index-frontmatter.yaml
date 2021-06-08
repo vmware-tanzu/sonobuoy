@@ -1,0 +1,6 @@
+---
+version: v0.51.0
+cascade:
+  layout: docs
+  gh: https://github.com/vmware-tanzu/sonobuoy/tree/v0.51.0
+---
