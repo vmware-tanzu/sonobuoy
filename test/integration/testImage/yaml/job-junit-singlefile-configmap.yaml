@@ -1,0 +1,24 @@
+config-map:
+  junit-via-configmap.xml: |
+    <testsuite name='test suite A' tests='3' failed='0' failures='0'>
+        <testcase name='test case 1' classname='this is the classname' target='local://' time='1.29e-05' />
+        <testcase name='test case 2' classname='this is the classname' target='local://' time='1.29e-05' />
+        <testcase name='test case 3' classname='this is the classname' target='local://' time='1.29e-05' />
+    </testsuite>
+sonobuoy-config:
+  driver: Job
+  plugin-name: job-junit-singlefile-configmap
+  result-format: junit
+spec:
+  args:
+  - single-file
+  - /tmp/sonobuoy/config/junit-via-configmap.xml
+  command:
+  - /testImage
+  image: sonobuoy/testimage:v0.1
+  name: plugin
+  resources: {}
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
+

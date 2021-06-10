@@ -1,0 +1,148 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sonobuoy
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-serviceaccount
+  namespace: sonobuoy
+---
+apiVersion: v1
+data:
+  config.json: |
+    {"Description":"DEFAULT","UUID":"","Version":"static-version-for-testing","ResultsDir":"/tmp/sonobuoy","Resources":["apiservices","certificatesigningrequests","clusterrolebindings","clusterroles","componentstatuses","configmaps","controllerrevisions","cronjobs","customresourcedefinitions","daemonsets","deployments","endpoints","ingresses","jobs","leases","limitranges","mutatingwebhookconfigurations","namespaces","networkpolicies","nodes","persistentvolumeclaims","persistentvolumes","poddisruptionbudgets","pods","podlogs","podsecuritypolicies","podtemplates","priorityclasses","replicasets","replicationcontrollers","resourcequotas","rolebindings","roles","servergroups","serverversion","serviceaccounts","services","statefulsets","storageclasses","validatingwebhookconfigurations","volumeattachments"],"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null,"LimitSize":"","LimitTime":""}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:static-version-for-testing","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","ProgressUpdatesPort":"8099"}
+kind: ConfigMap
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-config-cm
+  namespace: sonobuoy
+---
+apiVersion: v1
+data:
+  plugin-0.yaml: |
+    config-map:
+      file1: contents1
+      file2: contents2
+    extra-volumes:
+    - configMap:
+        name: plugin-myplugin1-cm
+      name: sonobuoy-myplugin1-vol
+    sonobuoy-config:
+      driver: ""
+      plugin-name: myplugin1
+    spec:
+      name: ""
+      resources: {}
+      volumeMounts:
+      - mountPath: /tmp/sonobuoy/config
+        name: sonobuoy-myplugin1-vol
+  plugin-1.yaml: |
+    config-map:
+      file3: contents3
+      file4: contents4
+    extra-volumes:
+    - configMap:
+        name: plugin-myplugin2-cm
+      name: sonobuoy-myplugin2-vol
+    sonobuoy-config:
+      driver: ""
+      plugin-name: myplugin2
+    spec:
+      name: ""
+      resources: {}
+      volumeMounts:
+      - mountPath: /tmp/sonobuoy/config
+        name: sonobuoy-myplugin2-vol
+kind: ConfigMap
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-plugins-cm
+  namespace: sonobuoy
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    component: sonobuoy
+    run: sonobuoy-master
+    sonobuoy-component: aggregator
+    tier: analysis
+  name: sonobuoy
+  namespace: sonobuoy
+spec:
+  containers:
+  - env:
+    - name: SONOBUOY_ADVERTISE_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    image: sonobuoy/sonobuoy:static-version-for-testing
+    imagePullPolicy: IfNotPresent
+    name: kube-sonobuoy
+    volumeMounts:
+    - mountPath: /etc/sonobuoy
+      name: sonobuoy-config-volume
+    - mountPath: /plugins.d
+      name: sonobuoy-plugins-volume
+    - mountPath: /tmp/sonobuoy
+      name: output-volume
+  restartPolicy: Never
+  serviceAccountName: sonobuoy-serviceaccount
+  tolerations:
+  - key: "kubernetes.io/e2e-evict-taint-key"
+    operator: "Exists"
+  volumes:
+  - configMap:
+      name: sonobuoy-config-cm
+    name: sonobuoy-config-volume
+  - configMap:
+      name: sonobuoy-plugins-cm
+    name: sonobuoy-plugins-volume
+  - emptyDir: {}
+    name: output-volume
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plugin-myplugin1-cm
+  namespace: sonobuoy
+data:
+  file1: |
+    contents1
+  file2: |
+    contents2
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plugin-myplugin2-cm
+  namespace: sonobuoy
+data:
+  file3: |
+    contents3
+  file4: |
+    contents4
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    component: sonobuoy
+    sonobuoy-component: aggregator
+  name: sonobuoy-aggregator
+  namespace: sonobuoy
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    sonobuoy-component: aggregator
+  type: ClusterIP

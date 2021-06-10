@@ -409,6 +409,28 @@ func TestGenerateManifestGolden(t *testing.T) {
 				NodeSelectors: map[string]string{"foo": "bar", "fizz": "buzz"},
 			},
 			goldenFile: filepath.Join("testdata", "multiple-node-selector.golden"),
+		}, {
+			name: "Plugins can specify configmaps",
+			inputcm: &client.GenConfig{
+				E2EConfig: &client.E2EConfig{},
+				Config:    newConfigWithoutUUID(),
+				StaticPlugins: []*manifest.Manifest{
+					{
+						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myplugin1"},
+						ConfigMap: map[string]string{
+							"file1": "contents1",
+							"file2": "contents2",
+						},
+					}, {
+						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myplugin2"},
+						ConfigMap: map[string]string{
+							"file3": "contents3",
+							"file4": "contents4",
+						},
+					},
+				},
+			},
+			goldenFile: filepath.Join("testdata", "plugin-configmaps.golden"),
 		},
 	}
 

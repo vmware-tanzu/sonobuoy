@@ -62,6 +62,9 @@ type templateValues struct {
 
 	NodeSelectors map[string]string
 
+	// configmap name, filename, string
+	ConfigMaps map[string]map[string]string
+
 	// CustomRegistries should be a multiline yaml string which represents
 	// the file contents of KUBE_TEST_REPO_LIST, the overrides for k8s e2e
 	// registries.
@@ -129,6 +132,30 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		return strings.ToLower(plugins[i].SonobuoyConfig.PluginName) < strings.ToLower(plugins[j].SonobuoyConfig.PluginName)
 	})
 
+	// If they have a configmap, associate the plugin with that configmap for mounting.
+	configs := map[string]map[string]string{}
+	for _, p := range plugins {
+		if len(p.ConfigMap) == 0 {
+			continue
+		}
+		configs[p.SonobuoyConfig.PluginName] = p.ConfigMap
+		p.ExtraVolumes = append(p.ExtraVolumes,
+			manifest.Volume{
+				Volume: corev1.Volume{
+					Name: fmt.Sprintf("sonobuoy-%v-vol", p.SonobuoyConfig.PluginName),
+					VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
+						LocalObjectReference: corev1.LocalObjectReference{Name: fmt.Sprintf("plugin-%v-cm", p.SonobuoyConfig.PluginName)},
+					}},
+				},
+			})
+		p.Spec.VolumeMounts = append(p.Spec.VolumeMounts,
+			corev1.VolumeMount{
+				Name:      fmt.Sprintf("sonobuoy-%v-vol", p.SonobuoyConfig.PluginName),
+				MountPath: "/tmp/sonobuoy/config",
+			},
+		)
+	}
+
 	err = checkPluginsUnique(plugins)
 	if err != nil {
 		return nil, errors.Wrap(err, "plugin YAML generation")
@@ -190,6 +217,8 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 
 		// Often created from reading a file, this value could have trailing newline.
 		CustomRegistries: strings.TrimSpace(cfg.E2EConfig.CustomRegistries),
+
+		ConfigMaps: configs,
 	}
 
 	var buf bytes.Buffer

@@ -19,6 +19,7 @@ package app
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
@@ -60,6 +61,9 @@ type GenPluginDefConfig struct {
 
 	// If set, the default pod spec used by Sonobuoy will be included in the output
 	showDefaultPodSpec bool
+
+	// configMapFiles is the list of files to read/store as configmaps for the plugin.
+	configMapFiles []string
 }
 
 // NewCmdGenPluginDef ...
@@ -117,6 +121,11 @@ func NewCmdGenPluginDef() *cobra.Command {
 	genPluginSet.StringArrayVarP(
 		&genPluginOpts.def.Spec.Args, "arg", "a", []string{},
 		"Arg values to set on the plugin. Can be set multiple times (e.g. --arg 'arg 1' --arg arg2)",
+	)
+
+	genPluginSet.StringArrayVar(
+		&genPluginOpts.configMapFiles, "configmap", nil,
+		`Specifies files to read and add as configMaps. Will be mounted to the plugin at /tmp/sonobuoy/configs/<filename>.`,
 	)
 
 	AddShowDefaultPodSpecFlag(&genPluginOpts.showDefaultPodSpec, genPluginSet)
@@ -184,6 +193,18 @@ func genPluginDef(cfg *GenPluginDefConfig) ([]byte, error) {
 			cfg.def.PodSpec = &manifest.PodSpec{}
 		}
 		cfg.def.PodSpec.NodeSelector = cfg.nodeSelector
+	}
+
+	if len(cfg.configMapFiles) > 0 {
+		cfg.def.ConfigMap = map[string]string{}
+	}
+	for _, v := range cfg.configMapFiles {
+		fData, err := os.ReadFile(v)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to read file %q", v)
+		}
+		base := filepath.Base(v)
+		cfg.def.ConfigMap[base] = string(fData)
 	}
 
 	yaml, err := kuberuntime.Encode(manifest.Encoder, &cfg.def)
