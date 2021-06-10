@@ -17,6 +17,8 @@ limitations under the License.
 package docker
 
 import (
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/image/exec"
 )
@@ -37,7 +39,7 @@ type LocalDocker struct {
 func (l LocalDocker) Run(entrypoint string, image string, args ...string) ([]string, error) {
 	dockerArgs := []string{"run"}
 	if entrypoint != "" {
-		dockerArgs = append(dockerArgs, "--entrypoint="+entrypoint)
+		dockerArgs = append(dockerArgs, fmt.Sprintf("--entrypoint=%s", entrypoint))
 	}
 	dockerArgs = append(dockerArgs, "--rm", image)
 	dockerArgs = append(dockerArgs, args...)
