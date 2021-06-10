@@ -208,6 +208,29 @@ func TestQuick(t *testing.T) {
 	checkTarballPluginForErrors(t, tb, "e2e", 0)
 }
 
+func TestConfigmaps(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	ns, cleanup := getNamespace(t)
+	defer cleanup()
+
+	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-singlefile-configmap.yaml -n %v", ns)
+	mustRunSonobuoyCommandWithContext(ctx, t, args)
+	tb := mustDownloadTarball(ctx, t, ns)
+	tb = saveToArtifacts(t, tb)
+
+	// Retrieve the sonobuoy results file from the tarball
+	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tb, "job-junit-singlefile-configmap")
+	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, resultsArgs)
+	var resultItem results.Item
+	yaml.Unmarshal(resultsYaml.Bytes(), &resultItem)
+	expectedStatus := "passed"
+	if resultItem.Status != expectedStatus {
+		t.Errorf("Expected plugin to have status: %v, got %v", expectedStatus, resultItem.Status)
+	}
+}
+
 func checkStatusForPluginErrors(ctx context.Context, t *testing.T, ns, plugin string, failCount int) {
 	var expectVals []string
 

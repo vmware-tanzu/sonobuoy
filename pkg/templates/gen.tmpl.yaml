@@ -142,7 +142,18 @@ spec:
   - emptyDir: {}
     name: output-volume
 ---
-{{- if .CustomRegistries }}
+{{- if .ConfigMaps }}{{- range $p, $cm := .ConfigMaps }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plugin-{{ $p }}-cm
+  namespace: {{ $.Namespace }}
+data:{{- range $f, $data := $cm }}
+  {{ $f }}: |
+    {{ indent 4 $data }}
+{{- end}}
+---
+{{- end }}{{- end }}{{- if .CustomRegistries }}
 apiVersion: v1
 data:
   repo-list.yaml: |
