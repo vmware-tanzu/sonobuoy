@@ -5,14 +5,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.15
       - name: Run unit tests
         env:
           VERBOSE: true
         run: |
-          source ./scripts/build.sh; unit_local
+          source ./scripts/build.sh; unit
   build:
     runs-on: ubuntu-latest
     steps:
