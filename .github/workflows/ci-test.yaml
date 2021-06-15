@@ -10,8 +10,31 @@ jobs:
           VERBOSE: true
         run: |
           source ./scripts/build.sh; unit
-  build:
+  build-linux:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build binaries and images
+        run: |
+          source ./scripts/build.sh
+          build_binaries
+          linux_containers
+          build_test_image
+      - name: Save images to tar
+        run: |
+          source ./scripts/build.sh
+          save_images_to_tar
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: sonobuoy-build-linux-${{ github.run_id }}
+          path: |
+            build
+  build-windows:
+    runs-on: ubuntu-latest
+    needs: [integration-test-on-kind]
     steps:
       - uses: actions/checkout@v2
       -
@@ -35,18 +58,12 @@ jobs:
       - name: Build binaries and images
         run: |
           source ./scripts/build.sh
-          build_binaries
-          linux_containers
+          build_binary_GOOS_GOARCH windows amd64
           windows_containers
-          build_test_image
-      - name: Save images to tar
-        run: |
-          source ./scripts/build.sh
-          save_images_to_tar
       - name: Save artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: sonobuoy-build-${{ github.run_id }}
+          name: sonobuoy-build-windows-${{ github.run_id }}
           path: |
             build
   stress-test-linux:
@@ -60,7 +77,7 @@ jobs:
           source ./scripts/build.sh; stress
   integration-test-on-kind:
     runs-on: ubuntu-latest
-    needs: [build, unit-test-linux]
+    needs: [build-linux, unit-test-linux]
     steps:
       - uses: actions/checkout@v2
       - name: Prepare cluster for tests
@@ -71,7 +88,7 @@ jobs:
       - name: Download binaries and prebuilt images
         uses: actions/download-artifact@v2
         with:
-          name: sonobuoy-build-${{ github.run_id }}
+          name: sonobuoy-build-linux-${{ github.run_id }}
           path: build
       - name: Ensure binaries are executable
         run: |
@@ -92,15 +109,19 @@ jobs:
   push-images:
     if: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
-    needs: [build, unit-test-linux, integration-test-on-kind, stress-test-linux]
+    needs: [build-linux, build-windows, unit-test-linux, integration-test-on-kind, stress-test-linux]
     steps:
       - uses: actions/checkout@v2
       - name: Download binaries and prebuilt images
         uses: actions/download-artifact@v2
         with:
-          name: sonobuoy-build-${{ github.run_id }}
+          name: sonobuoy-build-linux-${{ github.run_id }}
           path: build
-          # TODO: Load only what is needed
+      - name: Download binaries and prebuilt images
+        uses: actions/download-artifact@v2
+        with:
+          name: sonobuoy-build-windows-${{ github.run_id }}
+          path: build
       - name: Load images and verify
         run: |
           docker load -i build/linux/amd64/sonobuoy-img-linux-amd64-${{ github.run_id }}.tar
