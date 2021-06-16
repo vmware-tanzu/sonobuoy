@@ -173,7 +173,7 @@ func (p *Plugin) Monitor(ctx context.Context, kubeclient kubernetes.Interface, _
 		case <-ctx.Done():
 			switch {
 			case ctx.Err() == context.DeadlineExceeded:
-				logrus.Errorf("Timeout waiting for plugin %v", p.GetName())
+				logrus.Errorf("Timeout waiting for plugin %v. Try checking the pod logs and other data in the results tarball for more information.", p.GetName())
 				resultsCh <- utils.MakeErrorResult(
 					p.GetName(),
 					map[string]interface{}{"error": plugin.TimeoutErrMsg},
