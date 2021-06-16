@@ -32,7 +32,7 @@ const (
 	bufSize = 2048
 )
 
-var logFlags struct {
+type logFlags struct {
 	namespace  string
 	follow     bool
 	plugin     string
@@ -40,50 +40,53 @@ var logFlags struct {
 }
 
 func NewCmdLogs() *cobra.Command {
+	var f logFlags
 	cmd := &cobra.Command{
 		Use:   "logs",
 		Short: "Dumps the logs of the currently running sonobuoy containers for diagnostics",
-		Run:   getLogs,
+		Run:   getLogs(&f),
 		Args:  cobra.ExactArgs(0),
 	}
 
 	cmd.Flags().BoolVarP(
-		&logFlags.follow, "follow", "f", false,
+		&f.follow, "follow", "f", false,
 		"Specify if the logs should be streamed.",
 	)
-	AddKubeconfigFlag(&logFlags.kubeconfig, cmd.Flags())
-	AddNamespaceFlag(&logFlags.namespace, cmd.Flags())
-	cmd.Flags().StringVarP(&logFlags.plugin, pluginFlag, "p", "", "Show logs for a specific plugin")
+	AddKubeconfigFlag(&f.kubeconfig, cmd.Flags())
+	AddNamespaceFlag(&f.namespace, cmd.Flags())
+	cmd.Flags().StringVarP(&f.plugin, pluginFlag, "p", "", "Show logs for a specific plugin")
 	return cmd
 }
 
-func getLogs(cmd *cobra.Command, args []string) {
-	sbc, err := getSonobuoyClientFromKubecfg(logFlags.kubeconfig)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
-		os.Exit(1)
-	}
-
-	logConfig := client.NewLogConfig()
-	logConfig.Namespace = logFlags.namespace
-	logConfig.Follow = logFlags.follow
-	logConfig.Plugin = logFlags.plugin
-
-	logreader, err := sbc.LogReader(logConfig)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "could not build a log reader"))
-		os.Exit(1)
-	}
-	b := make([]byte, bufSize)
-	for {
-		n, err := logreader.Read(b)
-		if err != nil && err != io.EOF {
-			errlog.LogError(errors.Wrap(err, "error reading logs"))
+func getLogs(f *logFlags) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		sbc, err := getSonobuoyClientFromKubecfg(f.kubeconfig)
+		if err != nil {
+			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 			os.Exit(1)
 		}
-		fmt.Fprint(logConfig.Out, string(b[:n]))
-		if err == io.EOF {
-			return
+
+		logConfig := client.NewLogConfig()
+		logConfig.Namespace = f.namespace
+		logConfig.Follow = f.follow
+		logConfig.Plugin = f.plugin
+
+		logreader, err := sbc.LogReader(logConfig)
+		if err != nil {
+			errlog.LogError(errors.Wrap(err, "could not build a log reader"))
+			os.Exit(1)
+		}
+		b := make([]byte, bufSize)
+		for {
+			n, err := logreader.Read(b)
+			if err != nil && err != io.EOF {
+				errlog.LogError(errors.Wrap(err, "error reading logs"))
+				os.Exit(1)
+			}
+			fmt.Fprint(logConfig.Out, string(b[:n]))
+			if err == io.EOF {
+				return
+			}
 		}
 	}
 }

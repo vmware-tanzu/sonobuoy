@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package templates
+package client
 
 import (
 	_ "embed"
@@ -24,7 +24,7 @@ import (
 
 // TemplateFuncs exports (currently singular) functions to be used inside the template
 var (
-	TemplateFuncs = map[string]interface{}{
+	templateFuncs = map[string]interface{}{
 		"indent": func(i int, input string) string {
 			split := strings.Split(input, "\n")
 			ident := "\n" + strings.Repeat(" ", i)
@@ -36,11 +36,11 @@ var (
 	//go:embed gen.tmpl.yaml
 	templateDoc string
 
-	// Manifest is the template for the `sonobuoy gen` output
-	Manifest = NewTemplate("manifest", templateDoc)
+	// genManifest is the template for the `sonobuoy gen` output
+	genManifest = newTemplate("manifest", templateDoc)
 )
 
-// NewTemplate declares a new template that already has TemplateFuncs in scope
-func NewTemplate(name, tmpl string) *template.Template {
-	return template.Must(template.New(name).Funcs(TemplateFuncs).Parse(tmpl))
+// newTemplate declares a new template that already has templateFuncs in scope
+func newTemplate(name, tmpl string) *template.Template {
+	return template.Must(template.New(name).Funcs(templateFuncs).Parse(tmpl))
 }

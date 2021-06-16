@@ -29,7 +29,7 @@ import (
 	"k8s.io/client-go/util/exec"
 )
 
-var (
+const (
 	defaultOutDir = "."
 )
 

@@ -33,7 +33,6 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	manifesthelper "github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest/helper"
-	"github.com/vmware-tanzu/sonobuoy/pkg/templates"
 
 	corev1 "k8s.io/api/core/v1"
 )
@@ -223,7 +222,7 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 
 	var buf bytes.Buffer
 
-	if err := templates.Manifest.Execute(&buf, tmplVals); err != nil {
+	if err := genManifest.Execute(&buf, tmplVals); err != nil {
 		return nil, errors.Wrap(err, "couldn't execute manifest template")
 	}
 
