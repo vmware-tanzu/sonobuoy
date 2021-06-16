@@ -46,13 +46,13 @@ func E2EFlagSet(cfg *e2eFlags) *pflag.FlagSet {
 	return e2eset
 }
 
-var e2eflags e2eFlags
-
 func NewCmdE2E() *cobra.Command {
+	var e2eflags e2eFlags
+
 	cmd := &cobra.Command{
 		Use:   "e2e archive.tar.gz",
 		Short: "Inspect e2e test results. Optionally rerun failed tests",
-		Run:   e2es,
+		Run:   e2es(&e2eflags),
 		Args:  cobra.ExactArgs(1),
 	}
 	cmd.Flags().AddFlagSet(E2EFlagSet(&e2eflags))
@@ -60,84 +60,86 @@ func NewCmdE2E() *cobra.Command {
 	return cmd
 }
 
-func e2es(cmd *cobra.Command, args []string) {
-	f, err := os.Open(args[0])
-	if err != nil {
-		errlog.LogError(errors.Wrapf(err, "could not open sonobuoy archive: %v", args[0]))
-		os.Exit(1)
-	}
-	defer f.Close()
-	// As documented, ignore show if we are doing a rerun of failed tests.
-	if e2eflags.rerun {
-		e2eflags.show = "failed"
-	}
-	gzr, err := gzip.NewReader(f)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "could not make a gzip reader"))
-		os.Exit(1)
-	}
-	defer gzr.Close()
-
-	var cfg *rest.Config
-	// If we are doing a rerun, only then, we need kubeconfig
-	if e2eflags.rerun {
-		cfg, err = e2eflags.kubecfg.Get()
+func e2es(e2eflags *e2eFlags) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		f, err := os.Open(args[0])
 		if err != nil {
-			errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
+			errlog.LogError(errors.Wrapf(err, "could not open sonobuoy archive: %v", args[0]))
 			os.Exit(1)
 		}
-	}
-	sonobuoy, err := getSonobuoyClient(cfg)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
-		os.Exit(1)
-	}
-	testCases, err := sonobuoy.GetTests(gzr, e2eflags.show)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "could not get tests from archive"))
-		os.Exit(1)
-	}
-
-	// If we are not doing a rerun, print and exit.
-	if !e2eflags.rerun {
-		numTests := len(testCases)
-		fmt.Printf("%v tests: %v\n", e2eflags.show, numTests)
-		if numTests > 0 {
-			fmt.Println(client.PrintableTestCases(testCases))
+		defer f.Close()
+		// As documented, ignore show if we are doing a rerun of failed tests.
+		if e2eflags.rerun {
+			e2eflags.show = "failed"
 		}
-		return
-	}
-
-	runCfg, err := e2eflags.Config()
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "couldn't make a Run config"))
-		os.Exit(1)
-	}
-
-	if !e2eflags.skipPreflight {
-		pcfg := &client.PreflightConfig{
-			Namespace:    runflags.namespace,
-			DNSNamespace: runflags.dnsNamespace,
-			DNSPodLabels: runflags.dnsPodLabels,
+		gzr, err := gzip.NewReader(f)
+		if err != nil {
+			errlog.LogError(errors.Wrap(err, "could not make a gzip reader"))
+			os.Exit(1)
 		}
-		errs := sonobuoy.PreflightChecks(pcfg)
-		if len(errs) > 0 {
-			errlog.LogError(errors.New("Preflight checks failed"))
-			for _, err := range errs {
-				errlog.LogError(err)
+		defer gzr.Close()
+
+		var cfg *rest.Config
+		// If we are doing a rerun, only then, we need kubeconfig
+		if e2eflags.rerun {
+			cfg, err = e2eflags.kubecfg.Get()
+			if err != nil {
+				errlog.LogError(errors.Wrap(err, "couldn't get REST client"))
+				os.Exit(1)
 			}
+		}
+		sonobuoy, err := getSonobuoyClient(cfg)
+		if err != nil {
+			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 			os.Exit(1)
 		}
-	}
+		testCases, err := sonobuoy.GetTests(gzr, e2eflags.show)
+		if err != nil {
+			errlog.LogError(errors.Wrap(err, "could not get tests from archive"))
+			os.Exit(1)
+		}
 
-	fmt.Printf("Rerunning %d tests:\n", len(testCases))
+		// If we are not doing a rerun, print and exit.
+		if !e2eflags.rerun {
+			numTests := len(testCases)
+			fmt.Printf("%v tests: %v\n", e2eflags.show, numTests)
+			if numTests > 0 {
+				fmt.Println(client.PrintableTestCases(testCases))
+			}
+			return
+		}
 
-	// Ensure that we run the failed test cases and don't skip any
-	runCfg.E2EConfig.Focus = client.Focus(testCases)
-	runCfg.E2EConfig.Skip = ""
+		runCfg, err := e2eflags.Config()
+		if err != nil {
+			errlog.LogError(errors.Wrap(err, "couldn't make a Run config"))
+			os.Exit(1)
+		}
 
-	if err := sonobuoy.Run(runCfg); err != nil {
-		errlog.LogError(errors.Wrap(err, "error attempting to rerun failed tests"))
-		os.Exit(1)
+		if !e2eflags.skipPreflight {
+			pcfg := &client.PreflightConfig{
+				Namespace:    e2eflags.runFlags.namespace,
+				DNSNamespace: e2eflags.runFlags.dnsNamespace,
+				DNSPodLabels: e2eflags.runFlags.dnsPodLabels,
+			}
+			errs := sonobuoy.PreflightChecks(pcfg)
+			if len(errs) > 0 {
+				errlog.LogError(errors.New("Preflight checks failed"))
+				for _, err := range errs {
+					errlog.LogError(err)
+				}
+				os.Exit(1)
+			}
+		}
+
+		fmt.Printf("Rerunning %d tests:\n", len(testCases))
+
+		// Ensure that we run the failed test cases and don't skip any
+		runCfg.E2EConfig.Focus = client.Focus(testCases)
+		runCfg.E2EConfig.Skip = ""
+
+		if err := sonobuoy.Run(runCfg); err != nil {
+			errlog.LogError(errors.Wrap(err, "error attempting to rerun failed tests"))
+			os.Exit(1)
+		}
 	}
 }

@@ -212,55 +212,61 @@ func genPluginDef(cfg *GenPluginDefConfig) ([]byte, error) {
 }
 
 func NewCmdGenE2E() *cobra.Command {
+	var genE2Eflags genFlags
 	var cmd = &cobra.Command{
 		Use:   "e2e",
 		Short: "Generates the e2e plugin definition based on the given options",
-		RunE:  genE2EManifest,
+		RunE:  genE2EManifest(&genE2Eflags),
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(GenFlagSet(&genE2Eflags, EnabledRBACMode))
 	return cmd
 }
 
-func genE2EManifest(cmd *cobra.Command, args []string) error {
-	cfg, err := genflags.Config()
-	if err != nil {
-		return err
-	}
+func genE2EManifest(genflags *genFlags) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		cfg, err := genflags.Config()
+		if err != nil {
+			return err
+		}
 
-	m := client.E2EManifest(cfg)
-	yaml, err := manifesthelper.ToYAML(m, cfg.ShowDefaultPodSpec)
-	if err != nil {
-		return err
-	}
+		m := client.E2EManifest(cfg)
+		yaml, err := manifesthelper.ToYAML(m, cfg.ShowDefaultPodSpec)
+		if err != nil {
+			return err
+		}
 
-	fmt.Println(string(yaml))
-	return nil
+		fmt.Println(string(yaml))
+		return nil
+	}
 }
 
 func NewCmdGenSystemdLogs() *cobra.Command {
+	var genSystemdLogsflags genFlags
 	var cmd = &cobra.Command{
 		Use:   "systemd-logs",
 		Short: "Generates the systemd-logs plugin definition based on the given options",
-		RunE:  genSystemdLogsManifest,
+		RunE:  genSystemdLogsManifest(&genSystemdLogsflags),
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(GenFlagSet(&genSystemdLogsflags, EnabledRBACMode))
 	return cmd
 }
 
-func genSystemdLogsManifest(cmd *cobra.Command, args []string) error {
-	cfg, err := genflags.Config()
-	if err != nil {
-		return err
-	}
+func genSystemdLogsManifest(genflags *genFlags) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		cfg, err := genflags.Config()
+		if err != nil {
+			return err
+		}
 
-	m := client.SystemdLogsManifest(cfg)
-	yaml, err := manifesthelper.ToYAML(m, cfg.ShowDefaultPodSpec)
-	if err != nil {
-		return err
-	}
+		m := client.SystemdLogsManifest(cfg)
+		yaml, err := manifesthelper.ToYAML(m, cfg.ShowDefaultPodSpec)
+		if err != nil {
+			return err
+		}
 
-	fmt.Println(string(yaml))
-	return nil
+		fmt.Println(string(yaml))
+		return nil
+	}
 }

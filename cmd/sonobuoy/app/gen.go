@@ -71,11 +71,6 @@ type genFlags struct {
 	genflags *pflag.FlagSet
 }
 
-// TODO(jschnake): Avoid using these globals if possible.
-var genflags genFlags
-var genSystemdLogsflags genFlags
-var genE2Eflags genFlags
-
 func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	genset := pflag.NewFlagSet("generate", pflag.ExitOnError)
 	AddModeFlag(&cfg.mode, genset)
@@ -171,33 +166,36 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 }
 
 func NewCmdGen() *cobra.Command {
+	var genflags genFlags
 	var GenCommand = &cobra.Command{
 		Use:   "gen",
 		Short: "Generates a sonobuoy manifest for submission via kubectl",
-		Run:   genManifest,
+		Run:   genManifest(&genflags),
 		Args:  cobra.ExactArgs(0),
 	}
 	GenCommand.Flags().AddFlagSet(GenFlagSet(&genflags, EnabledRBACMode))
 	return GenCommand
 }
 
-func genManifest(cmd *cobra.Command, args []string) {
-	cfg, err := genflags.Config()
-	if err != nil {
-		errlog.LogError(err)
+func genManifest(genflags *genFlags) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		cfg, err := genflags.Config()
+		if err != nil {
+			errlog.LogError(err)
+			os.Exit(1)
+		}
+
+		// Generate does not require any client configuration
+		sbc := &client.SonobuoyClient{}
+
+		bytes, err := sbc.GenerateManifest(cfg)
+		if err == nil {
+			fmt.Printf("%s\n", bytes)
+			return
+		}
+		errlog.LogError(errors.Wrap(err, "error attempting to generate sonobuoy manifest"))
 		os.Exit(1)
 	}
-
-	// Generate does not require any client configuration
-	sbc := &client.SonobuoyClient{}
-
-	bytes, err := sbc.GenerateManifest(cfg)
-	if err == nil {
-		fmt.Printf("%s\n", bytes)
-		return
-	}
-	errlog.LogError(errors.Wrap(err, "error attempting to generate sonobuoy manifest"))
-	os.Exit(1)
 }
 
 // getClient returns a client if one can be found, and the error attempting to retrieve that client if not.

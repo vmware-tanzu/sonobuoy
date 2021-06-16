@@ -33,7 +33,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 )
 
-var statusFlags struct {
+type statusFlags struct {
 	namespace string
 	kubecfg   Kubeconfig
 	showAll   bool
@@ -63,22 +63,23 @@ func (p pluginSummaries) Less(i, j int) bool {
 }
 
 func NewCmdStatus() *cobra.Command {
+	var f statusFlags
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Gets a summarized status of a sonobuoy run",
-		Run:   getStatus,
+		Run:   getStatus(&f),
 		Args:  cobra.ExactArgs(0),
 	}
 	flags := cmd.Flags()
 
-	AddNamespaceFlag(&statusFlags.namespace, flags)
-	AddKubeconfigFlag(&statusFlags.kubecfg, flags)
+	AddNamespaceFlag(&f.namespace, flags)
+	AddKubeconfigFlag(&f.kubecfg, flags)
 	flags.BoolVar(
-		&statusFlags.showAll, "show-all", false,
+		&f.showAll, "show-all", false,
 		"Don't summarize plugin statuses, show results for each node",
 	)
 	flags.BoolVar(
-		&statusFlags.json, "json", false,
+		&f.json, "json", false,
 		"Print the status object as json",
 	)
 
@@ -87,35 +88,37 @@ func NewCmdStatus() *cobra.Command {
 
 // TODO (timothysc) summarize and aggregate daemonset-plugins by status done (24) running (24)
 // also --show-all
-func getStatus(cmd *cobra.Command, args []string) {
-	sbc, err := getSonobuoyClientFromKubecfg(statusFlags.kubecfg)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
-		os.Exit(1)
-	}
+func getStatus(f *statusFlags) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		sbc, err := getSonobuoyClientFromKubecfg(f.kubecfg)
+		if err != nil {
+			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
+			os.Exit(1)
+		}
 
-	status, err := sbc.GetStatus(&client.StatusConfig{
-		Namespace: statusFlags.namespace,
-	})
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
-		os.Exit(1)
-	}
+		status, err := sbc.GetStatus(&client.StatusConfig{
+			Namespace: f.namespace,
+		})
+		if err != nil {
+			errlog.LogError(errors.Wrap(err, "error attempting to run sonobuoy"))
+			os.Exit(1)
+		}
 
-	switch {
-	case statusFlags.showAll:
-		err = printAll(os.Stdout, status)
-	case statusFlags.json:
-		err = printJSON(os.Stdout, status)
-	default:
-		err = printSummary(os.Stdout, status)
-	}
+		switch {
+		case f.showAll:
+			err = printAll(os.Stdout, status)
+		case f.json:
+			err = printJSON(os.Stdout, status)
+		default:
+			err = printSummary(os.Stdout, status)
+		}
 
-	if err != nil {
-		errlog.LogError(err)
-		os.Exit(1)
+		if err != nil {
+			errlog.LogError(err)
+			os.Exit(1)
+		}
+		os.Exit(exitCode(status))
 	}
-	os.Exit(exitCode(status))
 }
 
 func exitCode(status *aggregation.Status) int {

@@ -30,13 +30,13 @@ type versionFlags struct {
 	short   bool
 }
 
-var versionflags versionFlags
-
 func NewCmdVersion() *cobra.Command {
+	var versionflags versionFlags
+
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print sonobuoy version",
-		Run:   runVersion,
+		Run:   runVersion(&versionflags),
 		Args:  cobra.ExactArgs(0),
 	}
 
@@ -46,30 +46,32 @@ func NewCmdVersion() *cobra.Command {
 	return cmd
 }
 
-func runVersion(cmd *cobra.Command, args []string) {
-	if versionflags.short {
-		fmt.Println(buildinfo.Version)
-		return
-	}
+func runVersion(versionflags *versionFlags) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		if versionflags.short {
+			fmt.Println(buildinfo.Version)
+			return
+		}
 
-	fmt.Printf("Sonobuoy Version: %s\n", buildinfo.Version)
-	fmt.Printf("MinimumKubeVersion: %s\n", buildinfo.MinimumKubeVersion)
-	fmt.Printf("MaximumKubeVersion: %s\n", buildinfo.MaximumKubeVersion)
-	fmt.Printf("GitSHA: %s\n", buildinfo.GitSHA)
+		fmt.Printf("Sonobuoy Version: %s\n", buildinfo.Version)
+		fmt.Printf("MinimumKubeVersion: %s\n", buildinfo.MinimumKubeVersion)
+		fmt.Printf("MaximumKubeVersion: %s\n", buildinfo.MaximumKubeVersion)
+		fmt.Printf("GitSHA: %s\n", buildinfo.GitSHA)
 
-	// Get Kubernetes version, this is last so that the regular version information
-	// will be shown even if the API server cannot be contacted and throws an error
-	apiVersion, skipk8sCheck := getK8Sversion()
-	if !skipk8sCheck {
-		fmt.Println("API Version: ", apiVersion)
-	} else {
-		fmt.Println("API Version check skipped due to missing `--kubeconfig` or other error")
+		// Get Kubernetes version, this is last so that the regular version information
+		// will be shown even if the API server cannot be contacted and throws an error
+		apiVersion, skipk8sCheck := getK8Sversion(versionflags.kubecfg)
+		if !skipk8sCheck {
+			fmt.Println("API Version: ", apiVersion)
+		} else {
+			fmt.Println("API Version check skipped due to missing `--kubeconfig` or other error")
+		}
 	}
 }
 
-func getK8Sversion() (string, bool) {
-	if versionflags.kubecfg.String() != "" {
-		sbc, err := getSonobuoyClientFromKubecfg(versionflags.kubecfg)
+func getK8Sversion(kubecfg Kubeconfig) (string, bool) {
+	if kubecfg.String() != "" {
+		sbc, err := getSonobuoyClientFromKubecfg(kubecfg)
 		if err != nil {
 			errlog.LogError(errors.Wrap(err, "could not create sonobuoy client"))
 			return "", true

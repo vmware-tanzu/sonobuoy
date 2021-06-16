@@ -43,7 +43,7 @@ func NewCmdAggregator() *cobra.Command {
 		Short: "Runs the aggregator component (for internal use)",
 		Long:  "Sonobuoy is an introspective kubernetes component that generates reports on cluster conformance, configuration, and more",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := runAggregator(input); err != nil {
+			if err := runAggregator(&input); err != nil {
 				errlog.LogError(err)
 				os.Exit(1)
 			}
@@ -59,7 +59,7 @@ func NewCmdAggregator() *cobra.Command {
 	return cmd
 }
 
-func runAggregator(input aggregatorInput) error {
+func runAggregator(input *aggregatorInput) error {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		return errors.Wrap(err, "error loading sonobuoy configuration")
