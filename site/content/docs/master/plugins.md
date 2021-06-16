@@ -75,7 +75,7 @@ Use the `sonobuoy gen plugin` command to help generate the YAML for your plugin 
 sonobuoy run --plugin myPlugin.yaml
 ```
 
-For a thorough walkthrough of how to build a custom plugin from scratch, see our [blog post][customPluginsBlog] and our [example plugins][examplePlugins].
+For a thorough walkthrough of how to build a custom plugin from scratch, see our [blog post][customPluginsBlog] and our [existing plugins][examplePlugins].
 
 ## Plugin Result Types
 
@@ -166,12 +166,11 @@ By providing the flag `--show-default-podspec` to `sonobuoy gen`, the default `p
 If you generate a new manifest by running `sonobuoy gen` again, you will need to reapply any changes made.
 We recommend adding your desired customizations to the plugin definition itself.
 
-[systemd-repo]: https://github.com/heptio/sonobuoy-plugin-systemd-logs
-[e2e]: https://github.com/vmware-tanzu/sonobuoy/blob/master/examples/plugins.d/heptio-e2e.yaml
+[systemd-repo]: https://github.com/vmware-tanzu/sonobuoy-plugins/tree/master/systemd-logs
 [conformance]: https://github.com/kubernetes/kubernetes/tree/master/cluster/images/conformance
 [e2ePlugin]: e2eplugin.md
 [kubernetes-podspecs]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core
 [customPluginsBlog]: https://blogs.vmware.com/cloudnative/2019/04/30/sonobuoy-plugins-custom-testing/
-[examplePlugins]: https://github.com/vmware-tanzu/sonobuoy/tree/master/examples/plugins
+[examplePlugins]: https://github.com/vmware-tanzu/sonobuoy-plugins
 [results]: results.md
 [resultsBlog]: https://sonobuoy.io/simplified-results-reporting-with-sonobuoy/
