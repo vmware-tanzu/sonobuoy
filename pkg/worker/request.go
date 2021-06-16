@@ -100,9 +100,15 @@ func DoRequest(url string, client *http.Client, callback func() (io.Reader, stri
 	if err != nil {
 		return errors.Wrapf(err, "error encountered dialing aggregator at %v", url)
 	}
-	if resp.StatusCode != http.StatusOK {
-		// TODO: retry logic for something like a 429 or otherwise
-		return errors.Errorf("got a %v response when dialing aggregator to %v", resp.StatusCode, url)
+	switch resp.StatusCode {
+	case http.StatusConflict:
+		// 409 indicates we've already submitted results. Can occur in some daemonset cases and
+		// isn't useful to error here.
+		errlog.LogError(errors.Errorf("got a %v response when dialing aggregator to %v. Logging and proceeding as normal.", resp.StatusCode, url))
+	case http.StatusOK:
+		return nil
+	default:
+		return errors.Errorf("got a %v response when dialing aggregator to %v. Logging and proceeding as normal.", resp.StatusCode, url)
 	}
 	return nil
 }

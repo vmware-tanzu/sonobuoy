@@ -41,8 +41,7 @@ data:
       command:
       - /bin/sh
       - -c
-      - /get_systemd_logs.sh && while true; do echo "Sleeping for 1h to avoid daemonset
-        restart"; sleep 3600; done
+      - /get_systemd_logs.sh
       env:
       - name: CHROOT_DIR
         value: /node

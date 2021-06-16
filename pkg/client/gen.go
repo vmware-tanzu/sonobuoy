@@ -251,7 +251,7 @@ func SystemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 			Container: corev1.Container{
 				Name:            "systemd-logs",
 				Image:           cfg.SystemdLogsImage,
-				Command:         []string{"/bin/sh", "-c", `/get_systemd_logs.sh && while true; do echo "Sleeping for 1h to avoid daemonset restart"; sleep 3600; done`},
+				Command:         []string{"/bin/sh", "-c", `/get_systemd_logs.sh`},
 				ImagePullPolicy: corev1.PullPolicy(cfg.ImagePullPolicy),
 				Env: []corev1.EnvVar{
 					{Name: "CHROOT_DIR", Value: "/node"},
