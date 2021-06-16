@@ -43,8 +43,9 @@ const (
 
 	// defaultSleepSeconds is the time after the plugin finishes for which Sonobuoy will sleep.
 	// The sleep functions as a way to prevent the daemonset from restarting the container once the
-	// process completes. There is currently no way to have a "run-once daemonset".
-	defaultSleepSeconds = "3600"
+	// process completes. There is currently no way to have a "run-once daemonset". Defaults
+	// to sleeping forever.
+	defaultSleepSeconds = "-1"
 )
 
 // Plugin is a plugin driver that dispatches containers to each node,
