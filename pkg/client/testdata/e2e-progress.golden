@@ -48,13 +48,13 @@ data:
       command:
       - /run_e2e.sh
       env:
-      - name: E2E_FOCUS
-      - name: E2E_SKIP
-      - name: E2E_PARALLEL
-      - name: E2E_USE_GO_RUNNER
-        value: "true"
       - name: E2E_EXTRA_ARGS
         value: --progress-report-url=http://localhost:8099/progress
+      - name: E2E_FOCUS
+      - name: E2E_PARALLEL
+      - name: E2E_SKIP
+      - name: E2E_USE_GO_RUNNER
+        value: "true"
       image: some-image:v1.17.0
       name: e2e
       resources: {}

@@ -62,19 +62,19 @@ data:
       command:
       - /run_e2e.sh
       env:
-      - name: E2E_FOCUS
-      - name: E2E_SKIP
-      - name: E2E_PARALLEL
-      - name: E2E_USE_GO_RUNNER
-        value: "true"
-      - name: LOCAL_SSH_KEY
-        value: id_rsa
       - name: AWS_SSH_KEY
         value: /root/.ssh/id_rsa
+      - name: E2E_FOCUS
+      - name: E2E_PARALLEL
+      - name: E2E_SKIP
+      - name: E2E_USE_GO_RUNNER
+        value: "true"
       - name: KUBE_SSH_KEY
         value: id_rsa
       - name: KUBE_SSH_USER
         value: ssh-user
+      - name: LOCAL_SSH_KEY
+        value: id_rsa
       name: e2e
       resources: {}
       volumeMounts:

@@ -117,6 +117,9 @@ func AddKubeConformanceImageVersion(imageVersion *image.ConformanceImageVersion,
 
 	*imageVersion = image.ConformanceImageVersionAuto
 	flags.Var(imageVersion, "kube-conformance-image-version", help)
+	if err := flags.MarkDeprecated("kube-conformance-image-version", "Use --kubernetes-version instead."); err != nil {
+		panic("Failed to setup flags properly")
+	}
 }
 
 // AddKubeconfigFlag adds a kubeconfig and context flags to the provided command.
@@ -359,13 +362,15 @@ func AddPluginListFlag(p *[]string, flags *pflag.FlagSet) {
 	flags.StringSliceVarP(p, "plugin", "p", []string{"e2e", "systemd-logs"}, "Describe which plugin's images to interact with (Valid plugins are 'e2e', 'systemd-logs').")
 }
 
-// AddKubernetesVersionFlag adds a string flag for the user to specify the cluster version to assume instead of reaching
-// out to the cluster to auto-detect it.
-func AddKubernetesVersionFlag(version *string, flags *pflag.FlagSet) {
-	flags.StringVar(
-		version, "kubernetes-version", "",
-		"Version to assume for Kubernetes. If empty, the cluster will be queried for its version",
-	)
+// AddKubernetesVersionFlag initialises an image version flag.
+func AddKubernetesVersionFlag(imageVersion *image.ConformanceImageVersion, flags *pflag.FlagSet) {
+	help := "Use default Conformance image, but override the version. "
+	help += "Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise. "
+	help += "'ignore' will try version resolution but ignore errors. "
+	help += "'latest' will find the latest dev image/version upstream."
+
+	*imageVersion = image.ConformanceImageVersionAuto
+	flags.Var(imageVersion, "kubernetes-version", help)
 }
 
 // AddShortFlag adds a boolean flag to just print the Sonobuoy version and

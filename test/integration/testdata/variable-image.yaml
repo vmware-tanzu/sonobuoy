@@ -1,0 +1,13 @@
+sonobuoy-config:
+  driver: Job
+  plugin-name: variable-image
+  result-format: raw
+spec:
+  command:
+  - ./run.sh
+  image: hello:$SONOBUOY_K8S_VERSION
+  name: plugin
+  resources: {}
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
