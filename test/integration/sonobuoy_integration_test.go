@@ -5,6 +5,7 @@ package integration
 import (
 	"bytes"
 	"context"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -28,6 +29,8 @@ const (
 var (
 	// Path to the Sonobuoy CLI
 	sonobuoy string
+
+	update = flag.Bool("update", false, "update .golden files")
 )
 
 func findSonobuoyCLI() (string, error) {
@@ -442,4 +445,45 @@ func pwd(t *testing.T) string {
 		t.Fatalf("Unable to get pwd: %v", err)
 	}
 	return pwd
+}
+
+// TestExactOutput is to test things which can expect exact output; so do not use it
+// for things like configs which include timestamps or UUIDs.
+func TestExactOutput(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	testCases := []struct {
+		desc       string
+		cmdLine    string
+		expectFile string
+	}{
+		{
+			desc:       "gen plugin e2e",
+			cmdLine:    "gen plugin e2e --kube-conformance-image-version=v123.456.789",
+			expectFile: "testdata/gen-plugin-e2e",
+		}, {
+			desc:       "gen plugin e2e respects configmap",
+			cmdLine:    "gen plugin e2e --kube-conformance-image-version=v123.456.789 --configmap=testdata/tiny-configmap.yaml",
+			expectFile: "testdata/gen-plugin-e2e-configmap",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			output := mustRunSonobuoyCommandWithContext(ctx, t, tc.cmdLine)
+			if *update {
+				if err := os.WriteFile(tc.expectFile, output.Bytes(), 0666); err != nil {
+					t.Fatalf("Failed to update goldenfile: %v", err)
+				}
+			} else {
+				fileData, err := ioutil.ReadFile(tc.expectFile)
+				if err != nil {
+					t.Fatalf("Failed to read golden file %v: %v", tc.expectFile, err)
+				}
+				if !bytes.Equal(fileData, output.Bytes()) {
+					t.Errorf("Expected manifest to equal goldenfile: %v but instead got:\n\n%v", tc.expectFile, output.String())
+				}
+			}
+		})
+	}
 }

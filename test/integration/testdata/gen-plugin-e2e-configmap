@@ -1,0 +1,44 @@
+config-map:
+  tiny-configmap.yaml: |
+    a: 1
+    b: 2
+podSpec:
+  containers: []
+  nodeSelector:
+    kubernetes.io/os: linux
+  restartPolicy: Never
+  serviceAccountName: sonobuoy-serviceaccount
+  tolerations:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+    operator: Exists
+  - key: CriticalAddonsOnly
+    operator: Exists
+  - key: kubernetes.io/e2e-evict-taint-key
+    operator: Exists
+sonobuoy-config:
+  driver: Job
+  plugin-name: e2e
+  result-format: junit
+spec:
+  command:
+  - /run_e2e.sh
+  env:
+  - name: E2E_FOCUS
+    value: \[Conformance\]
+  - name: E2E_SKIP
+    value: \[Disruptive\]|NoExecuteTaintManager
+  - name: E2E_PARALLEL
+    value: "false"
+  - name: E2E_USE_GO_RUNNER
+    value: "true"
+  - name: E2E_EXTRA_ARGS
+    value: --progress-report-url=http://localhost:8099/progress
+  image: k8s.gcr.io/conformance:v123.456.789
+  imagePullPolicy: Always
+  name: e2e
+  resources: {}
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
+
