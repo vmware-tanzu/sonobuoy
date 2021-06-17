@@ -213,17 +213,23 @@ func genPluginDef(cfg *GenPluginDefConfig) ([]byte, error) {
 
 func NewCmdGenE2E() *cobra.Command {
 	var genE2Eflags genFlags
+	configMapFiles := []string{}
+
 	var cmd = &cobra.Command{
 		Use:   "e2e",
 		Short: "Generates the e2e plugin definition based on the given options",
-		RunE:  genE2EManifest(&genE2Eflags),
+		RunE:  genE2EManifest(&genE2Eflags, &configMapFiles),
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(GenFlagSet(&genE2Eflags, EnabledRBACMode))
+	cmd.Flags().StringArrayVar(
+		&configMapFiles, "configmap", nil,
+		`Specifies files to read and add as configMaps. Will be mounted to the plugin at /tmp/sonobuoy/configs/<filename>.`,
+	)
 	return cmd
 }
 
-func genE2EManifest(genflags *genFlags) func(cmd *cobra.Command, args []string) error {
+func genE2EManifest(genflags *genFlags, configMapFiles *[]string) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		cfg, err := genflags.Config()
 		if err != nil {
@@ -231,6 +237,18 @@ func genE2EManifest(genflags *genFlags) func(cmd *cobra.Command, args []string) 
 		}
 
 		m := client.E2EManifest(cfg)
+		if len(*configMapFiles) > 0 {
+			m.ConfigMap = map[string]string{}
+		}
+		for _, v := range *configMapFiles {
+			fData, err := os.ReadFile(v)
+			if err != nil {
+				return errors.Wrapf(err, "failed to read file %q", v)
+			}
+			base := filepath.Base(v)
+			m.ConfigMap[base] = string(fData)
+		}
+
 		yaml, err := manifesthelper.ToYAML(m, cfg.ShowDefaultPodSpec)
 		if err != nil {
 			return err
