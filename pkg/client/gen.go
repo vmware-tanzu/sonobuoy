@@ -43,6 +43,8 @@ const (
 	lastE2EVersionWithoutProgress = "1.16.99"
 
 	envVarKeyExtraArgs = "E2E_EXTRA_ARGS"
+
+	sonobuoyK8sVersionKey = "SONOBUOY_K8S_VERSION"
 )
 
 // templateValues are used for direct template substitution for manifest generation.
@@ -160,6 +162,8 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		return nil, errors.Wrap(err, "plugin YAML generation")
 	}
 
+	cfg.PluginEnvOverrides, plugins = applyK8sVersion(cfg.KubeVersion, cfg.PluginEnvOverrides, plugins)
+
 	if cfg.PluginEnvOverrides != nil {
 		for pluginName, envVars := range cfg.PluginEnvOverrides {
 			found := false
@@ -227,6 +231,21 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func applyK8sVersion(imageVersion string, env map[string]map[string]string, plugins []*manifest.Manifest) (map[string]map[string]string, []*manifest.Manifest) {
+	// Set env on all plugins and swap out dynamic images.
+	if env == nil {
+		env = map[string]map[string]string{}
+	}
+	for i, p := range plugins {
+		if env[p.SonobuoyConfig.PluginName] == nil {
+			env[p.SonobuoyConfig.PluginName] = map[string]string{}
+		}
+		env[p.SonobuoyConfig.PluginName][sonobuoyK8sVersionKey] = imageVersion
+		plugins[i].Spec.Image = strings.ReplaceAll(plugins[i].Spec.Image, "$"+sonobuoyK8sVersionKey, imageVersion)
+	}
+	return env, plugins
 }
 
 func checkPluginsUnique(plugins []*manifest.Manifest) error {

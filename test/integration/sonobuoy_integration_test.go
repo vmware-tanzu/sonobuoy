@@ -460,12 +460,29 @@ func TestExactOutput(t *testing.T) {
 	}{
 		{
 			desc:       "gen plugin e2e",
-			cmdLine:    "gen plugin e2e --kube-conformance-image-version=v123.456.789",
-			expectFile: "testdata/gen-plugin-e2e",
+			cmdLine:    "gen plugin e2e --kubernetes-version=v123.456.789",
+			expectFile: "testdata/gen-plugin-e2e.golden",
 		}, {
 			desc:       "gen plugin e2e respects configmap",
-			cmdLine:    "gen plugin e2e --kube-conformance-image-version=v123.456.789 --configmap=testdata/tiny-configmap.yaml",
-			expectFile: "testdata/gen-plugin-e2e-configmap",
+			cmdLine:    "gen plugin e2e --kubernetes-version=v123.456.789 --configmap=testdata/tiny-configmap.yaml",
+			expectFile: "testdata/gen-plugin-e2e-configmap.golden",
+		}, {
+			desc:       "gen plugin e2e with deprecated flag",
+			cmdLine:    "gen plugin e2e --kube-conformance-image-version=v123.456.789",
+			expectFile: "testdata/gen-plugin-e2e-kube-flag-still-works.golden",
+		}, {
+			desc:       "gen with static config",
+			cmdLine:    "gen --config=testdata/static-config.json --kubernetes-version=v123.456.789",
+			expectFile: "testdata/gen-static.golden",
+		}, {
+			desc:       "gen specify dynamic plugin",
+			cmdLine:    "gen --config=testdata/static-config.json --kubernetes-version=v123.456.789 -pe2e",
+			expectFile: "testdata/gen-static-only-e2e.golden",
+		}, {
+			desc: "gen with variable plugin image",
+			cmdLine: "gen --config=testdata/static-config.json --kubernetes-version=v123.456.789 " +
+				"-p testdata/hello-world.yaml -p testdata/variable-image.yaml",
+			expectFile: "testdata/gen-variable-image.golden",
 		},
 	}
 	for _, tc := range testCases {

@@ -49,8 +49,8 @@ data:
       - /run_e2e.sh
       env:
       - name: E2E_FOCUS
-      - name: E2E_SKIP
       - name: E2E_PARALLEL
+      - name: E2E_SKIP
       - name: E2E_USE_GO_RUNNER
         value: "true"
       name: e2e
@@ -84,12 +84,12 @@ data:
       env:
       - name: CHROOT_DIR
         value: /node
-      - name: RESULTS_DIR
-        value: /tmp/results
       - name: NODE_NAME
         valueFrom:
           fieldRef:
             fieldPath: spec.nodeName
+      - name: RESULTS_DIR
+        value: /tmp/results
       name: systemd-logs
       resources: {}
       securityContext:

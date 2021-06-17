@@ -43,7 +43,7 @@ type imagesFlags struct {
 	kubeconfig        Kubeconfig
 	customRegistry    string
 	dryRun            bool
-	k8sVersion        string
+	k8sVersion        image.ConformanceImageVersion
 }
 
 func NewCmdImages() *cobra.Command {
@@ -209,7 +209,7 @@ func deleteCmd() *cobra.Command {
 				client = image.NewDockerClient()
 			}
 
-			if errs := deleteImages(flags.plugins, flags.kubeconfig, flags.e2eRegistryConfig, flags.k8sVersion, client); len(errs) > 0 {
+			if errs := deleteImages(flags.plugins, flags.kubeconfig, flags.e2eRegistryConfig, flags.k8sVersion.String(), client); len(errs) > 0 {
 				for _, err := range errs {
 					errlog.LogError(err)
 				}
@@ -229,9 +229,9 @@ func deleteCmd() *cobra.Command {
 
 // getClusterVersion will return either the given string or, if empty, use the kubeconfig
 // to reach out to the server and check its version.
-func getClusterVersion(k8sVersion string, kubeconfig Kubeconfig) (string, error) {
-	if len(k8sVersion) > 0 {
-		return k8sVersion, nil
+func getClusterVersion(k8sVersion image.ConformanceImageVersion, kubeconfig Kubeconfig) (string, error) {
+	if len(k8sVersion.String()) > 0 {
+		return k8sVersion.String(), nil
 	}
 
 	sbc, err := getSonobuoyClientFromKubecfg(kubeconfig)

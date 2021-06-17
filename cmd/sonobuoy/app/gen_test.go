@@ -271,7 +271,9 @@ func TestResolveConfig(t *testing.T) {
 
 			// Manually set KubeConformanceImage for all tests so that it does not error due to having 'auto' image
 			// without a real cluster to target for version info
-			gflagset.kubeConformanceImage = "testOnly"
+			if err := gflagset.k8sVersion.Set("v9.9.9"); err != nil {
+				t.Fatalf("Failed to set k8s version for testing: %v", err)
+			}
 
 			genConfig, err := gflagset.Config()
 			if err != nil {

@@ -84,6 +84,10 @@ type GenConfig struct {
 	// ShowDefaultPodSpec determines whether or not the default pod spec for
 	// the plugin should be incuded in the output.
 	ShowDefaultPodSpec bool
+
+	// The version of Kubernetes to assume. Used to surface for plugin images
+	// and env vars.
+	KubeVersion string
 }
 
 // Validate checks the config to determine if it is valid.
