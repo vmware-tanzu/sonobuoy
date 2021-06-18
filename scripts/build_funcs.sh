@@ -60,7 +60,7 @@ integration() {
         --env SONOBUOY_CLI="$SONOBUOY_CLI" \
         --network host \
         "$BUILD_IMAGE" \
-    go test ${VERBOSE:+-v} -timeout 3m -tags=integration "$GOTARGET"/test/integration/... -run TestConfigmaps
+    go test ${VERBOSE:+-v} -tags=integration "$GOTARGET"/test/integration/...
 }
 
 lint() {
