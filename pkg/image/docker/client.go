@@ -42,15 +42,11 @@ func (l LocalDocker) Run(image string, args ...string) ([]string, error) {
 }
 
 // PullIfNotPresent will pull an image if it is not present locally
-// retrying up to retries times
-// returns errors from pulling
+// retrying up to "retries" times. Returns errors from pulling.
 func (l LocalDocker) PullIfNotPresent(image string, retries int) error {
-	// TODO(bentheelder): switch most (all) of the logging here to debug level
-	// once we have configurable log levels
-	// if this did not return an error, then the image exists locally
 	cmd := exec.Command("docker", "inspect", "--type=image", image)
 	if err := cmd.Run(); err == nil {
-		log.Infof("Image: %s present locally", image)
+		log.Debugf("Image: %s present locally", image)
 		return nil
 	}
 	// otherwise try to pull it
