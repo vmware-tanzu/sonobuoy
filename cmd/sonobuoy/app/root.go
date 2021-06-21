@@ -62,9 +62,19 @@ func NewSonobuoyCommand() *cobra.Command {
 	cmds.AddCommand(NewCmdResults())
 	cmds.AddCommand(NewCmdSplat())
 
-	klog.InitFlags(nil)
-	cmds.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+	initKlog(cmds)
+	cmds.PersistentFlags().StringVar(&errlog.LogLevel, "level", "info", "Log level. One of {panic, fatal, error, warn, info, debug, trace}")
+
+	// Previously just had debug flag but in desire to have fine grained control over output we opted to
+	// have full ability to set level instead.
 	cmds.PersistentFlags().BoolVarP(&errlog.DebugOutput, "debug", "d", false, "Enable debug output (includes stack traces)")
+	if err := cmds.PersistentFlags().MarkHidden("debug"); err != nil {
+		panic(err)
+	}
+	if err := cmds.PersistentFlags().MarkDeprecated("debug", "Use --level flag instead."); err != nil {
+		panic(err)
+	}
+
 	return cmds
 
 }
@@ -89,4 +99,31 @@ func prerunChecks(cmd *cobra.Command, args []string) error {
 		logrus.Warnf("mode flag and e2e-focus/skip flags both set and may collide")
 	}
 	return nil
+}
+
+// initKlog flags but mark them hidden since they just make the help
+// more verbose and dont directly speak to the sonobuoy flags themselves.
+// Still usable if truly necessary.
+func initKlog(cmd *cobra.Command) {
+	klog.InitFlags(nil)
+	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+
+	for _, f := range []string{
+		"log_dir",
+		"log_file",
+		"log_file_max_size",
+		"logtostderr",
+		"alsologtostderr",
+		"v",
+		"add_dir_header",
+		"skip_headers",
+		"skip_log_headers",
+		"stderrthreshold",
+		"vmodule",
+		"log_backtrace_at",
+	} {
+		if err := cmd.PersistentFlags().MarkHidden(f); err != nil {
+			panic(err)
+		}
+	}
 }
