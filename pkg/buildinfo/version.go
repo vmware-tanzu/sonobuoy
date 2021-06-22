@@ -20,13 +20,16 @@ limitations under the License.
 package buildinfo
 
 // Version is the current version of Sonobuoy, set by the go linker's -X flag at build time
-var Version = "v0.51.0"
+var Version = "v0.52.0"
 
 // GitSHA is the actual commit that is being built, set by the go linker's -X flag at build time.
 var GitSHA string
 
 // MinimumKubeVersion is the lowest API version of Kubernetes this release of Sonobuoy supports.
+// (johnschnake): Not sure that we are really updating this anymore; now that we are generally
+// independant  of k8s releases, we don't have to bump this if we don't have a clear reason.
 var MinimumKubeVersion = "1.17.0"
 
 // MaximumKubeVersion is the highest API version of Kubernetes this release of Sonobuoy supports.
+// Set to 1.99.99 so as not to error/warn on new versions for development.
 var MaximumKubeVersion = "1.99.99"
