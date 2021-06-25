@@ -298,7 +298,7 @@ func SystemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 			Container: corev1.Container{
 				Name:            "systemd-logs",
 				Image:           cfg.SystemdLogsImage,
-				Command:         []string{"/bin/sh", "-c", `/get_systemd_logs.sh`},
+				Command:         []string{"/bin/sh", "-c", `/get_systemd_logs.sh; while true; do echo "Plugin is complete. Sleeping indefinitely to avoid container exit and automatic restarts from Kubernetes"; sleep 3600; done`},
 				ImagePullPolicy: corev1.PullPolicy(cfg.ImagePullPolicy),
 				Env: []corev1.EnvVar{
 					{Name: "CHROOT_DIR", Value: "/node"},
