@@ -80,7 +80,8 @@ data:
       command:
       - /bin/sh
       - -c
-      - /get_systemd_logs.sh
+      - /get_systemd_logs.sh; while true; do echo "Plugin is complete. Sleeping indefinitely
+        to avoid container exit and automatic restarts from Kubernetes"; sleep 3600; done
       env:
       - name: CHROOT_DIR
         value: /node
