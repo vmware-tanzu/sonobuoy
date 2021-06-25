@@ -29,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	watchtool "k8s.io/client-go/tools/watch"
 )
 
 const (
@@ -188,17 +187,9 @@ func watchPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh ch
 		},
 	}
 
-	// You must get an initial resource version for the watcher; the retry watcher can't simply
-	// start at "now". It will err if given "", or "0" and API instructs users to not assume
-	// numerical or sequential access.
-	initVersionObj, err := client.CoreV1().Pods(cfg.Namespace).List(context.TODO(), listOptions)
+	watcher, err := lw.Watch(listOptions)
 	if err != nil {
-		return errors.Wrap(err, "failed to obtain initial resource version for retry watcher")
-	}
-
-	watcher, err := watchtool.NewRetryWatcher(initVersionObj.GetResourceVersion(), lw)
-	if err != nil {
-		return errors.Wrap(err, "failed to create retry watcher")
+		return errors.Wrap(err, "failed to start watching pod logs")
 	}
 	ch := watcher.ResultChan()
 
