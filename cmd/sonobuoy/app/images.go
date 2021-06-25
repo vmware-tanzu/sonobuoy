@@ -230,18 +230,18 @@ func deleteCmd() *cobra.Command {
 // getClusterVersion will return either the given string or, if empty, use the kubeconfig
 // to reach out to the server and check its version.
 func getClusterVersion(k8sVersion image.ConformanceImageVersion, kubeconfig Kubeconfig) (string, error) {
-	if len(k8sVersion.String()) > 0 {
+	if len(k8sVersion.String()) > 0 && k8sVersion != image.ConformanceImageVersionAuto {
 		return k8sVersion.String(), nil
 	}
 
 	sbc, err := getSonobuoyClientFromKubecfg(kubeconfig)
 	if err != nil {
-		return "", errors.Wrap(err, "couldn't create sonobuoy client")
+		return "", errors.Wrap(err, "couldn't create sonobuoy client in order to check Kubernetes version")
 	}
 
 	version, err := sbc.Version()
 	if err != nil {
-		return "", errors.Wrap(err, "couldn't get Sonobuoy client")
+		return "", errors.Wrap(err, "couldn't determine Kubernetes version from cluster")
 	}
 
 	return version, nil
