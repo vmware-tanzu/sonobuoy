@@ -72,3 +72,41 @@ func TestConvertImagesToPairs(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestGetClusterVersion(t *testing.T) {
+	testCases := []struct {
+		desc      string
+		input     image.ConformanceImageVersion
+		expect    string
+		expectErr bool
+	}{
+		{
+			desc:      "Empty gets resolved (which will fail here)",
+			input:     image.ConformanceImageVersion(""),
+			expectErr: true,
+		}, {
+			desc:      "auto gets resolved (which will fail here)",
+			input:     image.ConformanceImageVersion("auto"),
+			expectErr: true,
+		}, {
+			desc:   "Other text gets returned without error",
+			input:  image.ConformanceImageVersion("foo"),
+			expect: "foo",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			output, err := getClusterVersion(tc.input, Kubeconfig{})
+			switch {
+			case err != nil && !tc.expectErr:
+				t.Fatalf("Expected no error but got %v", err)
+			case err == nil && tc.expectErr:
+				t.Fatalf("Expected error but got none")
+			}
+
+			if output != tc.expect {
+				t.Errorf("Expected %v but got %v", tc.expect, output)
+			}
+		})
+	}
+}
