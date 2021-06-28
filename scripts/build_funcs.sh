@@ -35,6 +35,21 @@ WIN_AMD64_BASEIMAGE=mcr.microsoft.com/windows/nanoserver
 TEST_IMAGE=testimage:v0.1
 KIND_CLUSTER=kind
 
+# update updates all the goldenfiles throughout our tests. Some of those are integration
+# tests so this will also build sonobuoy locally. A kind cluster won't be necessary.
+update_local() {
+    # Redirect output so we can avoid clutter where go is telling us where -update
+    # is not defined. Just printing out the packages at the end.
+    go test $GOTARGET/cmd/... $GOTARGET/pkg/... -update > tmp_update.out
+    cat tmp_update.out | grep github | grep -v ok
+    cat tmp_update.out | grep github | grep ok
+    rm tmp_update.out
+
+    # Integration tests take longer and need kind (usually). Just run the test we need.
+    go build -o sonobuoy
+    go test $GOTARGET/test/integration -update -tags integration -run TestExactOutput
+}
+
 unit_local() {
     go test ${VERBOSE:+-v} -timeout 60s -coverprofile=coverage.txt -covermode=atomic $GOTARGET/cmd/... $GOTARGET/pkg/...
 }
