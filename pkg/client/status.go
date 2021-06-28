@@ -18,22 +18,34 @@ package client
 
 import (
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 )
 
+// GetStatus returns the aggregation status that is set as an annotation on the aggregator pod.
+// Returns an error if unable to find the namespace, pod, or annotation. Use GetStatusPod to
+// also return the pod itself so that you can better understand the state of the system.
 func (c *SonobuoyClient) GetStatus(cfg *StatusConfig) (*aggregation.Status, error) {
+	s, _, err := c.GetStatusPod(cfg)
+	return s, err
+}
+
+// GetStatus returns the aggregation status that is set as an annotation on the aggregator pod.
+// Returns an error if unable to find the namespace, pod, or annotation. Also returns the aggregator
+// pod itself so that you can check its exact status or other annotations.
+func (c *SonobuoyClient) GetStatusPod(cfg *StatusConfig) (*aggregation.Status, *corev1.Pod, error) {
 	if cfg == nil {
-		return nil, errors.New("nil StatusConfig provided")
+		return nil, nil, errors.New("nil StatusConfig provided")
 	}
 
 	if err := cfg.Validate(); err != nil {
-		return nil, errors.Wrap(err, "config validation failed")
+		return nil, nil, errors.Wrap(err, "config validation failed")
 	}
 
 	client, err := c.Client()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	return aggregation.GetStatus(client, cfg.Namespace)

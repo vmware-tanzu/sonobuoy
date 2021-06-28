@@ -29,7 +29,7 @@ var expectedSummary = `         PLUGIN     STATUS   RESULT   COUNT
    systemd_logs   complete   failed       1
    systemd_logs    running                2
 
-Sonobuoy is still running. Runs can take up to 60 minutes.
+Sonobuoy is still running. Runs can take 60 minutes or more depending on cluster and plugin configuration.
 `
 var expectedShowAll = `         PLUGIN     NODE     STATUS   RESULT
             e2e            complete   passed
@@ -37,7 +37,7 @@ var expectedShowAll = `         PLUGIN     NODE     STATUS   RESULT
    systemd_logs   node02   complete   failed
    systemd_logs   node03    running         
 
-Sonobuoy is still running. Runs can take up to 60 minutes.
+Sonobuoy is still running. Runs can take 60 minutes or more depending on cluster and plugin configuration.
 `
 
 var exampleStatus = aggregation.Status{
