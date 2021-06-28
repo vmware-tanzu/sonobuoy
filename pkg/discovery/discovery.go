@@ -349,7 +349,7 @@ func getPodLogNamespaceFilter(cfg *config.Config) string {
 // effect the finalized status the user sees. This does not change the
 // status of individual plugins.
 func updateStatus(client kubernetes.Interface, namespace string, status string, tarInfo *pluginaggregation.TarInfo) error {
-	podStatus, err := pluginaggregation.GetStatus(client, namespace)
+	podStatus, _, err := pluginaggregation.GetStatus(client, namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the existing status")
 	}
@@ -363,7 +363,7 @@ func updateStatus(client kubernetes.Interface, namespace string, status string, 
 }
 
 func updatePluginStatus(client kubernetes.Interface, namespace string, pluginName string, item results.Item) error {
-	podStatus, err := pluginaggregation.GetStatus(client, namespace)
+	podStatus, _, err := pluginaggregation.GetStatus(client, namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the existing status")
 	}

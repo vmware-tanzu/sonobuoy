@@ -107,35 +107,35 @@ func (s *Status) updateStatus() error {
 // GetStatus returns the current status status on the sonobuoy pod. If the pod
 // does not exist, is not running, or is missing the status annotation, an error
 // is returned.
-func GetStatus(client kubernetes.Interface, namespace string) (*Status, error) {
+func GetStatus(client kubernetes.Interface, namespace string) (*Status, *corev1.Pod, error) {
 	if _, err := client.CoreV1().Namespaces().Get(context.TODO(), namespace, metav1.GetOptions{}); err != nil {
-		return nil, errors.Wrapf(err, "failed to get namespace %v", namespace)
+		return nil, nil, errors.Wrapf(err, "failed to get namespace %v", namespace)
 	}
 
 	// Determine sonobuoy pod name
 	podName, err := GetAggregatorPodName(client, namespace)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get the name of the aggregator pod to get the status from")
+		return nil, nil, errors.Wrap(err, "failed to get the name of the aggregator pod to get the status from")
 	}
 
 	pod, err := client.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.New("could not retrieve sonobuoy pod")
+		return nil, nil, errors.New("could not retrieve sonobuoy pod")
 	}
 
 	if pod.Status.Phase != corev1.PodRunning {
-		return nil, fmt.Errorf("pod has status %q", pod.Status.Phase)
+		return nil, pod, fmt.Errorf("pod has status %q", pod.Status.Phase)
 	}
 
 	statusJSON, ok := pod.Annotations[StatusAnnotationName]
 	if !ok {
-		return nil, fmt.Errorf("missing status annotation %q", StatusAnnotationName)
+		return nil, pod, fmt.Errorf("missing status annotation %q", StatusAnnotationName)
 	}
 
 	var status Status
 	if err := json.Unmarshal([]byte(statusJSON), &status); err != nil {
-		return nil, errors.Wrap(err, "couldn't unmarshal the JSON status annotation")
+		return nil, pod, errors.Wrap(err, "couldn't unmarshal the JSON status annotation")
 	}
 
-	return &status, nil
+	return &status, pod, nil
 }
