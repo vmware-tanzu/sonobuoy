@@ -110,6 +110,7 @@ func cleanup(t *testing.T, namespace string) {
 }
 
 func TestUseNamespaceFromManifest(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
@@ -141,6 +142,7 @@ func TestUseNamespaceFromManifest(t *testing.T) {
 
 // TestSimpleRun runs a simple plugin to check that it runs successfully
 func TestSimpleRun(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
@@ -152,6 +154,7 @@ func TestSimpleRun(t *testing.T) {
 }
 
 func TestRetrieveAndExtract(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
@@ -195,6 +198,7 @@ func TestRetrieveAndExtract(t *testing.T) {
 
 // TestQuick runs a real "--mode quick" check against the cluster to ensure that it passes.
 func TestQuick(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
@@ -212,6 +216,7 @@ func TestQuick(t *testing.T) {
 }
 
 func TestConfigmaps(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
@@ -324,6 +329,7 @@ func saveToArtifacts(t *testing.T, p string) (newPath string) {
 
 // TestSonobuoyVersion checks that all fields in the output from `version` are non-empty
 func TestSonobuoyVersion(t *testing.T) {
+	t.Parallel()
 	stdout := mustRunSonobuoyCommand(t, "version")
 
 	lines := strings.Split(stdout.String(), "\n")
@@ -338,6 +344,7 @@ func TestSonobuoyVersion(t *testing.T) {
 }
 
 func TestManualResultsJob(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
@@ -362,6 +369,7 @@ func TestManualResultsJob(t *testing.T) {
 }
 
 func TestManualResultsDaemonSet(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
@@ -391,6 +399,7 @@ func TestManualResultsDaemonSet(t *testing.T) {
 }
 
 func TestManualResultsWithNestedDetails(t *testing.T) {
+	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
