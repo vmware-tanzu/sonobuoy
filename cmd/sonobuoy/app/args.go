@@ -30,7 +30,6 @@ import (
 	"github.com/spf13/pflag"
 	ops "github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
-	v1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -318,10 +317,9 @@ func AddWaitOutputFlag(mode *WaitOutputMode, flags *pflag.FlagSet, defaultMode W
 }
 
 // AddImagePullPolicyFlag adds a boolean flag for deleting everything (including E2E tests).
-func AddImagePullPolicyFlag(policy *ImagePullPolicy, flags *pflag.FlagSet) {
-	*policy = ImagePullPolicy(v1.PullAlways) //default
-	flags.Var(
-		policy, imagePullPolicyFlag,
+func AddImagePullPolicyFlag(policy *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		policy, imagePullPolicyFlag, config.DefaultSonobuoyPullPolicy,
 		fmt.Sprintf("The ImagePullPolicy Sonobuoy should use for the aggregators and workers. Valid options are %s.", strings.Join(ValidPullPolicies(), ", ")),
 	)
 }

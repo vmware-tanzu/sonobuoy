@@ -117,7 +117,7 @@ func e2es(e2eflags *e2eFlags) func(cmd *cobra.Command, args []string) {
 
 		if !e2eflags.skipPreflight {
 			pcfg := &client.PreflightConfig{
-				Namespace:    e2eflags.runFlags.namespace,
+				Namespace:    e2eflags.runFlags.sonobuoyConfig.Namespace,
 				DNSNamespace: e2eflags.runFlags.dnsNamespace,
 				DNSPodLabels: e2eflags.runFlags.dnsPodLabels,
 			}

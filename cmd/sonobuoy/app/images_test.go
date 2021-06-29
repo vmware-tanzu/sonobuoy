@@ -99,9 +99,9 @@ func TestGetClusterVersion(t *testing.T) {
 			output, err := getClusterVersion(tc.input, Kubeconfig{})
 			switch {
 			case err != nil && !tc.expectErr:
-				t.Fatalf("Expected no error but got %v", err)
+				t.Errorf("Expected no error but got %v", err)
 			case err == nil && tc.expectErr:
-				t.Fatalf("Expected error but got none")
+				t.Errorf("Expected error but got none")
 			}
 
 			if output != tc.expect {
