@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kylelemons/godebug/pretty"
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -492,13 +493,26 @@ func TestExactOutput(t *testing.T) {
 			cmdLine: "gen --config=testdata/static-config.json --kubernetes-version=v123.456.789 " +
 				"-p testdata/hello-world.yaml -p testdata/variable-image.yaml",
 			expectFile: "testdata/gen-variable-image.golden",
+		}, {
+			desc:       "gen doesnt provide UUID",
+			cmdLine:    "gen",
+			expectFile: "testdata/gen-no-uuid.golden",
+		}, {
+			desc:       "gen config",
+			cmdLine:    "gen config",
+			expectFile: "testdata/gen-config-no-uuid.golden",
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 			output := mustRunSonobuoyCommandWithContext(ctx, t, tc.cmdLine)
+			binaryVersion := mustRunSonobuoyCommand(t, "version --short")
+			binaryVer := strings.TrimSpace(binaryVersion.String())
+			t.Logf("version output of binary, after trimming space: %q\n", binaryVer)
+
+			outString := strings.ReplaceAll(output.String(), binaryVer, "*STATIC_FOR_TESTING*")
 			if *update {
-				if err := os.WriteFile(tc.expectFile, output.Bytes(), 0666); err != nil {
+				if err := os.WriteFile(tc.expectFile, []byte(outString), 0666); err != nil {
 					t.Fatalf("Failed to update goldenfile: %v", err)
 				}
 			} else {
@@ -506,8 +520,8 @@ func TestExactOutput(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Failed to read golden file %v: %v", tc.expectFile, err)
 				}
-				if !bytes.Equal(fileData, output.Bytes()) {
-					t.Errorf("Expected manifest to equal goldenfile: %v but instead got:\n\n%v", tc.expectFile, output.String())
+				if diff := pretty.Compare(string(fileData), outString); diff != "" {
+					t.Errorf("Expected manifest to equal goldenfile: %v but got diff:\n\n%v", tc.expectFile, diff)
 				}
 			}
 		})

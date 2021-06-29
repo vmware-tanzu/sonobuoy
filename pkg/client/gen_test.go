@@ -142,9 +142,8 @@ func TestGenerateManifest(t *testing.T) {
 }
 
 func TestGenerateManifestGolden(t *testing.T) {
-	newConfigWithoutUUID := func() *config.Config {
+	staticConfig := func() *config.Config {
 		c := config.New()
-		c.UUID = ""
 
 		// Make version static so it doesn't have to be updated when we bump versions.
 		// Use `replace` so we are still effectively testing that the version would have
@@ -155,7 +154,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 	}
 
 	fromConfig := func(f func(*config.Config) *config.Config) *config.Config {
-		c := newConfigWithoutUUID()
+		c := staticConfig()
 		return f(c)
 	}
 
@@ -169,7 +168,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			name: "Default",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
-				Config:    newConfigWithoutUUID(),
+				Config:    staticConfig(),
 			},
 			goldenFile: filepath.Join("testdata", "default.golden"),
 		}, {
@@ -397,7 +396,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			name: "Node selector can be added",
 			inputcm: &client.GenConfig{
 				E2EConfig:     &client.E2EConfig{},
-				Config:        newConfigWithoutUUID(),
+				Config:        staticConfig(),
 				NodeSelectors: map[string]string{"foo": "bar"},
 			},
 			goldenFile: filepath.Join("testdata", "single-node-selector.golden"),
@@ -405,7 +404,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			name: "Multiple node selectors can be added",
 			inputcm: &client.GenConfig{
 				E2EConfig:     &client.E2EConfig{},
-				Config:        newConfigWithoutUUID(),
+				Config:        staticConfig(),
 				NodeSelectors: map[string]string{"foo": "bar", "fizz": "buzz"},
 			},
 			goldenFile: filepath.Join("testdata", "multiple-node-selector.golden"),
@@ -413,7 +412,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			name: "Plugins can specify configmaps",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
-				Config:    newConfigWithoutUUID(),
+				Config:    staticConfig(),
 				StaticPlugins: []*manifest.Manifest{
 					{
 						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myplugin1"},
