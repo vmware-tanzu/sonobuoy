@@ -29,14 +29,6 @@ func TestDefaults(t *testing.T) {
 	cfg1 := config.New()
 	cfg2 := config.New()
 
-	if reflect.DeepEqual(&cfg2, &cfg1) {
-		t.Fatalf("Defaults should not match UUIDs collided")
-	}
-
-	// set UUIDs to be the same
-	cfg1.UUID = "0xDEADBEEF"
-	cfg2.UUID = "0xDEADBEEF"
-
 	if !reflect.DeepEqual(&cfg2, &cfg1) {
 		t.Fatalf("Defaults should match but didn't")
 	}

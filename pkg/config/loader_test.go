@@ -126,6 +126,10 @@ func TestSaveAndLoad(t *testing.T) {
 	// We can't predict what advertise address we'll detect
 	cfg2.Aggregation.AdvertiseAddress = cfg.Aggregation.AdvertiseAddress
 
+	if reflect.DeepEqual(cfg2, cfg) {
+		t.Fatalf("Defaults shouldnt match at first since the Loader adds UUID but did: \n\n%v\n\n%v", cfg2, cfg)
+	}
+	cfg.UUID = cfg2.UUID
 	if !reflect.DeepEqual(cfg2, cfg) {
 		t.Fatalf("Defaults should match but didn't \n\n%v\n\n%v", cfg2, cfg)
 	}
@@ -133,7 +137,6 @@ func TestSaveAndLoad(t *testing.T) {
 
 func TestLoadConfigSetsUUID(t *testing.T) {
 	cfg := New()
-	cfg.UUID = ""
 
 	if blob, err := json.Marshal(&cfg); err == nil {
 		if err = ioutil.WriteFile("./config.json", blob, 0644); err != nil {

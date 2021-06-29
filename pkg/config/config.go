@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/c2h5oh/datasize"
-	uuid "github.com/satori/go.uuid"
 	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -346,8 +345,6 @@ func (c PodLogLimits) timeLimitDuration() (val time.Duration, defaulted bool, er
 // New returns a newly-constructed Config object with default values.
 func New() *Config {
 	var cfg Config
-	cfgUuid, _ := uuid.NewV4()
-	cfg.UUID = cfgUuid.String()
 	cfg.Description = "DEFAULT"
 	cfg.ResultsDir = AggregatorResultsPath
 	cfg.Version = buildinfo.Version
