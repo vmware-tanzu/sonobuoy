@@ -35,21 +35,6 @@ WIN_AMD64_BASEIMAGE=mcr.microsoft.com/windows/nanoserver
 TEST_IMAGE=testimage:v0.1
 KIND_CLUSTER=kind
 
-# update updates all the goldenfiles throughout our tests. Some of those are integration
-# tests so this will also build sonobuoy locally. A kind cluster won't be necessary.
-update_local() {
-    # Redirect output so we can avoid clutter where go is telling us where -update
-    # is not defined. Just printing out the packages at the end.
-    go test $GOTARGET/cmd/... $GOTARGET/pkg/... -update > tmp_update.out
-    cat tmp_update.out | grep github | grep -v ok
-    cat tmp_update.out | grep github | grep ok
-    rm tmp_update.out
-
-    # Integration tests take longer and need kind (usually). Just run the test we need.
-    go build -o sonobuoy
-    go test $GOTARGET/test/integration -update -tags integration -run TestExactOutput
-}
-
 unit_local() {
     go test ${VERBOSE:+-v} -timeout 60s -coverprofile=coverage.txt -covermode=atomic $GOTARGET/cmd/... $GOTARGET/pkg/...
 }
@@ -197,7 +182,7 @@ build_binaries() {
 # Builds sonobuoy using the local goos/goarch.
 native() {
     LDFLAGS="-s -w -X $GOTARGET/pkg/buildinfo.Version=$GIT_VERSION -X $GOTARGET/pkg/buildinfo.GitSHA=$GIT_REF_LONG"
-    args=("${VERBOSE:+-v}" -ldflags "${LDFLAGS}" "$GOTARGET")
+    args=(-ldflags "${LDFLAGS}" "$GOTARGET")
     CGO_ENABLED=0 GOOS="$HOST_GOOS" GOARCH="$HOST_GOARCH" go build -o sonobuoy "${args[@]}"
 }
 
@@ -342,4 +327,22 @@ load_test_images_into_cluster(){
     # Tests will look for the sonobuoy images by default, so hard-code those.
     kind load docker-image --name $KIND_CLUSTER sonobuoy/$TARGET:$IMAGE_VERSION
     kind load docker-image --name $KIND_CLUSTER sonobuoy/$TEST_IMAGE
+}
+
+# update_local updates all the goldenfiles throughout our tests. Some of those are integration
+# tests so this will also build sonobuoy locally. A kind cluster won't be necessary.
+update_local() {
+    set -x
+    # Redirect output so we can avoid clutter where go is telling us where -update
+    # is not defined. Just printing out the packages at the end.
+    go test $GOTARGET/cmd/... $GOTARGET/pkg/... -update > tmp_update.out
+    cat tmp_update.out | grep github | grep -v ok
+    cat tmp_update.out | grep github | grep ok
+    rm tmp_update.out
+
+    # Ensure you build using the intended script so buildinfo gets set.
+    native
+    # Integration tests take longer and need kind (usually). Just run the test we need.
+    go test $GOTARGET/test/integration -update -v -tags integration -run TestExactOutput
+    set +x
 }

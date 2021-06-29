@@ -498,9 +498,25 @@ func TestExactOutput(t *testing.T) {
 			cmdLine:    "gen",
 			expectFile: "testdata/gen-no-uuid.golden",
 		}, {
-			desc:       "gen config",
+			desc:       "gen config doesnt provide UUID",
 			cmdLine:    "gen config",
 			expectFile: "testdata/gen-config-no-uuid.golden",
+		}, {
+			desc:       "gen with config testing fields that also have flags",
+			cmdLine:    "gen --config=testdata/subfieldTest.json",
+			expectFile: "testdata/gen-config-no-flags.golden",
+		}, {
+			desc:       "gen with flags targeting nested config fields",
+			cmdLine:    "gen -n=cmdlineNS --image-pull-policy=Always --sonobuoy-image=cmdlineimg --timeout=99",
+			expectFile: "testdata/gen-subfield-flags.golden",
+		}, {
+			desc:       "gen with config then flags targeting subfields",
+			cmdLine:    "gen --config=testdata/subfieldTest.json -n cmdlineNS --image-pull-policy=Always --sonobuoy-image=cmdlineimg --timeout=99",
+			expectFile: "testdata/gen-config-then-flags.golden",
+		}, {
+			desc:       "gen with flags targeting subfields then config",
+			cmdLine:    "gen -n=cmdlineNS --image-pull-policy=Always --sonobuoy-image=cmdlineimg --timeout=99 --config=testdata/subfieldTest.json",
+			expectFile: "testdata/gen-flags-then-config.golden",
 		},
 	}
 	for _, tc := range testCases {
