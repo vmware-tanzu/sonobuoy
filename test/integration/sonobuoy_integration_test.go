@@ -48,16 +48,16 @@ func findSonobuoyCLI() (string, error) {
 
 // runSonobuoyCommandWithContext runs the Sonobuoy CLI with the given context and arguments.
 // It returns any encountered error and the stdout and stderr from the command execution.
-func runSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args string) (bytes.Buffer, bytes.Buffer, error) {
-	var stdout, stderr bytes.Buffer
+func runSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args string) (bytes.Buffer, error) {
+	var combinedOutput bytes.Buffer
 
 	command := exec.CommandContext(ctx, sonobuoy, strings.Fields(args)...)
-	command.Stdout = &stdout
-	command.Stderr = &stderr
+	command.Stdout = &combinedOutput
+	command.Stderr = &combinedOutput
 
 	t.Logf("Running %q\n", command.String())
 
-	return stdout, stderr, command.Run()
+	return combinedOutput, command.Run()
 }
 
 func mustRunSonobuoyCommand(t *testing.T, args string) bytes.Buffer {
@@ -83,7 +83,7 @@ func mustRunSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args s
 
 // runSonobuoyCommand runs the Sonobuoy CLI with the given arguments and a background context.
 // It returns any encountered error and the stdout and stderr from the command execution.
-func runSonobuoyCommand(t *testing.T, args string) (bytes.Buffer, bytes.Buffer, error) {
+func runSonobuoyCommand(t *testing.T, args string) (bytes.Buffer, error) {
 	return runSonobuoyCommandWithContext(context.Background(), t, args)
 }
 
@@ -102,11 +102,10 @@ func cleanup(t *testing.T, namespace string) {
 		args += " -n " + namespace
 	}
 
-	stdout, stderr, err := runSonobuoyCommand(t, args)
+	out, err := runSonobuoyCommand(t, args)
 	if err != nil {
 		t.Logf("Error encountered during cleanup: %q\n", err)
-		t.Log(stdout.String())
-		t.Log(stderr.String())
+		t.Log(out.String())
 	}
 }
 
@@ -513,18 +512,15 @@ func TestExactOutput(t *testing.T) {
 			desc:       "gen with config then flags targeting subfields",
 			cmdLine:    "gen --config=testdata/subfieldTest.json -n cmdlineNS --image-pull-policy=Always --sonobuoy-image=cmdlineimg --timeout=99",
 			expectFile: "testdata/gen-config-then-flags.golden",
-		}, {
-			desc:       "gen with flags targeting subfields then config",
-			cmdLine:    "gen -n=cmdlineNS --image-pull-policy=Always --sonobuoy-image=cmdlineimg --timeout=99 --config=testdata/subfieldTest.json",
-			expectFile: "testdata/gen-flags-then-config.golden",
 		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			output := mustRunSonobuoyCommandWithContext(ctx, t, tc.cmdLine)
+			// Allow errors here since we also may test stderr
+			output, _ := runSonobuoyCommandWithContext(ctx, t, tc.cmdLine)
+
 			binaryVersion := mustRunSonobuoyCommand(t, "version --short")
 			binaryVer := strings.TrimSpace(binaryVersion.String())
-			t.Logf("version output of binary, after trimming space: %q\n", binaryVer)
 
 			outString := strings.ReplaceAll(output.String(), binaryVer, "*STATIC_FOR_TESTING*")
 			if *update {
@@ -539,6 +535,33 @@ func TestExactOutput(t *testing.T) {
 				if diff := pretty.Compare(string(fileData), outString); diff != "" {
 					t.Errorf("Expected manifest to equal goldenfile: %v but got diff:\n\n%v", tc.expectFile, diff)
 				}
+			}
+		})
+	}
+}
+
+func TestOutputIncludes(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	testCases := []struct {
+		desc          string
+		cmdLine       string
+		expectSnippet string
+	}{
+		{
+			desc:          "gen with flags targeting subfields then config",
+			cmdLine:       "gen -n=cmdlineNS --image-pull-policy=Always --sonobuoy-image=cmdlineimg --timeout=99 --config=testdata/subfieldTest.json",
+			expectSnippet: "if a custom config file is set, it must be set before other flags that modify configuration fields",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Allow errors here since we also may test stderr
+			output, _ := runSonobuoyCommandWithContext(ctx, t, tc.cmdLine)
+
+			if !strings.Contains(output.String(), tc.expectSnippet) {
+				t.Errorf("Expected output to include %q, instead got:\n\n%v", tc.expectSnippet, output.String())
 			}
 		})
 	}

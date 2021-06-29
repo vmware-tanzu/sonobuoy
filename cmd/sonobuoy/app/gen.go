@@ -26,7 +26,6 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/image"
 	imagepkg "github.com/vmware-tanzu/sonobuoy/pkg/image"
 
-	"github.com/imdario/mergo"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -39,17 +38,13 @@ type genFlags struct {
 	mode                 client.Mode
 	rbacMode             RBACMode
 	kubecfg              Kubeconfig
-	namespace            string
 	dnsNamespace         string
 	dnsPodLabels         []string
-	sonobuoyImage        string
 	kubeConformanceImage string
 	systemdLogsImage     string
 	sshKeyPath           string
 	sshUser              string
 	k8sVersion           imagepkg.ConformanceImageVersion
-	imagePullPolicy      ImagePullPolicy
-	timeoutSeconds       int
 	showDefaultPodSpec   bool
 
 	// plugins will keep a list of the plugins we want. Custom type for
@@ -69,24 +64,24 @@ type genFlags struct {
 	// configs we need to tell whether or not values are default values or the user
 	// provided them on the command line/config file.
 	e2eflags *pflag.FlagSet
-	genflags *pflag.FlagSet
 }
 
 func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	genset := pflag.NewFlagSet("generate", pflag.ExitOnError)
-	AddModeFlag(&cfg.mode, genset)
+	cfg.sonobuoyConfig.Config = *config.New()
 	AddSonobuoyConfigFlag(&cfg.sonobuoyConfig, genset)
+	AddModeFlag(&cfg.mode, genset)
 	AddKubeconfigFlag(&cfg.kubecfg, genset)
 	cfg.e2eflags = AddE2EConfigFlags(genset)
 	AddRBACModeFlags(&cfg.rbacMode, genset, rbac)
-	AddImagePullPolicyFlag(&cfg.imagePullPolicy, genset)
-	AddTimeoutFlag(&cfg.timeoutSeconds, genset)
+	AddImagePullPolicyFlag(&cfg.sonobuoyConfig.ImagePullPolicy, genset)
+	AddTimeoutFlag(&cfg.sonobuoyConfig.Aggregation.TimeoutSeconds, genset)
 	AddShowDefaultPodSpecFlag(&cfg.showDefaultPodSpec, genset)
 
-	AddNamespaceFlag(&cfg.namespace, genset)
+	AddNamespaceFlag(&cfg.sonobuoyConfig.Namespace, genset)
 	AddDNSNamespaceFlag(&cfg.dnsNamespace, genset)
 	AddDNSPodLabelsFlag(&cfg.dnsPodLabels, genset)
-	AddSonobuoyImage(&cfg.sonobuoyImage, genset)
+	AddSonobuoyImage(&cfg.sonobuoyConfig.WorkerImage, genset)
 	AddKubeConformanceImage(&cfg.kubeConformanceImage, genset)
 	AddSystemdLogsImage(&cfg.systemdLogsImage, genset)
 	AddSSHKeyPathFlag(&cfg.sshKeyPath, genset)
@@ -99,7 +94,6 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 
 	AddKubeConformanceImageVersion(&cfg.k8sVersion, genset)
 	AddKubernetesVersionFlag(&cfg.k8sVersion, genset)
-	cfg.genflags = genset
 	return genset
 }
 
@@ -160,11 +154,11 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 
 	return &client.GenConfig{
 		E2EConfig:            e2ecfg,
-		Config:               g.resolveConfig(),
+		Config:               &g.sonobuoyConfig.Config,
 		EnableRBAC:           rbacEnabled,
 		KubeConformanceImage: e2eImage,
 		SystemdLogsImage:     g.systemdLogsImage,
-		ImagePullPolicy:      g.imagePullPolicy.String(),
+		ImagePullPolicy:      g.sonobuoyConfig.ImagePullPolicy,
 		SSHKeyPath:           g.sshKeyPath,
 		SSHUser:              g.sshUser,
 		DynamicPlugins:       g.plugins.DynamicPlugins,
@@ -228,100 +222,4 @@ func getClient(kubeconfig *Kubeconfig) (*kubernetes.Clientset, error) {
 	}
 
 	return client, kubeError
-}
-
-// getConfig generates a config which has the the following rules:
-//  - command line options override config values
-//  - plugins specified manually via flags specifically override plugins implied by mode flag
-//  - config values override default values
-// NOTE: Since it mutates plugin values, it should be called before using them.
-func (g *genFlags) resolveConfig() *config.Config {
-	if g == nil {
-		return config.New()
-	}
-
-	conf := config.New()
-	suppliedConfig := g.sonobuoyConfig.Get()
-	if suppliedConfig != nil {
-		mergeConfigs(suppliedConfig, conf)
-		conf = suppliedConfig
-	}
-
-	// Resolve plugins.
-	//  - If using the plugin flags, no actions needed.
-	//  - Otherwise use the supplied config and mode to figure out the plugins to run.
-	//    This only works for e2e/systemd-logs which are internal plugins so then "Set" them
-	//    as if they were provided on the cmdline.
-	// Gate the logic with a nil check because tests may not specify flags and intend the legacy logic.
-	if g.genflags == nil || !g.genflags.Changed("plugin") {
-		// Use legacy logic; conf.SelectedPlugins or mode if not set
-		if conf.PluginSelections == nil {
-			modeConfig := g.mode.Get()
-			if modeConfig != nil {
-				conf.PluginSelections = modeConfig.Selectors
-			}
-		}
-
-		// Set these values as if the user had requested the defaults.
-		if g.genflags != nil {
-			for _, v := range conf.PluginSelections {
-				g.genflags.Lookup("plugin").Value.Set(v.Name)
-			}
-		}
-	}
-
-	// Have to embed the flagset itself so we can inspect if these fields
-	// have been set explicitly or not on the command line. Otherwise
-	// we fail to properly prioritize command line/config/default values.
-	if g.genflags == nil {
-		return conf
-	}
-
-	if g.genflags.Changed(namespaceFlag) {
-		conf.Namespace = g.namespace
-	}
-
-	if g.genflags.Changed(sonobuoyImageFlag) {
-		conf.WorkerImage = g.sonobuoyImage
-	}
-
-	if g.genflags.Changed(imagePullPolicyFlag) {
-		conf.ImagePullPolicy = g.imagePullPolicy.String()
-	}
-
-	if g.genflags.Changed(timeoutFlag) {
-		conf.Aggregation.TimeoutSeconds = g.timeoutSeconds
-	}
-
-	return conf
-}
-
-func mergeConfigs(dst, src *config.Config) {
-	// Workaround for the fact that an explicitly stated empty slice is still
-	// considered a zero value by mergo. This means that the value given
-	// by the user is not respected. Even a custom transformation can't
-	// get around this. See https://github.com/imdario/mergo/issues/118
-	emptyResources := false
-	if len(dst.Resources) == 0 && dst.Resources != nil {
-		emptyResources = true
-	}
-
-	// Workaround to differentiate a false value and a nil value
-	// Only override dst.Limits.PodLogs.SonobuoyNamespace when it's nil
-	// See https://github.com/imdario/mergo/issues/89
-	var sonobuoyNamespace *bool
-	if dst.Limits.PodLogs.SonobuoyNamespace != nil {
-		sonobuoyNamespace = new(bool)
-		*sonobuoyNamespace = *dst.Limits.PodLogs.SonobuoyNamespace
-	}
-
-	// Provide defaults but don't overwrite any customized configuration.
-	mergo.Merge(dst, src)
-
-	if emptyResources {
-		dst.Resources = []string{}
-	}
-	if sonobuoyNamespace != nil {
-		dst.Limits.PodLogs.SonobuoyNamespace = sonobuoyNamespace
-	}
 }

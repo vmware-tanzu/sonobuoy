@@ -19,6 +19,7 @@ package app
 import (
 	"encoding/json"
 	"io/ioutil"
+	"reflect"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
@@ -41,11 +42,15 @@ func (c *SonobuoyConfig) String() string {
 // Type is needed for pflag.Value.
 func (c *SonobuoyConfig) Type() string { return "Sonobuoy config" }
 
-// Set attempts to read a file, then deserialise the json into a config.Config struct.
+// Set attempts to read a file, then deserialize the json into a config.Config struct.
 func (c *SonobuoyConfig) Set(str string) error {
+	if !reflect.DeepEqual(c.Config, *config.New()) {
+		return errors.New("if a custom config file is set, it must be set before other flags that modify configuration fields")
+	}
+
 	bytes, err := ioutil.ReadFile(str)
 	if err != nil {
-		return errors.Wrap(err, "cloudn't open config file")
+		return errors.Wrap(err, "couldn't open config file")
 	}
 
 	if err := json.Unmarshal(bytes, &c.Config); err != nil {
@@ -56,12 +61,7 @@ func (c *SonobuoyConfig) Set(str string) error {
 	return nil
 }
 
-// Get will return the config.Config if one is available, otherwise nil.
+// Get will return the config.Config.
 func (c *SonobuoyConfig) Get() *config.Config {
-	// Don't just return zero structs
-	if c.raw == "" {
-		return nil
-	}
-
 	return &c.Config
 }

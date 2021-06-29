@@ -18,21 +18,23 @@ package app
 
 import (
 	"testing"
+
+	"github.com/spf13/pflag"
 )
 
 func TestGivenAnyGenConfigFlags(t *testing.T) {
-	getSampleFlagsWithChanged := func(s []string) *genFlags {
+	getSampleFlagsWithChanged := func(s []string) *pflag.FlagSet {
 		sampleFlags := &genFlags{}
-		GenFlagSet(sampleFlags, DetectRBACMode)
+		fs := GenFlagSet(sampleFlags, DetectRBACMode)
 		for _, v := range s {
-			sampleFlags.genflags.Set(v, "foo")
+			fs.Set(v, "foo")
 		}
-		return sampleFlags
+		return fs
 	}
 
 	testCases := []struct {
 		desc         string
-		inFlags      *genFlags
+		inFlags      *pflag.FlagSet
 		allowedFlags []string
 		expect       bool
 	}{

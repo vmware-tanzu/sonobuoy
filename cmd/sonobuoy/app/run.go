@@ -63,10 +63,6 @@ func (r *runFlags) Config() (*client.RunConfig, error) {
 		GenFile:    r.genFile,
 	}
 
-	if r.genFile != "" && givenAnyGenConfigFlags(&(r.genFlags), allowedGenFlagsWithRunFile) {
-		return nil, fmt.Errorf("setting the --file flag is incompatible with any other options")
-	}
-
 	if r.genFile == "" {
 		gencfg, err := r.genFlags.Config()
 		if err != nil {
@@ -78,9 +74,9 @@ func (r *runFlags) Config() (*client.RunConfig, error) {
 	return runcfg, nil
 }
 
-func givenAnyGenConfigFlags(gf *genFlags, allowedFlagNames []string) bool {
+func givenAnyGenConfigFlags(fs *pflag.FlagSet, allowedFlagNames []string) bool {
 	changed := false
-	gf.genflags.Visit(func(f *pflag.Flag) {
+	fs.Visit(func(f *pflag.Flag) {
 		if changed {
 			return
 		}
@@ -93,15 +89,26 @@ func givenAnyGenConfigFlags(gf *genFlags, allowedFlagNames []string) bool {
 
 func NewCmdRun() *cobra.Command {
 	var f runFlags
+	fs := RunFlagSet(&f)
 	cmd := &cobra.Command{
 		Use:   "run",
 		Short: "Submits a sonobuoy run",
-		Run:   submitSonobuoyRun(&f),
-		Args:  cobra.ExactArgs(0),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return checkFlagValidity(fs, f)
+		},
+		Run:  submitSonobuoyRun(&f),
+		Args: cobra.ExactArgs(0),
 	}
 
-	cmd.Flags().AddFlagSet(RunFlagSet(&f))
+	cmd.Flags().AddFlagSet(fs)
 	return cmd
+}
+
+func checkFlagValidity(fs *pflag.FlagSet, rf runFlags) error {
+	if rf.genFile != "" && givenAnyGenConfigFlags(fs, allowedGenFlagsWithRunFile) {
+		return fmt.Errorf("setting the --file flag is incompatible with any other options besides %v", allowedGenFlagsWithRunFile)
+	}
+	return nil
 }
 
 func submitSonobuoyRun(f *runFlags) func(cmd *cobra.Command, args []string) {
@@ -120,7 +127,7 @@ func submitSonobuoyRun(f *runFlags) func(cmd *cobra.Command, args []string) {
 
 		if !f.skipPreflight {
 			pcfg := &client.PreflightConfig{
-				Namespace:    f.namespace,
+				Namespace:    f.sonobuoyConfig.Namespace,
 				DNSNamespace: f.dnsNamespace,
 				DNSPodLabels: f.dnsPodLabels,
 			}
