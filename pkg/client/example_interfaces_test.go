@@ -46,9 +46,8 @@ func Example() {
 	// The command line client provides default values with override flags.
 	runConfig := client.RunConfig{
 		GenConfig: client.GenConfig{
-			E2EConfig: &client.E2EConfig{
-				Focus: "[sig-networking]",
-				Skip:  "",
+			PluginEnvOverrides: map[string]map[string]string{
+				"e2e": {"E2E_FOCUS": "[sig-networking]"},
 			},
 			Config:          config.New(),
 			EnableRBAC:      true,

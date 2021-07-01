@@ -192,17 +192,6 @@ func TestGenerateManifestGolden(t *testing.T) {
 			},
 			goldenFile: filepath.Join("testdata", "systemd-logs-default.golden"),
 		}, {
-			name: "Enabling SSH (via legacy plugin choice)",
-			inputcm: &client.GenConfig{
-				E2EConfig: &client.E2EConfig{},
-				Config: &config.Config{
-					PluginSelections: []plugin.Selection{{Name: "e2e"}},
-				},
-				SSHKeyPath: filepath.Join("testdata", "test_ssh.key"),
-				SSHUser:    "ssh-user",
-			},
-			goldenFile: filepath.Join("testdata", "ssh.golden"),
-		}, {
 			name: "Empty array leads to default plugins, not 0",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},

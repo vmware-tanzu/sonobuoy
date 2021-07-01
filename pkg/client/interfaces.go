@@ -59,7 +59,6 @@ type GenConfig struct {
 	KubeConformanceImage string
 	SystemdLogsImage     string
 	SSHKeyPath           string
-	SSHUser              string
 
 	// DynamicPlugins are plugins which we know by name and whose manifest
 	// YAML are generated dynamically using the GenConfig settings.
@@ -82,7 +81,7 @@ type GenConfig struct {
 	NodeSelectors map[string]string
 
 	// ShowDefaultPodSpec determines whether or not the default pod spec for
-	// the plugin should be incuded in the output.
+	// the plugin should be included in the output.
 	ShowDefaultPodSpec bool
 
 	// The version of Kubernetes to assume. Used to surface for plugin images
@@ -101,10 +100,6 @@ func (gc *GenConfig) Validate() error {
 
 // E2EConfig is the configuration of the E2E tests.
 type E2EConfig struct {
-	Focus    string
-	Skip     string
-	Parallel string
-
 	// CustomRegistries is the contents of a yaml file which will be
 	// used as KUBE_TEST_REPO_LIST which overrides which registries
 	// e2e tests use.

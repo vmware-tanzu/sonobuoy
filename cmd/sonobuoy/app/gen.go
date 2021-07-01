@@ -34,7 +34,6 @@ import (
 
 type genFlags struct {
 	sonobuoyConfig       SonobuoyConfig
-	mode                 client.Mode
 	rbacMode             RBACMode
 	kubecfg              Kubeconfig
 	dnsNamespace         string
@@ -42,7 +41,6 @@ type genFlags struct {
 	kubeConformanceImage string
 	systemdLogsImage     string
 	sshKeyPath           string
-	sshUser              string
 	k8sVersion           imagepkg.ConformanceImageVersion
 	showDefaultPodSpec   bool
 
@@ -69,7 +67,6 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	genset := pflag.NewFlagSet("generate", pflag.ExitOnError)
 	cfg.sonobuoyConfig.Config = *config.New()
 	AddSonobuoyConfigFlag(&cfg.sonobuoyConfig, genset)
-	AddModeFlag(&cfg.mode, genset)
 	AddKubeconfigFlag(&cfg.kubecfg, genset)
 	cfg.e2eflags = AddE2EConfigFlags(genset)
 	AddRBACModeFlags(&cfg.rbacMode, genset, rbac)
@@ -84,10 +81,10 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddKubeConformanceImage(&cfg.kubeConformanceImage, genset)
 	AddSystemdLogsImage(&cfg.systemdLogsImage, genset)
 	AddSSHKeyPathFlag(&cfg.sshKeyPath, genset)
-	AddSSHUserFlag(&cfg.sshUser, genset)
 
 	AddPluginSetFlag(&cfg.plugins, genset)
 	AddPluginEnvFlag(&cfg.pluginEnvs, genset)
+	AddLegacyE2EFlags(&cfg.pluginEnvs, genset)
 
 	AddNodeSelectorsFlag(&cfg.nodeSelectors, genset)
 
@@ -97,9 +94,13 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 }
 
 func (g *genFlags) Config() (*client.GenConfig, error) {
-	e2ecfg, err := GetE2EConfig(g.mode, g.e2eflags)
+	e2ecfg, err := GetE2EConfig(g.e2eflags)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not retrieve E2E config")
+	}
+
+	if len(g.plugins.DynamicPlugins) == 0 && len(g.plugins.StaticPlugins) == 0 {
+		g.plugins.DynamicPlugins = []string{e2ePlugin, systemdLogsPlugin}
 	}
 
 	// TODO: Refactor this logic to be less convuled: https://github.com/vmware-tanzu/sonobuoy/issues/481
@@ -159,7 +160,6 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		SystemdLogsImage:     g.systemdLogsImage,
 		ImagePullPolicy:      g.sonobuoyConfig.ImagePullPolicy,
 		SSHKeyPath:           g.sshKeyPath,
-		SSHUser:              g.sshUser,
 		DynamicPlugins:       g.plugins.DynamicPlugins,
 		StaticPlugins:        g.plugins.StaticPlugins,
 		PluginEnvOverrides:   g.pluginEnvs,

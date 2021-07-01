@@ -134,8 +134,8 @@ func e2es(e2eflags *e2eFlags) func(cmd *cobra.Command, args []string) {
 		fmt.Printf("Rerunning %d tests:\n", len(testCases))
 
 		// Ensure that we run the failed test cases and don't skip any
-		runCfg.E2EConfig.Focus = client.Focus(testCases)
-		runCfg.E2EConfig.Skip = ""
+		runCfg.PluginEnvOverrides["e2e"]["E2E_FOCUS"] = client.Focus(testCases)
+		runCfg.PluginEnvOverrides["e2e"]["E2E_SKIP"] = ""
 
 		if err := sonobuoy.Run(runCfg); err != nil {
 			errlog.LogError(errors.Wrap(err, "error attempting to rerun failed tests"))

@@ -59,7 +59,6 @@ type templateValues struct {
 	ImagePullSecrets  string
 	CustomAnnotations map[string]string
 	SSHKey            string
-	SSHUser           string
 
 	NodeSelectors map[string]string
 
@@ -177,7 +176,9 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 			}
 
 			// Require overrides to target existing plugins and provide a helpful message if there is a mismatch.
-			if !found {
+			// Dont error if the plugin in question is "e2e" since we default to setting those values regardless of
+			// if they choose that plugin or not.
+			if !found && pluginName != e2ePluginName {
 				pluginNames := []string{}
 				for _, p := range plugins {
 					pluginNames = append(pluginNames, p.SonobuoyConfig.PluginName)
@@ -205,7 +206,6 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		ImagePullSecrets:  conf.ImagePullSecrets,
 		CustomAnnotations: conf.CustomAnnotations,
 		SSHKey:            base64.StdEncoding.EncodeToString(sshKeyData),
-		SSHUser:           cfg.SSHUser,
 
 		Plugins: pluginYAML,
 
@@ -339,9 +339,9 @@ func E2EManifest(cfg *GenConfig) *manifest.Manifest {
 				Command:         []string{"/run_e2e.sh"},
 				ImagePullPolicy: corev1.PullPolicy(cfg.ImagePullPolicy),
 				Env: []corev1.EnvVar{
-					{Name: "E2E_FOCUS", Value: cfg.E2EConfig.Focus},
-					{Name: "E2E_SKIP", Value: cfg.E2EConfig.Skip},
-					{Name: "E2E_PARALLEL", Value: cfg.E2EConfig.Parallel},
+					{Name: "E2E_FOCUS", Value: cfg.PluginEnvOverrides["e2e"]["E2E_FOCUS"]},
+					{Name: "E2E_SKIP", Value: cfg.PluginEnvOverrides["e2e"]["E2E_SKIP"]},
+					{Name: "E2E_PARALLEL", Value: cfg.PluginEnvOverrides["e2e"]["E2E_PARALLEL"]},
 					{Name: "E2E_USE_GO_RUNNER", Value: "true"},
 				},
 				VolumeMounts: []corev1.VolumeMount{
@@ -408,12 +408,6 @@ func E2EManifest(cfg *GenConfig) *manifest.Manifest {
 				Name:      "sshkey-vol",
 				MountPath: "/root/.ssh",
 			},
-		)
-	}
-
-	if len(cfg.SSHUser) > 0 {
-		m.Spec.Env = append(m.Spec.Env,
-			corev1.EnvVar{Name: "KUBE_SSH_USER", Value: cfg.SSHUser},
 		)
 	}
 
