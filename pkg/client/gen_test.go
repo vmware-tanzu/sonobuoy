@@ -192,7 +192,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			},
 			goldenFile: filepath.Join("testdata", "systemd-logs-default.golden"),
 		}, {
-			name: "Enabling SSH (legacy plugin choice)",
+			name: "Enabling SSH (via legacy plugin choice)",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				Config: &config.Config{
@@ -203,7 +203,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			},
 			goldenFile: filepath.Join("testdata", "ssh.golden"),
 		}, {
-			name: "Empty array leads to 0 plugins (legacy plugin choice)",
+			name: "Empty array leads to default plugins, not 0",
 			inputcm: &client.GenConfig{
 				E2EConfig: &client.E2EConfig{},
 				Config: fromConfig(func(c *config.Config) *config.Config {
@@ -211,7 +211,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 					return c
 				}),
 			},
-			goldenFile: filepath.Join("testdata", "no-plugins-via-selection.golden"),
+			goldenFile: filepath.Join("testdata", "default-plugins-via-selection.golden"),
 		}, {
 			// For backwards compatibility.
 			name: "Nil plugin selection and no manual choice leads to e2e/systemd",
