@@ -19,18 +19,21 @@ package app
 import (
 	"flag"
 
+	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"k8s.io/klog"
 )
 
 func NewSonobuoyCommand() *cobra.Command {
 	cmds := &cobra.Command{
-		Use:   "sonobuoy",
-		Short: "Generate reports on your kubernetes cluster",
-		Long:  "Sonobuoy is an introspective kubernetes component that generates reports on cluster conformance, configuration, and more",
-		Run:   rootCmd,
+		Use:               "sonobuoy",
+		Short:             "Generate reports on your kubernetes cluster",
+		Long:              "Sonobuoy is an introspective kubernetes component that generates reports on cluster conformance, configuration, and more",
+		PersistentPreRunE: prerunChecks,
+		Run:               rootCmd,
 	}
 
 	cmds.ResetFlags()
@@ -69,4 +72,21 @@ func NewSonobuoyCommand() *cobra.Command {
 func rootCmd(cmd *cobra.Command, args []string) {
 	// Sonobuoy does nothing when not given a subcommand
 	cmd.Help()
+}
+
+// prerunChecks can be a kitchen sink of little checks. Since we have the command
+// object we can get all the flags and do any complicated flag logic here.
+func prerunChecks(cmd *cobra.Command, args []string) error {
+	// Getting a list of all flags provided by the user.
+	flagsSet := map[string]bool{}
+	cmd.Flags().Visit(func(f *pflag.Flag) {
+		flagsSet[f.Name] = true
+	})
+
+	// Difficult to do checks like this within the flag themselves (since they dont know
+	// about each other).
+	if flagsSet["mode"] && (flagsSet["e2e-focus"] || flagsSet["e2e-skip"]) {
+		logrus.Warnf("mode flag and e2e-focus/skip flags both set and may collide")
+	}
+	return nil
 }

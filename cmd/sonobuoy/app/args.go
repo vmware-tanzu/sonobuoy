@@ -22,6 +22,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/image"
 
 	"gopkg.in/yaml.v2"
@@ -33,15 +34,37 @@ import (
 )
 
 const (
-	namespaceFlag       = "namespace"
-	sonobuoyImageFlag   = "sonobuoy-image"
-	imagePullPolicyFlag = "image-pull-policy"
-	pluginFlag          = "plugin"
-	timeoutFlag         = "timeout"
-	waitOutputFlag      = "wait-output"
-	customRegistryFlag  = "custom-registry"
-	kubeconfig          = "kubeconfig"
-	kubecontext         = "context"
+	namespaceFlag         = "namespace"
+	sonobuoyImageFlag     = "sonobuoy-image"
+	imagePullPolicyFlag   = "image-pull-policy"
+	pluginFlag            = "plugin"
+	timeoutFlag           = "timeout"
+	waitOutputFlag        = "wait-output"
+	customRegistryFlag    = "custom-registry"
+	kubeconfig            = "kubeconfig"
+	kubecontext           = "context"
+	e2eFocusFlag          = "e2e-focus"
+	e2eSkipFlag           = "e2e-skip"
+	e2eParallelFlag       = "e2e-parallel"
+	e2eRegistryConfigFlag = "e2e-repo-config"
+
+	// Quick runs a single E2E test and the systemd log tests.
+	Quick string = "quick"
+
+	// NonDisruptiveConformance runs all of the `Conformance` E2E tests which are not marked as disuprtive and the systemd log tests.
+	NonDisruptiveConformance string = "non-disruptive-conformance"
+
+	// CertifiedConformance runs all of the `Conformance` E2E tests and the systemd log tests.
+	CertifiedConformance string = "certified-conformance"
+
+	// nonDisruptiveSkipList should generally just need to skip disruptive tests since upstream
+	// will disallow the other types of tests from being tagged as Conformance. However, in v1.16
+	// two disruptive tests were  not marked as such, meaning we needed to specify them here to ensure
+	// user workload safety. See https://github.com/kubernetes/kubernetes/issues/82663
+	// and https://github.com/kubernetes/kubernetes/issues/82787
+	nonDisruptiveSkipList = `\[Disruptive\]|NoExecuteTaintManager`
+	conformanceFocus      = `\[Conformance\]`
+	quickFocus            = "Pods should be submitted and removed"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
@@ -69,18 +92,6 @@ func AddDNSPodLabelsFlag(str *[]string, flags *pflag.FlagSet) {
 	flags.StringSliceVar(
 		str, "dns-pod-labels", config.DefaultDNSPodLabels,
 		"The label selectors to use for locating DNS pods during preflight checks. Can be specified multiple times or as a comma-separated list.",
-	)
-}
-
-// AddModeFlag initialises a mode flag.
-// The mode is a preset configuration of sonobuoy configuration and e2e configuration variables.
-// Mode can be partially or fully overridden by specifying config, e2e-focus, and e2e-skip.
-// The variables specified by those flags will overlay the defaults provided by the given mode.
-func AddModeFlag(mode *ops.Mode, flags *pflag.FlagSet) {
-	*mode = ops.NonDisruptiveConformance // default
-	flags.VarP(
-		mode, "mode", "m",
-		fmt.Sprintf("What mode to run sonobuoy in. Valid modes are %s.", strings.Join(ops.GetModes(), ", ")),
 	)
 }
 
@@ -152,13 +163,6 @@ func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, flags *pflag.FlagSet) {
 	)
 }
 
-const (
-	e2eFocusFlag          = "e2e-focus"
-	e2eSkipFlag           = "e2e-skip"
-	e2eParallelFlag       = "e2e-parallel"
-	e2eRegistryConfigFlag = "e2e-repo-config"
-)
-
 // AddE2EConfigFlags adds three arguments: --e2e-focus, --e2e-skip and
 // --e2e-parallel. These are not taken as pointers, as they are only used by
 // GetE2EConfig. Instead, they are returned as a Flagset which should be passed
@@ -168,62 +172,70 @@ const (
 // users. Using e2e-parallel incorrectly has the potential to destroy clusters!
 func AddE2EConfigFlags(flags *pflag.FlagSet) *pflag.FlagSet {
 	e2eFlags := pflag.NewFlagSet("e2e", pflag.ExitOnError)
-	modeName := ops.NonDisruptiveConformance
-	defaultMode := modeName.Get()
-	e2eFlags.String(
-		e2eFocusFlag, defaultMode.E2EConfig.Focus,
-		"Specify the E2E_FOCUS flag to the conformance tests. Overrides --mode.",
-	)
-	e2eFlags.String(
-		e2eSkipFlag, defaultMode.E2EConfig.Skip,
-		"Specify the E2E_SKIP flag to the conformance tests. Overrides --mode.",
-	)
-	e2eFlags.String(
-		e2eParallelFlag, defaultMode.E2EConfig.Parallel,
-		"Specify the E2E_PARALLEL flag to the conformance tests. Overrides --mode.",
-	)
+
 	e2eFlags.String(
 		e2eRegistryConfigFlag, "",
 		"Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.",
 	)
-	e2eFlags.MarkHidden(e2eParallelFlag)
 	flags.AddFlagSet(e2eFlags)
 	return e2eFlags
 }
 
+// AddLegacyE2EFlags is a way to add flags which target the e2e plugin specifically
+// by leveraging the existing flags. They typically wrap other fields (like the env var
+// overrides) and modify those.
+func AddLegacyE2EFlags(env *PluginEnvVars, fs *pflag.FlagSet) {
+	m := &Mode{
+		env:  env,
+		name: "",
+	}
+	if err := m.Set(NonDisruptiveConformance); err != nil {
+		panic("Failed to initial mode flag")
+	}
+	fs.VarP(
+		m, "mode", "m",
+		fmt.Sprintf("What mode to run the e2e plugin in. Valid modes are %s.", []string{NonDisruptiveConformance, CertifiedConformance, Quick}),
+	)
+	fs.Var(
+		&envVarModierFlag{
+			plugin: e2ePlugin, field: "E2E_FOCUS",
+			PluginEnvVars:  *env,
+			validationFunc: regexpValidation},
+		e2eFocusFlag,
+		"Specify the E2E_FOCUS flag to the conformance tests.",
+	)
+	fs.Var(
+		&envVarModierFlag{
+			plugin: e2ePlugin, field: "E2E_SKIP",
+			PluginEnvVars:  *env,
+			validationFunc: regexpValidation},
+		e2eSkipFlag,
+		"Specify the E2E_SKIP flag to the conformance tests.",
+	)
+	pf := fs.VarPF(
+		&envVarModierFlag{
+			plugin:        e2ePlugin,
+			field:         "E2E_PARALLEL",
+			PluginEnvVars: *env,
+		}, e2eParallelFlag, "",
+		"Specify the E2E_PARALLEL flag to the conformance tests.",
+	)
+	if err := pf.Value.Set("false"); err != nil {
+		panic("Failed to initial parallel flag")
+	}
+	pf.Hidden = true
+
+	// Used by the container when enabling E2E tests which require SSH.
+	fs.Var(
+		&envVarModierFlag{plugin: e2ePlugin, field: "KUBE_SSH_USER", PluginEnvVars: *env}, "ssh-user",
+		"SSH user for ssh-key.",
+	)
+}
+
 // GetE2EConfig gets the E2EConfig from the mode, then overrides them with e2e-focus, e2e-skip and e2e-parallel if they
 // are provided. We can't rely on the zero value of the flags, as "" is a valid focus, skip or parallel value.
-func GetE2EConfig(mode ops.Mode, flags *pflag.FlagSet) (*ops.E2EConfig, error) {
-	cfg := mode.Get().E2EConfig
-	if flags.Changed(e2eFocusFlag) {
-		focus, err := flags.GetString(e2eFocusFlag)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't retrieve focus flag")
-		}
-		if _, err := regexp.Compile(focus); err != nil {
-			return nil, errors.Wrap(err, "focus flag fails regexp validation")
-		}
-		cfg.Focus = focus
-	}
-
-	if flags.Changed(e2eSkipFlag) {
-		skip, err := flags.GetString(e2eSkipFlag)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't retrieve skip flag")
-		}
-		if _, err := regexp.Compile(skip); err != nil {
-			return nil, errors.Wrap(err, "skip flag fails regexp validation")
-		}
-		cfg.Skip = skip
-	}
-
-	if flags.Changed(e2eParallelFlag) {
-		parallel, err := flags.GetString(e2eParallelFlag)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't retrieve parallel flag")
-		}
-		cfg.Parallel = parallel
-	}
+func GetE2EConfig(flags *pflag.FlagSet) (*ops.E2EConfig, error) {
+	cfg := client.E2EConfig{}
 
 	if flags.Changed(e2eRegistryConfigFlag) {
 		repoFile, err := flags.GetString(e2eRegistryConfigFlag)
@@ -334,15 +346,6 @@ func AddSSHKeyPathFlag(path *string, flags *pflag.FlagSet) {
 	)
 }
 
-// AddSSHUserFlag initialises an SSH user flag. Used by the container when
-// enabling E2E tests which require SSH.
-func AddSSHUserFlag(user *string, flags *pflag.FlagSet) {
-	flags.StringVar(
-		user, "ssh-user", "",
-		"SSH user for ssh-key.",
-	)
-}
-
 // AddPluginSetFlag adds the flag for gen/run which keeps track of which plugins
 // to run and loads them from local files if necessary.
 func AddPluginSetFlag(p *pluginList, flags *pflag.FlagSet) {
@@ -400,4 +403,68 @@ func AddExtractFlag(flag *bool, flags *pflag.FlagSet) {
 		flag, "extract", "x", false,
 		"If true, extracts the results instead of just downloading the results",
 	)
+}
+
+// Used if we're just setting the given string as the value; focus and skip need
+// regexp validation first.
+type envVarModierFlag struct {
+	plugin, field string
+	PluginEnvVars
+	validationFunc func(string) error
+}
+
+func (i *envVarModierFlag) String() string {
+	if i != nil && (i.PluginEnvVars)[i.plugin] != nil {
+		return (i.PluginEnvVars)[i.plugin][i.field]
+	}
+	return ""
+}
+func (i *envVarModierFlag) Type() string { return "envModifier" }
+func (i *envVarModierFlag) Set(str string) error {
+	if i.validationFunc != nil {
+		if err := i.validationFunc(str); err != nil {
+			return err
+		}
+	}
+	return (i.PluginEnvVars).Set(fmt.Sprintf("%v.%v=%v", i.plugin, i.field, str))
+}
+
+func regexpValidation(s string) error {
+	if _, err := regexp.Compile(s); err != nil {
+		return errors.Wrapf(err, "flag value %q fails regexp validation", s)
+	}
+	return nil
+}
+
+// Mode represents the sonobuoy configuration for a given mode.
+type Mode struct {
+	name string
+	env  *PluginEnvVars
+}
+
+func (m *Mode) String() string { return m.name }
+func (m *Mode) Type() string   { return "Mode" }
+func (m *Mode) Set(str string) error {
+	lcase := strings.ToLower(str)
+	switch lcase {
+	case NonDisruptiveConformance:
+		if err := m.env.Set(fmt.Sprintf("e2e.E2E_FOCUS=%v", conformanceFocus)); err != nil {
+			return fmt.Errorf("failed to set flag with value %v", str)
+		}
+		if err := m.env.Set(fmt.Sprintf("e2e.E2E_SKIP=%v", nonDisruptiveSkipList)); err != nil {
+			return fmt.Errorf("failed to set flag with value %v", str)
+		}
+	case Quick:
+		if err := m.env.Set(fmt.Sprintf("e2e.E2E_FOCUS=%v", quickFocus)); err != nil {
+			return fmt.Errorf("failed to set flag with value %v", str)
+		}
+	case CertifiedConformance:
+		if err := m.env.Set(fmt.Sprintf("e2e.E2E_FOCUS=%v", conformanceFocus)); err != nil {
+			return fmt.Errorf("failed to set flag with value %v", str)
+		}
+	default:
+		return fmt.Errorf("unknown mode %v", lcase)
+	}
+	m.name = lcase
+	return nil
 }
