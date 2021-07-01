@@ -102,20 +102,13 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		}
 	}
 
-	// Support legacy logic for the time being.
+	// If the user didnt provide plugins at all fallback to our original
+	// defaults. Legacy logic was that the user could specify plugins via the
+	// config.PluginSelection field but since the CLI handles custom plugins
+	// we moved to the list of actual plugin data. The PluginSelection is only
+	// a server-side capability to run a subset of available plugins.
 	if len(cfg.DynamicPlugins) == 0 && len(cfg.StaticPlugins) == 0 {
-		if conf.PluginSelections != nil {
-			// Empty (but non-nil) means run nothing. Setting any value means run
-			// those explicitly.
-			for _, v := range conf.PluginSelections {
-				cfg.DynamicPlugins = append(cfg.DynamicPlugins, v.Name)
-			}
-		} else {
-			// Nil plugin selection now means to run all plugins that are loaded.
-			// If the user didnt provide plugins at all fallback to our original
-			// defaults.
-			cfg.DynamicPlugins = []string{e2ePluginName, systemdLogsName}
-		}
+		cfg.DynamicPlugins = []string{e2ePluginName, systemdLogsName}
 	}
 
 	plugins := []*manifest.Manifest{}

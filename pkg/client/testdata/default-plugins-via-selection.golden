@@ -24,6 +24,69 @@ metadata:
   namespace: sonobuoy
 ---
 apiVersion: v1
+data:
+  plugin-0.yaml: |
+    podSpec:
+      containers: []
+      nodeSelector:
+        kubernetes.io/os: linux
+      restartPolicy: Never
+      serviceAccountName: sonobuoy-serviceaccount
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: kubernetes.io/e2e-evict-taint-key
+        operator: Exists
+    sonobuoy-config:
+      driver: Job
+      plugin-name: e2e
+      result-format: junit
+    spec:
+      command:
+      - /run_e2e.sh
+      env:
+      - name: E2E_FOCUS
+      - name: E2E_PARALLEL
+      - name: E2E_SKIP
+      - name: E2E_USE_GO_RUNNER
+        value: "true"
+      name: e2e
+      resources: {}
+      volumeMounts:
+      - mountPath: /tmp/results
+        name: results
+  plugin-1.yaml: |
+    sonobuoy-config:
+      driver: DaemonSet
+      plugin-name: systemd-logs
+      result-format: raw
+    spec:
+      command:
+      - /bin/sh
+      - -c
+      - /get_systemd_logs.sh; while true; do echo "Plugin is complete. Sleeping indefinitely
+        to avoid container exit and automatic restarts from Kubernetes"; sleep 3600; done
+      env:
+      - name: CHROOT_DIR
+        value: /node
+      - name: NODE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
+      - name: RESULTS_DIR
+        value: /tmp/results
+      name: systemd-logs
+      resources: {}
+      securityContext:
+        privileged: true
+      volumeMounts:
+      - mountPath: /tmp/results
+        name: results
+      - mountPath: /node
+        name: root
 kind: ConfigMap
 metadata:
   labels:

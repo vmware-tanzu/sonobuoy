@@ -23,7 +23,6 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
-	"github.com/vmware-tanzu/sonobuoy/pkg/image"
 	imagepkg "github.com/vmware-tanzu/sonobuoy/pkg/image"
 
 	"github.com/pkg/errors"
@@ -122,7 +121,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 	var e2eImage, e2eRegistry, imageVersion string
 
 	switch g.k8sVersion {
-	case "", image.ConformanceImageVersionAuto, image.ConformanceImageVersionLatest, image.ConformanceImageVersionIgnore:
+	case "", imagepkg.ConformanceImageVersionAuto, imagepkg.ConformanceImageVersionLatest, imagepkg.ConformanceImageVersionIgnore:
 		var discoveryClient discovery.ServerVersionInterface
 		if kubeclient != nil {
 			discoveryClient = kubeclient.DiscoveryClient
@@ -134,7 +133,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		e2eRegistry, imageVersion, err = g.k8sVersion.Get(discoveryClient, imagepkg.DevVersionURL)
 		if err != nil {
 			if errors.Cause(err) == imagepkg.ErrImageVersionNoClient &&
-				g.k8sVersion != image.ConformanceImageVersionIgnore {
+				g.k8sVersion != imagepkg.ConformanceImageVersionIgnore {
 				return nil, errors.Wrap(err, kubeError.Error())
 			}
 			return nil, err

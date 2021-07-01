@@ -19,8 +19,6 @@ package client
 import (
 	"fmt"
 	"strings"
-
-	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 )
 
 // Mode identifies a specific mode of running Sonobuoy.
@@ -57,8 +55,6 @@ var modeMap = map[string]Mode{
 type ModeConfig struct {
 	// E2EConfig is the focus and skip vars for the conformance tests.
 	E2EConfig E2EConfig
-	// Selectors are the plugins selected by this mode.
-	Selectors []plugin.Selection
 }
 
 // String needed for pflag.Value
@@ -89,10 +85,6 @@ func (m *Mode) Get() *ModeConfig {
 				Focus:    `\[Conformance\]`,
 				Parallel: "false",
 			},
-			Selectors: []plugin.Selection{
-				{Name: "e2e"},
-				{Name: "systemd-logs"},
-			},
 		}
 	case NonDisruptiveConformance:
 		return &ModeConfig{
@@ -101,19 +93,12 @@ func (m *Mode) Get() *ModeConfig {
 				Skip:     nonDisruptiveSkipList,
 				Parallel: "false",
 			},
-			Selectors: []plugin.Selection{
-				{Name: "e2e"},
-				{Name: "systemd-logs"},
-			},
 		}
 	case Quick:
 		return &ModeConfig{
 			E2EConfig: E2EConfig{
 				Focus:    "Pods should be submitted and removed",
 				Parallel: "false",
-			},
-			Selectors: []plugin.Selection{
-				{Name: "e2e"},
 			},
 		}
 	default:
