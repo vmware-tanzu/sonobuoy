@@ -28,6 +28,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/vmware-tanzu/sonobuoy/pkg/image"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 )
 
 // Number times to retry docker commands before giving up
@@ -45,6 +46,11 @@ type imagesFlags struct {
 	dryRun            bool
 	k8sVersion        image.ConformanceImageVersion
 }
+
+var (
+	// transformSink avoids nil issues despite not really needing the transforms for these commands.
+	transformSink = map[string][]func(*manifest.Manifest) error{}
+)
 
 func NewCmdImages() *cobra.Command {
 	var flags imagesFlags
@@ -74,7 +80,7 @@ func NewCmdImages() *cobra.Command {
 
 	AddKubeconfigFlag(&flags.kubeconfig, cmd.Flags())
 	AddPluginListFlag(&flags.plugins, cmd.Flags())
-	AddKubernetesVersionFlag(&flags.k8sVersion, cmd.Flags())
+	AddKubernetesVersionFlag(&flags.k8sVersion, &transformSink, cmd.Flags())
 
 	cmd.AddCommand(pullCmd())
 	cmd.AddCommand(pushCmd())
@@ -115,7 +121,7 @@ func pullCmd() *cobra.Command {
 	AddKubeconfigFlag(&flags.kubeconfig, pullCmd.Flags())
 	AddPluginListFlag(&flags.plugins, pullCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, pullCmd.Flags())
-	AddKubernetesVersionFlag(&flags.k8sVersion, pullCmd.Flags())
+	AddKubernetesVersionFlag(&flags.k8sVersion, &transformSink, pullCmd.Flags())
 
 	return pullCmd
 }
@@ -158,7 +164,7 @@ func pushCmd() *cobra.Command {
 	AddCustomRegistryFlag(&flags.customRegistry, pushCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, pushCmd.Flags())
 	pushCmd.MarkFlagRequired(customRegistryFlag)
-	AddKubernetesVersionFlag(&flags.k8sVersion, pushCmd.Flags())
+	AddKubernetesVersionFlag(&flags.k8sVersion, &transformSink, pushCmd.Flags())
 
 	return pushCmd
 }
@@ -191,7 +197,7 @@ func downloadCmd() *cobra.Command {
 	AddKubeconfigFlag(&flags.kubeconfig, downloadCmd.Flags())
 	AddPluginListFlag(&flags.plugins, downloadCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, downloadCmd.Flags())
-	AddKubernetesVersionFlag(&flags.k8sVersion, downloadCmd.Flags())
+	AddKubernetesVersionFlag(&flags.k8sVersion, &transformSink, downloadCmd.Flags())
 
 	return downloadCmd
 }
@@ -222,7 +228,7 @@ func deleteCmd() *cobra.Command {
 	AddKubeconfigFlag(&flags.kubeconfig, deleteCmd.Flags())
 	AddPluginListFlag(&flags.plugins, deleteCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, deleteCmd.Flags())
-	AddKubernetesVersionFlag(&flags.k8sVersion, deleteCmd.Flags())
+	AddKubernetesVersionFlag(&flags.k8sVersion, &transformSink, deleteCmd.Flags())
 
 	return deleteCmd
 }

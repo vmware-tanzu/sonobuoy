@@ -162,7 +162,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 		{
 			name: "Default",
 			inputcm: &client.GenConfig{
-				Config: staticConfig(),
+				Config:      staticConfig(),
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "default.golden"),
 		}, {
@@ -172,6 +173,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 					c.PluginSelections = []plugin.Selection{{Name: "e2e"}}
 					return c
 				}),
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "e2e-default.golden"),
 		}, {
@@ -181,6 +183,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 					c.PluginSelections = []plugin.Selection{{Name: "systemd-logs"}}
 					return c
 				}),
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "systemd-logs-default.golden"),
 		}, {
@@ -190,6 +193,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 					c.PluginSelections = []plugin.Selection{}
 					return c
 				}),
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "default-plugins-via-selection.golden"),
 		}, {
@@ -200,12 +204,14 @@ func TestGenerateManifestGolden(t *testing.T) {
 					c.PluginSelections = nil
 					return c
 				}),
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "default-plugins-via-nil-selection.golden"),
 		}, {
 			name: "Manually specify e2e",
 			inputcm: &client.GenConfig{
 				DynamicPlugins: []string{"e2e"},
+				KubeVersion:    "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "manual-e2e.golden"),
 		}, {
@@ -216,6 +222,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "foo"},
 					},
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "manual-custom-plugin.golden"),
 		}, {
@@ -227,6 +234,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "foo"},
 					},
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "manual-custom-plugin-plus-e2e.golden"),
 		}, {
@@ -238,6 +246,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "foo"},
 					},
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "manual-custom-plugin-plus-systemd.golden"),
 		}, {
@@ -247,6 +256,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
 					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			expectErr: "plugin YAML generation: plugin names must be unique, got duplicated plugin name 'a'",
 		}, {
@@ -265,6 +275,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
 					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "b"}},
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "plugins-and-pluginSelection.golden"),
 		}, {
@@ -274,6 +285,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 				Config: &config.Config{
 					ImagePullSecrets: "foo",
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "imagePullSecrets.golden"),
 		}, {
@@ -283,6 +295,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 				PluginEnvOverrides: map[string]map[string]string{
 					"e2e": {"E2E_SKIP": "override", "E2E_DRYRUN": "true"},
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "envoverrides.golden"),
 		}, {
@@ -292,12 +305,14 @@ func TestGenerateManifestGolden(t *testing.T) {
 				PluginEnvOverrides: map[string]map[string]string{
 					"e2e2": {"E2E_SKIP": "override", "E2E_DRYRUN": "true"},
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			expectErr: "failed to override env vars for plugin e2e2, no plugin with that name found; have plugins: [e2e]",
 		}, {
 			name: "Default pod spec is included if requested and no other pod spec provided",
 			inputcm: &client.GenConfig{
 				ShowDefaultPodSpec: true,
+				KubeVersion:        "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "default-pod-spec.golden"),
 		}, {
@@ -307,6 +322,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 				PluginEnvOverrides: map[string]map[string]string{
 					"e2e": {"E2E_USE_GO_RUNNER": ""},
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "goRunnerRemoved.golden"),
 		}, {
@@ -319,47 +335,42 @@ func TestGenerateManifestGolden(t *testing.T) {
 						PodSpec:        &manifest.PodSpec{},
 					},
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "use-existing-pod-spec.golden"),
 		}, {
 			name: "Conformance images >= v1.17 support progress",
 			inputcm: &client.GenConfig{
-				DynamicPlugins:       []string{"e2e"},
-				KubeConformanceImage: "some-image:v1.17.0",
+				DynamicPlugins: []string{"e2e"},
+				KubeVersion:    "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "e2e-progress.golden"),
 		}, {
 			name: "ProgressUpdatesPort is customizable for e2e",
 			inputcm: &client.GenConfig{
-				DynamicPlugins:       []string{"e2e"},
-				KubeConformanceImage: "some-image:v1.17.0",
+				DynamicPlugins: []string{"e2e"},
 				Config: &config.Config{
 					ProgressUpdatesPort: "1234",
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "e2e-progress-custom-port.golden"),
 		}, {
 			name: "Conformance images >= v1.17 will not override E2E_EXTRA_ARGS if specified by user",
 			inputcm: &client.GenConfig{
-				DynamicPlugins:       []string{"e2e"},
-				KubeConformanceImage: "some-image:v1.17.0",
+				DynamicPlugins: []string{"e2e"},
 				PluginEnvOverrides: map[string]map[string]string{
 					"e2e": {"E2E_EXTRA_ARGS": "user-defined"},
 				},
+				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "e2e-progress-vs-user-defined.golden"),
-		}, {
-			name: "Custom systemd-logs image is used if specified",
-			inputcm: &client.GenConfig{
-				DynamicPlugins:   []string{"systemd-logs"},
-				SystemdLogsImage: "custom-systemd-logs:v1.0.0",
-			},
-			goldenFile: filepath.Join("testdata", "custom-systemd-logs-image.golden"),
 		}, {
 			name: "Node selector can be added",
 			inputcm: &client.GenConfig{
 				Config:        staticConfig(),
 				NodeSelectors: map[string]string{"foo": "bar"},
+				KubeVersion:   "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "single-node-selector.golden"),
 		}, {
@@ -367,12 +378,14 @@ func TestGenerateManifestGolden(t *testing.T) {
 			inputcm: &client.GenConfig{
 				Config:        staticConfig(),
 				NodeSelectors: map[string]string{"foo": "bar", "fizz": "buzz"},
+				KubeVersion:   "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "multiple-node-selector.golden"),
 		}, {
 			name: "Plugins can specify configmaps",
 			inputcm: &client.GenConfig{
-				Config: staticConfig(),
+				Config:      staticConfig(),
+				KubeVersion: "v99+static.testing",
 				StaticPlugins: []*manifest.Manifest{
 					{
 						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myplugin1"},

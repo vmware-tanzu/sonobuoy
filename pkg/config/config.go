@@ -67,7 +67,7 @@ const (
 
 var (
 	// DefaultKubeConformanceImage is the URL and tag of the docker image to run for the kube conformance tests.
-	DefaultKubeConformanceImage = DefaultKubeConformanceImageURL + ":" + DefaultKubeConformanceImageTag
+	DefaultKubeConformanceImage = DefaultKubeConformanceImageURL + ":" + "$SONOBUOY_K8S_VERSION"
 	// DefaultImage is the URL of the docker image to run for the aggregator and workers
 	DefaultImage = "sonobuoy/sonobuoy:" + buildinfo.Version
 	// DefaultResources is the default set of resources which are queried for after plugins run. The strings

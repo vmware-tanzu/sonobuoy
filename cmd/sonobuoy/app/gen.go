@@ -34,16 +34,14 @@ import (
 )
 
 type genFlags struct {
-	sonobuoyConfig       SonobuoyConfig
-	rbacMode             RBACMode
-	kubecfg              Kubeconfig
-	dnsNamespace         string
-	dnsPodLabels         []string
-	kubeConformanceImage string
-	systemdLogsImage     string
-	sshKeyPath           string
-	k8sVersion           imagepkg.ConformanceImageVersion
-	showDefaultPodSpec   bool
+	sonobuoyConfig     SonobuoyConfig
+	rbacMode           RBACMode
+	kubecfg            Kubeconfig
+	dnsNamespace       string
+	dnsPodLabels       []string
+	sshKeyPath         string
+	k8sVersion         imagepkg.ConformanceImageVersion
+	showDefaultPodSpec bool
 
 	// plugins will keep a list of the plugins we want. Custom type for
 	// flag support.
@@ -76,8 +74,6 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddDNSNamespaceFlag(&cfg.dnsNamespace, genset)
 	AddDNSPodLabelsFlag(&cfg.dnsPodLabels, genset)
 	AddSonobuoyImage(&cfg.sonobuoyConfig.WorkerImage, genset)
-	AddKubeConformanceImage(&cfg.kubeConformanceImage, genset)
-	AddSystemdLogsImage(&cfg.systemdLogsImage, genset)
 	AddSSHKeyPathFlag(&cfg.sshKeyPath, &cfg.pluginTransforms, genset)
 
 	AddPluginSetFlag(&cfg.plugins, genset)
@@ -86,8 +82,13 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 
 	AddNodeSelectorsFlag(&cfg.nodeSelectors, genset)
 
-	AddKubeConformanceImageVersion(&cfg.k8sVersion, genset)
-	AddKubernetesVersionFlag(&cfg.k8sVersion, genset)
+	AddKubeConformanceImageVersion(&cfg.k8sVersion, &cfg.pluginTransforms, genset)
+	AddKubernetesVersionFlag(&cfg.k8sVersion, &cfg.pluginTransforms, genset)
+
+	AddPluginImage(&cfg.pluginTransforms, genset)
+	AddKubeConformanceImage(&cfg.pluginTransforms, genset)
+	AddSystemdLogsImage(&cfg.pluginTransforms, genset)
+
 	return genset
 }
 
@@ -95,8 +96,6 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 	if len(g.plugins.DynamicPlugins) == 0 && len(g.plugins.StaticPlugins) == 0 {
 		g.plugins.DynamicPlugins = []string{e2ePlugin, systemdLogsPlugin}
 	}
-
-	// TODO: Refactor this logic to be less convuled: https://github.com/vmware-tanzu/sonobuoy/issues/481
 
 	// In some configurations, the kube client isn't actually needed for correct executation
 	// Therefore, delay reporting the error until we're sure we need the client
@@ -112,8 +111,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		return nil, err
 	}
 
-	var e2eImage, e2eRegistry, imageVersion string
-
+	var k8sVersion string
 	switch g.k8sVersion {
 	case "", imagepkg.ConformanceImageVersionAuto, imagepkg.ConformanceImageVersionLatest, imagepkg.ConformanceImageVersionIgnore:
 		var discoveryClient discovery.ServerVersionInterface
@@ -124,7 +122,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		// `auto` k8s version needs resolution as well as any static plugins which use the
 		// variable SONOBUOY_K8S_VERSION. Just check for it all by default but allow skipping
 		// errors/resolution via flag.
-		e2eRegistry, imageVersion, err = g.k8sVersion.Get(discoveryClient, imagepkg.DevVersionURL)
+		_, k8sVersion, err = g.k8sVersion.Get(discoveryClient, imagepkg.DevVersionURL)
 		if err != nil {
 			if errors.Cause(err) == imagepkg.ErrImageVersionNoClient &&
 				g.k8sVersion != imagepkg.ConformanceImageVersionIgnore {
@@ -133,32 +131,21 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 			return nil, err
 		}
 	default:
-		// Sane default if specifying version by itself.
-		e2eRegistry = config.UpstreamKubeConformanceImageURL
-		imageVersion = g.k8sVersion.String()
-	}
-
-	// --kube-conformance-image overrides --kube-conformance-image-version
-	if g.kubeConformanceImage != "" {
-		e2eImage = g.kubeConformanceImage
-	} else {
-		e2eImage = fmt.Sprintf("%v:%v", e2eRegistry, imageVersion)
+		k8sVersion = g.k8sVersion.String()
 	}
 
 	return &client.GenConfig{
-		Config:               &g.sonobuoyConfig.Config,
-		EnableRBAC:           rbacEnabled,
-		KubeConformanceImage: e2eImage,
-		SystemdLogsImage:     g.systemdLogsImage,
-		ImagePullPolicy:      g.sonobuoyConfig.ImagePullPolicy,
-		SSHKeyPath:           g.sshKeyPath,
-		DynamicPlugins:       g.plugins.DynamicPlugins,
-		StaticPlugins:        g.plugins.StaticPlugins,
-		PluginEnvOverrides:   g.pluginEnvs,
-		ShowDefaultPodSpec:   g.showDefaultPodSpec,
-		NodeSelectors:        g.nodeSelectors,
-		KubeVersion:          imageVersion,
-		PluginTransforms:     g.pluginTransforms,
+		Config:             &g.sonobuoyConfig.Config,
+		EnableRBAC:         rbacEnabled,
+		ImagePullPolicy:    g.sonobuoyConfig.ImagePullPolicy,
+		SSHKeyPath:         g.sshKeyPath,
+		DynamicPlugins:     g.plugins.DynamicPlugins,
+		StaticPlugins:      g.plugins.StaticPlugins,
+		PluginEnvOverrides: g.pluginEnvs,
+		ShowDefaultPodSpec: g.showDefaultPodSpec,
+		NodeSelectors:      g.nodeSelectors,
+		KubeVersion:        k8sVersion,
+		PluginTransforms:   g.pluginTransforms,
 	}, nil
 }
 

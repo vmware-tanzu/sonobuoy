@@ -131,7 +131,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		return strings.ToLower(plugins[i].SonobuoyConfig.PluginName) < strings.ToLower(plugins[j].SonobuoyConfig.PluginName)
 	})
 
-	// Apply transforms. Ensure this is before handling configmaps.
+	// Apply transforms. Ensure this is before handling configmaps and applying the k8s_version.
 	for pluginName, transforms := range cfg.PluginTransforms {
 		for _, p := range plugins {
 			if p.SonobuoyConfig.PluginName == pluginName {
@@ -201,6 +201,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 			for _, p := range plugins {
 				pluginNames = append(pluginNames, p.SonobuoyConfig.PluginName)
 			}
+
 			return nil, nil, fmt.Errorf("failed to override env vars for plugin %v, no plugin with that name found; have plugins: %v", pluginName, pluginNames)
 		}
 	}
@@ -304,7 +305,7 @@ func SystemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 		Spec: manifest.Container{
 			Container: corev1.Container{
 				Name:            "systemd-logs",
-				Image:           cfg.SystemdLogsImage,
+				Image:           config.DefaultSystemdLogsImage,
 				Command:         []string{"/bin/sh", "-c", `/get_systemd_logs.sh; while true; do echo "Plugin is complete. Sleeping indefinitely to avoid container exit and automatic restarts from Kubernetes"; sleep 3600; done`},
 				ImagePullPolicy: corev1.PullPolicy(cfg.ImagePullPolicy),
 				Env: []corev1.EnvVar{
@@ -349,7 +350,7 @@ func E2EManifest(cfg *GenConfig) *manifest.Manifest {
 		Spec: manifest.Container{
 			Container: corev1.Container{
 				Name:            "e2e",
-				Image:           cfg.KubeConformanceImage,
+				Image:           fmt.Sprintf("%v:%v", config.UpstreamKubeConformanceImageURL, "$SONOBUOY_K8S_VERSION"),
 				Command:         []string{"/run_e2e.sh"},
 				ImagePullPolicy: corev1.PullPolicy(cfg.ImagePullPolicy),
 				Env: []corev1.EnvVar{

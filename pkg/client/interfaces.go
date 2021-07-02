@@ -56,12 +56,10 @@ type GenConfig struct {
 	// to plugins after loading them.
 	PluginTransforms map[string][]func(*manifest.Manifest) error
 
-	Config               *config.Config
-	EnableRBAC           bool
-	ImagePullPolicy      string
-	KubeConformanceImage string
-	SystemdLogsImage     string
-	SSHKeyPath           string
+	Config          *config.Config
+	EnableRBAC      bool
+	ImagePullPolicy string
+	SSHKeyPath      string
 
 	// DynamicPlugins are plugins which we know by name and whose manifest
 	// YAML are generated dynamically using the GenConfig settings.
