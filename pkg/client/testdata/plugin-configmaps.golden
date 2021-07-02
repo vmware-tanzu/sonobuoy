@@ -37,6 +37,9 @@ data:
       driver: ""
       plugin-name: myplugin1
     spec:
+      env:
+      - name: SONOBUOY_K8S_VERSION
+        value: v99+static.testing
       name: ""
       resources: {}
       volumeMounts:
@@ -54,6 +57,9 @@ data:
       driver: ""
       plugin-name: myplugin2
     spec:
+      env:
+      - name: SONOBUOY_K8S_VERSION
+        value: v99+static.testing
       name: ""
       resources: {}
       volumeMounts:

@@ -30,6 +30,9 @@ data:
       driver: ""
       plugin-name: a
     spec:
+      env:
+      - name: SONOBUOY_K8S_VERSION
+        value: v99+static.testing
       name: ""
       resources: {}
   plugin-1.yaml: |
@@ -37,6 +40,9 @@ data:
       driver: ""
       plugin-name: b
     spec:
+      env:
+      - name: SONOBUOY_K8S_VERSION
+        value: v99+static.testing
       name: ""
       resources: {}
 kind: ConfigMap

@@ -47,6 +47,7 @@ const (
 	e2eSkipFlag           = "e2e-skip"
 	e2eParallelFlag       = "e2e-parallel"
 	e2eRegistryConfigFlag = "e2e-repo-config"
+	pluginImageFlag       = "plugin-image"
 
 	// Quick runs a single E2E test and the systemd log tests.
 	Quick string = "quick"
@@ -103,30 +104,57 @@ func AddSonobuoyImage(image *string, flags *pflag.FlagSet) {
 	)
 }
 
-// AddKubeConformanceImage initialises an image url flag.
-func AddKubeConformanceImage(image *string, flags *pflag.FlagSet) {
-	flags.StringVar(
-		image, "kube-conformance-image", "",
-		"Container image override for the kube conformance image. Overrides --kube-conformance-image-version.",
+func AddPluginImage(pluginTransforms *map[string][]func(*manifest.Manifest) error, fs *pflag.FlagSet) {
+	fs.Var(
+		&pluginImageFlagType{
+			transforms: *pluginTransforms,
+		},
+		pluginImageFlag,
+		"Override a plugins image from what is in its definition (expects format plugin:image)",
 	)
 }
 
-// AddSystemdLogsImage initialises the systemd-logs-image flag.
-func AddSystemdLogsImage(image *string, flags *pflag.FlagSet) {
-	flags.StringVar(
-		image, "systemd-logs-image", config.DefaultSystemdLogsImage,
+// AddKubeConformanceImage initialises the kube-conformance-image flag. Really just a legacy wrapper for --plugin-image=e2e:imageName
+func AddKubeConformanceImage(pluginTransforms *map[string][]func(*manifest.Manifest) error, fs *pflag.FlagSet) {
+	fs.Var(
+		&hardcodedPluginImageFlagType{
+			plugin: e2ePlugin,
+			underlyingFlag: &pluginImageFlagType{
+				transforms: *pluginTransforms,
+			},
+		},
+		"kube-conformance-image",
+		"Container image override for the kube conformance image.",
+	)
+}
+
+// AddSystemdLogsImage initialises the systemd-logs-image flag. Really just a legacy wrapper for --plugin-image=systemd-logs:imageName
+func AddSystemdLogsImage(pluginTransforms *map[string][]func(*manifest.Manifest) error, fs *pflag.FlagSet) {
+	fs.Var(
+		&hardcodedPluginImageFlagType{
+			plugin: systemdLogsPlugin,
+			underlyingFlag: &pluginImageFlagType{
+				transforms: *pluginTransforms,
+			},
+		},
+		"systemd-logs-image",
 		"Container image override for the systemd-logs plugin image.",
 	)
 }
 
 // AddKubeConformanceImageVersion initialises an image version flag.
-func AddKubeConformanceImageVersion(imageVersion *image.ConformanceImageVersion, flags *pflag.FlagSet) {
+func AddKubeConformanceImageVersion(imageVersion *image.ConformanceImageVersion, pluginTransforms *map[string][]func(*manifest.Manifest) error, flags *pflag.FlagSet) {
 	help := "Use default Conformance image, but override the version. "
 	help += "Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise."
 	help += "You can also choose 'latest' which will find the latest dev image upstream."
 
-	*imageVersion = image.ConformanceImageVersionAuto
-	flags.Var(imageVersion, "kube-conformance-image-version", help)
+	flags.Var(
+		&kubernetesVersionLogicFlag{
+			raw: imageVersion,
+			underlyingFlag: &pluginImageFlagType{
+				transforms: *pluginTransforms,
+			},
+		}, "kube-conformance-image-version", help)
 	if err := flags.MarkDeprecated("kube-conformance-image-version", "Use --kubernetes-version instead."); err != nil {
 		panic("Failed to setup flags properly")
 	}
@@ -330,14 +358,19 @@ func AddPluginListFlag(p *[]string, flags *pflag.FlagSet) {
 }
 
 // AddKubernetesVersionFlag initialises an image version flag.
-func AddKubernetesVersionFlag(imageVersion *image.ConformanceImageVersion, flags *pflag.FlagSet) {
+func AddKubernetesVersionFlag(imageVersion *image.ConformanceImageVersion, pluginTransforms *map[string][]func(*manifest.Manifest) error, flags *pflag.FlagSet) {
 	help := "Use default Conformance image, but override the version. "
 	help += "Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise. "
 	help += "'ignore' will try version resolution but ignore errors. "
 	help += "'latest' will find the latest dev image/version upstream."
 
-	*imageVersion = image.ConformanceImageVersionAuto
-	flags.Var(imageVersion, "kubernetes-version", help)
+	flags.Var(
+		&kubernetesVersionLogicFlag{
+			raw: imageVersion,
+			underlyingFlag: &pluginImageFlagType{
+				transforms: *pluginTransforms,
+			},
+		}, "kubernetes-version", help)
 }
 
 // AddShortFlag adds a boolean flag to just print the Sonobuoy version and
@@ -512,4 +545,75 @@ func (f *sshPathFlag) Set(str string) error {
 		return nil
 	})
 	return nil
+}
+
+type pluginImageFlagType struct {
+	overrides  map[string]string
+	transforms map[string][]func(*manifest.Manifest) error
+}
+
+func (f *pluginImageFlagType) String() string { return fmt.Sprint(f.overrides) }
+func (f *pluginImageFlagType) Type() string   { return "plugin:image" }
+func (f *pluginImageFlagType) Set(str string) error {
+	parts := strings.SplitN(str, ":", 2)
+	if len(parts) != 2 {
+		return fmt.Errorf("failed to parse plugin image flag, expected format plugin:image and got %v", str)
+	}
+	if f.overrides == nil {
+		f.overrides = map[string]string{}
+	}
+	f.overrides[parts[0]] = parts[1]
+
+	f.transforms[parts[0]] = append(f.transforms[parts[0]], func(m *manifest.Manifest) error {
+		m.Spec.Image = parts[1]
+		return nil
+	})
+	return nil
+}
+
+type hardcodedPluginImageFlagType struct {
+	underlyingFlag *pluginImageFlagType
+	plugin         string
+}
+
+func (f *hardcodedPluginImageFlagType) String() string {
+	return f.underlyingFlag.String()
+}
+func (f *hardcodedPluginImageFlagType) Type() string { return "image" }
+func (f *hardcodedPluginImageFlagType) Set(str string) error {
+	return f.underlyingFlag.Set(fmt.Sprintf("%v:%v", f.plugin, str))
+}
+
+type kubernetesVersionLogicFlag struct {
+	underlyingFlag *pluginImageFlagType
+	raw            *image.ConformanceImageVersion
+}
+
+func (f *kubernetesVersionLogicFlag) String() string {
+	return f.raw.String()
+}
+func (f *kubernetesVersionLogicFlag) Type() string { return "string" }
+func (f *kubernetesVersionLogicFlag) Set(str string) error {
+	if err := f.raw.Set(str); err != nil {
+		return err
+	}
+
+	var img, ver string
+	switch *f.raw {
+	case "", image.ConformanceImageVersionIgnore, image.ConformanceImageVersionAuto:
+		img = config.UpstreamKubeConformanceImageURL
+		ver = "$SONOBUOY_K8S_VERSION"
+	case image.ConformanceImageVersionLatest:
+		version, err := image.GetLatestDevVersion(image.DevVersionURL)
+		if err != nil {
+			return errors.Wrap(err, "couldn't identify latest dev image")
+		}
+
+		img = image.DevVersionImageURL
+		ver = version
+	default:
+		img = config.UpstreamKubeConformanceImageURL
+		ver = f.raw.String()
+	}
+	return f.underlyingFlag.Set(fmt.Sprintf("%v:%v:%v", e2ePlugin, img, ver))
 }

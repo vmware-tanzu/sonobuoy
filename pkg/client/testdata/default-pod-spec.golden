@@ -55,6 +55,9 @@ data:
       - name: E2E_SKIP
       - name: E2E_USE_GO_RUNNER
         value: "true"
+      - name: SONOBUOY_K8S_VERSION
+        value: v99+static.testing
+      image: k8s.gcr.io/conformance:v99+static.testing
       name: e2e
       resources: {}
       volumeMounts:
@@ -93,6 +96,9 @@ data:
             fieldPath: spec.nodeName
       - name: RESULTS_DIR
         value: /tmp/results
+      - name: SONOBUOY_K8S_VERSION
+        value: v99+static.testing
+      image: sonobuoy/systemd-logs:v0.3
       name: systemd-logs
       resources: {}
       securityContext:

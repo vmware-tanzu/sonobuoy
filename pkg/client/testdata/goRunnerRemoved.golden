@@ -53,6 +53,9 @@ data:
       - name: E2E_FOCUS
       - name: E2E_PARALLEL
       - name: E2E_SKIP
+      - name: SONOBUOY_K8S_VERSION
+        value: v99+static.testing
+      image: k8s.gcr.io/conformance:v99+static.testing
       name: e2e
       resources: {}
       volumeMounts:
