@@ -95,6 +95,9 @@ func TestGetClusterVersion(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
+		// Dont let actual local env impact these tests.
+		defer os.Setenv("KUBECONFIG", os.Getenv("KUBECONFIG"))
+		os.Setenv("KUBECONFIG", "/foo/bar/not/a/kubeconfig")
 		t.Run(tc.desc, func(t *testing.T) {
 			output, err := getClusterVersion(tc.input, Kubeconfig{})
 			switch {
