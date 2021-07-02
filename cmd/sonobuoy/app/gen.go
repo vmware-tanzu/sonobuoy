@@ -78,7 +78,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddSonobuoyImage(&cfg.sonobuoyConfig.WorkerImage, genset)
 	AddKubeConformanceImage(&cfg.kubeConformanceImage, genset)
 	AddSystemdLogsImage(&cfg.systemdLogsImage, genset)
-	AddSSHKeyPathFlag(&cfg.sshKeyPath, genset)
+	AddSSHKeyPathFlag(&cfg.sshKeyPath, &cfg.pluginTransforms, genset)
 
 	AddPluginSetFlag(&cfg.plugins, genset)
 	AddPluginEnvFlag(&cfg.pluginEnvs, genset)

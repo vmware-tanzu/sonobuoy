@@ -373,34 +373,6 @@ func E2EManifest(cfg *GenConfig) *manifest.Manifest {
 	}
 	m.PodSpec.PodSpec.NodeSelector = map[string]string{"kubernetes.io/os": "linux"}
 
-	// Add volume mount, volume, and 3 env vars (for different possible platforms) for SSH capabilities.
-	if len(cfg.SSHKeyPath) > 0 {
-		defMode := int32(256)
-		m.ExtraVolumes = append(m.ExtraVolumes, manifest.Volume{
-			Volume: corev1.Volume{
-				Name: "sshkey-vol",
-				VolumeSource: corev1.VolumeSource{
-					Secret: &corev1.SecretVolumeSource{
-						SecretName:  "ssh-key",
-						DefaultMode: &defMode,
-					},
-				},
-			},
-		})
-		m.Spec.Env = append(m.Spec.Env,
-			corev1.EnvVar{Name: "LOCAL_SSH_KEY", Value: "id_rsa"},
-			corev1.EnvVar{Name: "AWS_SSH_KEY", Value: "/root/.ssh/id_rsa"},
-			corev1.EnvVar{Name: "KUBE_SSH_KEY", Value: "id_rsa"},
-		)
-		m.Spec.VolumeMounts = append(m.Spec.VolumeMounts,
-			corev1.VolumeMount{
-				ReadOnly:  false,
-				Name:      "sshkey-vol",
-				MountPath: "/root/.ssh",
-			},
-		)
-	}
-
 	m.Spec.Env = updateExtraArgs(m.Spec.Env, cfg.Config.ProgressUpdatesPort)
 
 	return m
