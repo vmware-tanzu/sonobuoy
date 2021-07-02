@@ -302,9 +302,12 @@ func AddImagePullPolicyFlag(policy *string, flags *pflag.FlagSet) {
 // AddSSHKeyPathFlag initialises an SSH key path flag. The SSH key is uploaded
 // as a secret and used in the containers to enable running of E2E tests which
 // require SSH keys to be present.
-func AddSSHKeyPathFlag(path *string, flags *pflag.FlagSet) {
-	flags.StringVar(
-		path, "ssh-key", "",
+func AddSSHKeyPathFlag(path *string, pluginTransforms *map[string][]func(*manifest.Manifest) error, flags *pflag.FlagSet) {
+	flags.Var(
+		&sshPathFlag{
+			filename:   path,
+			transforms: *pluginTransforms,
+		}, "ssh-key",
 		"Path to the private key enabling SSH to cluster nodes.",
 	)
 }
@@ -463,6 +466,49 @@ func (f *e2eRepoFlag) Set(str string) error {
 			Name:  "KUBE_TEST_REPO_LIST",
 			Value: fmt.Sprintf("/tmp/sonobuoy/configs/%v", name),
 		})
+		return nil
+	})
+	return nil
+}
+
+// The ssh-key flag needs to store the path to the ssh key but also
+// wire up the e2e plugin for using it.
+type sshPathFlag struct {
+	filename   *string
+	transforms map[string][]func(*manifest.Manifest) error
+}
+
+func (f *sshPathFlag) String() string { return *f.filename }
+func (f *sshPathFlag) Type() string   { return "yamlFile" }
+func (f *sshPathFlag) Set(str string) error {
+	*f.filename = str
+
+	f.transforms[e2ePlugin] = append(f.transforms[e2ePlugin], func(m *manifest.Manifest) error {
+		// Add volume mount, volume, and 3 env vars (for different possible platforms) for SSH capabilities.
+		defMode := int32(256)
+		m.ExtraVolumes = append(m.ExtraVolumes, manifest.Volume{
+			Volume: corev1.Volume{
+				Name: "sshkey-vol",
+				VolumeSource: corev1.VolumeSource{
+					Secret: &corev1.SecretVolumeSource{
+						SecretName:  "ssh-key",
+						DefaultMode: &defMode,
+					},
+				},
+			},
+		})
+		m.Spec.Env = append(m.Spec.Env,
+			corev1.EnvVar{Name: "LOCAL_SSH_KEY", Value: "id_rsa"},
+			corev1.EnvVar{Name: "AWS_SSH_KEY", Value: "/root/.ssh/id_rsa"},
+			corev1.EnvVar{Name: "KUBE_SSH_KEY", Value: "id_rsa"},
+		)
+		m.Spec.VolumeMounts = append(m.Spec.VolumeMounts,
+			corev1.VolumeMount{
+				ReadOnly:  false,
+				Name:      "sshkey-vol",
+				MountPath: "/root/.ssh",
+			},
+		)
 		return nil
 	})
 	return nil

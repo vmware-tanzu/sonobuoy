@@ -153,17 +153,7 @@ data:{{- range $f, $data := $cm }}
     {{ indent 4 $data }}
 {{- end}}
 ---
-{{- end }}{{- end }}{{- if .CustomRegistries }}
-apiVersion: v1
-data:
-  repo-list.yaml: |
-    {{ indent 4 .CustomRegistries }}
-kind: ConfigMap
-metadata:
-  name: repolist-cm
-  namespace: {{.Namespace}}
----
-{{- end}}
+{{- end }}{{- end }}
 apiVersion: v1
 kind: Service
 metadata:
