@@ -52,7 +52,10 @@ func (lc *LogConfig) Validate() error {
 
 // GenConfig are the input options for generating a Sonobuoy manifest.
 type GenConfig struct {
-	E2EConfig            *E2EConfig
+	// Plugin transforms allows us to lazily apply generic transformations
+	// to plugins after loading them.
+	PluginTransforms map[string][]func(*manifest.Manifest) error
+
 	Config               *config.Config
 	EnableRBAC           bool
 	ImagePullPolicy      string
@@ -91,19 +94,7 @@ type GenConfig struct {
 
 // Validate checks the config to determine if it is valid.
 func (gc *GenConfig) Validate() error {
-	if gc.E2EConfig == nil {
-		return errors.New("nil E2EConfig provided")
-	}
-
 	return nil
-}
-
-// E2EConfig is the configuration of the E2E tests.
-type E2EConfig struct {
-	// CustomRegistries is the contents of a yaml file which will be
-	// used as KUBE_TEST_REPO_LIST which overrides which registries
-	// e2e tests use.
-	CustomRegistries string
 }
 
 // RunConfig are the input options for running Sonobuoy.
@@ -116,12 +107,6 @@ type RunConfig struct {
 
 // Validate checks the config to determine if it is valid.
 func (rc *RunConfig) Validate() error {
-	// If given a manifest, just load it as-is.
-	if len(rc.GenFile) == 0 {
-		err := rc.GenConfig.Validate()
-		return errors.Wrap(err, "GenConfig validation failed")
-	}
-
 	return nil
 }
 

@@ -25,7 +25,6 @@ import (
 // NewGenConfig is a GenConfig using the default config and NonDisruptiveConformance mode
 func NewGenConfig() *GenConfig {
 	return &GenConfig{
-		E2EConfig:  &E2EConfig{},
 		Config:     config.New(),
 		EnableRBAC: true,
 	}

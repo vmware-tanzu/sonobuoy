@@ -34,11 +34,6 @@ func TestRunInvalidConfig(t *testing.T) {
 			expectedErrorMsg: "nil RunConfig provided",
 		},
 		{
-			desc:             "Passing an invalid config results in an error",
-			config:           &RunConfig{},
-			expectedErrorMsg: "config validation failed",
-		},
-		{
 			desc: "Passing a file takes priority over config flags",
 			config: &RunConfig{
 				GenFile: "foo.yaml",
