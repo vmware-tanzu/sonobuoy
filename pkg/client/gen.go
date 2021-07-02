@@ -131,6 +131,19 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		return strings.ToLower(plugins[i].SonobuoyConfig.PluginName) < strings.ToLower(plugins[j].SonobuoyConfig.PluginName)
 	})
 
+	// Apply transforms. Ensure this is before handling configmaps.
+	for pluginName, transforms := range cfg.PluginTransforms {
+		for _, p := range plugins {
+			if p.SonobuoyConfig.PluginName == pluginName {
+				for _, transform := range transforms {
+					if err := transform(p); err != nil {
+						return nil, nil, err
+					}
+				}
+			}
+		}
+	}
+
 	// If they have a configmap, associate the plugin with that configmap for mounting.
 	configs := map[string]map[string]string{}
 	for _, p := range plugins {
@@ -162,35 +175,33 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 
 	cfg.PluginEnvOverrides, plugins = applyK8sVersion(cfg.KubeVersion, cfg.PluginEnvOverrides, plugins)
 
-	if cfg.PluginEnvOverrides != nil {
-		for pluginName, envVars := range cfg.PluginEnvOverrides {
-			found := false
-			for _, p := range plugins {
-				if p.SonobuoyConfig.PluginName == pluginName {
-					found = true
-					newEnv := []corev1.EnvVar{}
-					removeVals := map[string]struct{}{}
-					for k, v := range envVars {
-						if v != "" {
-							newEnv = append(newEnv, corev1.EnvVar{Name: k, Value: v})
-						} else {
-							removeVals[k] = struct{}{}
-						}
+	for pluginName, envVars := range cfg.PluginEnvOverrides {
+		found := false
+		for _, p := range plugins {
+			if p.SonobuoyConfig.PluginName == pluginName {
+				found = true
+				newEnv := []corev1.EnvVar{}
+				removeVals := map[string]struct{}{}
+				for k, v := range envVars {
+					if v != "" {
+						newEnv = append(newEnv, corev1.EnvVar{Name: k, Value: v})
+					} else {
+						removeVals[k] = struct{}{}
 					}
-					p.Spec.Env = mergeEnv(newEnv, p.Spec.Env, removeVals)
 				}
+				p.Spec.Env = mergeEnv(newEnv, p.Spec.Env, removeVals)
 			}
+		}
 
-			// Require overrides to target existing plugins and provide a helpful message if there is a mismatch.
-			// Dont error if the plugin in question is "e2e" since we default to setting those values regardless of
-			// if they choose that plugin or not.
-			if !found && pluginName != e2ePluginName {
-				pluginNames := []string{}
-				for _, p := range plugins {
-					pluginNames = append(pluginNames, p.SonobuoyConfig.PluginName)
-				}
-				return nil, nil, fmt.Errorf("failed to override env vars for plugin %v, no plugin with that name found; have plugins: %v", pluginName, pluginNames)
+		// Require overrides to target existing plugins and provide a helpful message if there is a mismatch.
+		// Dont error if the plugin in question is "e2e" since we default to setting those values regardless of
+		// if they choose that plugin or not.
+		if !found && pluginName != e2ePluginName {
+			pluginNames := []string{}
+			for _, p := range plugins {
+				pluginNames = append(pluginNames, p.SonobuoyConfig.PluginName)
 			}
+			return nil, nil, fmt.Errorf("failed to override env vars for plugin %v, no plugin with that name found; have plugins: %v", pluginName, pluginNames)
 		}
 	}
 
@@ -216,9 +227,6 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		Plugins: pluginYAML,
 
 		NodeSelectors: cfg.NodeSelectors,
-
-		// Often created from reading a file, this value could have trailing newline.
-		CustomRegistries: strings.TrimSpace(cfg.E2EConfig.CustomRegistries),
 
 		ConfigMaps: configs,
 	}
@@ -364,30 +372,6 @@ func E2EManifest(cfg *GenConfig) *manifest.Manifest {
 		PodSpec: driver.DefaultPodSpec(m.SonobuoyConfig.Driver),
 	}
 	m.PodSpec.PodSpec.NodeSelector = map[string]string{"kubernetes.io/os": "linux"}
-
-	// Add volume mount, volume, and env var for custom registries.
-	if len(cfg.E2EConfig.CustomRegistries) > 0 {
-		m.ExtraVolumes = append(m.ExtraVolumes, manifest.Volume{
-			Volume: corev1.Volume{
-				Name: "repolist-vol",
-				VolumeSource: corev1.VolumeSource{
-					ConfigMap: &corev1.ConfigMapVolumeSource{
-						LocalObjectReference: corev1.LocalObjectReference{Name: "repolist-cm"},
-					},
-				},
-			},
-		})
-		m.Spec.Env = append(m.Spec.Env, corev1.EnvVar{
-			Name: "KUBE_TEST_REPO_LIST", Value: "/tmp/sonobuoy/repo-list.yaml",
-		})
-		m.Spec.VolumeMounts = append(m.Spec.VolumeMounts,
-			corev1.VolumeMount{
-				ReadOnly:  false,
-				Name:      "repolist-vol",
-				MountPath: "/tmp/sonobuoy",
-			},
-		)
-	}
 
 	// Add volume mount, volume, and 3 env vars (for different possible platforms) for SSH capabilities.
 	if len(cfg.SSHKeyPath) > 0 {

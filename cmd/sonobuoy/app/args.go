@@ -18,18 +18,18 @@ package app
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/image"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 
-	"gopkg.in/yaml.v2"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
-	ops "github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 )
 
@@ -163,28 +163,10 @@ func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, flags *pflag.FlagSet) {
 	)
 }
 
-// AddE2EConfigFlags adds three arguments: --e2e-focus, --e2e-skip and
-// --e2e-parallel. These are not taken as pointers, as they are only used by
-// GetE2EConfig. Instead, they are returned as a Flagset which should be passed
-// to GetE2EConfig. The returned flagset will be added to the passed in flag set.
-//
-// e2e-parallel is added as a hidden flag that should only be used by "power"
-// users. Using e2e-parallel incorrectly has the potential to destroy clusters!
-func AddE2EConfigFlags(flags *pflag.FlagSet) *pflag.FlagSet {
-	e2eFlags := pflag.NewFlagSet("e2e", pflag.ExitOnError)
-
-	e2eFlags.String(
-		e2eRegistryConfigFlag, "",
-		"Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.",
-	)
-	flags.AddFlagSet(e2eFlags)
-	return e2eFlags
-}
-
 // AddLegacyE2EFlags is a way to add flags which target the e2e plugin specifically
 // by leveraging the existing flags. They typically wrap other fields (like the env var
 // overrides) and modify those.
-func AddLegacyE2EFlags(env *PluginEnvVars, fs *pflag.FlagSet) {
+func AddLegacyE2EFlags(env *PluginEnvVars, pluginTransforms *map[string][]func(*manifest.Manifest) error, fs *pflag.FlagSet) {
 	m := &Mode{
 		env:  env,
 		name: "",
@@ -230,33 +212,14 @@ func AddLegacyE2EFlags(env *PluginEnvVars, fs *pflag.FlagSet) {
 		&envVarModierFlag{plugin: e2ePlugin, field: "KUBE_SSH_USER", PluginEnvVars: *env}, "ssh-user",
 		"SSH user for ssh-key.",
 	)
-}
 
-// GetE2EConfig gets the E2EConfig from the mode, then overrides them with e2e-focus, e2e-skip and e2e-parallel if they
-// are provided. We can't rely on the zero value of the flags, as "" is a valid focus, skip or parallel value.
-func GetE2EConfig(flags *pflag.FlagSet) (*ops.E2EConfig, error) {
-	cfg := client.E2EConfig{}
-
-	if flags.Changed(e2eRegistryConfigFlag) {
-		repoFile, err := flags.GetString(e2eRegistryConfigFlag)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't retrieve registry list flag")
-		}
-		contents, err := ioutil.ReadFile(repoFile)
-		if err != nil {
-			return nil, errors.Wrap(err, "couldn't read registry list")
-		}
-
-		// Unmarshal just to validate yaml and short circuit failures from malformed files.
-		err = yaml.Unmarshal(contents, map[string]string{})
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse yaml registry list:")
-		}
-
-		cfg.CustomRegistries = string(contents)
-	}
-
-	return &cfg, nil
+	fs.Var(
+		&e2eRepoFlag{
+			plugin:     e2ePlugin,
+			transforms: *pluginTransforms,
+		}, e2eRegistryConfigFlag,
+		"Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.",
+	)
 }
 
 // AddRBACModeFlags adds an E2E Argument with the provided default.
@@ -466,5 +429,41 @@ func (m *Mode) Set(str string) error {
 		return fmt.Errorf("unknown mode %v", lcase)
 	}
 	m.name = lcase
+	return nil
+}
+
+type e2eRepoFlag struct {
+	plugin   string
+	filename string
+
+	transforms map[string][]func(*manifest.Manifest) error
+
+	// Value to put in the configmap as the filename. Defaults to filename.
+	filenameOverride string
+}
+
+func (f *e2eRepoFlag) String() string { return f.filename }
+func (f *e2eRepoFlag) Type() string   { return "yaml-filepath" }
+func (f *e2eRepoFlag) Set(str string) error {
+	f.filename = str
+	name := filepath.Base(str)
+	if len(f.filenameOverride) > 0 {
+		name = f.filenameOverride
+	}
+	fData, err := os.ReadFile(str)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read file %q", str)
+	}
+
+	f.transforms[f.plugin] = append(f.transforms[f.plugin], func(m *manifest.Manifest) error {
+		m.ConfigMap = map[string]string{
+			name: string(fData),
+		}
+		m.Spec.Env = append(m.Spec.Env, corev1.EnvVar{
+			Name:  "KUBE_TEST_REPO_LIST",
+			Value: fmt.Sprintf("/tmp/sonobuoy/configs/%v", name),
+		})
+		return nil
+	})
 	return nil
 }

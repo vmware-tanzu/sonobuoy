@@ -24,6 +24,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	imagepkg "github.com/vmware-tanzu/sonobuoy/pkg/image"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -57,18 +58,15 @@ type genFlags struct {
 	// schedule on specific nodes.
 	nodeSelectors NodeSelectors
 
-	// These two fields are here since to properly squash settings down into nested
-	// configs we need to tell whether or not values are default values or the user
-	// provided them on the command line/config file.
-	e2eflags *pflag.FlagSet
+	pluginTransforms map[string][]func(*manifest.Manifest) error
 }
 
 func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	genset := pflag.NewFlagSet("generate", pflag.ExitOnError)
 	cfg.sonobuoyConfig.Config = *config.New()
+	cfg.pluginTransforms = map[string][]func(*manifest.Manifest) error{}
 	AddSonobuoyConfigFlag(&cfg.sonobuoyConfig, genset)
 	AddKubeconfigFlag(&cfg.kubecfg, genset)
-	cfg.e2eflags = AddE2EConfigFlags(genset)
 	AddRBACModeFlags(&cfg.rbacMode, genset, rbac)
 	AddImagePullPolicyFlag(&cfg.sonobuoyConfig.ImagePullPolicy, genset)
 	AddTimeoutFlag(&cfg.sonobuoyConfig.Aggregation.TimeoutSeconds, genset)
@@ -84,7 +82,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 
 	AddPluginSetFlag(&cfg.plugins, genset)
 	AddPluginEnvFlag(&cfg.pluginEnvs, genset)
-	AddLegacyE2EFlags(&cfg.pluginEnvs, genset)
+	AddLegacyE2EFlags(&cfg.pluginEnvs, &cfg.pluginTransforms, genset)
 
 	AddNodeSelectorsFlag(&cfg.nodeSelectors, genset)
 
@@ -94,11 +92,6 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 }
 
 func (g *genFlags) Config() (*client.GenConfig, error) {
-	e2ecfg, err := GetE2EConfig(g.e2eflags)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not retrieve E2E config")
-	}
-
 	if len(g.plugins.DynamicPlugins) == 0 && len(g.plugins.StaticPlugins) == 0 {
 		g.plugins.DynamicPlugins = []string{e2ePlugin, systemdLogsPlugin}
 	}
@@ -153,7 +146,6 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 	}
 
 	return &client.GenConfig{
-		E2EConfig:            e2ecfg,
 		Config:               &g.sonobuoyConfig.Config,
 		EnableRBAC:           rbacEnabled,
 		KubeConformanceImage: e2eImage,
@@ -166,6 +158,7 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		ShowDefaultPodSpec:   g.showDefaultPodSpec,
 		NodeSelectors:        g.nodeSelectors,
 		KubeVersion:          imageVersion,
+		PluginTransforms:     g.pluginTransforms,
 	}, nil
 }
 

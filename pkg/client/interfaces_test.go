@@ -50,34 +50,6 @@ func TestConfigValidation(t *testing.T) {
 			valid:  true,
 		},
 		{
-			desc:          "gen config without E2E config is not valid",
-			config:        &GenConfig{},
-			valid:         false,
-			expectedError: "nil E2EConfig provided",
-		},
-		{
-			desc: "gen config with E2E config is valid",
-			config: &GenConfig{
-				E2EConfig: &E2EConfig{},
-			},
-			valid: true,
-		},
-		{
-			desc:          "run config with invalid gen config is not valid",
-			config:        &RunConfig{},
-			valid:         false,
-			expectedError: "GenConfig validation failed: nil E2EConfig provided",
-		},
-		{
-			desc: "run config with valid gen config is valid",
-			config: &RunConfig{
-				GenConfig: GenConfig{
-					E2EConfig: &E2EConfig{},
-				},
-			},
-			valid: true,
-		},
-		{
 			desc:          "delete config with no namespace is not valid",
 			config:        &DeleteConfig{},
 			valid:         false,
