@@ -72,13 +72,21 @@ type templateValues struct {
 }
 
 // GenerateManifest fills in a template with a Sonobuoy config
-func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
+func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
+	b, _, err := c.GenerateManifestAndPlugins(cfg)
+	return b, err
+}
+
+// GenerateManifest fills in a template with a Sonobuoy config and also provides the objects
+// representing the plugins. This is useful if you want to do any structured handling of the resulting
+// plugins that would have been run.
+func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*manifest.Manifest, error) {
 	if cfg == nil {
-		return nil, errors.New("nil GenConfig provided")
+		return nil, nil, errors.New("nil GenConfig provided")
 	}
 
 	if err := cfg.Validate(); err != nil {
-		return nil, errors.Wrap(err, "config validation failed")
+		return nil, nil, errors.Wrap(err, "config validation failed")
 	}
 
 	// Allow nil cfg.Config but avoid dereference errors.
@@ -89,7 +97,7 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 
 	marshalledConfig, err := json.Marshal(conf)
 	if err != nil {
-		return nil, errors.Wrap(err, "couldn't marshall selector")
+		return nil, nil, errors.Wrap(err, "couldn't marshall selector")
 	}
 
 	sshKeyData := []byte{}
@@ -97,7 +105,7 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 		var err error
 		sshKeyData, err = ioutil.ReadFile(cfg.SSHKeyPath)
 		if err != nil {
-			return nil, errors.Wrapf(err, "unable to read SSH key file: %v", cfg.SSHKeyPath)
+			return nil, nil, errors.Wrapf(err, "unable to read SSH key file: %v", cfg.SSHKeyPath)
 		}
 	}
 
@@ -151,7 +159,7 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 
 	err = checkPluginsUnique(plugins)
 	if err != nil {
-		return nil, errors.Wrap(err, "plugin YAML generation")
+		return nil, nil, errors.Wrap(err, "plugin YAML generation")
 	}
 
 	cfg.PluginEnvOverrides, plugins = applyK8sVersion(cfg.KubeVersion, cfg.PluginEnvOverrides, plugins)
@@ -183,7 +191,7 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 				for _, p := range plugins {
 					pluginNames = append(pluginNames, p.SonobuoyConfig.PluginName)
 				}
-				return nil, fmt.Errorf("failed to override env vars for plugin %v, no plugin with that name found; have plugins: %v", pluginName, pluginNames)
+				return nil, nil, fmt.Errorf("failed to override env vars for plugin %v, no plugin with that name found; have plugins: %v", pluginName, pluginNames)
 			}
 		}
 	}
@@ -192,7 +200,7 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	for _, v := range plugins {
 		yaml, err := manifesthelper.ToYAML(v, cfg.ShowDefaultPodSpec)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		pluginYAML = append(pluginYAML, strings.TrimSpace(string(yaml)))
 	}
@@ -220,10 +228,10 @@ func (*SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	var buf bytes.Buffer
 
 	if err := genManifest.Execute(&buf, tmplVals); err != nil {
-		return nil, errors.Wrap(err, "couldn't execute manifest template")
+		return nil, nil, errors.Wrap(err, "couldn't execute manifest template")
 	}
 
-	return buf.Bytes(), nil
+	return buf.Bytes(), plugins, nil
 }
 
 func applyK8sVersion(imageVersion string, env map[string]map[string]string, plugins []*manifest.Manifest) (map[string]map[string]string, []*manifest.Manifest) {
