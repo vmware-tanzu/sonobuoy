@@ -25,7 +25,6 @@ import (
 	"sort"
 	"strings"
 
-	version "github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
@@ -38,9 +37,8 @@ import (
 )
 
 const (
-	e2ePluginName                 = "e2e"
-	systemdLogsName               = "systemd-logs"
-	lastE2EVersionWithoutProgress = "1.16.99"
+	e2ePluginName   = "e2e"
+	systemdLogsName = "systemd-logs"
 
 	envVarKeyExtraArgs = "E2E_EXTRA_ARGS"
 
@@ -411,21 +409,9 @@ func E2EManifest(cfg *GenConfig) *manifest.Manifest {
 		)
 	}
 
-	if e2eImageSupportsProgress(cfg.KubeConformanceImage) {
-		m.Spec.Env = updateExtraArgs(m.Spec.Env, cfg.Config.ProgressUpdatesPort)
-	}
+	m.Spec.Env = updateExtraArgs(m.Spec.Env, cfg.Config.ProgressUpdatesPort)
 
 	return m
-}
-
-func e2eImageSupportsProgress(imageName string) bool {
-	parts := strings.SplitAfter(imageName, ":")
-	tag := parts[len(parts)-1]
-	imageVersion, err := version.NewVersion(tag)
-	if err != nil {
-		return false
-	}
-	return imageVersion.GreaterThan(version.Must(version.NewVersion(lastE2EVersionWithoutProgress)))
 }
 
 // updateExtraArgs adds the flag expected by the e2e plugin for the progress report URL.
