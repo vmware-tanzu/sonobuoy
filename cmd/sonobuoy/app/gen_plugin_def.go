@@ -218,7 +218,7 @@ func NewCmdGenE2E() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "e2e",
 		Short: "Generates the e2e plugin definition based on the given options",
-		RunE:  genE2EManifest(&genE2Eflags, &configMapFiles),
+		RunE:  genManifestForPlugin(&genE2Eflags, e2ePlugin),
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(GenFlagSet(&genE2Eflags, EnabledRBACMode))
@@ -229,32 +229,30 @@ func NewCmdGenE2E() *cobra.Command {
 	return cmd
 }
 
-func genE2EManifest(genflags *genFlags, configMapFiles *[]string) func(cmd *cobra.Command, args []string) error {
+func genManifestForPlugin(genflags *genFlags, pluginName string) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		cfg, err := genflags.Config()
 		if err != nil {
 			return err
 		}
 
-		m := client.E2EManifest(cfg)
-		if len(*configMapFiles) > 0 {
-			m.ConfigMap = map[string]string{}
-		}
-		for _, v := range *configMapFiles {
-			fData, err := os.ReadFile(v)
-			if err != nil {
-				return errors.Wrapf(err, "failed to read file %q", v)
-			}
-			base := filepath.Base(v)
-			m.ConfigMap[base] = string(fData)
-		}
+		// Generate does not require any client configuration
+		sbc := &client.SonobuoyClient{}
 
-		yaml, err := manifesthelper.ToYAML(m, cfg.ShowDefaultPodSpec)
+		_, plugins, err := sbc.GenerateManifestAndPlugins(cfg)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error attempting to generate sonobuoy manifest")
 		}
 
-		fmt.Println(string(yaml))
+		for _, p := range plugins {
+			if p.Spec.Name == pluginName {
+				yaml, err := manifesthelper.ToYAML(p, cfg.ShowDefaultPodSpec)
+				if err != nil {
+					return errors.Wrap(err, "error attempting to serialize plugin")
+				}
+				fmt.Print(string(yaml))
+			}
+		}
 		return nil
 	}
 }
@@ -264,27 +262,9 @@ func NewCmdGenSystemdLogs() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "systemd-logs",
 		Short: "Generates the systemd-logs plugin definition based on the given options",
-		RunE:  genSystemdLogsManifest(&genSystemdLogsflags),
+		RunE:  genManifestForPlugin(&genSystemdLogsflags, systemdLogsPlugin),
 		Args:  cobra.NoArgs,
 	}
 	cmd.Flags().AddFlagSet(GenFlagSet(&genSystemdLogsflags, EnabledRBACMode))
 	return cmd
-}
-
-func genSystemdLogsManifest(genflags *genFlags) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		cfg, err := genflags.Config()
-		if err != nil {
-			return err
-		}
-
-		m := client.SystemdLogsManifest(cfg)
-		yaml, err := manifesthelper.ToYAML(m, cfg.ShowDefaultPodSpec)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(string(yaml))
-		return nil
-	}
 }

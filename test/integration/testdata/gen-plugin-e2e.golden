@@ -20,16 +20,18 @@ spec:
   command:
   - /run_e2e.sh
   env:
-  - name: E2E_FOCUS
-    value: \[Conformance\]
-  - name: E2E_SKIP
-    value: \[Disruptive\]|NoExecuteTaintManager
-  - name: E2E_PARALLEL
-    value: "false"
-  - name: E2E_USE_GO_RUNNER
-    value: "true"
   - name: E2E_EXTRA_ARGS
     value: --progress-report-url=http://localhost:8099/progress
+  - name: E2E_FOCUS
+    value: \[Conformance\]
+  - name: E2E_PARALLEL
+    value: "false"
+  - name: E2E_SKIP
+    value: \[Disruptive\]|NoExecuteTaintManager
+  - name: E2E_USE_GO_RUNNER
+    value: "true"
+  - name: SONOBUOY_K8S_VERSION
+    value: v123.456.789
   image: k8s.gcr.io/conformance:v123.456.789
   imagePullPolicy: IfNotPresent
   name: e2e
@@ -37,4 +39,3 @@ spec:
   volumeMounts:
   - mountPath: /tmp/results
     name: results
-
