@@ -74,6 +74,7 @@ data:
       - name: SONOBUOY_K8S_VERSION
         value: v123.456.789
       image: hello:v9
+      imagePullPolicy: IfNotPresent
       name: plugin
       resources: {}
       volumeMounts:
@@ -91,6 +92,7 @@ data:
       - name: SONOBUOY_K8S_VERSION
         value: v123.456.789
       image: hello:v123.456.789
+      imagePullPolicy: IfNotPresent
       name: plugin
       resources: {}
       volumeMounts:
