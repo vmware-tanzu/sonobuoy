@@ -403,6 +403,22 @@ func TestGenerateManifestGolden(t *testing.T) {
 				},
 			},
 			goldenFile: filepath.Join("testdata", "plugin-configmaps.golden"),
+		}, {
+			name: "ImagePullPolicy applied to all plugins",
+			inputcm: &client.GenConfig{
+				Config:      staticConfig(),
+				KubeVersion: "v99+static.testing",
+				StaticPlugins: []*manifest.Manifest{
+					{
+						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myplugin1"},
+						Spec:           manifest.Container{Container: v1.Container{ImagePullPolicy: "Never"}},
+					}, {
+						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myplugin2"},
+						Spec:           manifest.Container{Container: v1.Container{ImagePullPolicy: "Always"}},
+					},
+				},
+			},
+			goldenFile: filepath.Join("testdata", "imagePullPolicy-all-plugins.golden"),
 		},
 	}
 

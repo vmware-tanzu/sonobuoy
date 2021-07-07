@@ -40,6 +40,7 @@ data:
       env:
       - name: SONOBUOY_K8S_VERSION
         value: v99+static.testing
+      imagePullPolicy: IfNotPresent
       name: ""
       resources: {}
       volumeMounts:
@@ -60,6 +61,7 @@ data:
       env:
       - name: SONOBUOY_K8S_VERSION
         value: v99+static.testing
+      imagePullPolicy: IfNotPresent
       name: ""
       resources: {}
       volumeMounts:
