@@ -166,6 +166,23 @@ $ sonobuoy run --e2e-focus=’[Conformance]’ --e2e-skip=’[Disruptive]’
 
 We hope this primer on the Kubernetes test suite cleared up some of the confusion you may have had regarding the Kubernetes tests. If you have more questions, don't hesitate to reach out. We love making your testing easier!
 
+## Update: Sonobuoy's Quick mode
+
+After posting this blog, it was pointed out that we weren't as clear as possible regarding the `--mode` flag and its options.
+
+To clarify, the `--mode` flag is just a convenience wrapper for setting the `--e2e-focus` and `--e2e-skip` flags in the most common situations.
+
+Discussed above, were non-destructive-conformance mode (Sonobuoy's default) and certified-conformance mode. However, we failed to mention **quick mode**. Quick mode runs a single, quick test on your cluster as a smoke test:
+
+```
+    sonobuoy run --mode=quick
+```
+
+This is ideal for when:
+
+ - You've just created a cluster and want to make sure that it is functioning at all and can run pods as expected.
+ - You have a long-lived cluster up and want to run periodic smoke tests to ensure the cluster is still operating as expected without all the time/load of full non-destructive-conformance run.
+
 ## Join the Sonobuoy community:
 
 - Star/watch us on Github: [sonobuoy][sonobuoy] and [sonobuoy-plugins][sonobuoy-plugins]
