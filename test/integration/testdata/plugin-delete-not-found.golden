@@ -1,0 +1,11 @@
+Error: failed to load installed plugins: failed to find plugin file foo.yaml within directory *STATIC_FOR_TESTING*
+Usage:
+  sonobuoy plugin uninstall <plugin filename> [flags]
+
+Flags:
+  -h, --help   help for uninstall
+
+Global Flags:
+      --level level   Log level. One of {panic, fatal, error, warn, info, debug, trace} (default info)
+
+time="STATIC_TIME_FOR_TESTING" level=error msg="failed to load installed plugins: failed to find plugin file foo.yaml within directory *STATIC_FOR_TESTING*"
