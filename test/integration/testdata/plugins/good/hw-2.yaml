@@ -1,0 +1,13 @@
+sonobuoy-config:
+  driver: Job
+  plugin-name: hello-world2
+  result-format: raw
+spec:
+  command:
+  - ./run.sh
+  image: hello:v9
+  name: plugin
+  resources: {}
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results

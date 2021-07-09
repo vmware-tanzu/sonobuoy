@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -458,7 +459,7 @@ func pwd(t *testing.T) string {
 
 // TestExactOutput is to test things which can expect exact output; so do not use it
 // for things like configs which include timestamps or UUIDs.
-func TestExactOutput(t *testing.T) {
+func TestExactOutput_LocalGolden(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
@@ -562,6 +563,186 @@ func TestOutputIncludes(t *testing.T) {
 
 			if !strings.Contains(output.String(), tc.expectSnippet) {
 				t.Errorf("Expected output to include %q, instead got:\n\n%v", tc.expectSnippet, output.String())
+			}
+		})
+	}
+}
+
+// TestPluginCmds will test exact output but will also require other steps to properly
+// setup/cleanup so it was split into its own test.
+func TestPluginCmds_LocalGolden(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	testCases := []struct {
+		desc       string
+		cmdLine    string
+		expectFile string
+		useDir     string
+		cleanup    bool
+	}{
+		{
+			desc:       "plugin list",
+			cmdLine:    "plugin list",
+			useDir:     "testdata/plugins/good",
+			expectFile: "testdata/plugin-list.golden",
+		}, {
+			desc:       "plugin show without ext",
+			cmdLine:    "plugin show hello-world",
+			useDir:     "testdata/plugins/good",
+			expectFile: "testdata/plugin-show-wo-ext.golden",
+		}, {
+			desc:       "plugin show with ext",
+			cmdLine:    "plugin show hello-world.yaml",
+			useDir:     "testdata/plugins/good",
+			expectFile: "testdata/plugin-show-w-ext.golden",
+		}, {
+			desc: "plugin show not found",
+			// Set --level=panic to avoid timestamp in output.
+			cmdLine:    "plugin show no-plugin --level=panic",
+			useDir:     "testdata/plugins/good",
+			expectFile: "testdata/plugin-show-not-found.golden",
+		}, {
+			desc:       "plugin show second plugin",
+			cmdLine:    "plugin show hw-2",
+			useDir:     "testdata/plugins/good",
+			expectFile: "testdata/plugin-show-2.golden",
+		},
+	}
+
+	for _, tc := range testCases {
+		origval := os.Getenv("SONOBUOY_DIR")
+		defer os.Setenv("SONOBUOY_DIR", origval)
+
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.cleanup {
+				defer os.RemoveAll(tc.useDir)
+			}
+			os.Setenv("SONOBUOY_DIR", tc.useDir)
+
+			// Allow errors here since we also may test stderr
+			output, _ := runSonobuoyCommandWithContext(ctx, t, tc.cmdLine)
+
+			binaryVersion := mustRunSonobuoyCommand(t, "version --short")
+			binaryVer := strings.TrimSpace(binaryVersion.String())
+
+			outString := strings.ReplaceAll(output.String(), binaryVer, "*STATIC_FOR_TESTING*")
+			if *update {
+				if err := os.WriteFile(tc.expectFile, []byte(outString), 0666); err != nil {
+					t.Fatalf("Failed to update goldenfile: %v", err)
+				}
+			} else {
+				fileData, err := ioutil.ReadFile(tc.expectFile)
+				if err != nil {
+					t.Fatalf("Failed to read golden file %v: %v", tc.expectFile, err)
+				}
+				if diff := pretty.Compare(string(fileData), outString); diff != "" {
+					t.Errorf("Expected manifest to equal goldenfile: %v but got diff:\n\n%v", tc.expectFile, diff)
+				}
+			}
+		})
+	}
+}
+
+func TestPluginComplexCmds_LocalGolden(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	testCases := []struct {
+		desc       string
+		cmdLine    []string
+		expectFile string
+
+		// Just a workaround so I could still put this test case in this TDT.
+		// Will add a non-parsable yaml file in those files listed here before
+		// other commands are run.
+		addBadPlugins []string
+	}{
+		{
+			desc: "plugin install",
+			cmdLine: []string{
+				"plugins list",
+				"plugin install foo ./testdata/plugins/good/hello-world.yaml",
+				"plugins list",
+			},
+			expectFile: "testdata/plugin-install.golden",
+		}, {
+			desc: "plugin install then delete",
+			cmdLine: []string{
+				"plugins list",
+				"plugin install foo ./testdata/plugins/good/hello-world.yaml",
+				"plugin install foo2 ./testdata/plugins/good/hello-world.yaml",
+				"plugins list",
+				"plugin uninstall foo",
+				"plugins list",
+			},
+			expectFile: "testdata/plugin-install-delete.golden",
+		}, {
+			desc: "plugin install then delete",
+			cmdLine: []string{
+				"plugins uninstall foo",
+			},
+			expectFile: "testdata/plugin-delete-not-found.golden",
+		}, {
+			desc: "plugin list doesnt stop on errors",
+			cmdLine: []string{
+				"plugins list",
+				"plugin install p1 ./testdata/plugins/good/hello-world.yaml",
+				"plugin install p3 ./testdata/plugins/good/hello-world.yaml",
+				"plugin install p5 ./testdata/plugins/good/hello-world.yaml",
+				"plugins list",
+			},
+			addBadPlugins: []string{"p2.yaml", "p4.yaml"},
+			expectFile:    "testdata/plugin-list-good-bad.golden",
+		},
+	}
+
+	for _, tc := range testCases {
+		origval := os.Getenv("SONOBUOY_DIR")
+		defer os.Setenv("SONOBUOY_DIR", origval)
+
+		t.Run(tc.desc, func(t *testing.T) {
+			tmpDir, err := ioutil.TempDir("", "sonobuoy_plugin_test_*")
+			if err != nil {
+				t.Fatal("Failed to create tmp dir")
+			}
+			defer os.RemoveAll(tmpDir)
+
+			os.Setenv("SONOBUOY_DIR", tmpDir)
+
+			for _, v := range tc.addBadPlugins {
+				if err := os.WriteFile(filepath.Join(tmpDir, v), []byte("a:b:c:d:bad:file"), 0777); err != nil {
+					t.Fatalf("failed to setup bad plugins for test: %v", err)
+				}
+			}
+
+			// Allow errors here since we also may test stderr
+			var allOutput bytes.Buffer
+			for _, cmd := range tc.cmdLine {
+				output, _ := runSonobuoyCommandWithContext(ctx, t, cmd)
+				output.WriteTo(&allOutput)
+			}
+
+			binaryVersion := mustRunSonobuoyCommand(t, "version --short")
+			binaryVer := strings.TrimSpace(binaryVersion.String())
+
+			outString := strings.ReplaceAll(allOutput.String(), binaryVer, "*STATIC_FOR_TESTING*")
+			outString = strings.ReplaceAll(outString, tmpDir, "*STATIC_FOR_TESTING*")
+			r := regexp.MustCompile("time=\".*?\"")
+			outString = r.ReplaceAllString(outString, `time="STATIC_TIME_FOR_TESTING"`)
+
+			if *update {
+				if err := os.WriteFile(tc.expectFile, []byte(outString), 0666); err != nil {
+					t.Fatalf("Failed to update goldenfile: %v", err)
+				}
+			} else {
+				fileData, err := ioutil.ReadFile(tc.expectFile)
+				if err != nil {
+					t.Fatalf("Failed to read golden file %v: %v", tc.expectFile, err)
+				}
+				if diff := pretty.Compare(string(fileData), outString); diff != "" {
+					t.Errorf("Expected manifest to equal goldenfile: %v but got diff:\n\n%v", tc.expectFile, diff)
+				}
 			}
 		})
 	}

@@ -1,0 +1,9 @@
+filename: testdata/plugins/good/hello-world.yaml
+plugin name: hello-world
+source URL: foo.com
+description: This is a plugin description.
+---
+filename: testdata/plugins/good/hw-2.yaml
+plugin name: hello-world2
+source URL: 
+description: 

@@ -50,7 +50,7 @@ func TestFindPlugins(t *testing.T) {
 }
 
 func TestLoadNonexistentPlugin(t *testing.T) {
-	_, err := loadDefinitionFromFile("non/existent/path")
+	_, err := LoadDefinitionFromFile("non/existent/path")
 	if errors.Cause(err).Error() != "open non/existent/path: no such file or directory" {
 		t.Errorf("Expected ErrNotExist, got %v", errors.Cause(err))
 	}
@@ -58,14 +58,9 @@ func TestLoadNonexistentPlugin(t *testing.T) {
 
 func TestLoadValidPlugin(t *testing.T) {
 	jobDefFileName := "testdata/plugin.d/job.yml"
-	jobDefFile, err := loadDefinitionFromFile(jobDefFileName)
+	jobDef, err := LoadDefinitionFromFile(jobDefFileName)
 	if err != nil {
 		t.Fatalf("Unexpected error reading job plugin: %v", err)
-	}
-
-	jobDef, err := loadDefinition(jobDefFile)
-	if err != nil {
-		t.Fatalf("Unexpected error loading job plugin: %v", err)
 	}
 
 	if jobDef.SonobuoyConfig.Driver != "Job" {
@@ -80,13 +75,9 @@ func TestLoadValidPlugin(t *testing.T) {
 	}
 
 	daemonDefFileName := "testdata/plugin.d/daemonset.yaml"
-	daemonDefFile, err := loadDefinitionFromFile(daemonDefFileName)
+	daemonDef, err := LoadDefinitionFromFile(daemonDefFileName)
 	if err != nil {
 		t.Fatalf("Unexpected error creating daemonset plugin: %v", err)
-	}
-	daemonDef, err := loadDefinition(daemonDefFile)
-	if err != nil {
-		t.Fatalf("Unexpected error loading daemonset plugin: %v", err)
 	}
 
 	if daemonDef.SonobuoyConfig.Driver != "DaemonSet" {
@@ -125,14 +116,9 @@ func TestLoadValidPluginWithSkipCleanup(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			jobDefFile, err := loadDefinitionFromFile(tc.jobDefFileName)
+			jobDef, err := LoadDefinitionFromFile(tc.jobDefFileName)
 			if err != nil {
 				t.Fatalf("Unexpected error reading job plugin: %v", err)
-			}
-
-			jobDef, err := loadDefinition(jobDefFile)
-			if err != nil {
-				t.Fatalf("Unexpected error loading job plugin: %v", err)
 			}
 
 			if jobDef.SonobuoyConfig.SkipCleanup != tc.expectedValue {
