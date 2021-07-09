@@ -40,27 +40,40 @@ type Interface interface {
 	// Run runs a plugin, declaring all resources it needs, and then
 	// returns.  It does not block and wait until the plugin has finished.
 	Run(kubeClient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod, progressPort string) error
+
 	// Cleanup cleans up all resources created by the plugin
 	Cleanup(kubeClient kubernetes.Interface)
+
 	// Monitor continually checks for problems in the resources created by a
 	// plugin (either because it won't schedule, or the image won't
 	// download, too many failed executions, etc) and sends the errors as
 	// Result objects through the provided channel. It should return once the context
 	// is cancelled.
 	Monitor(ctx context.Context, kubeClient kubernetes.Interface, availableNodes []v1.Node, resultsCh chan<- *Result)
+
 	// ExpectedResults is an array of Result objects that a plugin should
 	// expect to submit.
 	ExpectedResults(nodes []v1.Node) []ExpectedResult
+
 	// GetName returns the name of this plugin
 	GetName() string
+
 	// SkipCleanup returns whether cleanup for this plugin should be skipped or not.
 	SkipCleanup() bool
+
 	// GetResultFormat states the type of results this plugin generates and facilates post-processing
 	// those results.
 	GetResultFormat() string
+
 	// GetResultFiles returns the specific files to target for post-processing. If empty, each
 	// result format specifies its own heuristic for determining those files.
 	GetResultFiles() []string
+
+	// GetDescription returns the human-readable description of the plugin.
+	GetDescription() string
+
+	// GetSourceURL returns the URL where the plugin came from and where updates to it will be located.
+	GetSourceURL() string
 }
 
 // ExpectedResult is an expected result that a plugin will submit.  This is so

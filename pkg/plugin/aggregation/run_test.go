@@ -242,6 +242,14 @@ func (cp *MockCleanupPlugin) GetResultFiles() []string {
 	return []string{}
 }
 
+func (cp *MockCleanupPlugin) GetDescription() string {
+	return "A mock plugin used for testing purposes"
+}
+
+func (cp *MockCleanupPlugin) GetSourceURL() string {
+	return ""
+}
+
 func TestCleanup(t *testing.T) {
 	createPlugin := func(skipCleanup bool) *MockCleanupPlugin {
 		return &MockCleanupPlugin{
