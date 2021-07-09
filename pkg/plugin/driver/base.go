@@ -78,6 +78,16 @@ func (b *Base) GetResultFiles() []string {
 	return b.Definition.SonobuoyConfig.ResultFiles
 }
 
+// GetSourceURL returns the sourceURL of the plugin.
+func (b *Base) GetSourceURL() string {
+	return b.Definition.SonobuoyConfig.SourceURL
+}
+
+// GetDescription returns the human-readable plugin description.
+func (b *Base) GetDescription() string {
+	return b.Definition.SonobuoyConfig.Description
+}
+
 // MakeTLSSecret makes a Kubernetes secret object for the given TLS certificate.
 func (b *Base) MakeTLSSecret(cert *tls.Certificate, ownerPod *v1.Pod) (*v1.Secret, error) {
 	rsaKey, ok := cert.PrivateKey.(*ecdsa.PrivateKey)

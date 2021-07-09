@@ -43,6 +43,13 @@ type SonobuoyConfig struct {
 	// to avoid automatically targeting other files or failing to target this one due to heuristics.
 	ResultFiles []string `json:"result-files,omitempty"`
 
+	// Description is an optional, human-readable description for the plugin.
+	Description string `json:"description,omitempty"`
+
+	// SourceURL is an optional URL which describes the source of the plugin and where updates
+	// to the plugin source would be kept.
+	SourceURL string `json:"source-url,omitempty"`
+
 	objectKind
 }
 
