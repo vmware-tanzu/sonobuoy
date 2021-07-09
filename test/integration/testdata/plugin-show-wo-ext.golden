@@ -1,0 +1,16 @@
+sonobuoy-config:
+  description: This is a plugin description.
+  driver: Job
+  plugin-name: hello-world
+  result-format: raw
+  source-url: foo.com
+spec:
+  command:
+  - ./run.sh
+  image: hello:v9
+  name: plugin
+  resources: {}
+  volumeMounts:
+  - mountPath: /tmp/results
+    name: results
+

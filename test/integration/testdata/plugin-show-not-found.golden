@@ -1,0 +1,10 @@
+Error: failed to load installed plugins: failed to find plugin file no-plugin.yaml within directory testdata/plugins/good
+Usage:
+  sonobuoy plugin show <plugin filename> [flags]
+
+Flags:
+  -h, --help   help for show
+
+Global Flags:
+      --level level   Log level. One of {panic, fatal, error, warn, info, debug, trace} (default info)
+
