@@ -63,7 +63,7 @@ func NewSonobuoyCommand() *cobra.Command {
 	cmds.AddCommand(NewCmdSplat())
 
 	initKlog(cmds)
-	cmds.PersistentFlags().StringVar(&errlog.LogLevel, "level", "info", "Log level. One of {panic, fatal, error, warn, info, debug, trace}")
+	cmds.PersistentFlags().Var(&errlog.LogLevel, "level", "Log level. One of {panic, fatal, error, warn, info, debug, trace}")
 
 	// Previously just had debug flag but in desire to have fine grained control over output we opted to
 	// have full ability to set level instead.

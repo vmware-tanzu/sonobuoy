@@ -27,16 +27,25 @@ var (
 	DebugOutput = false
 
 	// loglevel used for sirupsen/logrus
-	LogLevel = "info"
+	LogLevel logLevelFlagType = "info"
 )
 
-func SetLevel() {
+type logLevelFlagType string
+
+func (l *logLevelFlagType) String() string { return string(*l) }
+func (l *logLevelFlagType) Type() string   { return "level" }
+func (l *logLevelFlagType) Set(str string) error {
+	*l = logLevelFlagType(str)
+	return SetLevel(str)
+}
+
+func SetLevel(s string) error {
 	// Just using debug to set log level for as long
 	// as we want to keep the deprecated flag.
 	if DebugOutput {
 		LogLevel = "debug"
 	}
-	switch LogLevel {
+	switch s {
 	case "panic":
 		logrus.SetLevel(logrus.PanicLevel)
 	case "fatal":
@@ -54,10 +63,11 @@ func SetLevel() {
 		logrus.SetLevel(logrus.TraceLevel)
 		DebugOutput = true
 	default:
-		logrus.Warningf("Unknown log level %q. Defaulting to info.", LogLevel)
-		LogLevel = "info"
-		logrus.SetLevel(logrus.InfoLevel)
+		return fmt.Errorf("unknown log level %q", s)
 	}
+
+	return nil
+
 }
 
 // LogError logs an error, optionally with a tracelog
