@@ -93,6 +93,9 @@ func TestDecodeTarball(t *testing.T) {
 		Typeflag: tar.TypeSymlink,
 		ModTime:  time.Now(),
 	})
+	if err != nil {
+		t.Fatalf("Unexpected error %v", err)
+	}
 
 	err = w.Close()
 	if err != nil {
