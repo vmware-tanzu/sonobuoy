@@ -32,6 +32,7 @@ const (
 	etcdRegistry            = "quay.io/coreos"
 	gcAuthenticatedRegistry = "gcr.io/authenticated-image-pulling"
 	gcRegistry              = "k8s.gcr.io"
+	gcEtcdRegistry          = "k8s.gcr.io"
 	gcrReleaseRegistry      = "gcr.io/gke-release"
 	googleContainerRegistry = "gcr.io/google-containers"
 	invalidRegistry         = "invalid.com/invalid"
@@ -53,6 +54,7 @@ type RegistryList struct {
 	EtcdRegistry            string `yaml:"etcdRegistry,omitempty"`
 	GcAuthenticatedRegistry string `yaml:"gcAuthenticatedRegistry,omitempty"`
 	GcRegistry              string `yaml:"gcRegistry,omitempty"`
+	GcEtcdRegistry          string `yaml:"gcEtcdRegistry,omitempty"`
 	GcrReleaseRegistry      string `yaml:"gcrReleaseRegistry,omitempty"`
 	GoogleContainerRegistry string `yaml:"googleContainerRegistry,omitempty"`
 	InvalidRegistry         string `yaml:"invalidRegistry,omitempty"`
@@ -85,6 +87,7 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 		EtcdRegistry:            etcdRegistry,
 		GcAuthenticatedRegistry: gcAuthenticatedRegistry,
 		GcRegistry:              gcRegistry,
+		GcEtcdRegistry:          gcEtcdRegistry,
 		GcrReleaseRegistry:      gcrReleaseRegistry,
 		GoogleContainerRegistry: googleContainerRegistry,
 		InvalidRegistry:         invalidRegistry,
@@ -134,6 +137,7 @@ func GetDefaultImageRegistries(version string) (*RegistryList, error) {
 		E2eVolumeRegistry:     e2eVolumeRegistry,
 		DockerLibraryRegistry: dockerLibraryRegistry,
 		GcRegistry:            gcRegistry,
+		GcEtcdRegistry:        gcEtcdRegistry,
 		DockerGluster:         dockerGluster,
 		PromoterE2eRegistry:   promoterE2eRegistry,
 		SigStorageRegistry:    sigStorageRegistry,
