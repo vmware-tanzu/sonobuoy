@@ -62,17 +62,12 @@ func LoadAllPlugins(namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets 
 
 	pluginDefinitions := []manifest.Manifest{}
 	for file := range pluginDefinitionFiles {
-		definitionFile, err := loadDefinitionFromFile(file)
+		pluginDefinition, err := LoadDefinitionFromFile(file)
 		if err != nil {
 			return []plugin.Interface{}, errors.Wrapf(err, "couldn't load plugin definition file %v", file)
 		}
 
-		pluginDefinition, err := loadDefinition(definitionFile)
-		if err != nil {
-			return []plugin.Interface{}, errors.Wrapf(err, "couldn't load plugin definition for file %v", file)
-		}
-
-		pluginDefinitions = append(pluginDefinitions, pluginDefinition)
+		pluginDefinitions = append(pluginDefinitions, *pluginDefinition)
 	}
 
 	// The zero value for the slice, nil, indicates that all plugins should be run.
@@ -112,12 +107,25 @@ func findPlugins(dir string) ([]string, error) {
 	return plugins, nil
 }
 
-func loadDefinitionFromFile(file string) ([]byte, error) {
+func LoadDefinitionFromFile(file string) (*manifest.Manifest, error) {
+	definitionFile, err := readDefinitionFromFile(file)
+	if err != nil {
+		return nil, errors.Wrapf(err, "couldn't load plugin definition file %v", file)
+	}
+
+	pluginDefinition, err := LoadDefinition(definitionFile)
+	if err != nil {
+		return nil, errors.Wrapf(err, "couldn't load plugin definition for file %v", file)
+	}
+	return &pluginDefinition, nil
+}
+
+func readDefinitionFromFile(file string) ([]byte, error) {
 	bytes, err := ioutil.ReadFile(file)
 	return bytes, errors.Wrapf(err, "couldn't open plugin definition %v", file)
 }
 
-func loadDefinition(bytes []byte) (manifest.Manifest, error) {
+func LoadDefinition(bytes []byte) (manifest.Manifest, error) {
 	var def manifest.Manifest
 	err := kuberuntime.DecodeInto(manifest.Decoder, bytes, &def)
 	return def, errors.Wrap(err, "couldn't decode yaml for plugin definition")

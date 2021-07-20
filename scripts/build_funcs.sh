@@ -345,6 +345,6 @@ update_local() {
     # Ensure you build using the intended script so buildinfo gets set.
     native
     # Integration tests take longer and need kind (usually). Just run the test we need.
-    go test $GOTARGET/test/integration -update -v -tags integration -run TestExactOutput
+    go test $GOTARGET/test/integration -update -v -tags integration -run 'Golden'
     set +x
 }
