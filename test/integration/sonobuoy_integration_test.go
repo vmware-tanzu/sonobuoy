@@ -519,24 +519,7 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Allow errors here since we also may test stderr
 			output, _ := runSonobuoyCommandWithContext(ctx, t, tc.cmdLine)
-
-			binaryVersion := mustRunSonobuoyCommand(t, "version --short")
-			binaryVer := strings.TrimSpace(binaryVersion.String())
-
-			outString := strings.ReplaceAll(output.String(), binaryVer, "*STATIC_FOR_TESTING*")
-			if *update {
-				if err := os.WriteFile(tc.expectFile, []byte(outString), 0666); err != nil {
-					t.Fatalf("Failed to update goldenfile: %v", err)
-				}
-			} else {
-				fileData, err := ioutil.ReadFile(tc.expectFile)
-				if err != nil {
-					t.Fatalf("Failed to read golden file %v: %v", tc.expectFile, err)
-				}
-				if diff := pretty.Compare(string(fileData), outString); diff != "" {
-					t.Errorf("Expected manifest to equal goldenfile: %v but got diff:\n\n%v", tc.expectFile, diff)
-				}
-			}
+			checkFileMatchesOrUpdate(t, output.String(), tc.expectFile, "")
 		})
 	}
 }
@@ -622,24 +605,7 @@ func TestPluginCmds_LocalGolden(t *testing.T) {
 
 			// Allow errors here since we also may test stderr
 			output, _ := runSonobuoyCommandWithContext(ctx, t, tc.cmdLine)
-
-			binaryVersion := mustRunSonobuoyCommand(t, "version --short")
-			binaryVer := strings.TrimSpace(binaryVersion.String())
-
-			outString := strings.ReplaceAll(output.String(), binaryVer, "*STATIC_FOR_TESTING*")
-			if *update {
-				if err := os.WriteFile(tc.expectFile, []byte(outString), 0666); err != nil {
-					t.Fatalf("Failed to update goldenfile: %v", err)
-				}
-			} else {
-				fileData, err := ioutil.ReadFile(tc.expectFile)
-				if err != nil {
-					t.Fatalf("Failed to read golden file %v: %v", tc.expectFile, err)
-				}
-				if diff := pretty.Compare(string(fileData), outString); diff != "" {
-					t.Errorf("Expected manifest to equal goldenfile: %v but got diff:\n\n%v", tc.expectFile, diff)
-				}
-			}
+			checkFileMatchesOrUpdate(t, output.String(), tc.expectFile, "")
 		})
 	}
 }
@@ -723,27 +689,105 @@ func TestPluginComplexCmds_LocalGolden(t *testing.T) {
 				output.WriteTo(&allOutput)
 			}
 
-			binaryVersion := mustRunSonobuoyCommand(t, "version --short")
-			binaryVer := strings.TrimSpace(binaryVersion.String())
-
-			outString := strings.ReplaceAll(allOutput.String(), binaryVer, "*STATIC_FOR_TESTING*")
-			outString = strings.ReplaceAll(outString, tmpDir, "*STATIC_FOR_TESTING*")
-			r := regexp.MustCompile("time=\".*?\"")
-			outString = r.ReplaceAllString(outString, `time="STATIC_TIME_FOR_TESTING"`)
-
-			if *update {
-				if err := os.WriteFile(tc.expectFile, []byte(outString), 0666); err != nil {
-					t.Fatalf("Failed to update goldenfile: %v", err)
-				}
-			} else {
-				fileData, err := ioutil.ReadFile(tc.expectFile)
-				if err != nil {
-					t.Fatalf("Failed to read golden file %v: %v", tc.expectFile, err)
-				}
-				if diff := pretty.Compare(string(fileData), outString); diff != "" {
-					t.Errorf("Expected manifest to equal goldenfile: %v but got diff:\n\n%v", tc.expectFile, diff)
-				}
-			}
+			checkFileMatchesOrUpdate(t, allOutput.String(), tc.expectFile, tmpDir)
 		})
+	}
+}
+
+// TestPluginLoading_LocalGolden uses gen/goldenfile flow as the easiest/best way
+// to test that plugins are loaded from the correct places.
+func TestPluginLoading_LocalGolden(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	installedPluginFile := "./testdata/plugin-loading-installed.golden"
+	localPluginFile := "./testdata/plugin-loading-local.golden"
+
+	tmpDir, err := ioutil.TempDir("", "sonobuoy_plugin_test_*")
+	if err != nil {
+		t.Fatal("Failed to create tmp dir")
+	}
+	defer os.RemoveAll(tmpDir)
+
+	origDir, origFlag := os.Getenv("SONOBUOY_DIR"), os.Getenv("SONOBUOY_ALL_FEATURES")
+	defer func() {
+		os.Setenv("SONOBUOY_DIR", origDir)
+		os.Setenv("SONOBUOY_ALL_FEATURES", origFlag)
+	}()
+	os.Setenv("SONOBUOY_DIR", tmpDir)
+	os.Setenv("SONOBUOY_ALL_FEATURES", "true")
+
+	_, e := runSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	if e == nil {
+		t.Fatal("Expected a failure since no plugin was installed but got none")
+	}
+
+	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin install hello-world.yaml ./testdata/plugins/good/hello-world.yaml")
+	output := mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	checkFileMatchesOrUpdate(t, output.String(), installedPluginFile, tmpDir)
+
+	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin uninstall hello-world.yaml")
+	_, e = runSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	if e == nil {
+		t.Fatal("Expected a failure since no plugin was installed but got none")
+	}
+
+	// Copy file to pwd
+	input, err := ioutil.ReadFile("./testdata/plugins/good/hello-world.yaml")
+	if err != nil {
+		t.Fatalf("Failed to read plugin to test pwd loading")
+	}
+
+	// Create difference between local/installed plugin so we can differentiate them.
+	err = ioutil.WriteFile("hello-world.yaml", bytes.Replace(input, []byte("foo.com"), []byte("localfile.com"), -1), 0644)
+	if err != nil {
+		t.Fatalf("Failed to copy hello-world to pwd: %v", err)
+	}
+	defer os.Remove("hello-world.yaml")
+
+	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	checkFileMatchesOrUpdate(t, output.String(), localPluginFile, tmpDir)
+
+	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin install hello-world.yaml ./testdata/plugins/good/hello-world.yaml")
+	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	checkFileMatchesOrUpdate(t, output.String(), installedPluginFile, tmpDir)
+
+	os.Setenv("SONOBUOY_ALL_FEATURES", "false")
+	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	checkFileMatchesOrUpdate(t, output.String(), localPluginFile, tmpDir)
+
+	if err := os.Remove("hello-world.yaml"); err != nil {
+		t.Fatalf("Failed to delete local file: %v", err)
+	}
+
+	_, e = runSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	if e == nil {
+		t.Fatal("Expected a failure since no plugin was installed but got none")
+	}
+}
+
+func checkFileMatchesOrUpdate(t *testing.T, output, expectFile, maskDir string) {
+	binaryVersion := mustRunSonobuoyCommand(t, "version --short")
+	binaryVer := strings.TrimSpace(binaryVersion.String())
+
+	outString := strings.ReplaceAll(output, binaryVer, "*STATIC_FOR_TESTING*")
+	if maskDir != "" {
+		outString = strings.ReplaceAll(outString, maskDir, "*STATIC_FOR_TESTING*")
+	}
+	r := regexp.MustCompile("time=\".*?\"")
+	outString = r.ReplaceAllString(outString, `time="STATIC_TIME_FOR_TESTING"`)
+
+	if *update {
+		if err := os.WriteFile(expectFile, []byte(outString), 0666); err != nil {
+			t.Fatalf("Failed to update goldenfile: %v", err)
+		}
+	} else {
+		fileData, err := ioutil.ReadFile(expectFile)
+		if err != nil {
+			t.Fatalf("Failed to read golden file %v: %v", expectFile, err)
+		}
+		if diff := pretty.Compare(string(fileData), outString); diff != "" {
+			t.Errorf("Expected output to equal goldenfile: %v but got diff:\n\n%v", expectFile, diff)
+		}
 	}
 }

@@ -19,8 +19,6 @@ package app
 import (
 	"os"
 	"testing"
-
-	"github.com/spf13/cobra"
 )
 
 func TestFilenameFromArg(t *testing.T) {
@@ -93,9 +91,9 @@ func TestGetPluginCacheLocation(t *testing.T) {
 			if tc.cleanup {
 				defer os.RemoveAll(tc.input)
 			}
-			cmd := &cobra.Command{}
+
 			os.Setenv(SonobuoyDirEnvKey, tc.input)
-			o := getPluginCacheLocation(cmd)
+			o := getPluginCacheLocation()
 			if o != tc.expected {
 				t.Errorf("Expected %v but got %v", tc.expected, o)
 			}

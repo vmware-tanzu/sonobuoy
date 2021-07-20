@@ -72,6 +72,17 @@ func (p *pluginList) Type() string { return "pluginList" }
 
 // Set sets the explicit path of the loader to the provided config file
 func (p *pluginList) Set(str string) error {
+	// Load first from cache, then special cases (e2e/systemd-logs), then local file.
+	if featureEnabled(FeaturePluginInstallation) {
+		handled, err := p.loadPluginsFromInstalled(str)
+		if handled {
+			if err != nil {
+				return errors.Wrapf(err, "unable to load plugin %v from installed plugins", str)
+			}
+			return nil
+		}
+	}
+
 	switch str {
 	case pluginE2E:
 		p.DynamicPlugins = append(p.DynamicPlugins, str)
@@ -90,6 +101,24 @@ func (p *pluginList) Set(str string) error {
 func isURL(s string) bool {
 	u, err := url.Parse(s)
 	return err == nil && u.Scheme != "" && u.Host != ""
+}
+
+func (p *pluginList) loadPluginsFromInstalled(str string) (handled bool, returnErr error) {
+	// If empty, disable cache instead of err.
+	loc := getPluginCacheLocation()
+	if len(loc) == 0 {
+		return false, nil
+	}
+
+	m, err := loadPlugin(loc, filenameFromArg(str, ".yaml"))
+	if isNotExist(err) {
+		return false, err
+	}
+	if err != nil {
+		return true, err
+	}
+	p.StaticPlugins = append(p.StaticPlugins, m)
+	return true, nil
 }
 
 func (p *pluginList) loadPluginsFromFilesystem(str string) error {
@@ -170,4 +199,10 @@ func loadManifest(bytes []byte) (*manifest.Manifest, error) {
 	var def manifest.Manifest
 	err := kuberuntime.DecodeInto(manifest.Decoder, bytes, &def)
 	return &def, errors.Wrap(err, "couldn't decode yaml for plugin definition")
+}
+
+// isNotExist returns true if the cause of the error was that the plugin did not exist.
+func isNotExist(e error) bool {
+	_, ok := errors.Cause(e).(*pluginNotFoundError)
+	return ok
 }
