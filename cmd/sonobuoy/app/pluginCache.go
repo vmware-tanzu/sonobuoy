@@ -21,6 +21,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -38,12 +39,19 @@ var (
 	defaultSonobuoyDir = filepath.Join("~", ".sonobuoy")
 )
 
+// pluginNotFoundError is a custom type so we can tell whether or not loading the plugin
+// from the installation directory FAILED or if it just wasn't found.
+type pluginNotFoundError struct{ e error }
+
+func (p *pluginNotFoundError) Error() string {
+	return p.e.Error()
+}
+
 func NewCmdPlugin() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "plugin",
 		Aliases: []string{"plugins"},
 		Short:   "Manage your installed plugins",
-		Hidden:  true,
 	}
 
 	listCmd := &cobra.Command{
@@ -51,7 +59,7 @@ func NewCmdPlugin() *cobra.Command {
 		Short: "List all installed plugins",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return listInstalledPlugins(getPluginCacheLocation(cmd))
+			return listInstalledPlugins(getPluginCacheLocation())
 		},
 	}
 
@@ -60,7 +68,7 @@ func NewCmdPlugin() *cobra.Command {
 		Short: "Print the full definition of the named plugin file",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return showInstalledPlugin(getPluginCacheLocation(cmd), filenameFromArg(args[0], ".yaml"))
+			return showInstalledPlugin(getPluginCacheLocation(), filenameFromArg(args[0], ".yaml"))
 		},
 	}
 
@@ -69,7 +77,7 @@ func NewCmdPlugin() *cobra.Command {
 		Short: "Install a plugin so that it can be run via just its filename rather than a full path or URL.",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return installPlugin(getPluginCacheLocation(cmd), filenameFromArg(args[0], ".yaml"), args[1])
+			return installPlugin(getPluginCacheLocation(), filenameFromArg(args[0], ".yaml"), args[1])
 		},
 	}
 
@@ -78,7 +86,7 @@ func NewCmdPlugin() *cobra.Command {
 		Short: "Uninstall a plugin. You can continue to run any plugin via specifying a file or URL.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return uninstallPlugin(getPluginCacheLocation(cmd), filenameFromArg(args[0], ".yaml"))
+			return uninstallPlugin(getPluginCacheLocation(), filenameFromArg(args[0], ".yaml"))
 		},
 	}
 
@@ -90,7 +98,7 @@ func NewCmdPlugin() *cobra.Command {
 // getPluginCacheLocation will return the location of the plugin cache (defaults to ~/.sonobuoy)
 // If no override is set in the env, the default is assumed. If we are unable to expand to an abosolute
 // path then we return the empty string signalling the feature should be disabled.
-func getPluginCacheLocation(cmd *cobra.Command) string {
+func getPluginCacheLocation() string {
 	usePath := os.Getenv(SonobuoyDirEnvKey)
 	if len(usePath) == 0 {
 		usePath = defaultSonobuoyDir
@@ -119,10 +127,16 @@ func listInstalledPlugins(installedDir string) error {
 	}
 
 	pluginFiles, _ := loadPlugins(installedDir)
+	filenames := []string{}
+	for filename := range pluginFiles {
+		filenames = append(filenames, filename)
+	}
+	sort.StringSlice(filenames).Sort()
 
 	prefix := ""
 	first := true
-	for filename, p := range pluginFiles {
+	for _, filename := range filenames {
+		p := pluginFiles[filename]
 		if !first {
 			prefix = "---\n"
 		}
@@ -174,7 +188,7 @@ func loadPlugin(installedDir, reqFile string) (*manifest.Manifest, error) {
 	if reqManifest != nil {
 		return reqManifest, nil
 	}
-	return nil, fmt.Errorf("failed to find plugin file %v within directory %v", reqFile, installedDir)
+	return nil, &pluginNotFoundError{fmt.Errorf("failed to find plugin file %v within directory %v", reqFile, installedDir)}
 }
 
 // filenameFromArg will ensure the arg has the extension requested. This allows
