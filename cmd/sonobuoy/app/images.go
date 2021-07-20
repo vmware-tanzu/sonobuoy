@@ -421,7 +421,7 @@ func collectPluginsImages(plugins []string, k8sVersion string, client image.Clie
 			client.PullImages([]string{conformanceImage}, numDockerRetries)
 
 			// we only need stdout, but this combines stdout and stderr
-			e2eImages, err := client.RunImage(conformanceImage, "e2e.test", "--list-images")
+			e2eImages, err := client.RunImage("e2e.test", conformanceImage, "--list-images")
 			if err != nil {
 				return images, errors.Wrap(err, "failed to gather e2e images from conformance image")
 			}

@@ -17,6 +17,8 @@ limitations under the License.
 package docker
 
 import (
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/image/exec"
 )
@@ -28,14 +30,18 @@ type Docker interface {
 	Tag(src, dest string, retries int) error
 	Rmi(image string, retries int) error
 	Save(images []string, filename string) error
-	Run(image string, args ...string) ([]string, error)
+	Run(entrypoint string, image string, args ...string) ([]string, error)
 }
 
 type LocalDocker struct {
 }
 
-func (l LocalDocker) Run(image string, args ...string) ([]string, error) {
-	dockerArgs := []string{"run", "--rm", image}
+func (l LocalDocker) Run(entrypoint string, image string, args ...string) ([]string, error) {
+	dockerArgs := []string{"run"}
+	if entrypoint != "" {
+		dockerArgs = append(dockerArgs, fmt.Sprintf("--entrypoint=%s", entrypoint))
+	}
+	dockerArgs = append(dockerArgs, "--rm", image)
 	dockerArgs = append(dockerArgs, args...)
 	cmd := exec.Command("docker", dockerArgs...)
 	return exec.CombinedOutputLines(cmd)
