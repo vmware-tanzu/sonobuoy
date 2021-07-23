@@ -47,7 +47,12 @@ func RunFlagSet(cfg *runFlags) *pflag.FlagSet {
 	runset.AddFlagSet(GenFlagSet(&cfg.genFlags, DetectRBACMode))
 	AddSkipPreflightFlag(&cfg.skipPreflight, runset)
 	AddRunWaitFlag(&cfg.wait, runset)
-	AddWaitOutputFlag(&cfg.waitOutput, runset, SilentOutputMode)
+	if featureEnabled(FeatureWaitOutputProgressByDefault) {
+		AddWaitOutputFlag(&cfg.waitOutput, runset, ProgressOutputMode)
+	} else {
+		AddWaitOutputFlag(&cfg.waitOutput, runset, SilentOutputMode)
+	}
+
 	runset.StringVarP(
 		&cfg.genFile, "file", "f", "",
 		"If set, loads the file as if it were the output from sonobuoy gen. Set to `-` to read from stdin.",

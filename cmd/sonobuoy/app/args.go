@@ -316,7 +316,7 @@ func AddWaitOutputFlag(mode *WaitOutputMode, flags *pflag.FlagSet, defaultMode W
 	*mode = defaultMode
 	flags.Var(
 		mode, waitOutputFlag,
-		"Whether to enable spinner on Sonobuoy. Valid modes are Silent and Spinner")
+		"Specify the type of output Sonobuoy should produce when --wait is used. Valid modes are silent, spinner, or progress")
 }
 
 // AddImagePullPolicyFlag adds a boolean flag for deleting everything (including E2E tests).

@@ -3,8 +3,11 @@ package app
 import "os"
 
 const (
-	FeaturesAll               = "SONOBUOY_ALL_FEATURES"
+	FeaturesAll = "SONOBUOY_ALL_FEATURES"
+
 	FeaturePluginInstallation = "SONOBUOY_PLUGIN_INSTALLATION"
+
+	FeatureWaitOutputProgressByDefault = "SONOBUOY_PLUGIN_INSTALLATION"
 )
 
 func featureEnabled(feature string) bool {

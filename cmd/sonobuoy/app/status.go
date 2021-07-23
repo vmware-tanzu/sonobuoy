@@ -31,6 +31,7 @@ import (
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 )
 
@@ -48,6 +49,10 @@ type pluginSummary struct {
 	status string
 	result string
 	count  int
+
+	// Only useful/simple if its a job type plugin or a daemonset with just one node.
+	// Since this includes e2e, progress here is very helpful though.
+	progressMsg string
 }
 
 // For sort.Interface
@@ -187,9 +192,9 @@ func printJSON(w io.Writer, status *aggregation.Status) error {
 func printAll(w io.Writer, status *aggregation.Status) error {
 	tw := defaultTabWriter(w)
 
-	fmt.Fprintf(tw, "PLUGIN\tNODE\tSTATUS\tRESULT\t\n")
+	fmt.Fprintf(tw, "PLUGIN\tNODE\tSTATUS\tRESULT\tPROGRESS\t\n")
 	for _, pluginStatus := range status.Plugins {
-		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status, pluginStatus.ResultStatus)
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status, pluginStatus.ResultStatus, formatPluginProgress(pluginStatus.Progress))
 	}
 
 	if err := tw.Flush(); err != nil {
@@ -200,9 +205,22 @@ func printAll(w io.Writer, status *aggregation.Status) error {
 	return nil
 }
 
+func formatPluginProgress(p *plugin.ProgressUpdate) string {
+	if p == nil {
+		return ""
+	}
+	return fmt.Sprintf("%v/%v (%v failures)", p.Completed+int64(len(p.Failures)), p.Total, len(p.Failures))
+}
+
 func printSummary(w io.Writer, status *aggregation.Status) error {
 	tw := defaultTabWriter(w)
+
+	// [myPlugin][complete:passed]# matching those keys
 	totals := map[string]map[string]int{}
+
+	// [myPlugin]ProgressMessage Used only if total above is 1; avoided complicated that totals map of maps even more by
+	// splitting this out.
+	progressMap := map[string]string{}
 
 	// Effectively making a pivot chart to count the unique combinations of status/result.
 	statusResultKey := func(p aggregation.PluginStatus) string {
@@ -214,6 +232,12 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 			totals[pStatus.Plugin] = make(map[string]int)
 		}
 		totals[pStatus.Plugin][statusResultKey(pStatus)]++
+		if _, ok := progressMap[pStatus.Plugin]; !ok {
+			progressMap[pStatus.Plugin] = formatPluginProgress(pStatus.Progress)
+		} else {
+			// Dont complicate things by trying to show progress for N plugins at once. --show-all makes this easier.
+			progressMap[pStatus.Plugin] = ""
+		}
 	}
 
 	// Sort everything nicely
@@ -221,18 +245,18 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 	for pluginName, pluginStats := range totals {
 		for statusAndResult, count := range pluginStats {
 			summaries = append(summaries, pluginSummary{
-				plugin: pluginName,
-				status: strings.Split(statusAndResult, ":")[0],
-				result: strings.Split(statusAndResult, ":")[1],
-				count:  count,
+				plugin:      pluginName,
+				status:      strings.Split(statusAndResult, ":")[0],
+				result:      strings.Split(statusAndResult, ":")[1],
+				count:       count,
+				progressMsg: progressMap[pluginName],
 			})
-
 		}
 	}
 	sort.Sort(summaries)
-	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tRESULT\tCOUNT\t\n")
+	fmt.Fprintf(tw, "PLUGIN\tSTATUS\tRESULT\tCOUNT\tPROGRESS\t\n")
 	for _, summary := range summaries {
-		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t\n", summary.plugin, summary.status, summary.result, summary.count)
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%s\t\n", summary.plugin, summary.status, summary.result, summary.count, summary.progressMsg)
 	}
 
 	if err := tw.Flush(); err != nil {
