@@ -100,7 +100,7 @@ func AddDNSPodLabelsFlag(str *[]string, flags *pflag.FlagSet) {
 func AddSonobuoyImage(image *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		image, sonobuoyImageFlag, config.DefaultImage,
-		"Container image override for the sonobuoy worker and container.",
+		"Container image override for the sonobuoy worker and aggregator.",
 	)
 }
 
@@ -110,7 +110,7 @@ func AddPluginImage(pluginTransforms *map[string][]func(*manifest.Manifest) erro
 			transforms: *pluginTransforms,
 		},
 		pluginImageFlag,
-		"Override a plugins image from what is in its definition (expects format plugin:image)",
+		"Override a plugins image from what is in its definition (e.g. myPlugin:testimage)",
 	)
 }
 
@@ -124,7 +124,7 @@ func AddKubeConformanceImage(pluginTransforms *map[string][]func(*manifest.Manif
 			},
 		},
 		"kube-conformance-image",
-		"Container image override for the kube conformance image.",
+		"Container image override for the e2e plugin. Shorthand for --plugin-image=e2e:<string>",
 	)
 }
 
@@ -138,13 +138,13 @@ func AddSystemdLogsImage(pluginTransforms *map[string][]func(*manifest.Manifest)
 			},
 		},
 		"systemd-logs-image",
-		"Container image override for the systemd-logs plugin image.",
+		"Container image override for the systemd-logs plugin. Shorthand for --plugin-image=systemd-logs:<string>",
 	)
 }
 
 // AddKubeConformanceImageVersion initialises an image version flag.
 func AddKubeConformanceImageVersion(imageVersion *image.ConformanceImageVersion, pluginTransforms *map[string][]func(*manifest.Manifest) error, flags *pflag.FlagSet) {
-	help := "Use default Conformance image, but override the version. "
+	help := "Use default e2e plugin image, but override the version. "
 	help += "Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise."
 	help += "You can also choose 'latest' which will find the latest dev image upstream."
 
@@ -187,7 +187,7 @@ func AddCustomRegistryFlag(cfg *string, flags *pflag.FlagSet) {
 func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, flags *pflag.FlagSet) {
 	flags.Var(
 		cfg, "config",
-		"Path to a sonobuoy configuration JSON file. Overrides --mode.",
+		"Path to a sonobuoy configuration JSON file.",
 	)
 }
 
@@ -212,7 +212,7 @@ func AddLegacyE2EFlags(env *PluginEnvVars, pluginTransforms *map[string][]func(*
 			PluginEnvVars:  *env,
 			validationFunc: regexpValidation},
 		e2eFocusFlag,
-		"Specify the E2E_FOCUS flag to the conformance tests.",
+		"Specify the E2E_FOCUS value for the e2e plugin, specifying which tests to run. Shorthand for --plugin-env=e2e.E2E_FOCUS=<string>",
 	)
 	fs.Var(
 		&envVarModierFlag{
@@ -220,7 +220,7 @@ func AddLegacyE2EFlags(env *PluginEnvVars, pluginTransforms *map[string][]func(*
 			PluginEnvVars:  *env,
 			validationFunc: regexpValidation},
 		e2eSkipFlag,
-		"Specify the E2E_SKIP flag to the conformance tests.",
+		"Specify the E2E_SKIP value for the e2e plugin, specifying which tests to skip. Shorthand for --plugin-env=e2e.E2E_SKIP=<string>",
 	)
 	pf := fs.VarPF(
 		&envVarModierFlag{
@@ -228,7 +228,7 @@ func AddLegacyE2EFlags(env *PluginEnvVars, pluginTransforms *map[string][]func(*
 			field:         "E2E_PARALLEL",
 			PluginEnvVars: *env,
 		}, e2eParallelFlag, "",
-		"Specify the E2E_PARALLEL flag to the conformance tests.",
+		"Specify the E2E_PARALLEL value for the e2e plugin. Shorthand for --plugin-env=e2e.E2E_PARALLEL=<string>",
 	)
 	if err := pf.Value.Set("false"); err != nil {
 		panic("Failed to initial parallel flag")
@@ -238,7 +238,7 @@ func AddLegacyE2EFlags(env *PluginEnvVars, pluginTransforms *map[string][]func(*
 	// Used by the container when enabling E2E tests which require SSH.
 	fs.Var(
 		&envVarModierFlag{plugin: e2ePlugin, field: "KUBE_SSH_USER", PluginEnvVars: *env}, "ssh-user",
-		"SSH user for ssh-key.",
+		"SSH user for ssh-key. Required if running e2e plugin with certain tests that require SSH access to nodes.",
 	)
 
 	fs.Var(
@@ -256,7 +256,7 @@ func AddRBACModeFlags(mode *RBACMode, flags *pflag.FlagSet, defaultMode RBACMode
 	flags.Var(
 		mode, "rbac",
 		// Doesn't use the map in app.rbacModeMap to preserve order so we can add an explanation for detect.
-		"Whether to enable rbac on Sonobuoy. Valid modes are Enable, Disable, and Detect (query the server to see whether to enable RBAC).",
+		"Whether to enable RBAC on Sonobuoy. Valid modes are Enable, Disable, and Detect (query the server to see whether to enable RBAC).",
 	)
 }
 
@@ -264,7 +264,7 @@ func AddRBACModeFlags(mode *RBACMode, flags *pflag.FlagSet, defaultMode RBACMode
 func AddSkipPreflightFlag(flag *bool, flags *pflag.FlagSet) {
 	flags.BoolVar(
 		flag, "skip-preflight", false,
-		"If true, skip all checks before kicking off the sonobuoy run.",
+		"If true, skip all checks before starting the sonobuoy run.",
 	)
 }
 
@@ -280,7 +280,7 @@ func AddDeleteAllFlag(flag *bool, flags *pflag.FlagSet) {
 func AddDeleteWaitFlag(flag *int, flags *pflag.FlagSet) {
 	flags.IntVar(
 		flag, "wait", 0,
-		"Wait for resources to be deleted before completing. 0 indicates do not wait. By providing --wait the default is to wait for 1 hour.",
+		"Wait for resources to be deleted before completing. 0 indicates do not wait. By providing --wait the default is to wait up to 1 hour.",
 	)
 	flags.Lookup("wait").NoOptDefVal = "60"
 }
@@ -289,7 +289,7 @@ func AddDeleteWaitFlag(flag *int, flags *pflag.FlagSet) {
 func AddRunWaitFlag(flag *int, flags *pflag.FlagSet) {
 	flags.IntVar(
 		flag, "wait", 0,
-		"How long (in minutes) to wait for sonobuoy run to be completed or fail, where 0 indicates do not wait. If specified, the default wait time is 1 day.",
+		"How long (in minutes) for the CLI to wait for sonobuoy run to be completed or fail, where 0 indicates do not wait. If specified, the default wait time is 1 day.",
 	)
 	flags.Lookup("wait").NoOptDefVal = "1440"
 }
@@ -298,7 +298,7 @@ func AddRunWaitFlag(flag *int, flags *pflag.FlagSet) {
 func AddTimeoutFlag(flag *int, flags *pflag.FlagSet) {
 	flags.IntVar(
 		flag, timeoutFlag, config.DefaultAggregationServerTimeoutSeconds,
-		"How long (in seconds) Sonobuoy will wait for plugins to complete before exiting. 0 indicates no timeout.",
+		"How long (in seconds) Sonobuoy aggregator will wait for plugins to complete before exiting. 0 indicates no timeout.",
 	)
 }
 
@@ -307,7 +307,7 @@ func AddTimeoutFlag(flag *int, flags *pflag.FlagSet) {
 func AddShowDefaultPodSpecFlag(flag *bool, flags *pflag.FlagSet) {
 	flags.BoolVar(
 		flag, "show-default-podspec", false,
-		"If true, include the default pod spec used for plugins in the output",
+		"If true, include the default pod spec used for plugins in the output.",
 	)
 }
 
@@ -323,7 +323,7 @@ func AddWaitOutputFlag(mode *WaitOutputMode, flags *pflag.FlagSet, defaultMode W
 func AddImagePullPolicyFlag(policy *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		policy, imagePullPolicyFlag, config.DefaultSonobuoyPullPolicy,
-		fmt.Sprintf("The ImagePullPolicy Sonobuoy should use for the aggregators and workers. Valid options are %s.", strings.Join(ValidPullPolicies(), ", ")),
+		fmt.Sprintf("Set the ImagePullPolicy for the Sonobuoy image and all plugins. Valid options are %s.", strings.Join(ValidPullPolicies(), ", ")),
 	)
 }
 
@@ -336,7 +336,7 @@ func AddSSHKeyPathFlag(path *string, pluginTransforms *map[string][]func(*manife
 			filename:   path,
 			transforms: *pluginTransforms,
 		}, "ssh-key",
-		"Path to the private key enabling SSH to cluster nodes.",
+		"Path to the private key enabling SSH to cluster nodes. May be required by some tests from the e2e plugin.",
 	)
 }
 
@@ -359,7 +359,7 @@ func AddPluginListFlag(p *[]string, flags *pflag.FlagSet) {
 
 // AddKubernetesVersionFlag initialises an image version flag.
 func AddKubernetesVersionFlag(imageVersion *image.ConformanceImageVersion, pluginTransforms *map[string][]func(*manifest.Manifest) error, flags *pflag.FlagSet) {
-	help := "Use default Conformance image, but override the version. "
+	help := "Use default E2E image, but override the version. "
 	help += "Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise. "
 	help += "'ignore' will try version resolution but ignore errors. "
 	help += "'latest' will find the latest dev image/version upstream."
@@ -378,7 +378,7 @@ func AddKubernetesVersionFlag(imageVersion *image.ConformanceImageVersion, plugi
 func AddShortFlag(flag *bool, flags *pflag.FlagSet) {
 	flags.BoolVar(
 		flag, "short", false,
-		"If true, prints just the sonobuoy version",
+		"If true, prints just the Sonobuoy version.",
 	)
 }
 
@@ -400,7 +400,7 @@ func AddNodeSelectorsFlag(p *NodeSelectors, flags *pflag.FlagSet) {
 func AddExtractFlag(flag *bool, flags *pflag.FlagSet) {
 	flags.BoolVarP(
 		flag, "extract", "x", false,
-		"If true, extracts the results instead of just downloading the results",
+		"If true, extracts the results instead of just downloading the results tarball.",
 	)
 }
 

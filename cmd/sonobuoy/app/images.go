@@ -57,7 +57,7 @@ func NewCmdImages() *cobra.Command {
 	// Main command
 	cmd := &cobra.Command{
 		Use:   "images",
-		Short: "Manage images used in a plugin. Supported plugins are: 'e2e'",
+		Short: "Manage images used in a plugin to facilitate running them in airgapped (or similar) environments. Supported plugins are: 'e2e'",
 		Run: func(cmd *cobra.Command, args []string) {
 			var client image.Client
 			if flags.dryRun {
@@ -415,7 +415,7 @@ func collectPluginsImages(plugins []string, k8sVersion string, client image.Clie
 		case e2ePlugin:
 			conformanceImage := fmt.Sprintf("%v:%v", config.UpstreamKubeConformanceImageURL, k8sVersion)
 			images = append(images, conformanceImage)
-			logrus.Info("conformance image to be used: ", conformanceImage)
+			logrus.Info("e2e image to be used: ", conformanceImage)
 
 			// pull before running to ensure stderr is empty, because...
 			client.PullImages([]string{conformanceImage}, numDockerRetries)
@@ -423,7 +423,7 @@ func collectPluginsImages(plugins []string, k8sVersion string, client image.Clie
 			// we only need stdout, but this combines stdout and stderr
 			e2eImages, err := client.RunImage(conformanceImage, "e2e.test", "--list-images")
 			if err != nil {
-				return images, errors.Wrap(err, "failed to gather e2e images from conformance image")
+				return images, errors.Wrap(err, "failed to gather test images from e2e image")
 			}
 
 			// in case there are empty newlines getting parsed as a slice element

@@ -30,8 +30,8 @@ import (
 func NewSonobuoyCommand() *cobra.Command {
 	cmds := &cobra.Command{
 		Use:               "sonobuoy",
-		Short:             "Generate reports on your kubernetes cluster",
-		Long:              "Sonobuoy is an introspective kubernetes component that generates reports on cluster conformance, configuration, and more",
+		Short:             "Generate reports on your Kubernetes cluster by running plugins",
+		Long:              "Sonobuoy is a Kubernetes component that generates reports on cluster conformance, configuration, and more",
 		PersistentPreRunE: prerunChecks,
 		Run:               rootCmd,
 	}

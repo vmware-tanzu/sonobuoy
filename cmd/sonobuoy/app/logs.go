@@ -43,18 +43,18 @@ func NewCmdLogs() *cobra.Command {
 	var f logFlags
 	cmd := &cobra.Command{
 		Use:   "logs",
-		Short: "Dumps the logs of the currently running sonobuoy containers for diagnostics",
+		Short: "Dumps the logs of the currently running Sonobuoy containers for diagnostics",
 		Run:   getLogs(&f),
 		Args:  cobra.ExactArgs(0),
 	}
 
 	cmd.Flags().BoolVarP(
 		&f.follow, "follow", "f", false,
-		"Specify if the logs should be streamed.",
+		"Continue following the logs of the Sonobuoy created containers.",
 	)
 	AddKubeconfigFlag(&f.kubeconfig, cmd.Flags())
 	AddNamespaceFlag(&f.namespace, cmd.Flags())
-	cmd.Flags().StringVarP(&f.plugin, pluginFlag, "p", "", "Show logs for a specific plugin")
+	cmd.Flags().StringVarP(&f.plugin, pluginFlag, "p", "", "Show logs only for a specific plugin")
 	return cmd
 }
 
