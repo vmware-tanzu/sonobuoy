@@ -75,10 +75,11 @@ func NewCmdGenPluginDef() *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "plugin",
-		Short: "Generates the manifest Sonobuoy uses to define a plugin",
-		Run:   genPluginDefWrapper(&genPluginOpts),
-		Args:  cobra.NoArgs,
+		Use:     "plugin",
+		Short:   "Generates the manifest Sonobuoy uses to define a plugin",
+		Run:     genPluginDefWrapper(&genPluginOpts),
+		Args:    cobra.NoArgs,
+		Example: "sonobuoy gen plugin -n myPlugin -i myregistry/myimage:v0",
 	}
 
 	genPluginSet := pflag.NewFlagSet("generate plugin", pflag.ExitOnError)

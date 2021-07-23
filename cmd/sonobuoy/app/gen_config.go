@@ -17,7 +17,7 @@ func NewCmdGenConfig() *cobra.Command {
 
 	var GenCommand = &cobra.Command{
 		Use:   "config",
-		Short: "Generates a sonobuoy config for input to sonobuoy gen or run.",
+		Short: "Generates a Sonobuoy config for input to sonobuoy gen or run.",
 		Run:   genConfigCobra(&f),
 		Args:  cobra.ExactArgs(0),
 	}

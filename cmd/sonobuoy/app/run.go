@@ -92,7 +92,7 @@ func NewCmdRun() *cobra.Command {
 	fs := RunFlagSet(&f)
 	cmd := &cobra.Command{
 		Use:   "run",
-		Short: "Submits a sonobuoy run",
+		Short: "Starts a Sonobuoy run by launching the Sonobuoy aggregator and plugin pods.",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return checkFlagValidity(fs, f)
 		},
