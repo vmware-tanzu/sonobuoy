@@ -21,20 +21,19 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestPodFailing(t *testing.T) {
 	// fromGoodPod is a helper function to simplify the specification of test cases.
 	fromGoodPod := func(f func(*corev1.Pod) *corev1.Pod) *corev1.Pod {
-		goodPod := &v1.Pod{}
+		goodPod := &corev1.Pod{}
 		return f(goodPod)
 	}
 
 	testCases := []struct {
 		desc          string
-		pod           *v1.Pod
+		pod           *corev1.Pod
 		expectFailing bool
 		expectMsg     string
 	}{
