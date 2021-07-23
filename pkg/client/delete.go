@@ -18,7 +18,7 @@ package client
 
 import (
 	"context"
-	"strings"
+	"fmt"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -37,8 +37,13 @@ const (
 	clusterRoleFieldNamespace = "namespace"
 	clusterRoleFieldValue     = "sonobuoy"
 	spinnerMode               = "Spinner"
+	progressMode              = "Progress"
 	pollFreq                  = 5 * time.Second
 )
+
+// ConditionFuncWithProgress is like wait.ConditionFunc but the extra string allows us
+// to capture status information.
+type ConditionFuncWithProgress func() (string, bool, error)
 
 // Delete removes all the resources that Sonobuoy had created including
 // its own namespace, cluster roles/bindings, and optionally e2e scoped
@@ -57,7 +62,7 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 		return err
 	}
 
-	conditions := []wait.ConditionFunc{}
+	conditions := []ConditionFuncWithProgress{}
 	nsCondition, err := cleanupNamespace(cfg.Namespace, client)
 	if err != nil {
 		return err
@@ -81,10 +86,20 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 	}
 
 	if cfg.Wait > time.Duration(0) {
-
+		lastProgress := ""
 		allConditions := func() (bool, error) {
 			for _, condition := range conditions {
-				done, err := condition()
+				progress, done, err := condition()
+				if cfg.WaitOutput == progressMode {
+					if lastProgress == progress {
+						fmt.Println("...")
+					} else {
+						fmt.Println()
+						fmt.Println(progress)
+						lastProgress = progress
+					}
+				}
+
 				if !done || err != nil {
 					return done, err
 				}
@@ -92,7 +107,8 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 			return true, nil
 		}
 
-		if strings.Compare(cfg.WaitOutput, spinnerMode) == 0 {
+		switch cfg.WaitOutput {
+		case spinnerMode:
 			var s *spinner.Spinner = getSpinnerInstance()
 			s.Start()
 			defer s.Stop()
@@ -105,19 +121,27 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 	return nil
 }
 
-func cleanupNamespace(namespace string, client kubernetes.Interface) (wait.ConditionFunc, error) {
+func cleanupNamespace(namespace string, client kubernetes.Interface) (ConditionFuncWithProgress, error) {
 	// Delete the namespace
 	log := logrus.WithFields(logrus.Fields{
 		"kind":      "namespace",
 		"namespace": namespace,
 	})
 
-	nsDeletedCondition := func() (bool, error) {
-		_, err := client.CoreV1().Namespaces().Get(context.TODO(), namespace, metav1.GetOptions{})
+	nsDeletedCondition := func() (string, bool, error) {
+		ns, err := client.CoreV1().Namespaces().Get(context.TODO(), namespace, metav1.GetOptions{})
 		if kubeerror.IsNotFound(err) {
-			return true, nil
+			return fmt.Sprintf("Namespace %q has been deleted", namespace), true, nil
 		}
-		return false, err
+		if err != nil {
+			status := fmt.Sprintf("Error encountered while trying to delete namespace %q: %v", ns.Name, err)
+			return status, false, err
+		}
+		if ns != nil {
+			status := fmt.Sprintf("Namespace %q has status %+v", ns.Name, ns.Status)
+			return status, false, err
+		}
+		return "Requested namespace returned nil but was not recognized as having been deleted. Report this as a bug.", false, err
 	}
 
 	err := client.CoreV1().Namespaces().Delete(context.TODO(), namespace, metav1.DeleteOptions{})
@@ -128,7 +152,7 @@ func cleanupNamespace(namespace string, client kubernetes.Interface) (wait.Condi
 	return nsDeletedCondition, nil
 }
 
-func deleteRBAC(client kubernetes.Interface, cfg *DeleteConfig) (wait.ConditionFunc, error) {
+func deleteRBAC(client kubernetes.Interface, cfg *DeleteConfig) (ConditionFuncWithProgress, error) {
 	// ClusterRole and ClusterRoleBindings aren't namespaced, so delete them seperately
 	selector := metav1.AddLabelToSelector(
 		&metav1.LabelSelector{},
@@ -148,18 +172,32 @@ func deleteRBAC(client kubernetes.Interface, cfg *DeleteConfig) (wait.ConditionF
 		LabelSelector: metav1.FormatLabelSelector(selector),
 	}
 
-	rbacDeleteCondition := func() (bool, error) {
+	rbacDeleteCondition := func() (string, bool, error) {
 		bindingList, err := client.RbacV1().ClusterRoleBindings().List(context.TODO(), listOpts)
-		if err != nil || len(bindingList.Items) > 0 {
-			return false, err
+		if err != nil {
+			return fmt.Sprintf("Error encountered when checking for ClusterRoleBindings: %v", err), false, err
+		}
+		if len(bindingList.Items) > 0 {
+			names := []string{}
+			for _, i := range bindingList.Items {
+				names = append(names, i.Name)
+			}
+			return fmt.Sprintf("Still found %v ClusterRoleBindings to delete: %v", len(names), names), false, nil
 		}
 
 		roleList, err := client.RbacV1().ClusterRoles().List(context.TODO(), listOpts)
-		if err != nil || len(roleList.Items) > 0 {
-			return false, err
+		if err != nil {
+			return fmt.Sprintf("Error encountered when checking for ClusterRoleBindings: %v", err), false, err
+		}
+		if len(bindingList.Items) > 0 {
+			names := []string{}
+			for _, i := range roleList.Items {
+				names = append(names, i.Name)
+			}
+			return fmt.Sprintf("Still found %v ClusterRoles to delete: %v", len(names), names), false, nil
 		}
 
-		return true, nil
+		return "Deleted all ClusterRoles and ClusterRoleBindings.", true, nil
 	}
 
 	err := client.RbacV1().ClusterRoleBindings().DeleteCollection(context.TODO(), deleteOpts, listOpts)
@@ -184,21 +222,25 @@ func isE2ENamespace(ns v1.Namespace) bool {
 	return hasE2EFrameworkLabel && hasE2ERunLabel
 }
 
-func cleanupE2E(client kubernetes.Interface) (wait.ConditionFunc, error) {
+func cleanupE2E(client kubernetes.Interface) (ConditionFuncWithProgress, error) {
 	// Delete any dangling E2E namespaces
 	// There currently isn't a way to associate namespaces with a particular test run so this
 	// will delete namespaces associated with any e2e test run by checking the namespace's labels.
-	e2eNamespaceCondition := func() (bool, error) {
+	e2eNamespaceCondition := func() (string, bool, error) {
 		namespaces, err := client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
-			return false, errors.Wrap(err, "failed to list namespaces")
+			return "Error encountered when checking namespaces for deletion.", false, errors.Wrap(err, "failed to list namespaces")
 		}
+		names := []string{}
 		for _, namespace := range namespaces.Items {
 			if isE2ENamespace(namespace) {
-				return false, nil
+				names = append(names, namespace.Name)
 			}
 		}
-		return true, nil
+		if len(names) > 0 {
+			return fmt.Sprintf("Found %v namespaces that still need to be deleted: %v", len(names), names), false, nil
+		}
+		return "All E2E namespaces deleted", true, nil
 	}
 
 	namespaces, err := client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})

@@ -49,8 +49,11 @@ func NewCmdDelete() *cobra.Command {
 	AddRBACModeFlags(&f.rbacMode, cmd.Flags(), DetectRBACMode)
 	AddDeleteAllFlag(&f.deleteAll, cmd.Flags())
 	AddDeleteWaitFlag(&f.wait, cmd.Flags())
-	AddWaitOutputFlag(&f.waitOutput, cmd.Flags(), SilentOutputMode)
-
+	if featureEnabled(FeatureWaitOutputProgressByDefault) {
+		AddWaitOutputFlag(&f.waitOutput, cmd.Flags(), ProgressOutputMode)
+	} else {
+		AddWaitOutputFlag(&f.waitOutput, cmd.Flags(), SilentOutputMode)
+	}
 	return cmd
 }
 

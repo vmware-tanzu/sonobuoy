@@ -23,11 +23,13 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 	"golang.org/x/crypto/ssh/terminal"
 	kubeerror "k8s.io/apimachinery/pkg/api/errors"
@@ -47,6 +49,10 @@ const (
 
 	// Special key for when to load manifest from stdin instead of a local file.
 	stdinFile = "-"
+)
+
+var (
+	whitespaceRemover = strings.NewReplacer(" ", "", "\t", "")
 )
 
 // RunManifest is the same as Run(*RunConfig) execpt that the []byte given
@@ -108,14 +114,39 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 		// The runCondition will be a closure around this variable so that subsequent
 		// polling attempts know if the status has been present yet.
 		seenStatus := false
+
+		// Printer allows us to more easily add output conditionally throughout the runCondition.
+		var printer = func(string) {}
+		if cfg.WaitOutput == progressMode {
+			lastMsg := ""
+			seenLines := map[string]struct{}{}
+			printer = func(s string) {
+				if s == lastMsg {
+					fmt.Println("...")
+					return
+				}
+				lines := strings.Split(s, "\n")
+				for _, l := range lines {
+					lKey := stripSpaces(l)
+					if _, ok := seenLines[lKey]; !ok {
+						seenLines[lKey] = struct{}{}
+						fmt.Printf("%v %v\n", time.Now().Format("15:04:05"), l)
+					}
+				}
+				lastMsg = s
+			}
+		}
 		runCondition := func() (bool, error) {
+
 			// Get the Aggregator pod and check if its status is completed or terminated.
 			status, err := c.GetStatus(&StatusConfig{Namespace: createdNamespace})
 			switch {
 			case err != nil && seenStatus:
+				printer(fmt.Sprintf("Failed to check status of the aggregator: %v", err))
 				return false, errors.Wrap(err, "failed to get status")
 			case err != nil && !seenStatus:
 				// Allow more time for the status to reported.
+				printer("Waiting for the aggregator to get tagged with its current status...")
 				return false, nil
 			case status != nil:
 				seenStatus = true
@@ -124,22 +155,30 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 			// if nil below was added for coverage on staticcheck
 			// TODO: ensure this is the desired behavior
 			if status == nil {
+				printer("Aggregator status is nil after having been applied previously. Report this as an error.")
 				return false, nil
 			}
 
 			switch {
 			case status.Status == aggregation.CompleteStatus:
+				printer(aggregatorStatusToProgress(status))
 				return true, nil
 			case status.Status == aggregation.FailedStatus:
-				return true, fmt.Errorf("Pod entered a fatal terminal status: %v", status.Status)
+				printer(aggregatorStatusToProgress(status))
+				return true, fmt.Errorf("pod entered a fatal terminal status: %v", status.Status)
 			}
+			printer(aggregatorStatusToProgress(status))
 			return false, nil
 		}
 
-		if strings.Compare(cfg.WaitOutput, spinnerMode) == 0 {
+		switch cfg.WaitOutput {
+		case spinnerMode:
 			var s *spinner.Spinner = getSpinnerInstance()
 			s.Start()
 			defer s.Stop()
+		case progressMode:
+			// handled by conditionFunc since it has to be part of the polling.
+			// Could use channels but that will lead to future issues.
 		}
 		err := wait.Poll(pollInterval, cfg.Wait, runCondition)
 		if err != nil {
@@ -148,6 +187,10 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 	}
 
 	return nil
+}
+
+func stripSpaces(s string) string {
+	return whitespaceRemover.Replace(s)
 }
 
 // Run will use the given RunConfig to generate YAML for a series of resources and then
@@ -211,4 +254,58 @@ func getSpinnerInstance() *spinner.Spinner {
 	s := spinner.New(spinner.CharSets[spinnerType], spinnerDuration)
 	s.Color(spinnerColor)
 	return s
+}
+
+func aggregatorStatusToProgress(s *aggregation.Status) string {
+	var b bytes.Buffer
+	if err := printAll(&b, s); err != nil {
+		logrus.Error(errors.Wrap(err, "failed printing aggregator status"))
+	}
+	return b.String()
+}
+
+// TODO(jschnake): printall, defaultTabWriter, and humanReadableStatus are copies from app package.
+// Printing is normally the app packages responsibility but the line blurs here.
+// Copying code to facilitate progress feature, but should consider extracting from
+// both locations to a generic one for reuse.
+func printAll(w io.Writer, status *aggregation.Status) error {
+	tw := defaultTabWriter(w)
+
+	fmt.Fprintf(tw, "PLUGIN\tNODE\tSTATUS\tRESULT\tPROGRESS\t\n")
+	for _, pluginStatus := range status.Plugins {
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status, pluginStatus.ResultStatus, formatPluginProgress(pluginStatus.Progress))
+	}
+
+	if err := tw.Flush(); err != nil {
+		return errors.Wrap(err, "couldn't write status out")
+	}
+
+	fmt.Fprintf(w, "\n%s\n", humanReadableStatus(status.Status))
+	return nil
+}
+
+func formatPluginProgress(p *plugin.ProgressUpdate) string {
+	if p == nil {
+		return ""
+	}
+	return fmt.Sprintf("%v/%v (%v failures)", p.Completed+int64(len(p.Failures)), p.Total, len(p.Failures))
+}
+
+func defaultTabWriter(w io.Writer) *tabwriter.Writer {
+	return tabwriter.NewWriter(w, 0, 2, 3, ' ', tabwriter.AlignRight)
+}
+
+func humanReadableStatus(str string) string {
+	switch str {
+	case aggregation.RunningStatus:
+		return "Sonobuoy is still running. Runs can take 60 minutes or more depending on cluster and plugin configuration."
+	case aggregation.FailedStatus:
+		return "Sonobuoy has failed. You can see what happened with `sonobuoy logs`."
+	case aggregation.CompleteStatus:
+		return "Sonobuoy has completed. Use `sonobuoy retrieve` to get results."
+	case aggregation.PostProcessingStatus:
+		return "Sonobuoy plugins have completed. Preparing results for download."
+	default:
+		return fmt.Sprintf("Sonobuoy is in unknown state %q. Please report a bug at github.com/vmware-tanzu/sonobuoy", str)
+	}
 }

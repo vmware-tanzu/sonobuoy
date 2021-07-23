@@ -19,35 +19,25 @@ package app
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"testing"
 
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 )
-
-var expectedSummary = `         PLUGIN     STATUS   RESULT   COUNT
-            e2e   complete   passed       1
-   systemd_logs   complete   failed       1
-   systemd_logs    running                2
-
-Sonobuoy is still running. Runs can take 60 minutes or more depending on cluster and plugin configuration.
-`
-var expectedShowAll = `         PLUGIN     NODE     STATUS   RESULT
-            e2e            complete   passed
-   systemd_logs   node01    running         
-   systemd_logs   node02   complete   failed
-   systemd_logs   node03    running         
-
-Sonobuoy is still running. Runs can take 60 minutes or more depending on cluster and plugin configuration.
-`
 
 var exampleStatus = aggregation.Status{
 	Status: "running",
 	Plugins: []aggregation.PluginStatus{
 		{
 			Plugin:       "e2e",
-			Node:         "",
+			Node:         "global",
 			Status:       "complete",
-			ResultStatus: "passed",
+			ResultStatus: "failed",
+			Progress: &plugin.ProgressUpdate{
+				PluginName: "e2e", Node: "global",
+				Total: 2, Completed: 1, Failures: []string{"a"},
+			},
 		},
 		{
 			Plugin: "systemd_logs",
@@ -59,6 +49,10 @@ var exampleStatus = aggregation.Status{
 			Node:         "node02",
 			Status:       "complete",
 			ResultStatus: "failed",
+			Progress: &plugin.ProgressUpdate{
+				PluginName: "systemd_logs", Node: "node02",
+				Total: 3, Completed: 1, Failures: []string{"a"},
+			},
 		},
 		{
 			Plugin: "systemd_logs",
@@ -70,32 +64,40 @@ var exampleStatus = aggregation.Status{
 
 func TestPrintStatus(t *testing.T) {
 	tests := []struct {
-		expected string
-		name     string
-		f        func(w io.Writer, s *aggregation.Status) error
+		expectFile string
+		name       string
+		f          func(w io.Writer, s *aggregation.Status) error
 	}{
 		{
-			expected: expectedSummary,
-			name:     "StatusSummary",
-			f:        printSummary,
+			expectFile: "testdata/expectedSummary.golden",
+			name:       "StatusSummary",
+			f:          printSummary,
 		},
 		{
-			expected: expectedShowAll,
-			name:     "StatusShowAll",
-			f:        printAll,
+			expectFile: "testdata/expectedShowAll.golden",
+			name:       "StatusShowAll",
+			f:          printAll,
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			var b bytes.Buffer
-			err := test.f(&b, &exampleStatus)
+			err := tc.f(&b, &exampleStatus)
 			if err != nil {
 				t.Fatalf("expected err to be nil, got %v", err)
 			}
 
-			if b.String() != test.expected {
-				t.Errorf("expected output to be \n%v, got \n%v", test.expected, b.String())
+			if *update {
+				ioutil.WriteFile(tc.expectFile, b.Bytes(), 0666)
+			} else {
+				fileData, err := ioutil.ReadFile(tc.expectFile)
+				if err != nil {
+					t.Fatalf("Failed to read golden file %v: %v", tc.expectFile, err)
+				}
+				if !bytes.Equal(fileData, b.Bytes()) {
+					t.Errorf("expected output to match goldenfile %v but got \n%v", tc.expectFile, b.String())
+				}
 			}
 		})
 	}
