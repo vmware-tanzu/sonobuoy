@@ -37,7 +37,12 @@ information Sonobuoy gathered as well:
  - query results about the contents/state of your cluster
 
 ```
-mkdir ./results; tar xzf $output -C ./results
+$ sonobuoy retrieve --extract
+
+OR
+
+$ output=$(sonobuoy retrieve --extract)
+$ mkdir ./results; tar xzf $output -C ./results
 ```
 
 ## Filename

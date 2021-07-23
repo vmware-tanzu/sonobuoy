@@ -644,7 +644,7 @@ func TestPluginComplexCmds_LocalGolden(t *testing.T) {
 			},
 			expectFile: "testdata/plugin-install-delete.golden",
 		}, {
-			desc: "plugin install then delete",
+			desc: "plugin delete not found",
 			cmdLine: []string{
 				"plugins uninstall foo",
 			},

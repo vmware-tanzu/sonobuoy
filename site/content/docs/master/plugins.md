@@ -34,7 +34,7 @@ Gathers the latest system logs from each node, using systemd's `journalctl` comm
 
 ## Specifying Which Plugins To Run
 
-By default both the `e2e` and `systemd-logs` plugin are run. If you set `--mode=quick` only the `e2e` plugin is run.
+By default both the `e2e` and `systemd-logs` plugin are run.
 
 Otherwise, you can specify the plugins to run (including custom plugins) by using the `--plugin` flag. This can accept the path to a plugin defintion file or the name of a built-in plugin. For example:
 
@@ -165,6 +165,19 @@ By providing the flag `--show-default-podspec` to `sonobuoy gen`, the default `p
 > **NOTE:** Modifications to the `podSpec` are only persisted within that generated manifest.
 If you generate a new manifest by running `sonobuoy gen` again, you will need to reapply any changes made.
 We recommend adding your desired customizations to the plugin definition itself.
+
+#### Plugin Installation (Experimental Feature)
+
+When you select which plugins to run, currently you have to specify a local file or a URL where the plugin definition exists. Keeping track of the absolute paths and URLs creates a burden to plugin adoption so we've implemented a new feature to help: plugin installation.
+
+To (enable)[featureGates], set `SONOBUOY_PLUGIN_INSTALLATION=true`. Then proceed to use Sonobuoy normally. With this new functionality you can install a plugin for repeated use by executing the commands:
+
+```
+$ sonobuoy plugin install myPlugin <file or URL>
+$ sonobuoy run -p myPlugin
+```
+
+The plugin definition will be saved into ~/.sonobuoy (configurable via the environment variable `SONOBUOY_DIR`). If Sonobuoy can't find the plugin in the installation directory, it will search the pwd just like current behavior.
 
 [systemd-repo]: https://github.com/vmware-tanzu/sonobuoy-plugins/tree/master/systemd-logs
 [conformance]: https://github.com/kubernetes/kubernetes/tree/master/cluster/images/conformance
