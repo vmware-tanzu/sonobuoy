@@ -15,7 +15,7 @@ Then manually modify it as necessary. Maybe you need special options for plugins
 Finally, create the resources yourself via kubectl.
 
 ```
-kubectl apply -f sonobuoy.yaml
+sonobuoy run -f sonobuoy.yaml
 ```
 
 > Note: If you find that you need this flow to accomplish your work, talk to us about it in our [Slack][slack] channel or file an [issue][issue] in Github. Others may have the same need and we'd love to help support you.

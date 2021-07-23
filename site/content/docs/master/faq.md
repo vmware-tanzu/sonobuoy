@@ -11,7 +11,7 @@ The default mode for the e2e plugin (`non-disruptive-conformance`) will run all 
 This is to help prevent you from accidentally running tests which may disrupt workloads on your cluster.
 To run all the conformance tests, use the `certified-conformance` mode.
 
-Please refer to our [documentation for the `e2e` plugin][e2ePlugin] for more details of the built-in configurations.
+Please refer to our [documentation for the `e2e` plugin][e2ePlugin] for more details of the built-in configurations or our blog [post][testsuiteblog] on the Kubernetes test suite.
 
 ### How do I determine why my tests failed?
 Before debugging test failures, we recommend isolating any failures to verify that they are genuine and are not spurious or transient.
@@ -170,3 +170,4 @@ The following SIG tags exist within the E2E tests:
 [customPlugins]: plugins.md
 [support-custom-taints]: https://github.com/kubernetes/kubernetes/issues/83329
 [framework-flags]: https://github.com/kubernetes/kubernetes/blob/master/test/e2e/framework/test_context.go
+[testsuiteblog]: https://sonobuoy.io/understanding-e2e-tests
