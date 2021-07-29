@@ -26,6 +26,9 @@ func (e *errReader) Read(p []byte) (n int, err error) {
 func TestJUnitProcessReader(t *testing.T) {
 	xmlFromFile := func(path string) io.Reader {
 		f, err := os.Open(path)
+		if err != nil {
+			t.Fatalf("Failed to open test file %v:%v", path, err)
+		}
 		defer f.Close()
 		var bb bytes.Buffer
 		_, err = io.Copy(&bb, f)
