@@ -48,6 +48,7 @@ const (
 	e2eParallelFlag       = "e2e-parallel"
 	e2eRegistryConfigFlag = "e2e-repo-config"
 	pluginImageFlag       = "plugin-image"
+	filenameFlag          = "filename"
 
 	// Quick runs a single E2E test and the systemd log tests.
 	Quick string = "quick"
@@ -401,6 +402,14 @@ func AddExtractFlag(flag *bool, flags *pflag.FlagSet) {
 	flags.BoolVarP(
 		flag, "extract", "x", false,
 		"If true, extracts the results instead of just downloading the results tarball.",
+	)
+}
+
+// AddFilename initialises a namespace flag.
+func AddFilenameFlag(str *string, flags *pflag.FlagSet) {
+	flags.StringVarP(
+		str, filenameFlag, "f", "",
+		"Specify the name of the downloaded file. If empty, defaults to the name of the tarball in the pod.",
 	)
 }
 
