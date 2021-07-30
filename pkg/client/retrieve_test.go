@@ -59,3 +59,41 @@ func TestRetrieveInvalidConfig(t *testing.T) {
 		}
 	}
 }
+
+func TestGetFilename(t *testing.T) {
+	testCases := []struct {
+		desc   string
+		input  string
+		count  int
+		expect string
+	}{
+		{
+			desc:   "0 leads to no suffix",
+			input:  "foo",
+			expect: "foo",
+		}, {
+			desc:   "<0 leads to no suffix",
+			input:  "foo",
+			expect: "foo",
+			count:  -1,
+		}, {
+			desc:   ">0 leads to suffix",
+			input:  "foo",
+			expect: "foo-01",
+			count:  1,
+		}, {
+			desc:   "Suffix is before ext",
+			input:  "foo.ext",
+			expect: "foo-01.ext",
+			count:  1,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			o := getFilename(tc.input, tc.count)
+			if o != tc.expect {
+				t.Errorf("Expected %v but got %v", tc.expect, o)
+			}
+		})
+	}
+}

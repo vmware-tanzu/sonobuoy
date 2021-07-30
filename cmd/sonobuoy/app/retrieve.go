@@ -38,6 +38,7 @@ type retrieveFlags struct {
 	kubecfg        Kubeconfig
 	extract        bool
 	outputLocation string
+	filename       string
 }
 
 func NewCmdRetrieve() *cobra.Command {
@@ -52,6 +53,8 @@ func NewCmdRetrieve() *cobra.Command {
 	AddKubeconfigFlag(&rcvFlags.kubecfg, cmd.Flags())
 	AddNamespaceFlag(&rcvFlags.namespace, cmd.Flags())
 	AddExtractFlag(&rcvFlags.extract, cmd.Flags())
+	AddFilenameFlag(&rcvFlags.filename, cmd.Flags())
+
 	return cmd
 }
 
@@ -91,7 +94,7 @@ func retrieveResults(opts retrieveFlags, r io.Reader, ec <-chan error) error {
 	eg.Go(func() error { return <-ec })
 	eg.Go(func() error {
 		// This untars the request itself, which is tar'd as just part of the API request, not the sonobuoy logic.
-		filesCreated, err := client.UntarAll(r, opts.outputLocation, "")
+		filesCreated, err := client.UntarAll(r, opts.outputLocation, opts.filename)
 		if err != nil {
 			return err
 		}
@@ -100,6 +103,7 @@ func retrieveResults(opts retrieveFlags, r io.Reader, ec <-chan error) error {
 			for _, name := range filesCreated {
 				fmt.Println(name)
 			}
+
 			return nil
 		} else {
 			for _, filename := range filesCreated {

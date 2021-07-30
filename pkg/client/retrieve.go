@@ -112,13 +112,14 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 }
 
 /** Everything below this marker originally was copy/pasta'd from k8s/k8s. The modification are:
-  exporting UntarAll, returning the list of files created, and the fix for undrained readers  **/
+  exporting UntarAll, returning the list of files created, and the fix for undrained readers. Also
+  added the filename override as opposed to using a file prefix.  **/
 
 // UntarAll expects a reader that contains tar'd data. It will untar the contents of the reader and write
-// the output into destFile under the prefix, prefix. It returns a list of all the
+// the output into destDir. If filename specified, then files will be named "filename, filename-01, filename-02". It returns a list of all the
 // files it created.
-func UntarAll(reader io.Reader, destFile, prefix string) (filenames []string, returnErr error) {
-	entrySeq := -1
+func UntarAll(reader io.Reader, destDir, filename string) (filenames []string, returnErr error) {
+	entrySeq, filenameCount := -1, -1
 	filenames = []string{}
 	// Adding compression per `splat` subcommand implementation
 	gzReader, err := gzip.NewReader(reader)
@@ -143,7 +144,7 @@ func UntarAll(reader io.Reader, destFile, prefix string) (filenames []string, re
 
 		for i := range b {
 			if b[i] != 0 {
-				returnErr = fmt.Errorf("non-zero data %v read after tar EOF", b[i])
+				returnErr = fmt.Errorf("non-zero data %v (byte %v) read after tar EOF", string(b[i]), b[i])
 				return
 			}
 		}
@@ -166,7 +167,7 @@ func UntarAll(reader io.Reader, destFile, prefix string) (filenames []string, re
 
 		entrySeq++
 		mode := header.FileInfo().Mode()
-		outFileName := filepath.Join(destFile, header.Name[len(prefix):])
+		outFileName := filepath.Join(destDir, header.Name)
 		baseName := filepath.Dir(outFileName)
 
 		if err := os.MkdirAll(baseName, 0755); err != nil {
@@ -196,6 +197,11 @@ func UntarAll(reader io.Reader, destFile, prefix string) (filenames []string, re
 				return filenames, err
 			}
 		} else {
+			filenameCount++
+			// For regular file, respect requested name.
+			if len(filename) > 0 {
+				outFileName = filepath.Join(destDir, getFilename(filename, filenameCount))
+			}
 			outFile, err := os.Create(outFileName)
 			if err != nil {
 				return filenames, err
@@ -213,10 +219,21 @@ func UntarAll(reader io.Reader, destFile, prefix string) (filenames []string, re
 
 	if entrySeq == -1 {
 		//if no file was copied
-		errInfo := fmt.Sprintf("error: %s no such file or directory", prefix)
-		return filenames, errors.New(errInfo)
+		return filenames, errors.New("no valid entries in result")
 	}
 	return filenames, nil
+}
+
+// getFilename, given foo.ext should return foo.ext, foo-01.ext, foo-02.ext...
+func getFilename(f string, i int) string {
+	if i <= 0 {
+		return f
+	}
+	ext := filepath.Ext(f)
+	base := filepath.Base(f)
+	baseWithoutExt := strings.TrimRight(base, ext)
+
+	return fmt.Sprintf("%v-%02d%v", baseWithoutExt, i, ext)
 }
 
 // UntarFile untars the file, filename, into the given destination directory with the given prefix. If delete
