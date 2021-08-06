@@ -12,8 +12,8 @@ toc:
       - page: E2E & Conformance
         url: /e2eplugin
       - page: Examples
-        url: /examples
-        github: true
+        url: https://github.com/vmware-tanzu/sonobuoy-plugins/
+        absolute: true
   - title: Advanced
     subfolderitems:
       - page: Detailed result contents
