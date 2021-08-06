@@ -100,6 +100,10 @@ func prerunChecks(cmd *cobra.Command, args []string) error {
 	if flagsSet["mode"] && (flagsSet["e2e-focus"] || flagsSet["e2e-skip"]) {
 		logrus.Warnf("mode flag and e2e-focus/skip flags both set and may collide")
 	}
+
+	if flagsSet["kube-conformance-image"] && (flagsSet["kubernetes-version"] || flagsSet["kube-conformance-image-version"]) {
+		logrus.Warnf("kube-conformance-image flag and kubernetes-version/kube-conformance-image-version flags both set and may collide")
+	}
 	return nil
 }
 

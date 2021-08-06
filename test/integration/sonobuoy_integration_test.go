@@ -513,6 +513,10 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "gen with config then flags targeting subfields",
 			cmdLine:    "gen --config=testdata/subfieldTest.json -n cmdlineNS --image-pull-policy=Always --sonobuoy-image=cmdlineimg --timeout=99",
 			expectFile: "testdata/gen-config-then-flags.golden",
+		}, {
+			desc:       "gen respects kube-conformance-image for both plugin and config issue 1376",
+			cmdLine:    "gen --kube-conformance-image=custom-image --kubernetes-version=v9.8.7",
+			expectFile: "testdata/gen-issue-1376.golden",
 		},
 	}
 	for _, tc := range testCases {
