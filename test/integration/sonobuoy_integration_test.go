@@ -517,6 +517,10 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "gen respects kube-conformance-image for both plugin and config issue 1376",
 			cmdLine:    "gen --kube-conformance-image=custom-image --kubernetes-version=v9.8.7",
 			expectFile: "testdata/gen-issue-1376.golden",
+		}, {
+			desc:       "e2e-repo-config should cause KUBE_TEST_REPO_LIST env var to match location used for mount",
+			cmdLine:    "gen --e2e-repo-config=./testdata/tiny-configmap.yaml",
+			expectFile: "testdata/gen-issue-1375.golden",
 		},
 	}
 	for _, tc := range testCases {
