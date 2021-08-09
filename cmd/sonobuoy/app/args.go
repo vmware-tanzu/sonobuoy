@@ -506,7 +506,7 @@ func (f *e2eRepoFlag) Set(str string) error {
 		}
 		m.Spec.Env = append(m.Spec.Env, corev1.EnvVar{
 			Name:  "KUBE_TEST_REPO_LIST",
-			Value: fmt.Sprintf("/tmp/sonobuoy/configs/%v", name),
+			Value: fmt.Sprintf("/tmp/sonobuoy/config/%v", name),
 		})
 		return nil
 	})
