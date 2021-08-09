@@ -31,7 +31,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 	kubeerror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -219,7 +219,7 @@ func (c *SonobuoyClient) Run(cfg *RunConfig) error {
 
 func loadManifestFromFile(f string) ([]byte, error) {
 	if f == stdinFile {
-		if terminal.IsTerminal(int(os.Stdin.Fd())) {
+		if term.IsTerminal(int(os.Stdin.Fd())) {
 			return nil, fmt.Errorf("nothing on stdin to read")
 		}
 
