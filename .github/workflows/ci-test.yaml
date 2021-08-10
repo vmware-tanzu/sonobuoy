@@ -75,6 +75,23 @@ jobs:
           VERBOSE: true
         run: |
           source ./scripts/build.sh; stress
+  vulnerability-scan-linux:
+    runs-on: ubuntu-latest
+    needs: [build-linux, unit-test-linux]
+    steps:
+      - name: Download binaries and prebuilt images
+        uses: actions/download-artifact@v2
+        with:
+          name: sonobuoy-build-linux-${{ github.run_id }}
+          path: build
+      - name: Run vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          input: build/linux/amd64/sonobuoy-img-linux-amd64-${{ github.run_id }}.tar
+          format: 'table'
+          exit-code: '1'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH,MEDIUM'
   integration-test-on-kind:
     runs-on: ubuntu-latest
     needs: [build-linux, unit-test-linux]
