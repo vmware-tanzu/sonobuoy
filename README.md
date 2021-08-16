@@ -165,6 +165,10 @@ Sonobuoy requires admin permissions which won't be automatic if you are running 
 kubectl create clusterrolebinding <your-user-cluster-admin-binding> --clusterrole=cluster-admin --user=<your.google.cloud.email@example.org>
 ```
 
+### Certified-Conformance bug (versions v0.53.0 and v0.53.1)
+
+These versions of Sonobuoy have a bug that runs the wrong set of tests without additional actions. See more details [here](https://sonobuoy.io/docs/v0.53.1/issue1388.md). The simplest way to avoid this is to update your version of Sonobuoy to >= v0.53.2.
+
 ## Contributing
 
 Thanks for taking the time to join our community and start contributing! We
