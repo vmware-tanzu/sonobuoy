@@ -173,7 +173,7 @@ kubectl create clusterrolebinding <your-user-cluster-admin-binding> --clusterrol
 
 ### Certified-Conformance bug (versions v0.53.0 and v0.53.1)
 
-These versions of Sonobuoy have a bug that runs the wrong set of tests without additional actions. See more details [here](issue1388). The simplest way to avoid this is to update your version of Sonobuoy to >= v0.53.2.
+These versions of Sonobuoy have a bug that runs the wrong set of tests without additional actions. See more details [here][issue1388]. The simplest way to avoid this is to update your version of Sonobuoy to >= v0.53.2.
 
 ## Contributing
 
@@ -205,6 +205,7 @@ See [the list of releases][releases] to find out about feature changes.
 [customPlugins]: plugins
 [gen]: gen
 [issue]: https://github.com/vmware-tanzu/sonobuoy/issues
+[issue1388]: issue1388
 [k8s]: https://github.com/kubernetes/kubernetes
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
 [oview]: https://youtu.be/8QK-Hg2yUd4
