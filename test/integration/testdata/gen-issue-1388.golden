@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: configfileNS
+  name: sonobuoy
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -10,31 +10,31 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-serviceaccount
-  namespace: configfileNS
+  namespace: sonobuoy
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
     component: sonobuoy
-    namespace: configfileNS
-  name: sonobuoy-serviceaccount-configfileNS
+    namespace: sonobuoy
+  name: sonobuoy-serviceaccount-sonobuoy
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: sonobuoy-serviceaccount-configfileNS
+  name: sonobuoy-serviceaccount-sonobuoy
 subjects:
 - kind: ServiceAccount
   name: sonobuoy-serviceaccount
-  namespace: configfileNS
+  namespace: sonobuoy
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
     component: sonobuoy
-    namespace: configfileNS
-  name: sonobuoy-serviceaccount-configfileNS
+    namespace: sonobuoy
+  name: sonobuoy-serviceaccount-sonobuoy
 rules:
 - apiGroups:
   - '*'
@@ -52,13 +52,13 @@ rules:
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"DEFAULT","UUID":"","Version":"vSubfieldTestVersion","ResultsDir":"/tmp/sonobuoy","Resources":["apiservices","certificatesigningrequests","clusterrolebindings","clusterroles","componentstatuses","configmaps","controllerrevisions","cronjobs","customresourcedefinitions","daemonsets","deployments","endpoints","ingresses","jobs","leases","limitranges","mutatingwebhookconfigurations","namespaces","networkpolicies","nodes","persistentvolumeclaims","persistentvolumes","poddisruptionbudgets","pods","podlogs","podsecuritypolicies","podtemplates","priorityclasses","replicasets","replicationcontrollers","resourcequotas","rolebindings","roles","servergroups","serverversion","serviceaccounts","services","statefulsets","storageclasses","validatingwebhookconfigurations","volumeattachments"],"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null,"LimitSize":"","LimitTime":""}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":12345},"Plugins":[{"name":"configpluginval"}],"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"configfileNS","WorkerImage":"configImg","ImagePullPolicy":"Never","ImagePullSecrets":"","ProgressUpdatesPort":"8099"}
+    {"Description":"DEFAULT","UUID":"","Version":"*STATIC_FOR_TESTING*","ResultsDir":"/tmp/sonobuoy","Resources":["apiservices","certificatesigningrequests","clusterrolebindings","clusterroles","componentstatuses","configmaps","controllerrevisions","cronjobs","customresourcedefinitions","daemonsets","deployments","endpoints","ingresses","jobs","leases","limitranges","mutatingwebhookconfigurations","namespaces","networkpolicies","nodes","persistentvolumeclaims","persistentvolumes","poddisruptionbudgets","pods","podlogs","podsecuritypolicies","podtemplates","priorityclasses","replicasets","replicationcontrollers","resourcequotas","rolebindings","roles","servergroups","serverversion","serviceaccounts","services","statefulsets","storageclasses","validatingwebhookconfigurations","volumeattachments"],"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null,"LimitSize":"","LimitTime":""}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:*STATIC_FOR_TESTING*","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","ProgressUpdatesPort":"8099"}
 kind: ConfigMap
 metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-config-cm
-  namespace: configfileNS
+  namespace: sonobuoy
 ---
 apiVersion: v1
 data:
@@ -91,14 +91,12 @@ data:
         value: \[Conformance\]
       - name: E2E_PARALLEL
         value: "false"
-      - name: E2E_SKIP
-        value: \[Disruptive\]|NoExecuteTaintManager
       - name: E2E_USE_GO_RUNNER
         value: "true"
       - name: SONOBUOY_K8S_VERSION
         value: ignore
       image: k8s.gcr.io/conformance:ignore
-      imagePullPolicy: Never
+      imagePullPolicy: IfNotPresent
       name: e2e
       resources: {}
       volumeMounts:
@@ -127,7 +125,7 @@ data:
       - name: SONOBUOY_K8S_VERSION
         value: ignore
       image: sonobuoy/systemd-logs:v0.3
-      imagePullPolicy: Never
+      imagePullPolicy: IfNotPresent
       name: systemd-logs
       resources: {}
       securityContext:
@@ -142,7 +140,7 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-plugins-cm
-  namespace: configfileNS
+  namespace: sonobuoy
 ---
 apiVersion: v1
 kind: Pod
@@ -153,7 +151,7 @@ metadata:
     sonobuoy-component: aggregator
     tier: analysis
   name: sonobuoy
-  namespace: configfileNS
+  namespace: sonobuoy
 spec:
   containers:
   - env:
@@ -161,8 +159,8 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: configImg
-    imagePullPolicy: Never
+    image: sonobuoy/sonobuoy:*STATIC_FOR_TESTING*
+    imagePullPolicy: IfNotPresent
     name: kube-sonobuoy
     volumeMounts:
     - mountPath: /etc/sonobuoy
@@ -193,7 +191,7 @@ metadata:
     component: sonobuoy
     sonobuoy-component: aggregator
   name: sonobuoy-aggregator
-  namespace: configfileNS
+  namespace: sonobuoy
 spec:
   ports:
   - port: 8080

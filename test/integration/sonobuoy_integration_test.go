@@ -495,7 +495,7 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			expectFile: "testdata/gen-variable-image.golden",
 		}, {
 			desc:       "gen doesnt provide UUID",
-			cmdLine:    "gen",
+			cmdLine:    "gen --kubernetes-version=ignore",
 			expectFile: "testdata/gen-no-uuid.golden",
 		}, {
 			desc:       "gen config doesnt provide UUID",
@@ -503,15 +503,15 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			expectFile: "testdata/gen-config-no-uuid.golden",
 		}, {
 			desc:       "gen with config testing fields that also have flags",
-			cmdLine:    "gen --config=testdata/subfieldTest.json",
+			cmdLine:    "gen --config=testdata/subfieldTest.json --kubernetes-version=ignore",
 			expectFile: "testdata/gen-config-no-flags.golden",
 		}, {
 			desc:       "gen with flags targeting nested config fields",
-			cmdLine:    "gen -n=cmdlineNS --image-pull-policy=Always --sonobuoy-image=cmdlineimg --timeout=99",
+			cmdLine:    "gen -n=cmdlineNS --image-pull-policy=Always --sonobuoy-image=cmdlineimg --timeout=99 --kubernetes-version=ignore",
 			expectFile: "testdata/gen-subfield-flags.golden",
 		}, {
 			desc:       "gen with config then flags targeting subfields",
-			cmdLine:    "gen --config=testdata/subfieldTest.json -n cmdlineNS --image-pull-policy=Always --sonobuoy-image=cmdlineimg --timeout=99",
+			cmdLine:    "gen --config=testdata/subfieldTest.json -n cmdlineNS --image-pull-policy=Always --sonobuoy-image=cmdlineimg --timeout=99 --kubernetes-version=ignore",
 			expectFile: "testdata/gen-config-then-flags.golden",
 		}, {
 			desc:       "gen respects kube-conformance-image for both plugin and config issue 1376",
@@ -519,8 +519,12 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			expectFile: "testdata/gen-issue-1376.golden",
 		}, {
 			desc:       "e2e-repo-config should cause KUBE_TEST_REPO_LIST env var to match location used for mount",
-			cmdLine:    "gen --e2e-repo-config=./testdata/tiny-configmap.yaml",
+			cmdLine:    "gen --e2e-repo-config=./testdata/tiny-configmap.yaml --kubernetes-version=ignore",
 			expectFile: "testdata/gen-issue-1375.golden",
+		}, {
+			desc:       "certified conformance should have no skip value",
+			cmdLine:    "gen --mode=certified-conformance --kubernetes-version=ignore",
+			expectFile: "testdata/gen-issue-1388.golden",
 		},
 	}
 	for _, tc := range testCases {

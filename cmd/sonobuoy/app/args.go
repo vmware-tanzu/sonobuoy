@@ -466,8 +466,14 @@ func (m *Mode) Set(str string) error {
 		if err := m.env.Set(fmt.Sprintf("e2e.E2E_FOCUS=%v", quickFocus)); err != nil {
 			return fmt.Errorf("failed to set flag with value %v", str)
 		}
+		if err := m.env.Set("e2e.E2E_SKIP"); err != nil {
+			return fmt.Errorf("failed to set flag with value %v", str)
+		}
 	case CertifiedConformance:
 		if err := m.env.Set(fmt.Sprintf("e2e.E2E_FOCUS=%v", conformanceFocus)); err != nil {
+			return fmt.Errorf("failed to set flag with value %v", str)
+		}
+		if err := m.env.Set("e2e.E2E_SKIP"); err != nil {
 			return fmt.Errorf("failed to set flag with value %v", str)
 		}
 	default:
