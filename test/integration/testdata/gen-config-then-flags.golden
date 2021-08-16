@@ -96,8 +96,8 @@ data:
       - name: E2E_USE_GO_RUNNER
         value: "true"
       - name: SONOBUOY_K8S_VERSION
-        value: v1.20.0
-      image: k8s.gcr.io/conformance:v1.20.0
+        value: ignore
+      image: k8s.gcr.io/conformance:ignore
       imagePullPolicy: Always
       name: e2e
       resources: {}
@@ -125,7 +125,7 @@ data:
       - name: RESULTS_DIR
         value: /tmp/results
       - name: SONOBUOY_K8S_VERSION
-        value: v1.20.0
+        value: ignore
       image: sonobuoy/systemd-logs:v0.3
       imagePullPolicy: Always
       name: systemd-logs
