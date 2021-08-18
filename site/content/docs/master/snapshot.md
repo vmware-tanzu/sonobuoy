@@ -28,8 +28,6 @@ The results of plugins can be inspected without being extracted. By default, it 
 sonobuoy results $output [--plugin <name>] [--mode report|detailed|dump]
 ```
 
-> Note: There is also an older `sonobuoy e2e $output` command which can inspect the results of the `e2e` plugin and even rerun failures.
-
 You can also extract the output locally so that you can view the other
 information Sonobuoy gathered as well:
  - detailed plugin results

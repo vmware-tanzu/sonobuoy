@@ -236,6 +236,12 @@ func AddLegacyE2EFlags(env *PluginEnvVars, pluginTransforms *map[string][]func(*
 	}
 	pf.Hidden = true
 
+	// Used to replace the --rerun-failed functionality from the old e2e command.
+	fs.Var(
+		&rerunFailedFlag{env: env}, "rerun-failed",
+		"Read the given tarball and set the E2E_FOCUS to target all the failed tests",
+	)
+
 	// Used by the container when enabling E2E tests which require SSH.
 	fs.Var(
 		&envVarModierFlag{plugin: e2ePlugin, field: "KUBE_SSH_USER", PluginEnvVars: *env}, "ssh-user",
@@ -631,4 +637,34 @@ func (f *kubernetesVersionLogicFlag) Set(str string) error {
 		ver = f.raw.String()
 	}
 	return f.underlyingFlag.Set(fmt.Sprintf("%v:%v:%v", e2ePlugin, img, ver))
+}
+
+type rerunFailedFlag struct {
+	s   string
+	env *PluginEnvVars
+}
+
+func (f *rerunFailedFlag) String() string { return f.s }
+func (f *rerunFailedFlag) Type() string   { return "tar.gz file" }
+func (f *rerunFailedFlag) Set(str string) error {
+	failedList, err := failedTestsFromTar(str, "e2e")
+	if err != nil {
+		return err
+	}
+
+	if len(failedList) == 0 {
+		return fmt.Errorf("no tests failed for plugin %q in tarball %q", "e2e", str)
+	}
+
+	val := stringsToRegexp(failedList)
+	if err := f.env.Set(fmt.Sprintf("e2e.E2E_FOCUS=%v", val)); err != nil {
+		return fmt.Errorf("failed to set flag with value %v", str)
+	}
+
+	// Removes E2E_SKIP value.
+	if err := f.env.Set("e2e.E2E_SKIP"); err != nil {
+		return fmt.Errorf("failed to set flag with value %v", str)
+	}
+	f.s = val
+	return nil
 }

@@ -23,6 +23,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -330,4 +331,31 @@ func getFileFromMeta(m map[string]string) string {
 // current OS seperator and simply converts all windows `\` to `/`.
 func toSlash(path string) string {
 	return strings.ReplaceAll(path, string(windowsSeperator), "/")
+}
+
+// stringsToRegexp just makes a regexp out of the string array that will match any of the given values.
+func stringsToRegexp(testCases []string) string {
+	testNames := make([]string, len(testCases))
+	for i, tc := range testCases {
+		testNames[i] = regexp.QuoteMeta(tc)
+	}
+	return strings.Join(testNames, "|")
+}
+
+func failedTestsFromTar(tarballPath, plugin string) ([]string, error) {
+	r, cleanup, err := getReader(tarballPath)
+	defer cleanup()
+	if err != nil {
+		return nil, err
+	}
+
+	obj, err := r.PluginResultsItem(plugin)
+	if err != nil {
+		return nil, err
+	}
+
+	statusCounts := map[string]int{}
+	var failedList []string
+	_, failedList = walkForSummary(obj, statusCounts, failedList)
+	return failedList, nil
 }
