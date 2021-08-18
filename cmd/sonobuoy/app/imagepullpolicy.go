@@ -18,9 +18,10 @@ package app
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 type ImagePullPolicy v1.PullPolicy
@@ -52,5 +53,6 @@ func ValidPullPolicies() []string {
 		valid[i] = key
 		i++
 	}
+	sort.StringSlice(valid).Sort()
 	return valid
 }

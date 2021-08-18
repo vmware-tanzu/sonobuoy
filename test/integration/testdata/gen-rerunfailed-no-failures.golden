@@ -1,0 +1,44 @@
+Error: invalid argument "testdata/results-quick-no-failures.tar.gz" for "--rerun-failed" flag: no tests failed for plugin "e2e" in tarball "testdata/results-quick-no-failures.tar.gz"
+Usage:
+  sonobuoy gen [flags]
+  sonobuoy gen [command]
+
+Available Commands:
+  config               Generates a Sonobuoy config for input to sonobuoy gen or run.
+  default-image-config Generates the default image registry config for the e2e plugin
+  plugin               Generates the manifest Sonobuoy uses to define a plugin
+
+Flags:
+      --aggregator-node-selector nodeSelectors   Node selectors to add to the aggregator. Values can be given multiple times and are in the form key:value (default map[])
+      --config Sonobuoy config                   Path to a sonobuoy configuration JSON file.
+      --context string                           Context in the kubeconfig to use.
+      --dns-namespace string                     The namespace to check for DNS pods during preflight checks. (default "kube-system")
+      --dns-pod-labels strings                   The label selectors to use for locating DNS pods during preflight checks. Can be specified multiple times or as a comma-separated list. (default [k8s-app=kube-dns,k8s-app=coredns])
+      --e2e-focus envModifier                    Specify the E2E_FOCUS value for the e2e plugin, specifying which tests to run. Shorthand for --plugin-env=e2e.E2E_FOCUS=<string> (default \[Conformance\])
+      --e2e-repo-config yaml-filepath            Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.
+      --e2e-skip envModifier                     Specify the E2E_SKIP value for the e2e plugin, specifying which tests to skip. Shorthand for --plugin-env=e2e.E2E_SKIP=<string> (default \[Disruptive\]|NoExecuteTaintManager)
+  -h, --help                                     help for gen
+      --image-pull-policy string                 Set the ImagePullPolicy for the Sonobuoy image and all plugins. Valid options are Always, IfNotPresent, Never. (default "IfNotPresent")
+      --kube-conformance-image image             Container image override for the e2e plugin. Shorthand for --plugin-image=e2e:<string> (default map[])
+      --kubeconfig Kubeconfig                    Path to explicit kubeconfig file.
+      --kubernetes-version string                Use default E2E image, but override the version. Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise. 'ignore' will try version resolution but ignore errors. 'latest' will find the latest dev image/version upstream.
+  -m, --mode Mode                                What mode to run the e2e plugin in. Valid modes are [non-disruptive-conformance certified-conformance quick]. (default non-disruptive-conformance)
+  -n, --namespace string                         The namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously. (default "sonobuoy")
+  -p, --plugin pluginList                        Which plugins to run. Can either point to a URL, local file/directory, or be one of the known plugins (e2e or systemd-logs). Can be specified multiple times to run multiple plugins.
+      --plugin-env pluginenvvar                  Set env vars on plugins. Values can be given multiple times and are in the form plugin.env=value (default map[])
+      --plugin-image plugin:image                Override a plugins image from what is in its definition (e.g. myPlugin:testimage) (default map[])
+      --rbac RBACMode                            Whether to enable RBAC on Sonobuoy. Valid modes are Enable, Disable, and Detect (query the server to see whether to enable RBAC). (default Enable)
+      --rerun-failed tar.gz file                 Read the given tarball and set the E2E_FOCUS to target all the failed tests
+      --show-default-podspec                     If true, include the default pod spec used for plugins in the output.
+      --sonobuoy-image string                    Container image override for the sonobuoy worker and aggregator. (default "sonobuoy/sonobuoy:*STATIC_FOR_TESTING*")
+      --ssh-key yamlFile                         Path to the private key enabling SSH to cluster nodes. May be required by some tests from the e2e plugin.
+      --ssh-user envModifier                     SSH user for ssh-key. Required if running e2e plugin with certain tests that require SSH access to nodes.
+      --systemd-logs-image image                 Container image override for the systemd-logs plugin. Shorthand for --plugin-image=systemd-logs:<string> (default map[])
+      --timeout int                              How long (in seconds) Sonobuoy aggregator will wait for plugins to complete before exiting. 0 indicates no timeout. (default 21600)
+
+Global Flags:
+      --level level   Log level. One of {panic, fatal, error, warn, info, debug, trace} (default info)
+
+Use "sonobuoy gen [command] --help" for more information about a command.
+
+time="STATIC_TIME_FOR_TESTING" level=error msg="invalid argument \"testdata/results-quick-no-failures.tar.gz\" for \"--rerun-failed\" flag: no tests failed for plugin \"e2e\" in tarball \"testdata/results-quick-no-failures.tar.gz\""

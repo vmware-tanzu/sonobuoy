@@ -277,15 +277,6 @@ func mustDownloadTarball(ctx context.Context, t *testing.T, ns string) string {
 // checkPluginForErrors runs multiple checks to ensure that failCount errors occurred for the given
 // plugin. Ensures that all our different reporting methods are in agreement.
 func checkTarballPluginForErrors(t *testing.T, tarball, plugin string, failCount int) {
-	if plugin == "e2e" {
-		expectOut := fmt.Sprintf("failed tests: %v", failCount)
-		args := fmt.Sprintf("e2e %v ", tarball)
-		out := mustRunSonobuoyCommand(t, args)
-		if !strings.Contains(out.String(), expectOut) {
-			t.Errorf("Expected output of %q to contain %q but output was %v", args, expectOut, out.String())
-		}
-	}
-
 	expectOut := fmt.Sprintf("Failed: %v", failCount)
 	args := fmt.Sprintf("results %v --plugin %v", tarball, plugin)
 	out := mustRunSonobuoyCommand(t, args)
@@ -525,6 +516,22 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "certified conformance should have no skip value",
 			cmdLine:    "gen --mode=certified-conformance --kubernetes-version=ignore",
 			expectFile: "testdata/gen-issue-1388.golden",
+		}, {
+			desc:       "gen rerun-failed should work",
+			cmdLine:    "gen --rerun-failed testdata/results-4-e2e-failures.tar.gz --kubernetes-version=ignore",
+			expectFile: "testdata/gen-rerunfailed-works.golden",
+		}, {
+			desc:       "gen rerun-failed should err if missing e2e results",
+			cmdLine:    "gen --rerun-failed testdata/results-missing-e2e.tar.gz --kubernetes-version=ignore",
+			expectFile: "testdata/gen-rerunfailed-missing.golden",
+		}, {
+			desc:       "gen rerun-failed should err differently if not tarball",
+			cmdLine:    "gen --rerun-failed testdata/tiny-configmap.yaml --kubernetes-version=ignore",
+			expectFile: "testdata/gen-rerunfailed-not-tarball.golden",
+		}, {
+			desc:       "gen rerun-failed should err if no failures",
+			cmdLine:    "gen --rerun-failed testdata/results-quick-no-failures.tar.gz --kubernetes-version=ignore",
+			expectFile: "testdata/gen-rerunfailed-no-failures.golden",
 		},
 	}
 	for _, tc := range testCases {
