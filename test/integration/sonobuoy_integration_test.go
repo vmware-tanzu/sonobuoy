@@ -32,6 +32,10 @@ var (
 	// Path to the Sonobuoy CLI
 	sonobuoy string
 
+	// A tmp dir to imitate a typical users HOME directory. Useful due to plugin cache logic which
+	// typically requires _some_ way to determine a home directory.
+	testHome string
+
 	update = flag.Bool("update", false, "update .golden files")
 )
 
@@ -49,14 +53,21 @@ func findSonobuoyCLI() (string, error) {
 
 // runSonobuoyCommandWithContext runs the Sonobuoy CLI with the given context and arguments.
 // It returns any encountered error and the stdout and stderr from the command execution.
-func runSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args string) (bytes.Buffer, error) {
+func runSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args string, env ...string) (bytes.Buffer, error) {
 	var combinedOutput bytes.Buffer
 
 	command := exec.CommandContext(ctx, sonobuoy, strings.Fields(args)...)
 	command.Stdout = &combinedOutput
 	command.Stderr = &combinedOutput
 
-	t.Logf("Running %q\n", command.String())
+	// Test with features on so we can get more feedback. Low risk that
+	// this will hide default behavior but in that case we may just make the
+	// experimental feature the default then.
+	command.Env = []string{"SONOBUOY_ALL_FEATURES=true", "KUBECONFIG=" + os.Getenv("KUBECONFIG"), "HOME=" + testHome}
+	for _, v := range env {
+		command.Env = append(command.Env, v)
+	}
+	t.Logf("Running %q with env: %v\n", command.String(), command.Env)
 
 	return combinedOutput, command.Run()
 }
@@ -67,14 +78,22 @@ func mustRunSonobuoyCommand(t *testing.T, args string) bytes.Buffer {
 
 // mustRunSonobuoyCommandWithContext runs the Sonobuoy CLI with the given context and arguments.
 // It returns stdout and fails the test immediately if there are any errors.
-func mustRunSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args string) bytes.Buffer {
+func mustRunSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args string, env ...string) bytes.Buffer {
 	var stdout, stderr bytes.Buffer
 
 	command := exec.CommandContext(ctx, sonobuoy, strings.Fields(args)...)
 	command.Stdout = &stdout
 	command.Stderr = &stderr
 
-	t.Logf("Running %q\n", command.String())
+	// Test with features on so we can get more feedback. Low risk that
+	// this will hide default behavior but in that case we may just make the
+	// experimental feature the default then.
+	command.Env = []string{"SONOBUOY_ALL_FEATURES=true", "KUBECONFIG=" + os.Getenv("KUBECONFIG"), "HOME=" + testHome}
+	for _, v := range env {
+		command.Env = append(command.Env, v)
+	}
+
+	t.Logf("Running %q with env: %v\n", command.String(), command.Env)
 	if err := command.Run(); err != nil {
 		t.Fatalf("Expected %q to not error but got error: %q with stdout: %q and stderr: %q", args, err, stdout.String(), stderr.String())
 	}
@@ -445,6 +464,14 @@ func TestMain(m *testing.M) {
 	}
 	fmt.Printf("Using Sonobuoy CLI at %q\n", sonobuoy)
 
+	// Creating so we get a clean location for HOME; important due to the plugin cache logic.
+	testHome, err = ioutil.TempDir("", "sonobuoy_int_test_home_*")
+	if err != nil {
+		fmt.Printf("Failed to create tmp dir home: %v", err)
+		os.Exit(1)
+	}
+	defer os.RemoveAll(testHome)
+
 	result := m.Run()
 	os.Exit(result)
 }
@@ -613,10 +640,9 @@ func TestPluginCmds_LocalGolden(t *testing.T) {
 			if tc.cleanup {
 				defer os.RemoveAll(tc.useDir)
 			}
-			os.Setenv("SONOBUOY_DIR", tc.useDir)
 
 			// Allow errors here since we also may test stderr
-			output, _ := runSonobuoyCommandWithContext(ctx, t, tc.cmdLine)
+			output, _ := runSonobuoyCommandWithContext(ctx, t, tc.cmdLine, "SONOBUOY_DIR="+tc.useDir)
 			checkFileMatchesOrUpdate(t, output.String(), tc.expectFile, "")
 		})
 	}
@@ -676,17 +702,12 @@ func TestPluginComplexCmds_LocalGolden(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		origval := os.Getenv("SONOBUOY_DIR")
-		defer os.Setenv("SONOBUOY_DIR", origval)
-
 		t.Run(tc.desc, func(t *testing.T) {
 			tmpDir, err := ioutil.TempDir("", "sonobuoy_plugin_test_*")
 			if err != nil {
 				t.Fatal("Failed to create tmp dir")
 			}
 			defer os.RemoveAll(tmpDir)
-
-			os.Setenv("SONOBUOY_DIR", tmpDir)
 
 			for _, v := range tc.addBadPlugins {
 				if err := os.WriteFile(filepath.Join(tmpDir, v), []byte("a:b:c:d:bad:file"), 0777); err != nil {
@@ -697,7 +718,7 @@ func TestPluginComplexCmds_LocalGolden(t *testing.T) {
 			// Allow errors here since we also may test stderr
 			var allOutput bytes.Buffer
 			for _, cmd := range tc.cmdLine {
-				output, _ := runSonobuoyCommandWithContext(ctx, t, cmd)
+				output, _ := runSonobuoyCommandWithContext(ctx, t, cmd, "SONOBUOY_DIR="+tmpDir)
 				output.WriteTo(&allOutput)
 			}
 
@@ -717,29 +738,23 @@ func TestPluginLoading_LocalGolden(t *testing.T) {
 
 	tmpDir, err := ioutil.TempDir("", "sonobuoy_plugin_test_*")
 	if err != nil {
-		t.Fatal("Failed to create tmp dir")
+		t.Fatalf("Failed to create tmp dir home: %v", err)
 	}
 	defer os.RemoveAll(tmpDir)
 
-	origDir, origFlag := os.Getenv("SONOBUOY_DIR"), os.Getenv("SONOBUOY_ALL_FEATURES")
-	defer func() {
-		os.Setenv("SONOBUOY_DIR", origDir)
-		os.Setenv("SONOBUOY_ALL_FEATURES", origFlag)
-	}()
-	os.Setenv("SONOBUOY_DIR", tmpDir)
-	os.Setenv("SONOBUOY_ALL_FEATURES", "true")
+	envVars := []string{"SONOBUOY_DIR=" + tmpDir}
 
-	_, e := runSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	_, e := runSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	if e == nil {
 		t.Fatal("Expected a failure since no plugin was installed but got none")
 	}
 
-	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin install hello-world.yaml ./testdata/plugins/good/hello-world.yaml")
-	output := mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin install hello-world.yaml ./testdata/plugins/good/hello-world.yaml", envVars...)
+	output := mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	checkFileMatchesOrUpdate(t, output.String(), installedPluginFile, tmpDir)
 
-	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin uninstall hello-world.yaml")
-	_, e = runSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin uninstall hello-world.yaml", envVars...)
+	_, e = runSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	if e == nil {
 		t.Fatal("Expected a failure since no plugin was installed but got none")
 	}
@@ -757,22 +772,22 @@ func TestPluginLoading_LocalGolden(t *testing.T) {
 	}
 	defer os.Remove("hello-world.yaml")
 
-	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	checkFileMatchesOrUpdate(t, output.String(), localPluginFile, tmpDir)
 
-	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin install hello-world.yaml ./testdata/plugins/good/hello-world.yaml")
-	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin install hello-world.yaml ./testdata/plugins/good/hello-world.yaml", envVars...)
+	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	checkFileMatchesOrUpdate(t, output.String(), installedPluginFile, tmpDir)
 
-	os.Setenv("SONOBUOY_ALL_FEATURES", "false")
-	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	envVars = append(envVars, "SONOBUOY_ALL_FEATURES=false")
+	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	checkFileMatchesOrUpdate(t, output.String(), localPluginFile, tmpDir)
 
 	if err := os.Remove("hello-world.yaml"); err != nil {
 		t.Fatalf("Failed to delete local file: %v", err)
 	}
 
-	_, e = runSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789")
+	_, e = runSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	if e == nil {
 		t.Fatal("Expected a failure since no plugin was installed but got none")
 	}
@@ -783,6 +798,7 @@ func checkFileMatchesOrUpdate(t *testing.T, output, expectFile, maskDir string) 
 	binaryVer := strings.TrimSpace(binaryVersion.String())
 
 	outString := strings.ReplaceAll(output, binaryVer, "*STATIC_FOR_TESTING*")
+	outString = strings.ReplaceAll(outString, testHome, "*STATIC_FOR_TESTING*")
 	if maskDir != "" {
 		outString = strings.ReplaceAll(outString, maskDir, "*STATIC_FOR_TESTING*")
 	}
