@@ -274,12 +274,11 @@ func uninstallPlugin(installedDir, filename string) error {
 }
 
 func expandPath(path string) (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-
 	if len(path) > 0 && path[0] == '~' {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
 		path = filepath.Join(home, path[1:])
 	}
 	return path, nil
