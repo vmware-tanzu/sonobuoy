@@ -43,6 +43,11 @@ type pluginList struct {
 	// DynamicPlugins are ones which require all the other gen input in order to finalize.
 	// E.g. the e2e plugin was templated to use all those other values.
 	DynamicPlugins []string
+
+	// InstallDir is the directory to check for plugins rather than only relying on files
+	// in the present working directory or a URL. If blank, the list won't be able to load
+	// plugins without specfying the whole path (or a relative one from the cwd).
+	InstallDir string
 }
 
 const (
@@ -73,7 +78,7 @@ func (p *pluginList) Type() string { return "pluginList" }
 // Set sets the explicit path of the loader to the provided config file
 func (p *pluginList) Set(str string) error {
 	// Load first from cache, then special cases (e2e/systemd-logs), then local file.
-	if featureEnabled(FeaturePluginInstallation) {
+	if p.InstallDir != "" {
 		handled, err := p.loadPluginsFromInstalled(str)
 		if handled {
 			if err != nil {
@@ -105,12 +110,11 @@ func isURL(s string) bool {
 
 func (p *pluginList) loadPluginsFromInstalled(str string) (handled bool, returnErr error) {
 	// If empty, disable cache instead of err.
-	loc := getPluginCacheLocation()
-	if len(loc) == 0 {
+	if len(p.InstallDir) == 0 {
 		return false, nil
 	}
 
-	m, err := loadPlugin(loc, filenameFromArg(str, ".yaml"))
+	m, err := loadPlugin(p.InstallDir, filenameFromArg(str, ".yaml"))
 	if isNotExist(err) {
 		return false, err
 	}
