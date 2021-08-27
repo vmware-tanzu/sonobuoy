@@ -1,0 +1,6 @@
+---
+version: main
+cascade:
+  layout: docs
+  gh: https://github.com/vmware-tanzu/sonobuoy/tree/main
+---
