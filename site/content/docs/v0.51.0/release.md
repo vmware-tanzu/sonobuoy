@@ -10,7 +10,7 @@ Is there a Kubernetes release since the last Sonobuoy release? If so, apply the 
 
 ### Conformance images
 Ensure the upstream conformance script is working appropriately:
-  * Update the `kind-config.yaml` file with the new image version [here](https://github.com/vmware-tanzu/sonobuoy/blob/master/kind-config.yaml).
+  * Update the `kind-config.yaml` file with the new image version [here](https://github.com/vmware-tanzu/sonobuoy/blob/main/kind-config.yaml).
   * Run conformance tests
 
 ### Setup e2e image registry for new version
@@ -24,7 +24,7 @@ If you have a local copy of kubernetes/kubernetes repository, here's a quick way
   * Ensure you have the recent tags pulled in (i.e. `git fetch --all` or equivalent)
   * Run `git diff OLD_TAG NEW_TAG -- test/utils/image/manifest.go`
 
-In the event that there are modifications to `RegistryList`, new fields need to be added to [our copy of `RegistryList` in `pkg/image/manifest.go`](https://github.com/vmware-tanzu/sonobuoy/tree/master/pkg/image/manifest.go) while removed fields need to stay for backwards compatibility reasons (e.g. newer version of Sonobuoy running on an older version of Kubernetes).
+In the event that there are modifications to `RegistryList`, new fields need to be added to [our copy of `RegistryList` in `pkg/image/manifest.go`](https://github.com/vmware-tanzu/sonobuoy/tree/main/pkg/image/manifest.go) while removed fields need to stay for backwards compatibility reasons (e.g. newer version of Sonobuoy running on an older version of Kubernetes).
 
 ## Updating the versioned docs
 Explicit doc changes (if any) should be made to the appropriate files in directory `site/docs/master`.

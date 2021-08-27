@@ -13,31 +13,31 @@ TOC_NAME="$(echo "${VERSION}"toc|sed s/\\./-/g)"
 read -r -d '' CONFIG_VERSION_BLOCK << EOM
   docs_latest: v.*
   docs_versions:
-    - master
+    - main
 EOM
 
 read -r -d '' NEW_VERSION_BLOCK << EOM
   docs_latest: ${VERSION}
   docs_versions:
-    - master
+    - main
     - ${VERSION}
 EOM
 
 read -r -d '' OLD_SCOPE_BLOCK << EOM
   - scope:
-      path: docs\/master
+      path: docs\/main
     values:
-      version: master
-      gh: https:\/\/github.com\/vmware-tanzu\/sonobuoy\/tree\/master
+      version: main
+      gh: https:\/\/github.com\/vmware-tanzu\/sonobuoy\/tree\/main
       layout: \"docs\"
 EOM
 
 read -r -d '' NEW_SCOPE_BLOCK << EOM
   - scope:
-      path: docs\/master
+      path: docs\/main
     values:
-      version: master
-      gh: https:\/\/github.com\/vmware-tanzu\/sonobuoy\/tree\/master
+      version: main
+      gh: https:\/\/github.com\/vmware-tanzu\/sonobuoy\/tree\/main
       layout: \"docs\"
   - scope:
       path: docs\/${VERSION}
@@ -47,9 +47,9 @@ read -r -d '' NEW_SCOPE_BLOCK << EOM
       layout: \"docs\"
 EOM
 
-read -r -d '' MASTER_FRONTMATTER << EOM
+read -r -d '' MAIN_FRONTMATTER << EOM
 ---
-version: master
+version: main
 cascade:
   layout: docs
   gh: https:\/\/github.com\/vmware-tanzu\/sonobuoy\/tree\/.*
@@ -65,9 +65,9 @@ cascade:
 ---
 EOM
 
-OLD_TOC_BLOCK="master: master-toc"
+OLD_TOC_BLOCK="main: main-toc"
 read -r -d '' NEW_TOC_BLOCK << EOM
-master: master-toc
+main: main-toc
 ${VERSION}: ${TOC_NAME}
 EOM
 
@@ -83,16 +83,16 @@ else
         debian:stretch-slim \
         /bin/sh -c \
         "rm -rf /root/site/content/docs/${VERSION} && \
-        cp -r /root/site/content/docs/master /root/site/content/docs/${VERSION} && \
-        sed -i 's/site\/docs\/master\///g' /root/site/content/docs/${VERSION}/_index.md && \
+        cp -r /root/site/content/docs/main /root/site/content/docs/${VERSION} && \
+        sed -i 's/site\/docs\/main\///g' /root/site/content/docs/${VERSION}/_index.md && \
         sed -i 's/docs\/img/img/g' /root/site/content/docs/${VERSION}/_index.md && \
-        sed -i 's/sonobuoy\/tree\/master/sonobuoy\/tree\/${VERSION}/g' /root/site/content/docs/${VERSION}/_index.md && \
-        sed -i 's/sonobuoy.io\/docs\/master/sonobuoy.io\/docs\/${VERSION}/g' /root/site/content/docs/${VERSION}/_index.md && \
-        cp /root/site/data/docs/master-toc.yml /root/site/data/docs/${TOC_NAME}.yml && \
+        sed -i 's/sonobuoy\/tree\/main/sonobuoy\/tree\/${VERSION}/g' /root/site/content/docs/${VERSION}/_index.md && \
+        sed -i 's/sonobuoy.io\/docs\/main/sonobuoy.io\/docs\/${VERSION}/g' /root/site/content/docs/${VERSION}/_index.md && \
+        cp /root/site/data/docs/main-toc.yml /root/site/data/docs/${TOC_NAME}.yml && \
         perl -i -0pe 's/${CONFIG_VERSION_BLOCK}/${NEW_VERSION_BLOCK}/' /root/site/config.yaml && \
         perl -i -0pe 's/${OLD_SCOPE_BLOCK}/${NEW_SCOPE_BLOCK}/' /root/site/config.yaml && \
         perl -i -0pe 's/${OLD_TOC_BLOCK}/${NEW_TOC_BLOCK}/' /root/site/data/docs/toc-mapping.yml && \
-        perl -i -0pe 's/${MASTER_FRONTMATTER}/${RELEASE_FRONTMATTER}/' /root/site/content/docs/${VERSION}/index-frontmatter.yaml && \
-        perl -i -0pe 's/${MASTER_FRONTMATTER}/${RELEASE_FRONTMATTER}/' /root/site/content/docs/${VERSION}/_index.md && \
+        perl -i -0pe 's/${MAIN_FRONTMATTER}/${RELEASE_FRONTMATTER}/' /root/site/content/docs/${VERSION}/index-frontmatter.yaml && \
+        perl -i -0pe 's/${MAIN_FRONTMATTER}/${RELEASE_FRONTMATTER}/' /root/site/content/docs/${VERSION}/_index.md && \
         sed -i 's/${OLD_FOOTER_BLOCK}/${NEW_FOOTER_BLOCK}/' /root/site/config.yaml"
 fi

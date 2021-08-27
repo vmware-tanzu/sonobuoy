@@ -51,7 +51,7 @@ func TestCA(t *testing.T) {
 
 	capool := auth.CACertPool()
 
-	srvName := "master.sonobuoy.local"
+	srvName := "aggregator.sonobuoy.local"
 	srvCert, err := auth.ServerKeyPair(srvName)
 	if err != nil {
 		t.Errorf("couldn't get server cert")

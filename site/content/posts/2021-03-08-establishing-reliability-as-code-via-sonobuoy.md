@@ -12,7 +12,7 @@ slug: reliability-scanner-kubernetes-clusters
 ---
 
 
-We are happy to introduce the [Reliability Scanner for Kubernetes as a Sonobuoy Plugin](https://github.com/vmware-tanzu/sonobuoy-plugins/tree/master/reliability-scanner)! It is a light-weight Go program that includes an extensible set of reliability assessments, or checks, performed against various components of a cluster, such as Pods, Namespaces, Services, etc. The Reliability Scanner runs as a container that serves as a Sonobuoy plugin and uses a configuration file to define customized checks. Kubernetes cluster operators can then configure appropriate constraints to run reliability scanner checks against their clusters. This project is based upon efforts and practices of [VMware’s Customer Reliability Engineering (CRE) team](https://tanzu.vmware.com/content/blog/hello-world-meet-vmware-cre).
+We are happy to introduce the [Reliability Scanner for Kubernetes as a Sonobuoy Plugin](https://github.com/vmware-tanzu/sonobuoy-plugins/tree/main/reliability-scanner)! It is a light-weight Go program that includes an extensible set of reliability assessments, or checks, performed against various components of a cluster, such as Pods, Namespaces, Services, etc. The Reliability Scanner runs as a container that serves as a Sonobuoy plugin and uses a configuration file to define customized checks. Kubernetes cluster operators can then configure appropriate constraints to run reliability scanner checks against their clusters. This project is based upon efforts and practices of [VMware’s Customer Reliability Engineering (CRE) team](https://tanzu.vmware.com/content/blog/hello-world-meet-vmware-cre).
 
 This article provides a walk-through of the components usedby the initial set of checks recommended by VMware CRE.  You can create your own customized checks or extend the existing checks. 
 
@@ -36,13 +36,13 @@ Quality of service (QoS) in Kubernetes is used by the scheduler to make decision
 The upfront reservation on scheduled Nodes depend on how our application requirement was defined.  One of the reliability practices that allows applications to operate more efficiently is to ensure that the Node has or reserves enough resources when a container is scheduled.  The reliability scanner will report any Pod that does not meet the minimum desired QoS class defined in the constraint.
 
 ### Getting Started
-With the Reliability Scanner, you can add new reliability checks easily.  Please refer to the [README](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/README.md) for more details.
+With the Reliability Scanner, you can add new reliability checks easily.  Please refer to the [README](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/main/reliability-scanner/README.md) for more details.
 
-First, make sure that [Sonobuoy CLI](https://github.com/vmware-tanzu/sonobuoy), Docker, make, ytt, and kubectl are installed on your local machine.  There’s a helpful [Makefile](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/Makefile) that handles the necessary setup and templating needed to run the customized reliability check YAML.  
+First, make sure that [Sonobuoy CLI](https://github.com/vmware-tanzu/sonobuoy), Docker, make, ytt, and kubectl are installed on your local machine.  There’s a helpful [Makefile](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/main/reliability-scanner/Makefile) that handles the necessary setup and templating needed to run the customized reliability check YAML.  
 
 
 ### Adding a new QOS reliability check
-The reliability scanner is ready to be used to scan your cluster. However, a cluster operator who is interested in creating a customized reliability check, will need to make modifications in two places in order to create a new customized reliability check.  First, the new check must be defined by name, description, kind, and spec, in a [YAML configuration file](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/plugin/reliability-scanner-custom-values.lib.yml) as shown below:
+The reliability scanner is ready to be used to scan your cluster. However, a cluster operator who is interested in creating a customized reliability check, will need to make modifications in two places in order to create a new customized reliability check.  First, the new check must be defined by name, description, kind, and spec, in a [YAML configuration file](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/main/reliability-scanner/plugin/reliability-scanner-custom-values.lib.yml) as shown below:
 
 ```
 name: "Pod QOS check"
@@ -53,7 +53,7 @@ name: "Pod QOS check"
      include_detail: true                  # includes the actual Pod QoS in the report
 ```
 
-Next, some Golang code must be written which actually does the check we need.  As a starting point, the check will have to satisfy the [Querier](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/api/v1alpha1/pod/qos/qos.go) Go interface (the project comes with a default [QoS implementation](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/api/v1alpha1/pod/qos/qos.go) of the Querier interface), and a mapping must be made in the [scanner.go](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/master/reliability-scanner/cmd/reliability-scanner/scanner.go) file.
+Next, some Golang code must be written which actually does the check we need.  As a starting point, the check will have to satisfy the [Querier](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/main/reliability-scanner/api/v1alpha1/pod/qos/qos.go) Go interface (the project comes with a default [QoS implementation](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/main/reliability-scanner/api/v1alpha1/pod/qos/qos.go) of the Querier interface), and a mapping must be made in the [scanner.go](https://github.com/vmware-tanzu/sonobuoy-plugins/blob/main/reliability-scanner/cmd/reliability-scanner/scanner.go) file.
 
 ### Testing the new check
 The QoS check, defined above, allows the scanner to look across the cluster to report back on the current state of a Pod within the cluster to understand workloads that do not define our minimum [QoS class](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/).
@@ -112,7 +112,7 @@ We can see that, although our report is showing a failed status (as none of the 
 
 Using this Reliability Scanner within a cluster is an easy way for cluster operators to identify any workloads or configurations that do not meet requirements and report them.
 
-For the probes and owner annotations checks, please refer to the [Reliability Scanner repo](https://github.com/vmware-tanzu/sonobuoy-plugins/tree/master/reliability-scanner).
+For the probes and owner annotations checks, please refer to the [Reliability Scanner repo](https://github.com/vmware-tanzu/sonobuoy-plugins/tree/main/reliability-scanner).
 
 We hope that in time we are able to build sets of checks for multiple concerns and would love any feedback about the Reliability Scanner. Additionally, the VMware CRE team would love to hear from the broader community about good practices for operating workloads on Kubernetes.
 

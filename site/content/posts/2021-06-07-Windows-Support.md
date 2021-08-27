@@ -41,12 +41,12 @@ Along with adding Windows support for the Sonobuoy image, we also officially sup
 
 ## Running A Windows Plugin
 
-Now that you have a Windows cluster and client, let's show how easy it is to run a plugin. In fact, it is exactly the same as running any other Sonobuoy plugin. Let’s run the “windows-events” [example plugin](https://github.com/vmware-tanzu/sonobuoy-plugins/tree/master/examples/windows-plugin) from the [sonobuoy-plugins](https://github.com/vmware-tanzu/sonobuoy-plugins) repository.
+Now that you have a Windows cluster and client, let's show how easy it is to run a plugin. In fact, it is exactly the same as running any other Sonobuoy plugin. Let’s run the “windows-events” [example plugin](https://github.com/vmware-tanzu/sonobuoy-plugins/tree/main/examples/windows-plugin) from the [sonobuoy-plugins](https://github.com/vmware-tanzu/sonobuoy-plugins) repository.
 
 Since the Windows support is new, you need to either have the latest version of Sonobuoy or specify the image via a flag. For explicitness, we'll show the flag but realize that it is optional if you’ve updated your CLI client.
 
 ```
-url=https://raw.githubusercontent.com/vmware-tanzu/sonobuoy-plugins/master/examples/windows-plugin/plugin.yaml
+url=https://raw.githubusercontent.com/vmware-tanzu/sonobuoy-plugins/main/examples/windows-plugin/plugin.yaml
 img=sonobuoy/sonobuoy:v0.51.0
 
 sonobuoy run --plugin $url --sonobuoy-image=$img --wait

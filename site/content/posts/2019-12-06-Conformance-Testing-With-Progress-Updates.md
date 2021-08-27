@@ -104,7 +104,7 @@ sonobuoy run --kube-conformance-image-version=v1.17.0-beta.2
 
 **Q:** I'd like to implement progress updates in my own custom plugin. How do I do that?
 
-**A:** To see an example use of this feature, check out the readme file for the [progress reporter](https://github.com/vmware-tanzu/sonobuoy/tree/master/examples/plugins/progress-reporter). The Sonobuoy sidecar will always be listening for progress updates if your plugin wants to send them, so it is just a matter of posting some JSON data to the expected endpoint.
+**A:** To see an example use of this feature, check out the readme file for the [progress reporter](https://github.com/vmware-tanzu/sonobuoy/tree/main/examples/plugins/progress-reporter). The Sonobuoy sidecar will always be listening for progress updates if your plugin wants to send them, so it is just a matter of posting some JSON data to the expected endpoint.
 
 ## Join the Sonobuoy Community
 

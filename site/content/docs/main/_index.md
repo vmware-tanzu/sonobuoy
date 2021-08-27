@@ -197,10 +197,10 @@ See [the list of releases][releases] to find out about feature changes.
 [airgap]: airgap
 [brew]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-with-homebrew-on-macos
 [cncf]: https://github.com/cncf/k8s-conformance#certified-kubernetes
-[coc]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CODE_OF_CONDUCT.md
-[contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/master/CONTRIBUTING.md
+[coc]: https://github.com/vmware-tanzu/sonobuoy/blob/main/CODE_OF_CONDUCT.md
+[contrib]: https://github.com/vmware-tanzu/sonobuoy/blob/masmainter/CONTRIBUTING.md
 [docker]: https://docs.docker.com/get-docker/
-[docs]: https://sonobuoy.io/docs/master
+[docs]: https://sonobuoy.io/docs/main
 [e2ePlugin]: e2eplugin
 [customPlugins]: plugins
 [gen]: gen

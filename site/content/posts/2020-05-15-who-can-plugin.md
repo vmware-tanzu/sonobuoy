@@ -12,7 +12,7 @@ date: 2020-05-15
 slug: who-can-plugin
 ---
 
-The Sonobuoy team is continuing to expand its range of custom plugins and we would like to introduce the latest plugin in our collection: [who-can](https://github.com/vmware-tanzu/sonobuoy-plugins/tree/master/who-can).
+The Sonobuoy team is continuing to expand its range of custom plugins and we would like to introduce the latest plugin in our collection: [who-can](https://github.com/vmware-tanzu/sonobuoy-plugins/tree/main/who-can).
 
 This plugin utilizes a project from [Aqua Security](https://www.aquasec.com/): [kubectl-who-can](https://github.com/aquasecurity/kubectl-who-can).
 kubectl-who-can shows which subjects have RBAC permissions to perform actions (verbs) against different resources in all namespaces in your Kubernetes clusters.
@@ -62,7 +62,7 @@ The default configuration for the plugin produces reports in all of the availabl
 To run the plugin, use the following command:
 
 ```bash
-sonobuoy run --plugin https://raw.githubusercontent.com/vmware-tanzu/sonobuoy-plugins/master/who-can/who-can.yaml
+sonobuoy run --plugin https://raw.githubusercontent.com/vmware-tanzu/sonobuoy-plugins/main/who-can/who-can.yaml
 ```
 
 This fetches the plugin from GitHub and uses the default configuration.
