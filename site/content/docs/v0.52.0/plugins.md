@@ -166,7 +166,7 @@ By providing the flag `--show-default-podspec` to `sonobuoy gen`, the default `p
 If you generate a new manifest by running `sonobuoy gen` again, you will need to reapply any changes made.
 We recommend adding your desired customizations to the plugin definition itself.
 
-[systemd-repo]: https://github.com/vmware-tanzu/sonobuoy-plugins/tree/master/systemd-logs
+[systemd-repo]: https://github.com/vmware-tanzu/sonobuoy-plugins/tree/main/systemd-logs
 [conformance]: https://github.com/kubernetes/kubernetes/tree/master/cluster/images/conformance
 [e2ePlugin]: e2eplugin.md
 [kubernetes-podspecs]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core

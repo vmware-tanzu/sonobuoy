@@ -28,7 +28,7 @@ With a single Sonobuoy command, you can run the same tests that are used to qual
 ## Native Extensibility Through Plugins
 Sonobuoy provides several plugins out of the box, including a systemd log collector and the upstream end-to-end Kubernetes conformance test suite. Sonobuoy is the community standard tool for executing conformance tests on a Kubernetes cluster; however, its architecture is designed to accomplish much more.
 
-The open plugin architecture equips you, as a platform operator, with the means to develop custom conformance and validation tests for environments before they go into production. A [custom plugin](https://github.com/vmware-tanzu/sonobuoy/blob/master/docs/plugins.md) can be developed by creating a plugin definition file that describes how the plugin is structured and what parameters the plugin requires. The plugin then needs to follow a documented API that provides a communication mechanism for Sonobuoy to inform it of the plugin’s status including whether it is pending, running, or complete.
+The open plugin architecture equips you, as a platform operator, with the means to develop custom conformance and validation tests for environments before they go into production. A [custom plugin](https://github.com/vmware-tanzu/sonobuoy/blob/main/docs/plugins.md) can be developed by creating a plugin definition file that describes how the plugin is structured and what parameters the plugin requires. The plugin then needs to follow a documented API that provides a communication mechanism for Sonobuoy to inform it of the plugin’s status including whether it is pending, running, or complete.
 
 ![Sonobuoy Plugin](/img/image4.png "Sonobuoy Plugin")
 

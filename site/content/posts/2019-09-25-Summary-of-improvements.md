@@ -145,6 +145,6 @@ Join the Sonobuoy community:
 [schnakeGithub]: https://github.com/johnschnake
 [zubronGithub]: https://github.com/zubron
 [releases]: https://github.com/vmware-tanzu/sonobuoy/releases
-[progressExample]: https://github.com/vmware-tanzu/sonobuoy/tree/master/examples/plugins/progress-reporter
+[progressExample]: https://github.com/vmware-tanzu/sonobuoy/tree/main/examples/plugins/progress-reporter
 [resultsBlogpost]: https://sonobuoy.io/simplified-results-reporting-with-sonobuoy/
 [podSpecBlogPost]: https://sonobuoy.io/customizing-plugin-podspecs/

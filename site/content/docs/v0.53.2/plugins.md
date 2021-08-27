@@ -179,7 +179,7 @@ $ sonobuoy run -p myPlugin
 
 The plugin definition will be saved into ~/.sonobuoy (configurable via the environment variable `SONOBUOY_DIR`). If Sonobuoy can't find the plugin in the installation directory, it will search the pwd just like current behavior.
 
-[systemd-repo]: https://github.com/vmware-tanzu/sonobuoy-plugins/tree/master/systemd-logs
+[systemd-repo]: https://github.com/vmware-tanzu/sonobuoy-plugins/tree/main/systemd-logs
 [conformance]: https://github.com/kubernetes/kubernetes/tree/master/cluster/images/conformance
 [e2ePlugin]: e2eplugin.md
 [kubernetes-podspecs]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core

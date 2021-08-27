@@ -59,7 +59,6 @@ kind: Pod
 metadata:
   labels:
     component: sonobuoy
-    run: sonobuoy-master
     sonobuoy-component: aggregator
     tier: analysis
   name: sonobuoy

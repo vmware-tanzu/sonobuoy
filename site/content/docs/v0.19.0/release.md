@@ -15,7 +15,7 @@ Ensure the upstream conformance script is working appropriately:
     1. Run `make check-kind-env` to ensure the repo/tag are correct
     1. Run `make kind_images`
     1. Run `make push_kind_images`
-  * Update the `kind-config.yaml` file with the new image version [here](https://github.com/vmware-tanzu/sonobuoy/blob/master/kind-config.yaml).
+  * Update the `kind-config.yaml` file with the new image version [here](https://github.com/vmware-tanzu/sonobuoy/blob/main/kind-config.yaml).
 
 ### Setup e2e image registry for new version
 Add the new list of E2E test images for the targed version.

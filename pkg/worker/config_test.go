@@ -1,11 +1,12 @@
 package worker
 
 import (
-	"github.com/spf13/viper"
-	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/spf13/viper"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -30,17 +31,6 @@ func TestLoadConfig(t *testing.T) {
 			},
 			env: map[string]string{
 				"AGGREGATOR_URL": "aggregator",
-			},
-		},
-		{
-			desc: "Aggregator URL is set in config if only deprecated master url env var is set",
-			expectedCfg: &plugin.WorkerConfig{
-				AggregatorURL:       "master",
-				ResultsDir:          plugin.ResultsDir,
-				ProgressUpdatesPort: defaultProgressUpdatesPort,
-			},
-			env: map[string]string{
-				"MASTER_URL": "master",
 			},
 		},
 		{

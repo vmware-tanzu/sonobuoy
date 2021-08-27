@@ -167,11 +167,11 @@ If you generate a new manifest by running `sonobuoy gen` again, you will need to
 We recommend adding your desired customizations to the plugin definition itself.
 
 [systemd-repo]: https://github.com/heptio/sonobuoy-plugin-systemd-logs
-[e2e]: https://github.com/vmware-tanzu/sonobuoy/blob/master/examples/plugins.d/heptio-e2e.yaml
+[e2e]: https://github.com/vmware-tanzu/sonobuoy/blob/main/examples/plugins.d/heptio-e2e.yaml
 [conformance]: https://github.com/kubernetes/kubernetes/tree/master/cluster/images/conformance
 [e2ePlugin]: e2eplugin.md
 [kubernetes-podspecs]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core
 [customPluginsBlog]: https://blogs.vmware.com/cloudnative/2019/04/30/sonobuoy-plugins-custom-testing/
-[examplePlugins]: https://github.com/vmware-tanzu/sonobuoy/tree/master/examples/plugins
+[examplePlugins]: https://github.com/vmware-tanzu/sonobuoy/tree/main/examples/plugins
 [results]: results.md
 [resultsBlog]: https://sonobuoy.io/simplified-results-reporting-with-sonobuoy/

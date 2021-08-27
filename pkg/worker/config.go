@@ -32,15 +32,6 @@ func setConfigDefaults(ac *plugin.WorkerConfig) {
 	ac.ProgressUpdatesPort = defaultProgressUpdatesPort
 }
 
-func processDeprecatedVariables() {
-	// Default to using deprecated "masterurl" key if "aggregatorurl" key is not set.
-	// Remove in v0.19.0
-	viper.BindEnv("masterurl", "MASTER_URL")
-	if viper.Get("masterurl") != nil && viper.Get("aggregatorurl") == nil {
-		viper.Set("aggregatorurl", viper.Get("masterurl"))
-	}
-}
-
 // LoadConfig loads the configuration for the sonobuoy worker from environment
 // variables, returning a plugin.WorkerConfig struct with defaults applied
 func LoadConfig() (*plugin.WorkerConfig, error) {
@@ -58,8 +49,6 @@ func LoadConfig() (*plugin.WorkerConfig, error) {
 	viper.BindEnv("progressport", "SONOBUOY_PROGRESS_PORT")
 
 	setConfigDefaults(config)
-
-	processDeprecatedVariables()
 
 	if err = viper.Unmarshal(config); err != nil {
 		return nil, errors.WithStack(err)
