@@ -7,7 +7,7 @@ const (
 
 	FeaturePluginInstallation = "SONOBUOY_PLUGIN_INSTALLATION"
 
-	FeatureWaitOutputProgressByDefault = "SONOBUOY_PLUGIN_INSTALLATION"
+	FeatureWaitOutputProgressByDefault = "SONOBUOY_WAIT_PROGRESS"
 )
 
 func featureEnabled(feature string) bool {
