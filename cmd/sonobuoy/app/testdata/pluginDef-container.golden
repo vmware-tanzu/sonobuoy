@@ -1,6 +1,6 @@
 sonobuoy-config:
   driver: ""
-  plugin-name: ""
+  plugin-name: emptynotallowed
 spec:
   command:
   - /bin/sh
