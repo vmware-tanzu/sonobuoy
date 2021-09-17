@@ -114,6 +114,10 @@ metadata:
   name: sonobuoy
   namespace: sonobuoy
 spec:
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 3000
+    fsGroup: 2000
   nodeSelector:
     foo: bar
   containers:
