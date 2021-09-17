@@ -17,6 +17,8 @@ limitations under the License.
 package config
 
 import (
+	"fmt"
+	"os"
 	"path"
 	"time"
 
@@ -365,6 +367,10 @@ func New() *Config {
 	}
 
 	cfg.WorkerImage = DefaultImage
+	devRepo := os.Getenv("SONOBUOY_DEV_REPO")
+	if len(devRepo) > 0 {
+		cfg.WorkerImage = fmt.Sprintf("%v/sonobuoy:%v", devRepo, buildinfo.Version)
+	}
 	cfg.ImagePullPolicy = DefaultSonobuoyPullPolicy
 
 	cfg.ProgressUpdatesPort = DefaultProgressUpdatesPort
