@@ -51,7 +51,7 @@ func TestCreateUpdater(t *testing.T) {
 		t.Errorf("unexpected error receiving update %v", err)
 	}
 
-	if updater.status.Status != FailedStatus {
+	if updater.status.Status != RunningStatus {
 		t.Errorf("expected status to be failed, got %v", updater.status.Status)
 	}
 }
@@ -282,7 +282,7 @@ func TestReceive(t *testing.T) {
 					{Node: "node2", Plugin: "type1", Status: "failed"},
 					{Node: "global", Plugin: "type2", Status: "running"},
 				},
-				Status: "failed",
+				Status: "running",
 			},
 			results: map[string]*plugin.Result{
 				"type1/node1": {NodeName: "node1", ResultType: "type1"},

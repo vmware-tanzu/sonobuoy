@@ -232,7 +232,6 @@ func (a *Aggregator) processResult(result *plugin.Result) error {
 }
 
 // processProgressUpdate is the main aggregator logic for handling the progress updates from plugins.
-// We first
 func (a *Aggregator) processProgressUpdate(progress plugin.ProgressUpdate) error {
 	a.resultsMutex.Lock()
 	expected := a.isExpected(progress)

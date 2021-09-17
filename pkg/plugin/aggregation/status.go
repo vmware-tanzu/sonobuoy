@@ -39,7 +39,8 @@ const (
 	// put in the more finalized, complete, status until any postprocessing is
 	// done.
 	PostProcessingStatus string = "post-processing"
-	// FailedStatus means one or more plugins has failed and the run will not complete successfully.
+	// FailedStatus means the aggregator itself has failed and results may not be available at all.
+	// It does not indicate success or failure of any/all plugins.
 	FailedStatus string = "failed"
 )
 
@@ -85,17 +86,15 @@ func (p PluginStatus) Key() string {
 
 // updateStatus sets the overall status field based on the values of all of the plugins' status.
 func (s *Status) updateStatus() error {
+	// Fall back to PostProcessingStatus instead of complete; in `discovery` pkg
+	// we do the post-processing and only then trigger the change manually to complete.
 	status := PostProcessingStatus
 	for _, plugin := range s.Plugins {
 		switch plugin.Status {
 		case CompleteStatus:
 			continue
-		case FailedStatus:
-			status = FailedStatus
-		case RunningStatus:
-			if status != FailedStatus {
-				status = RunningStatus
-			}
+		case FailedStatus, RunningStatus:
+			status = RunningStatus
 		default:
 			return fmt.Errorf("unknown status %s", plugin.Status)
 		}
