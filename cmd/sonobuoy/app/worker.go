@@ -57,12 +57,16 @@ func NewCmdWorker() *cobra.Command {
 }
 
 func newGlobalCmd() *cobra.Command {
+	var sleep int64
+
 	cmd := &cobra.Command{
 		Use:   "global",
 		Short: "Submit results scoped to the whole cluster",
-		RunE:  runGatherGlobal,
+		RunE:  runGatherGlobal(&sleep),
 		Args:  cobra.ExactArgs(0),
 	}
+
+	cmd.Flags().Int64Var(&sleep, "sleep", -1, "After sending results, keeps the process alive for N seconds to avoid restarting the container. If N<0, Sonobuoy sleeps forever.")
 
 	return cmd
 }
@@ -76,7 +80,7 @@ func newSingleNodeCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 	}
 
-	cmd.Flags().Int64Var(&sleep, "sleep", 0, "After sending results, keeps the process alive for N seconds to avoid restarting the container. If N<0, Sonobuoy sleeps forever.")
+	cmd.Flags().Int64Var(&sleep, "sleep", -1, "After sending results, keeps the process alive for N seconds to avoid restarting the container. If N<0, Sonobuoy sleeps forever.")
 	return cmd
 }
 
@@ -125,8 +129,14 @@ func loadAndValidateConfig() (*plugin.WorkerConfig, error) {
 	return cfg, nil
 }
 
-func runGatherGlobal(cmd *cobra.Command, args []string) error {
-	return runGather(true)
+func runGatherGlobal(sleep *int64) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		if err := runGather(true); err != nil {
+			return err
+		}
+		sleepFunc(sleep)
+		return nil
+	}
 }
 
 // runGatherSingleNode returns a closure which will run the data gathering and then sleep
@@ -136,20 +146,24 @@ func runGatherSingleNode(sleep *int64) func(cmd *cobra.Command, args []string) e
 		if err := runGather(false); err != nil {
 			return err
 		}
-		switch {
-		case sleep == nil || *sleep == 0:
-			// No sleep.
-		case *sleep < 0:
-			// Sleep forever.
-			logrus.Infof("Results transmitted to aggregator.  Sleeping forever.")
-			for {
-				time.Sleep(60 * time.Minute)
-			}
-		case *sleep > 0:
-			logrus.Infof("Results transmitted to aggregator. Sleeping for %v seconds", *sleep)
-			time.Sleep(time.Duration(*sleep) * time.Second)
-		}
+		sleepFunc(sleep)
 		return nil
+	}
+}
+
+func sleepFunc(sleep *int64) {
+	switch {
+	case sleep == nil || *sleep == 0:
+		// No sleep.
+	case *sleep < 0:
+		// Sleep forever.
+		logrus.Infof("Results transmitted to aggregator.  Sleeping forever.")
+		for {
+			time.Sleep(60 * time.Minute)
+		}
+	case *sleep > 0:
+		logrus.Infof("Results transmitted to aggregator. Sleeping for %v seconds", *sleep)
+		time.Sleep(time.Duration(*sleep) * time.Second)
 	}
 }
 
