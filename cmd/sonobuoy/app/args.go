@@ -100,7 +100,7 @@ func AddDNSPodLabelsFlag(str *[]string, flags *pflag.FlagSet) {
 // AddSonobuoyImage initialises an image url flag.
 func AddSonobuoyImage(image *string, flags *pflag.FlagSet) {
 	flags.StringVar(
-		image, sonobuoyImageFlag, config.DefaultImage,
+		image, sonobuoyImageFlag, *image,
 		"Container image override for the sonobuoy worker and aggregator.",
 	)
 }
