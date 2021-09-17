@@ -174,7 +174,10 @@ func TestSimpleRun(t *testing.T) {
 	mustRunSonobuoyCommandWithContext(ctx, t, args)
 }
 
-func TestRetrieveAndExtract(t *testing.T) {
+// TestRetrieveAndExtractWithPodLogs tests that we are able to extract the files
+// from the tarball via the retrieve command. It also ensures that we dont
+// regress on #1415, that plugin pod logs should be gathered.
+func TestRetrieveAndExtractWithPodLogs(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
@@ -182,7 +185,7 @@ func TestRetrieveAndExtract(t *testing.T) {
 	ns, cleanup := getNamespace(t)
 	defer cleanup()
 
-	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-passing-singlefile.yaml -n %v", ns)
+	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-passing-singlefile.yaml -p testImage/yaml/ds-junit-passing-tar.yaml -n %v", ns)
 	mustRunSonobuoyCommandWithContext(ctx, t, args)
 
 	// Create tmpdir and extract contents into it
@@ -214,6 +217,20 @@ func TestRetrieveAndExtract(t *testing.T) {
 	t.Logf("Extracted files:\n%v", strings.Join(files, "\n\t-"))
 	if len(files) < 20 {
 		t.Errorf("Expected many files to be extracted into %v, but only got %v", tmpdir, len(files))
+	}
+
+	// This is the logic that ensures that multiple pod logs were gathered.
+	podLogCount := 0
+	for _, f := range files {
+		if strings.HasPrefix(f, filepath.Join(tmpdir, "podlogs", ns)) &&
+			strings.HasSuffix(f, "/logs") {
+			podLogCount++
+		}
+	}
+	// Should have one for each node/plugin combo expected. Here 2 for the daemonset, the aggregator,
+	// and the job.
+	if podLogCount < 4 {
+		t.Errorf("Expected 4 pod logs to be gathered (2 for the daemonset, aggregator, and job) but only got %v", podLogCount)
 	}
 }
 

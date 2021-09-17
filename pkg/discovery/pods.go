@@ -84,10 +84,10 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 	// 2 - Foreach pod, dump each of its containers' logs in a tree in the following location:
 	//   pods/:podname/logs/:containername.txt
 	for _, pod := range podlist.Items {
-		if _, ok := visitedPods[pod.SelfLink]; ok {
+		if _, ok := visitedPods[string(pod.UID)]; ok {
 			continue // skip visited pods
 		}
-		visitedPods[pod.SelfLink] = struct{}{}
+		visitedPods[string(pod.UID)] = struct{}{}
 
 		if pod.Status.Phase == v1.PodFailed && pod.Status.Reason == "Evicted" {
 			logrus.WithField("podName", pod.Name).Info("Skipping evicted pod.")
