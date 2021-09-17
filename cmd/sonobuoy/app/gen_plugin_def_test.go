@@ -38,6 +38,7 @@ func TestPluginGenDef(t *testing.T) {
 			desc: "Container fields",
 			cfg: GenPluginDefConfig{
 				def: manifest.Manifest{
+					SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "emptynotallowed"},
 					Spec: manifest.Container{
 						Container: v1.Container{
 							Name:    "n",
@@ -51,7 +52,7 @@ func TestPluginGenDef(t *testing.T) {
 		}, {
 			desc: "Env vars",
 			cfg: GenPluginDefConfig{
-				def: manifest.Manifest{},
+				def: manifest.Manifest{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "emptynotallowed"}},
 				env: map[string]string{"FOO": "bar"},
 			},
 			expectFile: "testdata/pluginDef-env.golden",

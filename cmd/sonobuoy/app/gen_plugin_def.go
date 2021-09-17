@@ -208,6 +208,12 @@ func genPluginDef(cfg *GenPluginDefConfig) ([]byte, error) {
 		cfg.def.ConfigMap[base] = string(fData)
 	}
 
+	// Ensure a config with this plugin would validate
+	gc := client.GenConfig{StaticPlugins: []*manifest.Manifest{&cfg.def}}
+	if err := gc.Validate(); err != nil {
+		return nil, errors.Wrap(err, "plugin failed validation")
+	}
+
 	yaml, err := kuberuntime.Encode(manifest.Encoder, &cfg.def)
 	return yaml, errors.Wrap(err, "serializing as YAML")
 }

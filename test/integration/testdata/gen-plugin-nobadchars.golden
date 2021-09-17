@@ -1,0 +1,1 @@
+time="STATIC_TIME_FOR_TESTING" level=error msg="plugin failed validation: invalid plugin name \"badcharS\"; name must only include lowercase alphanumeric values '.' or '-'. This is due to Kubernetes requiring various values to follow RFC 1123 for valid subdomain names"

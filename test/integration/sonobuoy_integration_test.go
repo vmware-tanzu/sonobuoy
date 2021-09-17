@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package integration
@@ -559,6 +560,14 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "gen rerun-failed should err if no failures",
 			cmdLine:    "gen --rerun-failed testdata/results-quick-no-failures.tar.gz --kubernetes-version=ignore",
 			expectFile: "testdata/gen-rerunfailed-no-failures.golden",
+		}, {
+			desc:       "gen plugin should should run plugin name validation",
+			cmdLine:    "gen plugin -n badcharS -i foo",
+			expectFile: "testdata/gen-plugin-nobadchars.golden",
+		}, {
+			desc:       "gen should run plugin name validation",
+			cmdLine:    "gen -p testdata/plugins/badpluginname.yaml --kubernetes-version=ignore",
+			expectFile: "testdata/gen-nobadchars.golden",
 		},
 	}
 	for _, tc := range testCases {

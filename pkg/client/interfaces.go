@@ -17,7 +17,9 @@ limitations under the License.
 package client
 
 import (
+	"fmt"
 	"io"
+	"regexp"
 	"time"
 
 	"github.com/pkg/errors"
@@ -27,6 +29,10 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+)
+
+const (
+	nameRegexpString = `^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`
 )
 
 // LogConfig are the input options for viewing a Sonobuoy run's logs.
@@ -92,6 +98,12 @@ type GenConfig struct {
 
 // Validate checks the config to determine if it is valid.
 func (gc *GenConfig) Validate() error {
+	nameRegexp := regexp.MustCompile(nameRegexpString)
+	for _, m := range gc.StaticPlugins {
+		if !nameRegexp.MatchString(m.SonobuoyConfig.PluginName) {
+			return fmt.Errorf("invalid plugin name %q; name must only include lowercase alphanumeric values '.' or '-'. This is due to Kubernetes requiring various values to follow RFC 1123 for valid subdomain names", m.SonobuoyConfig.PluginName)
+		}
+	}
 	return nil
 }
 
