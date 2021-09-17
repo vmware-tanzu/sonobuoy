@@ -40,9 +40,9 @@ func TestUpdateStatus(t *testing.T) {
 			expectedStatus: "running",
 		},
 		{
-			name:           "one failed is failed",
+			name:           "one running is running even if others failed",
 			pluginStatuses: []string{"running", "failed", "complete"},
-			expectedStatus: "failed",
+			expectedStatus: "running",
 		},
 	}
 
