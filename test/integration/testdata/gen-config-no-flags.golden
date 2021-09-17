@@ -154,6 +154,10 @@ metadata:
   name: sonobuoy
   namespace: configfileNS
 spec:
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 3000
+    fsGroup: 2000
   containers:
   - env:
     - name: SONOBUOY_ADVERTISE_IP
