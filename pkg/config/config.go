@@ -66,53 +66,13 @@ const (
 var (
 	// DefaultImage is the URL of the docker image to run for the aggregator and workers
 	DefaultImage = "sonobuoy/sonobuoy:" + buildinfo.Version
+
 	// DefaultResources is the default set of resources which are queried for after plugins run. The strings
 	// are compared against the resource.Name given by the client-go discovery client. The non-standard values
 	// that are included here are: podlogs, servergroups, serverversion. The value 'nodes', although a crawlable
 	// API value, also is used to query against the healthz and configz endpoints on the node.
-	DefaultResources = []string{
-		"apiservices",
-		"certificatesigningrequests",
-		"clusterrolebindings",
-		"clusterroles",
-		"componentstatuses",
-		"configmaps",
-		"controllerrevisions",
-		"cronjobs",
-		"customresourcedefinitions",
-		"daemonsets",
-		"deployments",
-		"endpoints",
-		"ingresses",
-		"jobs",
-		"leases",
-		"limitranges",
-		"mutatingwebhookconfigurations",
-		"namespaces",
-		"networkpolicies",
-		"nodes",
-		"persistentvolumeclaims",
-		"persistentvolumes",
-		"poddisruptionbudgets",
-		"pods",
-		"podlogs",
-		"podsecuritypolicies",
-		"podtemplates",
-		"priorityclasses",
-		"replicasets",
-		"replicationcontrollers",
-		"resourcequotas",
-		"rolebindings",
-		"roles",
-		"servergroups",
-		"serverversion",
-		"serviceaccounts",
-		"services",
-		"statefulsets",
-		"storageclasses",
-		"validatingwebhookconfigurations",
-		"volumeattachments",
-	}
+	// By providing the nil value we query them all (except secrets).
+	DefaultResources = []string(nil)
 
 	// DefaultDNSPodLabels are the label selectors that are used to locate the DNS pods in the cluster.
 	DefaultDNSPodLabels = []string{
@@ -352,6 +312,7 @@ func New() *Config {
 	cfg.Resources = DefaultResources
 
 	cfg.Namespace = DefaultNamespace
+	cfg.Limits.PodLogs.Namespaces = "kube-system"
 	cfg.Limits.PodLogs.SonobuoyNamespace = new(bool)
 	*cfg.Limits.PodLogs.SonobuoyNamespace = true
 	cfg.Limits.PodLogs.FieldSelectors = []string{}
