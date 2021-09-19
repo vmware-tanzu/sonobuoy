@@ -41,11 +41,11 @@ import (
 )
 
 const (
-	bufferSize                    = 4096
-	pollInterval                  = 20 * time.Second
-	spinnerType     int           = 14
-	spinnerDuration time.Duration = 2000 * time.Millisecond
-	spinnerColor                  = "red"
+	bufferSize          = 4096
+	pollInterval        = 20 * time.Second
+	spinnerType     int = 14
+	spinnerDuration     = 2000 * time.Millisecond
+	spinnerColor        = "red"
 
 	// Special key for when to load manifest from stdin instead of a local file.
 	stdinFile = "-"
@@ -173,7 +173,7 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 
 		switch cfg.WaitOutput {
 		case spinnerMode:
-			var s *spinner.Spinner = getSpinnerInstance()
+			var s = getSpinnerInstance()
 			s.Start()
 			defer s.Stop()
 		case progressMode:
@@ -238,7 +238,7 @@ func handleCreateError(name, namespace, resource string, err error) error {
 
 	switch {
 	case err == nil:
-		log.Info("created object")
+		log.Info("create request issued")
 	// Some resources (like ClusterRoleBinding and ClusterBinding) aren't
 	// namespaced and may overlap between runs. So don't abort on duplicate errors
 	// in this case.

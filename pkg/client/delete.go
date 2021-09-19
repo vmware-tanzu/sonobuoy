@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/briandowns/spinner"
-
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -109,7 +107,7 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 
 		switch cfg.WaitOutput {
 		case spinnerMode:
-			var s *spinner.Spinner = getSpinnerInstance()
+			var s = getSpinnerInstance()
 			s.Start()
 			defer s.Stop()
 		}
@@ -267,11 +265,11 @@ func cleanupE2E(client kubernetes.Interface) (ConditionFuncWithProgress, error) 
 func logDelete(log logrus.FieldLogger, err error) error {
 	switch {
 	case err == nil:
-		log.Info("deleted")
+		log.Info("delete request issued")
 	case kubeerror.IsNotFound(err):
 		log.Info("already deleted")
 	case kubeerror.IsConflict(err):
-		log.WithError(err).Info("delete in progress")
+		log.WithError(err).Info("delete already in progress")
 	case err != nil:
 		return err
 	}
