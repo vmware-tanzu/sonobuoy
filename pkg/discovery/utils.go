@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -55,10 +56,19 @@ func SerializeObj(obj interface{}, outpath string, file string) error {
 		return errors.WithStack(err)
 	}
 
-	eJSONBytes, err := json.Marshal(obj)
+	var b []byte
+	switch t := obj.(type) {
+	case *unstructured.UnstructuredList:
+		for _, v := range t.Items {
+			v.SetManagedFields(nil)
+		}
+		b, err = t.MarshalJSON()
+	default:
+		b, err = json.Marshal(obj)
+	}
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return errors.WithStack(ioutil.WriteFile(filepath.Join(outpath, file), eJSONBytes, 0644))
+	return errors.WithStack(ioutil.WriteFile(filepath.Join(outpath, file), b, 0644))
 }
