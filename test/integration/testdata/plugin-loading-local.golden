@@ -73,8 +73,14 @@ data:
       command:
       - ./run.sh
       env:
+      - name: SONOBUOY
+        value: "true"
+      - name: SONOBUOY_CONFIG_DIR
+        value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
         value: v123.456.789
+      - name: SONOBUOY_RESULTS_DIR
+        value: /tmp/sonobuoy/results
       image: hello:v9
       imagePullPolicy: IfNotPresent
       name: plugin

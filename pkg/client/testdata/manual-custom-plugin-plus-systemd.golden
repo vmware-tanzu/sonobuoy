@@ -31,8 +31,14 @@ data:
       plugin-name: foo
     spec:
       env:
+      - name: SONOBUOY
+        value: "true"
+      - name: SONOBUOY_CONFIG_DIR
+        value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
         value: v99+static.testing
+      - name: SONOBUOY_RESULTS_DIR
+        value: /tmp/sonobuoy/results
       name: ""
       resources: {}
   plugin-1.yaml: |
@@ -55,8 +61,14 @@ data:
             fieldPath: spec.nodeName
       - name: RESULTS_DIR
         value: /tmp/results
+      - name: SONOBUOY
+        value: "true"
+      - name: SONOBUOY_CONFIG_DIR
+        value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
         value: v99+static.testing
+      - name: SONOBUOY_RESULTS_DIR
+        value: /tmp/sonobuoy/results
       image: sonobuoy/systemd-logs:v0.3
       name: systemd-logs
       resources: {}
