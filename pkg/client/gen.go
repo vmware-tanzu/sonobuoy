@@ -42,7 +42,14 @@ const (
 
 	envVarKeyExtraArgs = "E2E_EXTRA_ARGS"
 
+	// sonobuoyKey is just a true/false env to indicate that the container was launched/tagged by Sonobuoy.
+	sonobuoyKey           = "SONOBUOY"
 	sonobuoyK8sVersionKey = "SONOBUOY_K8S_VERSION"
+	sonobuoyResultsDirKey = "SONOBUOY_RESULTS_DIR"
+	sonobuoyConfigDirKey  = "SONOBUOY_CONFIG_DIR"
+
+	sonobuoyDefaultConfigDir  = "/tmp/sonobuoy/config"
+	sonobuoyDefaultResultsDir = "/tmp/sonobuoy/results"
 )
 
 // templateValues are used for direct template substitution for manifest generation.
@@ -169,7 +176,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		p.Spec.VolumeMounts = append(p.Spec.VolumeMounts,
 			corev1.VolumeMount{
 				Name:      fmt.Sprintf("sonobuoy-%v-vol", p.SonobuoyConfig.PluginName),
-				MountPath: "/tmp/sonobuoy/config",
+				MountPath: sonobuoyDefaultConfigDir,
 			},
 		)
 	}
@@ -179,7 +186,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		return nil, nil, errors.Wrap(err, "plugin YAML generation")
 	}
 
-	cfg.PluginEnvOverrides, plugins = applyK8sVersion(cfg.KubeVersion, cfg.PluginEnvOverrides, plugins)
+	cfg.PluginEnvOverrides, plugins = applyAutoEnvVars(cfg.KubeVersion, cfg.PluginEnvOverrides, plugins)
 
 	for pluginName, envVars := range cfg.PluginEnvOverrides {
 		found := false
@@ -247,7 +254,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 	return buf.Bytes(), plugins, nil
 }
 
-func applyK8sVersion(imageVersion string, env map[string]map[string]string, plugins []*manifest.Manifest) (map[string]map[string]string, []*manifest.Manifest) {
+func applyAutoEnvVars(imageVersion string, env map[string]map[string]string, plugins []*manifest.Manifest) (map[string]map[string]string, []*manifest.Manifest) {
 	// Set env on all plugins and swap out dynamic images.
 	if env == nil {
 		env = map[string]map[string]string{}
@@ -257,6 +264,9 @@ func applyK8sVersion(imageVersion string, env map[string]map[string]string, plug
 			env[p.SonobuoyConfig.PluginName] = map[string]string{}
 		}
 		env[p.SonobuoyConfig.PluginName][sonobuoyK8sVersionKey] = imageVersion
+		env[p.SonobuoyConfig.PluginName][sonobuoyResultsDirKey] = sonobuoyDefaultResultsDir
+		env[p.SonobuoyConfig.PluginName][sonobuoyConfigDirKey] = sonobuoyDefaultConfigDir
+		env[p.SonobuoyConfig.PluginName][sonobuoyKey] = "true"
 		plugins[i].Spec.Image = strings.ReplaceAll(plugins[i].Spec.Image, "$"+sonobuoyK8sVersionKey, imageVersion)
 	}
 	return env, plugins

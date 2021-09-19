@@ -33,8 +33,14 @@ data:
       plugin-name: a
     spec:
       env:
+      - name: SONOBUOY
+        value: "true"
+      - name: SONOBUOY_CONFIG_DIR
+        value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
         value: v99+static.testing
+      - name: SONOBUOY_RESULTS_DIR
+        value: /tmp/sonobuoy/results
       name: ""
       resources: {}
 kind: ConfigMap

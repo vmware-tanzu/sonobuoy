@@ -95,8 +95,14 @@ data:
         value: \[Disruptive\]|NoExecuteTaintManager
       - name: E2E_USE_GO_RUNNER
         value: "true"
+      - name: SONOBUOY
+        value: "true"
+      - name: SONOBUOY_CONFIG_DIR
+        value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
         value: v123.456.789
+      - name: SONOBUOY_RESULTS_DIR
+        value: /tmp/sonobuoy/results
       image: k8s.gcr.io/conformance:v123.456.789
       imagePullPolicy: IfNotPresent
       name: e2e
@@ -124,8 +130,14 @@ data:
             fieldPath: spec.nodeName
       - name: RESULTS_DIR
         value: /tmp/results
+      - name: SONOBUOY
+        value: "true"
+      - name: SONOBUOY_CONFIG_DIR
+        value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
         value: v123.456.789
+      - name: SONOBUOY_RESULTS_DIR
+        value: /tmp/sonobuoy/results
       image: sonobuoy/systemd-logs:v0.3
       imagePullPolicy: IfNotPresent
       name: systemd-logs
