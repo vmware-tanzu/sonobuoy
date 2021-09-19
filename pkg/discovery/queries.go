@@ -63,7 +63,7 @@ func timedListQuery(outpath string, file string, f listQuery) (time.Duration, er
 	}
 
 	if len(list.Items) > 0 {
-		err = errors.WithStack(SerializeObj(list.Items, outpath, file))
+		err = errors.WithStack(SerializeObj(list, outpath, file))
 	}
 	return duration, err
 }
