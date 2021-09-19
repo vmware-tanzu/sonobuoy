@@ -203,14 +203,18 @@ func GlobalResultURL(baseURL, pluginName string) (string, error) {
 
 func logRequest(req *http.Request) {
 	vars := mux.Vars(req)
-	log := logrus.WithField("plugin_name", vars["plugin"])
+	log := logrus.WithFields(map[string]interface{}{
+		"plugin_name": vars["plugin"],
+		"url":         req.URL,
+		"method":      req.Method,
+	})
 	if node := vars["node"]; node != "" {
 		log = log.WithField("node", node)
 	}
 	if req.TLS != nil && len(req.TLS.PeerCertificates) > 0 {
-		log = log.WithField("client_cert", req.TLS.PeerCertificates[0].Subject.CommonName)
+		log = log.WithField("client_cert", req.TLS.PeerCertificates[0].DNSNames)
 	}
-	log.Info("received aggregator request")
+	log.Info("received request")
 }
 
 // filenameFromHeader gets the filename from a content-disposition of the form:
