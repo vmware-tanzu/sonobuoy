@@ -812,7 +812,8 @@ func TestPluginLoading_LocalGolden(t *testing.T) {
 	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	checkFileMatchesOrUpdate(t, output.String(), installedPluginFile, tmpDir)
 
-	envVars = append(envVars, "SONOBUOY_ALL_FEATURES=false")
+	// Disable the feature explicitly and ensure we aren't using it.
+	envVars = append(envVars, "SONOBUOY_PLUGIN_INSTALLATION=false")
 	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	checkFileMatchesOrUpdate(t, output.String(), localPluginFile, tmpDir)
 
