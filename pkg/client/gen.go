@@ -74,6 +74,8 @@ type templateValues struct {
 	// the file contents of KUBE_TEST_REPO_LIST, the overrides for k8s e2e
 	// registries.
 	CustomRegistries string
+
+	SecurityContext string
 }
 
 // GenerateManifest fills in a template with a Sonobuoy config
@@ -243,6 +245,8 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		NodeSelectors: cfg.NodeSelectors,
 
 		ConfigMaps: configs,
+
+		SecurityContext: secContextFromMode(conf.SecurityContextMode),
 	}
 
 	var buf bytes.Buffer

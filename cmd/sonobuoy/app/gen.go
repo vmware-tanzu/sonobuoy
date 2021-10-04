@@ -97,6 +97,8 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 		cfg.plugins.InstallDir = getPluginCacheLocation()
 	}
 
+	AddSecurityContextMode(&cfg.sonobuoyConfig.SecurityContextMode, genset)
+
 	return genset
 }
 

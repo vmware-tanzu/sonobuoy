@@ -29,6 +29,7 @@ Flags:
       --plugin-image plugin:image                Override a plugins image from what is in its definition (e.g. myPlugin:testimage) (default map[])
       --rbac RBACMode                            Whether to enable RBAC on Sonobuoy. Valid modes are Enable, Disable, and Detect (query the server to see whether to enable RBAC). (default Enable)
       --rerun-failed tar.gz file                 Read the given tarball and set the E2E_FOCUS to target all the failed tests
+      --security-context-mode string             Type of security context to use for the aggregator pod. Allowable values are [none, nonroot] (default "nonroot")
       --show-default-podspec                     If true, include the default pod spec used for plugins in the output.
       --sonobuoy-image string                    Container image override for the sonobuoy worker and aggregator. (default "sonobuoy/sonobuoy:*STATIC_FOR_TESTING*")
       --ssh-key yamlFile                         Path to the private key enabling SSH to cluster nodes. May be required by some tests from the e2e plugin.

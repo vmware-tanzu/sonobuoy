@@ -34,21 +34,22 @@ import (
 )
 
 const (
-	namespaceFlag         = "namespace"
-	sonobuoyImageFlag     = "sonobuoy-image"
-	imagePullPolicyFlag   = "image-pull-policy"
-	pluginFlag            = "plugin"
-	timeoutFlag           = "timeout"
-	waitOutputFlag        = "wait-output"
-	customRegistryFlag    = "custom-registry"
-	kubeconfig            = "kubeconfig"
-	kubecontext           = "context"
-	e2eFocusFlag          = "e2e-focus"
-	e2eSkipFlag           = "e2e-skip"
-	e2eParallelFlag       = "e2e-parallel"
-	e2eRegistryConfigFlag = "e2e-repo-config"
-	pluginImageFlag       = "plugin-image"
-	filenameFlag          = "filename"
+	namespaceFlag           = "namespace"
+	sonobuoyImageFlag       = "sonobuoy-image"
+	imagePullPolicyFlag     = "image-pull-policy"
+	pluginFlag              = "plugin"
+	timeoutFlag             = "timeout"
+	waitOutputFlag          = "wait-output"
+	customRegistryFlag      = "custom-registry"
+	kubeconfig              = "kubeconfig"
+	kubecontext             = "context"
+	e2eFocusFlag            = "e2e-focus"
+	e2eSkipFlag             = "e2e-skip"
+	e2eParallelFlag         = "e2e-parallel"
+	e2eRegistryConfigFlag   = "e2e-repo-config"
+	pluginImageFlag         = "plugin-image"
+	filenameFlag            = "filename"
+	securityContextModeFlag = "security-context-mode"
 
 	// Quick runs a single E2E test and the systemd log tests.
 	Quick string = "quick"
@@ -166,6 +167,13 @@ func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	// The default is the empty string (look in the environment)
 	flags.Var(cfg, "kubeconfig", "Path to explicit kubeconfig file.")
 	flags.StringVar(&cfg.Context, kubecontext, "", "Context in the kubeconfig to use.")
+}
+
+func AddSecurityContextMode(mode *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		mode, securityContextModeFlag, "nonroot",
+		"Type of security context to use for the aggregator pod. Allowable values are [none, nonroot]",
+	)
 }
 
 // AddE2ERegistryConfigFlag adds a e2eRegistryConfigFlag flag to the provided command.
