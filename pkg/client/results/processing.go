@@ -33,45 +33,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	// StatusFailed is the key we base junit pass/failure off of and save into
-	// our canonical results format.
-	StatusFailed = "failed"
-
-	// StatusPassed is the key we base junit pass/failure off of and save into
-	// our canonical results format.
-	StatusPassed = "passed"
-
-	// StatusSkipped is the key we base junit pass/failure off of and save into
-	// our canonical results format.
-	StatusSkipped = "skipped"
-
-	// StatusUnknown is the key we fallback to in our canonical results format
-	// if another can not be determined.
-	StatusUnknown = "unknown"
-
-	// StatusTimeout is the key used when the plugin does not report results within the
-	// timeout period. It will be treated as a failure (e.g. its parent will be marked
-	// as a failure).
-	StatusTimeout = "timeout"
-
-	// PostProcessedResultsFile is the name of the file we create when doing
-	// postprocessing on the plugin results.
-	PostProcessedResultsFile = "sonobuoy_results.yaml"
-
-	// metadataFileKey is the key used in an Item's metadata field when the Item is
-	// representing the a file summary (and its leaf nodes are individual tests or suites).
-	metadataFileKey = "file"
-
-	// metadataTypeKey is the key used in an Item's metadata field when describing what type
-	// of entry in the tree it is. Currently we just tag summaries, files, and nodes.
-	metadataTypeKey = "type"
-
-	metadataTypeNode    = "node"
-	metadataTypeFile    = "file"
-	metadataTypeSummary = "summary"
-)
-
 // ResultFormat constants are the supported values for the resultFormat field
 // which enables post processing.
 const (
@@ -89,48 +50,6 @@ type postProcessor func(string, string) (Item, error)
 // determine whether or not that file should be postprocessed. Allows matching a specific
 // file only or all files with a given suffix (for instance).
 type fileSelector func(string, os.FileInfo) bool
-
-// Item is the central format for plugin results. Various plugin
-// types can be transformed into this simple format and set at a standard
-// location in our results tarball for simplified processing by any consumer.
-type Item struct {
-	Name     string                 `json:"name" yaml:"name"`
-	Status   string                 `json:"status" yaml:"status"`
-	Metadata map[string]string      `json:"meta,omitempty" yaml:"meta,omitempty"`
-	Details  map[string]interface{} `json:"details,omitempty" yaml:"details,omitempty"`
-	Items    []Item                 `json:"items,omitempty" yaml:"items,omitempty"`
-}
-
-// Empty returns true if the Item is empty.
-func (i Item) Empty() bool {
-	if i.Name == "" && i.Status == "" && len(i.Items) == 0 && len(i.Metadata) == 0 {
-		return true
-	}
-	return false
-}
-
-// GetSubTreeByName traverses the tree and returns a reference to the
-// subtree whose root has the given name.
-func (i *Item) GetSubTreeByName(root string) *Item {
-	if i == nil {
-		return nil
-	}
-
-	if root == "" || i.Name == root {
-		return i
-	}
-
-	if len(i.Items) > 0 {
-		for _, v := range i.Items {
-			subItem := (&v).GetSubTreeByName(root)
-			if subItem != nil {
-				return subItem
-			}
-		}
-	}
-
-	return nil
-}
 
 // manualResultsAggregation is custom logic just for aggregating results for the top level summary
 // when the plugin is providing the YAML results manually. This is required in (at least) some cases
@@ -178,10 +97,10 @@ func manualResultsAggregation(items ...Item) string {
 	return strings.Join(parts, ", ")
 }
 
-// aggregateStatus defines the aggregation rules for status. Failures bubble
+// AggregateStatus defines the aggregation rules for status. Failures bubble
 // up and otherwise the status is assumed to pass as long as there are >=1 result.
 // If 0 items are aggregated, StatusUnknown is returned.
-func aggregateStatus(items ...Item) string {
+func AggregateStatus(items ...Item) string {
 	// Avoid the situation where we get 0 results (because the plugin partially failed to run)
 	// but we report it as passed.
 	if len(items) == 0 {
@@ -192,7 +111,7 @@ func aggregateStatus(items ...Item) string {
 	for i := range items {
 		// Branches should just aggregate their leaves and return the result.
 		if len(items[i].Items) > 0 {
-			items[i].Status = aggregateStatus(items[i].Items...)
+			items[i].Status = AggregateStatus(items[i].Items...)
 		}
 
 		// Empty status should be updated to unknown.
@@ -201,7 +120,7 @@ func aggregateStatus(items ...Item) string {
 		}
 
 		switch {
-		case isFailureStatus(items[i].Status):
+		case IsFailureStatus(items[i].Status):
 			failedFound = true
 		case items[i].Status == StatusUnknown:
 			unknownFound = true
@@ -220,9 +139,9 @@ func aggregateStatus(items ...Item) string {
 	return StatusPassed
 }
 
-// isFailureStatus returns true if the status is any one of the failure modes (e.g.
+// IsFailureStatus returns true if the status is any one of the failure modes (e.g.
 // StatusFailed or StatusTimeout).
-func isFailureStatus(s string) bool {
+func IsFailureStatus(s string) bool {
 	return s == StatusFailed || s == StatusTimeout
 }
 
@@ -274,7 +193,7 @@ func processNodesWithProcessor(p plugin.Interface, baseDir, dir string, processo
 		nodeName := filepath.Base(nodeDirInfo.Name())
 		nodeItem := Item{
 			Name:     nodeName,
-			Metadata: map[string]string{metadataTypeKey: metadataTypeNode},
+			Metadata: map[string]string{MetadataTypeKey: MetadataTypeNode},
 		}
 		items, err := processDir(p, pdir, filepath.Join(dir, nodeName), processor, selector)
 		nodeItem.Items = items
@@ -323,7 +242,7 @@ func processPluginWithProcessor(p plugin.Interface, baseDir string, processor po
 
 	results := Item{
 		Name:     p.GetName(),
-		Metadata: map[string]string{metadataTypeKey: metadataTypeSummary},
+		Metadata: map[string]string{MetadataTypeKey: MetadataTypeSummary},
 	}
 
 	results.Items = append(results.Items, items...)
@@ -347,7 +266,7 @@ func processPluginWithProcessor(p plugin.Interface, baseDir string, processor po
 			results.Status = manualResultsAggregation(results.Items...)
 		}
 	} else {
-		results.Status = aggregateStatus(results.Items...)
+		results.Status = AggregateStatus(results.Items...)
 	}
 
 	return results, errs
@@ -395,17 +314,11 @@ func errProcessor(pluginDir string, currentFile string) (Item, error) {
 		resultObj.Name = fmt.Sprint(resultObj.Details["error"])
 	}
 
-	if isTimeoutErr(resultObj) {
+	if IsTimeoutErr(resultObj) {
 		resultObj.Status = StatusTimeout
 	}
 
 	return resultObj, nil
-}
-
-// isTimeoutErr is the snippet of logic that determines whether or not a given Item represents
-// a timeout error (i.e. Sonobuoy timed out waiting for results).
-func isTimeoutErr(i Item) bool {
-	return strings.Contains(fmt.Sprint(i.Details["error"]), "timeout")
 }
 
 // processDir will walk the files in a given directory, using the fileSelector function to

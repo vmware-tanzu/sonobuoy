@@ -566,7 +566,7 @@ func TestAggregateStatus(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			out := aggregateStatus(tc.input...)
+			out := AggregateStatus(tc.input...)
 			if out != tc.expected {
 				t.Errorf("Expected %v but got %v", tc.expected, out)
 			}

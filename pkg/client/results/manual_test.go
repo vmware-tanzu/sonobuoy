@@ -61,8 +61,8 @@ func TestManualProcessFile(t *testing.T) {
 				Name:   "missingFile.yaml",
 				Status: StatusUnknown,
 				Metadata: map[string]string{
-					metadataFileKey: "missingFile.yaml",
-					metadataTypeKey: metadataTypeFile,
+					MetadataFileKey: "missingFile.yaml",
+					MetadataTypeKey: MetadataTypeFile,
 				},
 			},
 		},
@@ -75,8 +75,8 @@ func TestManualProcessFile(t *testing.T) {
 				Name:   "invalid-results.yaml",
 				Status: StatusUnknown,
 				Metadata: map[string]string{
-					metadataFileKey: "invalid-results.yaml",
-					metadataTypeKey: metadataTypeFile,
+					MetadataFileKey: "invalid-results.yaml",
+					MetadataTypeKey: MetadataTypeFile,
 				},
 			},
 		},
@@ -88,8 +88,8 @@ func TestManualProcessFile(t *testing.T) {
 				Name:   "manual-results.yaml",
 				Status: "status-from-manual-results",
 				Metadata: map[string]string{
-					metadataFileKey: "manual-results.yaml",
-					metadataTypeKey: metadataTypeFile,
+					MetadataFileKey: "manual-results.yaml",
+					MetadataTypeKey: MetadataTypeFile,
 				},
 				Items: []Item{
 					{
@@ -111,8 +111,8 @@ func TestManualProcessFile(t *testing.T) {
 				Name:   "manual-results-arbitrary-details.yaml",
 				Status: "status-from-manual-results",
 				Metadata: map[string]string{
-					metadataFileKey: "manual-results-arbitrary-details.yaml",
-					metadataTypeKey: metadataTypeFile,
+					MetadataFileKey: "manual-results-arbitrary-details.yaml",
+					MetadataTypeKey: MetadataTypeFile,
 				},
 				Details: map[string]interface{}{
 					"arbitrary-data": map[interface{}]interface{}{

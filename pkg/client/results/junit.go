@@ -177,8 +177,8 @@ func junitProcessFile(pluginDir, currentFile string) (Item, error) {
 		Name:   filepath.Base(currentFile),
 		Status: StatusUnknown,
 		Metadata: map[string]string{
-			metadataFileKey: relPath,
-			metadataTypeKey: metadataTypeFile,
+			MetadataFileKey: relPath,
+			MetadataTypeKey: MetadataTypeFile,
 		},
 	}
 
@@ -256,11 +256,11 @@ func junitProcessReader(r io.Reader, name string, metadata map[string]string) (I
 			// Different JUnit implementations build the objects in slightly different ways.
 			// Some will only use contents, some only the message attribute. Here we just concat
 			// the values, separated with a space.
-			hasFailureContents := (t.Failure != nil && (t.Failure.Message != "" || t.Failure.Contents != ""))
+			hasFailureContents := t.Failure != nil && (t.Failure.Message != "" || t.Failure.Contents != "")
 			if hasFailureContents {
 				testItem.Details[JUnitFailureKey] = strings.TrimSpace(t.Failure.Message + " " + t.Failure.Contents)
 			}
-			hasErrorContents := (t.ErrorMessage != nil && (t.ErrorMessage.Message != "" || t.ErrorMessage.Contents != ""))
+			hasErrorContents := t.ErrorMessage != nil && (t.ErrorMessage.Message != "" || t.ErrorMessage.Contents != "")
 			if hasErrorContents {
 				testItem.Details[JUnitErrorKey] = strings.TrimSpace(t.ErrorMessage.Message + " " + t.ErrorMessage.Contents)
 			}
