@@ -37,8 +37,8 @@ func manualProcessFile(pluginDir, currentFile string) (Item, error) {
 		Name:   filepath.Base(currentFile),
 		Status: StatusUnknown,
 		Metadata: map[string]string{
-			metadataFileKey: relPath,
-			metadataTypeKey: metadataTypeFile,
+			MetadataFileKey: relPath,
+			MetadataTypeKey: MetadataTypeFile,
 		},
 	}
 
