@@ -61,6 +61,10 @@ const (
 
 	// DefaultSystemdLogsImage is the URL for the docker image used by the systemd-logs plugin
 	DefaultSystemdLogsImage = "sonobuoy/systemd-logs:v0.3"
+
+	// DefaultSecurityContextMode is a shorthand for common security context values. Default is nonroot which sets
+	// runAsUser, runAsGroup, and fsGroup. 'none' skips setting those it entirely since Windows does not support them.
+	DefaultSecurityContextMode = "nonroot"
 )
 
 var (
@@ -133,6 +137,12 @@ type Config struct {
 
 	// ProgressUpdatesPort is the port on which the Sonobuoy worker will listen for status updates from its plugin.
 	ProgressUpdatesPort string `json:"ProgressUpdatesPort,omitempty" mapstructure:"ProgressUpdatesPort"`
+
+	// SecurityCtx allows uers to specify the security context for the aggregator pod. This is particularly
+	// important for two cases: local security prevents running without specifying non-root users and Windows
+	// nodes do not currently support runAsUser/Group settings so if we default so something we need to allow
+	// users to opt out easily.
+	SecurityContextMode string `json:"SecurityContextMode" mapstructure:"SecurityContextMode"`
 }
 
 // LimitConfig is a configuration on the limits of various responses, such as limits of sizes
@@ -335,6 +345,8 @@ func New() *Config {
 	cfg.ImagePullPolicy = DefaultSonobuoyPullPolicy
 
 	cfg.ProgressUpdatesPort = DefaultProgressUpdatesPort
+
+	cfg.SecurityContextMode = DefaultSecurityContextMode
 
 	return &cfg
 }

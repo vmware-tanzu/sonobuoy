@@ -40,6 +40,23 @@ var (
 	genManifest = newTemplate("manifest", templateDoc)
 )
 
+// secContextFromMode turns a simple string "mode" into the security context it refers to. Users could
+// completely customize this by using 'sonobuoy gen' and editing it, but this provides a fast/easy way
+// to switch between common values.
+func secContextFromMode(mode string) string {
+	// TODO(jschnake): Seems like we should be using an actual object and marshalling it
+	// but we get into version issues (at time of writing this fsgroup is a new, beta feature).
+	// Just explicitly writing it for now and we can evolve this if other use cases come up.
+	switch mode {
+	case "none":
+		return ""
+	case "nonroot":
+		return "securityContext:\n    runAsUser: 1000\n    runAsGroup: 3000\n    fsGroup: 2000"
+	default:
+		return "securityContext:\n    runAsUser: 1000\n    runAsGroup: 3000\n    fsGroup: 2000"
+	}
+}
+
 // newTemplate declares a new template that already has templateFuncs in scope
 func newTemplate(name, tmpl string) *template.Template {
 	return template.Must(template.New(name).Funcs(templateFuncs).Parse(tmpl))

@@ -585,6 +585,10 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "gen should run plugin name validation",
 			cmdLine:    "gen -p testdata/plugins/badpluginname.yaml --kubernetes-version=ignore",
 			expectFile: "testdata/gen-nobadchars.golden",
+		}, {
+			desc:       "gen with security context none",
+			cmdLine:    "gen --security-context-mode=none --kubernetes-version=ignore",
+			expectFile: "testdata/gen-security-context-none.golden",
 		},
 	}
 	for _, tc := range testCases {

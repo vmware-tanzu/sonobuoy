@@ -52,7 +52,7 @@ rules:
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"DEFAULT","UUID":"static","Version":"static","ResultsDir":"/tmp/sonobuoy","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null,"LimitSize":"","LimitTime":""}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:staticversion","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}
+    {"Description":"DEFAULT","UUID":"","Version":"*STATIC_FOR_TESTING*","ResultsDir":"/tmp/sonobuoy","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null,"LimitSize":"","LimitTime":""}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:*STATIC_FOR_TESTING*","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","ProgressUpdatesPort":"8099","SecurityContextMode":"none"}
 kind: ConfigMap
 metadata:
   labels:
@@ -63,53 +63,92 @@ metadata:
 apiVersion: v1
 data:
   plugin-0.yaml: |
+    podSpec:
+      containers: []
+      nodeSelector:
+        kubernetes.io/os: linux
+      restartPolicy: Never
+      serviceAccountName: sonobuoy-serviceaccount
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: kubernetes.io/e2e-evict-taint-key
+        operator: Exists
     sonobuoy-config:
       driver: Job
-      plugin-name: hello-world
-      result-format: raw
+      plugin-name: e2e
+      result-format: junit
     spec:
       command:
-      - ./run.sh
+      - /run_e2e.sh
       env:
+      - name: E2E_EXTRA_ARGS
+        value: --progress-report-url=http://localhost:8099/progress
+      - name: E2E_FOCUS
+        value: \[Conformance\]
+      - name: E2E_PARALLEL
+        value: "false"
+      - name: E2E_SKIP
+        value: \[Disruptive\]|NoExecuteTaintManager
+      - name: E2E_USE_GO_RUNNER
+        value: "true"
       - name: SONOBUOY
         value: "true"
       - name: SONOBUOY_CONFIG_DIR
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
-        value: v123.456.789
+        value: ignore
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      image: hello:v9
+      image: k8s.gcr.io/conformance:ignore
       imagePullPolicy: IfNotPresent
-      name: plugin
+      name: e2e
       resources: {}
       volumeMounts:
       - mountPath: /tmp/results
         name: results
   plugin-1.yaml: |
     sonobuoy-config:
-      driver: Job
-      plugin-name: variable-image
+      driver: DaemonSet
+      plugin-name: systemd-logs
       result-format: raw
     spec:
       command:
-      - ./run.sh
+      - /bin/sh
+      - -c
+      - /get_systemd_logs.sh; while true; do echo "Plugin is complete. Sleeping indefinitely
+        to avoid container exit and automatic restarts from Kubernetes"; sleep 3600; done
       env:
+      - name: CHROOT_DIR
+        value: /node
+      - name: NODE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
+      - name: RESULTS_DIR
+        value: /tmp/results
       - name: SONOBUOY
         value: "true"
       - name: SONOBUOY_CONFIG_DIR
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
-        value: v123.456.789
+        value: ignore
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      image: hello:v123.456.789
+      image: sonobuoy/systemd-logs:v0.3
       imagePullPolicy: IfNotPresent
-      name: plugin
+      name: systemd-logs
       resources: {}
+      securityContext:
+        privileged: true
       volumeMounts:
       - mountPath: /tmp/results
         name: results
+      - mountPath: /node
+        name: root
 kind: ConfigMap
 metadata:
   labels:
@@ -127,17 +166,13 @@ metadata:
   name: sonobuoy
   namespace: sonobuoy
 spec:
-  securityContext:
-    runAsUser: 1000
-    runAsGroup: 3000
-    fsGroup: 2000
   containers:
   - env:
     - name: SONOBUOY_ADVERTISE_IP
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: sonobuoy/sonobuoy:staticversion
+    image: sonobuoy/sonobuoy:*STATIC_FOR_TESTING*
     imagePullPolicy: IfNotPresent
     name: kube-sonobuoy
     volumeMounts:
