@@ -9,7 +9,7 @@ TARGET=sonobuoy
 GOTARGET=github.com/vmware-tanzu/"$TARGET"
 GOPATH=$(go env GOPATH)
 REGISTRY=sonobuoy
-LINUX_ARCH=(amd64 arm64)
+LINUX_ARCH=(amd64 arm64 ppc64le)
 
 # Currently only under a single arch, can iterate over these and still assume arch value.
 WIN_ARCH=amd64
@@ -31,6 +31,7 @@ BUILDMNT=/go/src/$GOTARGET
 BUILD_IMAGE=golang:1.16
 AMD_IMAGE=gcr.io/distroless/static:nonroot
 ARM_IMAGE=gcr.io/distroless/static:nonroot-arm64
+PPC64LE_IMAGE=gcr.io/distroless/static:nonroot-ppc64le
 WIN_AMD64_BASEIMAGE=mcr.microsoft.com/windows/nanoserver
 TEST_IMAGE=testimage:v0.1
 KIND_CLUSTER=kind
@@ -107,6 +108,10 @@ gen_dockerfile_for_os_arch(){
             sed -e "s|BASEIMAGE|$ARM_IMAGE|g" \
                 -e 's|CMD1||g' \
                 -e 's|BINARY|build/linux/arm64/sonobuoy|g' Dockerfile > "$dockerfile"
+        elif [ "$2" = "ppc64le" ]; then
+            sed -e "s|BASEIMAGE|$PPC64LE_IMAGE|g" \
+                -e 's|CMD1||g' \
+                -e 's|BINARY|build/linux/ppc64le/sonobuoy|g' Dockerfile > "$dockerfile"
         else
             echo "Linux ARCH unknown"
         fi
