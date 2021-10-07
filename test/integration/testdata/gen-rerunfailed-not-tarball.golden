@@ -17,6 +17,7 @@ Flags:
       --e2e-focus envModifier                    Specify the E2E_FOCUS value for the e2e plugin, specifying which tests to run. Shorthand for --plugin-env=e2e.E2E_FOCUS=<string> (default \[Conformance\])
       --e2e-repo-config yaml-filepath            Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.
       --e2e-skip envModifier                     Specify the E2E_SKIP value for the e2e plugin, specifying which tests to skip. Shorthand for --plugin-env=e2e.E2E_SKIP=<string> (default \[Disruptive\]|NoExecuteTaintManager)
+  -f, --file -                                   If set, loads the file as if it were the output from sonobuoy gen. Set to - to read from stdin.
   -h, --help                                     help for gen
       --image-pull-policy string                 Set the ImagePullPolicy for the Sonobuoy image and all plugins. Valid options are Always, IfNotPresent, Never. (default "IfNotPresent")
       --kube-conformance-image image             Container image override for the e2e plugin. Shorthand for --plugin-image=e2e:<string> (default map[])
@@ -31,11 +32,14 @@ Flags:
       --rerun-failed tar.gz file                 Read the given tarball and set the E2E_FOCUS to target all the failed tests
       --security-context-mode string             Type of security context to use for the aggregator pod. Allowable values are [none, nonroot] (default "nonroot")
       --show-default-podspec                     If true, include the default pod spec used for plugins in the output.
+      --skip-preflight                           If true, skip all checks before starting the sonobuoy run.
       --sonobuoy-image string                    Container image override for the sonobuoy worker and aggregator. (default "sonobuoy/sonobuoy:*STATIC_FOR_TESTING*")
       --ssh-key yamlFile                         Path to the private key enabling SSH to cluster nodes. May be required by some tests from the e2e plugin.
       --ssh-user envModifier                     SSH user for ssh-key. Required if running e2e plugin with certain tests that require SSH access to nodes.
       --systemd-logs-image image                 Container image override for the systemd-logs plugin. Shorthand for --plugin-image=systemd-logs:<string> (default map[])
       --timeout int                              How long (in seconds) Sonobuoy aggregator will wait for plugins to complete before exiting. 0 indicates no timeout. (default 21600)
+      --wait int[=1440]                          How long (in minutes) for the CLI to wait for sonobuoy run to be completed or fail, where 0 indicates do not wait. If specified, the default wait time is 1 day.
+      --wait-output string                       Specify the type of output Sonobuoy should produce when --wait is used. Valid modes are silent, spinner, or progress (default "Progress")
 
 Global Flags:
       --level level   Log level. One of {panic, fatal, error, warn, info, debug, trace} (default info)
