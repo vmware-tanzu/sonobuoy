@@ -156,13 +156,17 @@ func PostProcessPlugin(p plugin.Interface, dir string) (Item, []error) {
 
 	switch p.GetResultFormat() {
 	case ResultFormatE2E, ResultFormatJUnit:
+		logrus.WithField("plugin", p.GetName()).Trace("Using junit post-processor")
 		i, errs = processPluginWithProcessor(p, dir, junitProcessFile, fileOrExtension(p.GetResultFiles(), ".xml"))
 	case ResultFormatRaw:
+		logrus.WithField("plugin", p.GetName()).Trace("Using raw post-processor")
 		i, errs = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
 	case ResultFormatManual:
+		logrus.WithField("plugin", p.GetName()).Trace("Using manual post-processor")
 		// Only process the specified plugin result files or a Sonobuoy results file.
 		i, errs = processPluginWithProcessor(p, dir, manualProcessFile, fileOrDefault(p.GetResultFiles(), PostProcessedResultsFile))
 	default:
+		logrus.WithField("plugin", p.GetName()).Trace("Defaulting to raw post-processor")
 		// Default to raw format so that consumers can still expect the aggregate file to exist and
 		// can navigate the output of the plugin more easily.
 		i, errs = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))

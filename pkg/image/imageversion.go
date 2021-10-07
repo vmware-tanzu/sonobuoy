@@ -18,11 +18,12 @@ package image
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
-	version "github.com/hashicorp/go-version"
+	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"k8s.io/client-go/discovery"
@@ -97,12 +98,14 @@ func (c *ConformanceImageVersion) Get(client discovery.ServerVersionInterface, l
 		}
 
 		ver, err := conformanceTagFromSemver(version.GitVersion)
+		logrus.Tracef("Resolved 'auto' version to %v from GitVersion %v", ver, version.GitVersion)
 		return config.UpstreamKubeConformanceImageURL, ver, err
 	case ConformanceImageVersionLatest:
 		version, err := GetLatestDevVersion(latestURL)
 		if err != nil {
 			return "", "", errors.Wrap(err, "couldn't identify latest dev image")
 		}
+		logrus.Tracef("Resolved 'latest' version to %v via URL %v", version, latestURL)
 
 		return DevVersionImageURL, version, nil
 	}

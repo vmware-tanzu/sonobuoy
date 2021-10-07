@@ -25,6 +25,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+
 	"github.com/pkg/errors"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
@@ -76,6 +79,10 @@ type templateValues struct {
 	CustomRegistries string
 
 	SecurityContext string
+
+	// Translate our log level into a glog value to for the aggregator/workers (e.g. the 9 in -v=9)
+	KlogLevel int
+	LogLevel  string
 }
 
 // GenerateManifest fills in a template with a Sonobuoy config
@@ -247,6 +254,9 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		ConfigMaps: configs,
 
 		SecurityContext: secContextFromMode(conf.SecurityContextMode),
+
+		KlogLevel: errlog.GetLevelForGlog(),
+		LogLevel:  logrus.GetLevel().String(),
 	}
 
 	var buf bytes.Buffer

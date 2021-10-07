@@ -85,12 +85,15 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 	//   pods/:podname/logs/:containername.txt
 	for _, pod := range podlist.Items {
 		if _, ok := visitedPods[string(pod.UID)]; ok {
-			continue // skip visited pods
+			logrus.
+				WithField("pod.UID", pod.UID).WithField("pod.Name", pod.Name).
+				Tracef("Skipping pod pod logs since we have already visited it before")
+			continue
 		}
 		visitedPods[string(pod.UID)] = struct{}{}
 
 		if pod.Status.Phase == v1.PodFailed && pod.Status.Reason == "Evicted" {
-			logrus.WithField("podName", pod.Name).Info("Skipping evicted pod.")
+			logrus.WithField("podName", pod.Name).Trace("Skipping evicted pod.")
 			continue
 		}
 		for _, container := range pod.Spec.Containers {

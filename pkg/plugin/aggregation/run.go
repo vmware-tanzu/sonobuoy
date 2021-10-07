@@ -193,9 +193,11 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	for {
 		select {
 		case err := <-doneServ:
+			logrus.Tracef("Server stopped listening and returned error: %v", err)
 			stopWaitCh <- true
 			return err
 		case <-doneAggr:
+			logrus.Trace("Aggregator done")
 			if aggr.hadTimeout() {
 				return &timeoutErr{errors.New("timeout occurred when waiting for plugin results")}
 			}
@@ -209,7 +211,14 @@ func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
 	// Cleanup after each plugin unless cleanup is explicitly skipped
 	for _, p := range plugins {
 		if !p.SkipCleanup() {
+			logrus.
+				WithField("plugin", p.GetName()).
+				Tracef("Invoking plugin cleanup")
 			p.Cleanup(client)
+		} else {
+			logrus.
+				WithField("plugin", p.GetName()).
+				Tracef("Skipping plugin cleanup as specified")
 		}
 	}
 }

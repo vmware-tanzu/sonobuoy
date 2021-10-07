@@ -18,7 +18,7 @@ package app
 
 import (
 	"flag"
-
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 
@@ -90,9 +90,13 @@ func rootCmd(cmd *cobra.Command, args []string) {
 func prerunChecks(cmd *cobra.Command, args []string) error {
 	// Getting a list of all flags provided by the user.
 	flagsSet := map[string]bool{}
+	flagsDebug := []string{}
 	cmd.Flags().Visit(func(f *pflag.Flag) {
 		flagsSet[f.Name] = true
+		flagsDebug = append(flagsDebug, fmt.Sprintf("%v=%v", f.Name, f.Value.String()))
 	})
+
+	logrus.Tracef("Invoked command %v with args %v and flags %v", cmd.Name(), args, flagsDebug)
 
 	// Difficult to do checks like this within the flag themselves (since they dont know
 	// about each other).

@@ -70,6 +70,10 @@ func SetLevel(s string) error {
 
 }
 
+func GetLevelForGlog() int {
+	return int(logrus.GetLevel())
+}
+
 // LogError logs an error, optionally with a tracelog
 func LogError(err error) {
 	if DebugOutput {
