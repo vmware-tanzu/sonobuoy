@@ -134,10 +134,13 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 
 	// 3. Dump the config.json we used to run our test
 	if blob, err := json.Marshal(cfg); err == nil {
+		logrus.Trace("Recording the marshalled Sonobuoy config")
 		if err = ioutil.WriteFile(filepath.Join(metapath, "config.json"), blob, 0644); err != nil {
 			errlog.LogError(errors.Wrap(err, "could not write config.json file"))
 			return errCount + 1
 		}
+	} else {
+		errlog.LogError(errors.Wrap(err, "error marshalling Sonobuoy config"))
 	}
 
 	// runInfo is for dumping additional information to help enable processing of the resulting tarball.
@@ -216,6 +219,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 
 	// Postprocessing before we create the tarball.
 	for _, p := range cfg.LoadedPlugins {
+		logrus.WithField("plugin", p.GetName()).Trace("Post-processing")
 		item, errs := results.PostProcessPlugin(p, outpath)
 		for _, e := range errs {
 			logrus.Errorf("Error processing plugin %v: %v", p.GetName(), e)
@@ -234,6 +238,9 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 
 	// Saving plugin definitions in their respective folders for easy reference.
 	for _, p := range cfg.LoadedPlugins {
+		logrus.
+			WithField("plugin", p.GetName()).
+			Tracef("Saving plugin definition")
 		runInfo.LoadedPlugins = append(runInfo.LoadedPlugins, p.GetName())
 		trackErrorsFor("saving plugin info")(
 			dumpPlugin(p, outpath),
@@ -363,6 +370,7 @@ func updateStatus(client kubernetes.Interface, namespace string, status string, 
 }
 
 func updatePluginStatus(client kubernetes.Interface, namespace string, pluginName string, item results.Item) error {
+	logrus.WithField("plugin", pluginName).Trace("Updating plugin status")
 	podStatus, _, err := pluginaggregation.GetStatus(client, namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the existing status")
@@ -386,6 +394,7 @@ func integrateResultsIntoStatus(podStatus *pluginaggregation.Status, pluginName 
 		}
 
 		if itemForNode == nil {
+			logrus.WithField("plugin", pluginName).Trace("No results for node in this result")
 			return
 		}
 
@@ -393,6 +402,10 @@ func integrateResultsIntoStatus(podStatus *pluginaggregation.Status, pluginName 
 		statusCounts(itemForNode, statusInfo)
 		podStatus.Plugins[i].ResultStatus = itemForNode.Status
 		podStatus.Plugins[i].ResultStatusCounts = statusInfo
+		logrus.
+			WithField("plugin", pluginName).
+			WithField("node", podStatus.Plugins[i].Node).
+			Tracef("Updating with status %v", itemForNode.Status)
 	}
 }
 

@@ -118,6 +118,8 @@ spec:
     image: {{.SonobuoyImage}}
     imagePullPolicy: {{.ImagePullPolicy}}
     name: kube-sonobuoy
+    command: ["/sonobuoy"]
+    args: ["aggregator", "--no-exit", "--level={{ .LogLevel }}", "-v={{ .KlogLevel }}", "--alsologtostderr"]
     volumeMounts:
     - mountPath: /etc/sonobuoy
       name: sonobuoy-config-volume

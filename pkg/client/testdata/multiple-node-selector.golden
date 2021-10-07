@@ -142,6 +142,8 @@ spec:
     image: sonobuoy/sonobuoy:static-version-for-testing
     imagePullPolicy: IfNotPresent
     name: kube-sonobuoy
+    command: ["/sonobuoy"]
+    args: ["aggregator", "--no-exit", "--level=info", "-v=4", "--alsologtostderr"]
     volumeMounts:
     - mountPath: /etc/sonobuoy
       name: sonobuoy-config-volume
