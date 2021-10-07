@@ -18,7 +18,9 @@ package app
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
@@ -42,6 +44,13 @@ type genFlags struct {
 	sshKeyPath         string
 	k8sVersion         imagepkg.ConformanceImageVersion
 	showDefaultPodSpec bool
+
+	// These values are mainly for `run` but we want `gen` to support all the same
+	// flags so you can just swap out gen/run.
+	skipPreflight bool
+	wait          int
+	waitOutput    WaitOutputMode
+	genFile       string
 
 	// plugins will keep a list of the plugins we want. Custom type for
 	// flag support.
@@ -99,6 +108,19 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 
 	AddSecurityContextMode(&cfg.sonobuoyConfig.SecurityContextMode, genset)
 
+	AddSkipPreflightFlag(&cfg.skipPreflight, genset)
+	AddRunWaitFlag(&cfg.wait, genset)
+	if featureEnabled(FeatureWaitOutputProgressByDefault) {
+		AddWaitOutputFlag(&cfg.waitOutput, genset, ProgressOutputMode)
+	} else {
+		AddWaitOutputFlag(&cfg.waitOutput, genset, SilentOutputMode)
+	}
+
+	genset.StringVarP(
+		&cfg.genFile, "file", "f", "",
+		"If set, loads the file as if it were the output from sonobuoy gen. Set to `-` to read from stdin.",
+	)
+	
 	return genset
 }
 
@@ -159,6 +181,24 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 	}, nil
 }
 
+func (g *genFlags) RunConfig() (*client.RunConfig, error) {
+	runcfg := &client.RunConfig{
+		Wait:       time.Duration(g.wait) * time.Minute,
+		WaitOutput: g.waitOutput.String(),
+		GenFile:    g.genFile,
+	}
+
+	if g.genFile == "" {
+		gencfg, err := g.Config()
+		if err != nil {
+			return nil, err
+		}
+		runcfg.GenConfig = *gencfg
+	}
+
+	return runcfg, nil
+}
+
 func NewCmdGen() *cobra.Command {
 	var genflags genFlags
 	var GenCommand = &cobra.Command{
@@ -173,6 +213,16 @@ func NewCmdGen() *cobra.Command {
 
 func genManifest(genflags *genFlags) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
+		if len(genflags.genFile) > 0 {
+			b, err := ioutil.ReadFile(genflags.genFile)
+			if err != nil {
+				errlog.LogError(err)
+				os.Exit(1)
+			}
+			fmt.Println(string(b))
+			return
+		}
+
 		cfg, err := genflags.Config()
 		if err != nil {
 			errlog.LogError(err)
