@@ -38,6 +38,7 @@ import (
 const (
 	ResultFormatJUnit  = "junit"
 	ResultFormatE2E    = "e2e"
+	ResultFormatGoJSON = "gojson"
 	ResultFormatRaw    = "raw"
 	ResultFormatManual = "manual"
 )
@@ -158,6 +159,9 @@ func PostProcessPlugin(p plugin.Interface, dir string) (Item, []error) {
 	case ResultFormatE2E, ResultFormatJUnit:
 		logrus.WithField("plugin", p.GetName()).Trace("Using junit post-processor")
 		i, errs = processPluginWithProcessor(p, dir, junitProcessFile, fileOrExtension(p.GetResultFiles(), ".xml"))
+	case ResultFormatGoJSON:
+		logrus.WithField("plugin", p.GetName()).Trace("Using gojson post-processor")
+		i, errs = processPluginWithProcessor(p, dir, gojsonProcessFile, fileOrExtension(p.GetResultFiles(), ".json"))
 	case ResultFormatRaw:
 		logrus.WithField("plugin", p.GetName()).Trace("Using raw post-processor")
 		i, errs = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
