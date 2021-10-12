@@ -54,6 +54,8 @@ const (
 	pluginE2E         = "e2e"
 	pluginSystemdLogs = "systemd-logs"
 	fileExtensionYAML = ".yaml"
+
+	renameAsSeperator = "@"
 )
 
 // Make sure pluginList implements Value properly
@@ -77,9 +79,17 @@ func (p *pluginList) Type() string { return "pluginList" }
 
 // Set sets the explicit path of the loader to the provided config file
 func (p *pluginList) Set(str string) error {
+	// Parse as plugin@customName
+	strSlice := strings.Split(str, renameAsSeperator)
+	str = strSlice[0]
+	renameAs := ""
+	if len(strSlice) > 1 {
+		renameAs = strSlice[1]
+	}
+
 	// Load first from cache, then special cases (e2e/systemd-logs), then local file.
 	if p.InstallDir != "" {
-		handled, err := p.loadPluginsFromInstalled(str)
+		handled, err := p.loadPluginsFromInstalled(str, renameAs)
 		if handled {
 			if err != nil {
 				return errors.Wrapf(err, "unable to load plugin %v from installed plugins", str)
@@ -91,13 +101,19 @@ func (p *pluginList) Set(str string) error {
 	switch str {
 	case pluginE2E:
 		p.DynamicPlugins = append(p.DynamicPlugins, str)
+		if renameAs != "" {
+			return fmt.Errorf("Cannot use @ renaming of plugins not loaded from file or URL")
+		}
 	case pluginSystemdLogs:
 		p.DynamicPlugins = append(p.DynamicPlugins, str)
+		if renameAs != "" {
+			return fmt.Errorf("Cannot use @ renaming of plugins not loaded from file or URL")
+		}
 	default:
 		if isURL(str) {
-			return p.loadSinglePluginFromURL(str)
+			return p.loadSinglePluginFromURL(str, renameAs)
 		}
-		return p.loadPluginsFromFilesystem(str)
+		return p.loadPluginsFromFilesystem(str, renameAs)
 	}
 
 	return nil
@@ -108,7 +124,7 @@ func isURL(s string) bool {
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
-func (p *pluginList) loadPluginsFromInstalled(str string) (handled bool, returnErr error) {
+func (p *pluginList) loadPluginsFromInstalled(str, renameAs string) (handled bool, returnErr error) {
 	// If empty, disable cache instead of err.
 	if len(p.InstallDir) == 0 {
 		return false, nil
@@ -121,20 +137,26 @@ func (p *pluginList) loadPluginsFromInstalled(str string) (handled bool, returnE
 	if err != nil {
 		return true, err
 	}
+	if len(renameAs) > 0 {
+		m.SonobuoyConfig.PluginName = renameAs
+	}
 	p.StaticPlugins = append(p.StaticPlugins, m)
 	return true, nil
 }
 
-func (p *pluginList) loadPluginsFromFilesystem(str string) error {
+func (p *pluginList) loadPluginsFromFilesystem(str, renameAs string) error {
 	finfo, err := os.Stat(str)
 	if err != nil {
 		return errors.Wrapf(err, "unable to stat %q", str)
 	}
 
 	if finfo.IsDir() {
+		if len(renameAs) > 0 {
+			return fmt.Errorf("plugin renaming via @ is not valid if targeting a directory")
+		}
 		return p.loadPluginsDir(str)
 	}
-	return p.loadSinglePluginFromFile(str)
+	return p.loadSinglePluginFromFile(str, renameAs)
 }
 
 // loadPluginsDir loads every plugin in the given directory. It does not traverse recursively
@@ -148,7 +170,7 @@ func (p *pluginList) loadPluginsDir(dirpath string) error {
 
 	for _, file := range files {
 		if !file.IsDir() && strings.HasSuffix(file.Name(), fileExtensionYAML) {
-			if err := p.loadSinglePluginFromFile(filepath.Join(dirpath, file.Name())); err != nil {
+			if err := p.loadSinglePluginFromFile(filepath.Join(dirpath, file.Name()), ""); err != nil {
 				return errors.Wrapf(err, "failed to load plugin in file %q", file.Name())
 			}
 		}
@@ -158,7 +180,7 @@ func (p *pluginList) loadPluginsDir(dirpath string) error {
 }
 
 // loadSinglePluginFromURL loads a single plugin located at the given path.
-func (p *pluginList) loadSinglePluginFromURL(url string) error {
+func (p *pluginList) loadSinglePluginFromURL(url, renameAs string) error {
 	c := http.Client{
 		Timeout: 10 * time.Second,
 	}
@@ -170,20 +192,20 @@ func (p *pluginList) loadSinglePluginFromURL(url string) error {
 		return fmt.Errorf("unexpected HTTP response code %v", resp.StatusCode)
 	}
 
-	return errors.Wrapf(p.loadSinglePlugin(resp.Body), "loading plugin from URL %q", url)
+	return errors.Wrapf(p.loadSinglePlugin(resp.Body, renameAs), "loading plugin from URL %q", url)
 }
 
 // loadSinglePluginFromFile loads a single plugin located at the given path.
-func (p *pluginList) loadSinglePluginFromFile(filepath string) error {
+func (p *pluginList) loadSinglePluginFromFile(filepath, renameAs string) error {
 	f, err := os.Open(filepath)
 	if err != nil {
 		return errors.Wrapf(err, "unable to read file %q", filepath)
 	}
-	return errors.Wrapf(p.loadSinglePlugin(f), "loading plugin from file %q", filepath)
+	return errors.Wrapf(p.loadSinglePlugin(f, renameAs), "loading plugin from file %q", filepath)
 }
 
 // loadSinglePlugin reads the data from the reader and loads the plugin.
-func (p *pluginList) loadSinglePlugin(r io.ReadCloser) error {
+func (p *pluginList) loadSinglePlugin(r io.ReadCloser, renameAs string) error {
 	defer r.Close()
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -195,6 +217,9 @@ func (p *pluginList) loadSinglePlugin(r io.ReadCloser) error {
 		return errors.Wrap(err, "failed to load plugin")
 	}
 
+	if len(renameAs) > 0 {
+		newPlugin.SonobuoyConfig.PluginName = renameAs
+	}
 	p.StaticPlugins = append(p.StaticPlugins, newPlugin)
 	return nil
 }
