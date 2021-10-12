@@ -1,16 +1,19 @@
 Installed plugin plugin into file *STATIC_FOR_TESTING*/foo.yaml from source ./testdata/plugins/good/hello-world.yaml
 Installed plugin plugin into file *STATIC_FOR_TESTING*/foo2.yaml from source ./testdata/plugins/good/hello-world.yaml
-filename: *STATIC_FOR_TESTING*/foo.yaml
-plugin name: hello-world
-source URL: foo.com
-description: This is a plugin description.
+Run as: foo
+Filename: *STATIC_FOR_TESTING*/foo.yaml
+Plugin name (in aggregator): hello-world
+Source URL: foo.com
+Description: This is a plugin description.
 ---
-filename: *STATIC_FOR_TESTING*/foo2.yaml
-plugin name: hello-world
-source URL: foo.com
-description: This is a plugin description.
+Run as: foo2
+Filename: *STATIC_FOR_TESTING*/foo2.yaml
+Plugin name (in aggregator): hello-world
+Source URL: foo.com
+Description: This is a plugin description.
 Uninstalled plugin file *STATIC_FOR_TESTING*/foo.yaml
-filename: *STATIC_FOR_TESTING*/foo2.yaml
-plugin name: hello-world
-source URL: foo.com
-description: This is a plugin description.
+Run as: foo2
+Filename: *STATIC_FOR_TESTING*/foo2.yaml
+Plugin name (in aggregator): hello-world
+Source URL: foo.com
+Description: This is a plugin description.

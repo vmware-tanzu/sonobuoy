@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -140,8 +141,8 @@ func listInstalledPlugins(installedDir string) error {
 		if !first {
 			prefix = "---\n"
 		}
-		fmt.Printf("%vfilename: %v\nplugin name: %v\nsource URL: %v\ndescription: %v\n",
-			prefix, filename, p.SonobuoyConfig.PluginName, p.SonobuoyConfig.SourceURL, p.SonobuoyConfig.Description)
+		fmt.Printf("%vRun as: %v\nFilename: %v\nPlugin name (in aggregator): %v\nSource URL: %v\nDescription: %v\n",
+			prefix, strings.TrimSuffix(filepath.Base(filename), ".yaml"), filename, p.SonobuoyConfig.PluginName, p.SonobuoyConfig.SourceURL, p.SonobuoyConfig.Description)
 		first = false
 	}
 
