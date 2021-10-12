@@ -5,17 +5,20 @@ Installed plugin plugin into file *STATIC_FOR_TESTING*/p3.yaml from source ./tes
 Installed plugin plugin into file *STATIC_FOR_TESTING*/p5.yaml from source ./testdata/plugins/good/hello-world.yaml
 time="STATIC_TIME_FOR_TESTING" level=error msg="failed to load definition from file \"*STATIC_FOR_TESTING*/p2.yaml\": couldn't load plugin definition for file *STATIC_FOR_TESTING*/p2.yaml: couldn't decode yaml for plugin definition: couldn't get version/kind; json parse error: json: cannot unmarshal string into Go value of type struct { APIVersion string \"json:\\\"apiVersion,omitempty\\\"\"; Kind string \"json:\\\"kind,omitempty\\\"\" }"
 time="STATIC_TIME_FOR_TESTING" level=error msg="failed to load definition from file \"*STATIC_FOR_TESTING*/p4.yaml\": couldn't load plugin definition for file *STATIC_FOR_TESTING*/p4.yaml: couldn't decode yaml for plugin definition: couldn't get version/kind; json parse error: json: cannot unmarshal string into Go value of type struct { APIVersion string \"json:\\\"apiVersion,omitempty\\\"\"; Kind string \"json:\\\"kind,omitempty\\\"\" }"
-filename: *STATIC_FOR_TESTING*/p1.yaml
-plugin name: hello-world
-source URL: foo.com
-description: This is a plugin description.
+Run as: p1
+Filename: *STATIC_FOR_TESTING*/p1.yaml
+Plugin name (in aggregator): hello-world
+Source URL: foo.com
+Description: This is a plugin description.
 ---
-filename: *STATIC_FOR_TESTING*/p3.yaml
-plugin name: hello-world
-source URL: foo.com
-description: This is a plugin description.
+Run as: p3
+Filename: *STATIC_FOR_TESTING*/p3.yaml
+Plugin name (in aggregator): hello-world
+Source URL: foo.com
+Description: This is a plugin description.
 ---
-filename: *STATIC_FOR_TESTING*/p5.yaml
-plugin name: hello-world
-source URL: foo.com
-description: This is a plugin description.
+Run as: p5
+Filename: *STATIC_FOR_TESTING*/p5.yaml
+Plugin name (in aggregator): hello-world
+Source URL: foo.com
+Description: This is a plugin description.

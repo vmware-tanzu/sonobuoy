@@ -1,9 +1,11 @@
-filename: testdata/plugins/good/hello-world.yaml
-plugin name: hello-world
-source URL: foo.com
-description: This is a plugin description.
+Run as: hello-world
+Filename: testdata/plugins/good/hello-world.yaml
+Plugin name (in aggregator): hello-world
+Source URL: foo.com
+Description: This is a plugin description.
 ---
-filename: testdata/plugins/good/hw-2.yaml
-plugin name: hello-world2
-source URL: 
-description: 
+Run as: hw-2
+Filename: testdata/plugins/good/hw-2.yaml
+Plugin name (in aggregator): hello-world2
+Source URL: 
+Description: 
