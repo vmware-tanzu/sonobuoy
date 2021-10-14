@@ -10,13 +10,18 @@ builds:
     - amd64
     - arm64
     - 386
+    - ppc64le
   ignore:
     - goos: darwin
       goarch: 386
     - goos: darwin
       goarch: arm64
+    - goos: darwin
+      goarch: ppc64le
     - goos: windows
       goarch: arm64
+    - goos: windows
+      goarch: ppc64le
   ldflags: -s -w -X github.com/vmware-tanzu/sonobuoy/pkg/buildinfo.Version=v{{.Version}} -X github.com/vmware-tanzu/sonobuoy/pkg/buildinfo.GitSHA={{.FullCommit}}
 archives:
   - id: tar
