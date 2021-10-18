@@ -9,7 +9,7 @@ TARGET=sonobuoy
 GOTARGET=github.com/vmware-tanzu/"$TARGET"
 GOPATH=$(go env GOPATH)
 REGISTRY=sonobuoy
-LINUX_ARCH=(amd64 arm64 ppc64le)
+LINUX_ARCH=(amd64 arm64 ppc64le s390x)
 
 # Currently only under a single arch, can iterate over these and still assume arch value.
 WIN_ARCH=amd64
@@ -32,6 +32,7 @@ BUILD_IMAGE=golang:1.16
 AMD_IMAGE=gcr.io/distroless/static:nonroot
 ARM_IMAGE=gcr.io/distroless/static:nonroot-arm64
 PPC64LE_IMAGE=gcr.io/distroless/static:nonroot-ppc64le
+S390X_IMAGE=gcr.io/distroless/static:nonroot-s390x
 WIN_AMD64_BASEIMAGE=mcr.microsoft.com/windows/nanoserver
 TEST_IMAGE=testimage:v0.1
 KIND_CLUSTER=kind
@@ -112,6 +113,10 @@ gen_dockerfile_for_os_arch(){
             sed -e "s|BASEIMAGE|$PPC64LE_IMAGE|g" \
                 -e 's|CMD1||g' \
                 -e 's|BINARY|build/linux/ppc64le/sonobuoy|g' Dockerfile > "$dockerfile"
+	elif [ "$2" = "s390x" ]; then
+            sed -e "s|BASEIMAGE|$S390X_IMAGE|g" \
+                -e 's|CMD1||g' \
+                -e 's|BINARY|build/linux/s390x/sonobuoy|g' Dockerfile > "$dockerfile"
         else
             echo "Linux ARCH unknown"
         fi
