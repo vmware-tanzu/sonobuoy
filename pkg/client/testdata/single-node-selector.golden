@@ -98,7 +98,7 @@ data:
         value: v99+static.testing
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      image: sonobuoy/systemd-logs:v0.3
+      image: sonobuoy/systemd-logs:v0.4
       imagePullPolicy: IfNotPresent
       name: systemd-logs
       resources: {}
