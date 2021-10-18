@@ -50,6 +50,7 @@ const (
 	pluginImageFlag         = "plugin-image"
 	filenameFlag            = "filename"
 	securityContextModeFlag = "security-context-mode"
+	aggregatorPermissionsFlag = "aggregator-permissions"
 
 	// Quick runs a single E2E test and the systemd log tests.
 	Quick string = "quick"
