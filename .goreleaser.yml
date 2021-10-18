@@ -11,6 +11,7 @@ builds:
     - arm64
     - 386
     - ppc64le
+    - s390x
   ignore:
     - goos: darwin
       goarch: 386
@@ -18,10 +19,14 @@ builds:
       goarch: arm64
     - goos: darwin
       goarch: ppc64le
+    - goos: darwin
+      goarch: s390x
     - goos: windows
       goarch: arm64
     - goos: windows
       goarch: ppc64le
+    - goos: windows
+      goarch: s390x
   ldflags: -s -w -X github.com/vmware-tanzu/sonobuoy/pkg/buildinfo.Version=v{{.Version}} -X github.com/vmware-tanzu/sonobuoy/pkg/buildinfo.GitSHA={{.FullCommit}}
 archives:
   - id: tar
