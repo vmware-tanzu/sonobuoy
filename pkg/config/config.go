@@ -60,7 +60,7 @@ const (
 	DefaultDNSNamespace = "kube-system"
 
 	// DefaultSystemdLogsImage is the URL for the docker image used by the systemd-logs plugin
-	DefaultSystemdLogsImage = "sonobuoy/systemd-logs:v0.3"
+	DefaultSystemdLogsImage = "sonobuoy/systemd-logs:v0.4"
 
 	// DefaultSecurityContextMode is a shorthand for common security context values. Default is nonroot which sets
 	// runAsUser, runAsGroup, and fsGroup. 'none' skips setting those it entirely since Windows does not support them.
