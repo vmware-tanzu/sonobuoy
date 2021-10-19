@@ -25,6 +25,8 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/pkg/errors"
@@ -76,7 +78,9 @@ func NewPlugin(dfn manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy,
 
 // ExpectedResults returns the list of results expected for this daemonset.
 func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
+
 	nodes = p.filterByNodeSelector(nodes)
+	logrus.Errorf("schnake expected results! nodes %v", nodes)
 	ret := make([]plugin.ExpectedResult, 0, len(nodes))
 
 	for _, node := range nodes {
@@ -89,21 +93,55 @@ func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	return ret
 }
 
-// filterByNodeSelector will filter the list of nodes to just the ones matching the affinity of the plugin.
+// filterByNodeSelector will filter the list of nodes to just the ones matching the nodeSelector of the plugin.
 func (p *Plugin) filterByNodeSelector(nodes []v1.Node) []v1.Node {
 	ps := p.Base.Definition.PodSpec
-	if ps == nil ||
-		ps.Affinity == nil ||
-		ps.Affinity.NodeAffinity == nil ||
-		ps.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
+	if ps == nil {
+		return nodes
+	}
+
+	// Match either the nodeSelector field for the affinity.
+	var nodeSelector *v1.NodeSelector
+	if ps.Affinity != nil && ps.Affinity.NodeAffinity != nil {
+		nodeSelector = ps.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution
+	}
+
+	// Translate the nodeSelector field into a labels.Selector with requirements.
+	ls := labels.NewSelector()
+	nodeSelMap := ps.NodeSelector
+	reqs := labels.Requirements{}
+	for k, v := range nodeSelMap {
+		newReq, err := labels.NewRequirement(k, selection.Equals, []string{v})
+		if err != nil {
+			logrus.Errorf("Filtering by labelSelector had a bad requirement: %v", err)
+			return nodes
+		}
+		reqs = append(reqs, *newReq)
+	}
+	ls = ls.Add(reqs...)
+
+	if ls.Empty() && nodeSelector == nil {
+		logrus.Trace("Filtering by nodes had no requirements, returning all nodes")
 		return nodes
 	}
 
 	retNodes := []v1.Node{}
-	nodeSelector := ps.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution
 	for _, node := range nodes {
-		if nodeMatchesNodeSelector(&node, nodeSelector) {
+		logrus.Tracef("Filtering by labelSelector, checking node.GetLabels(): %v against %v", node, node.GetLabels())
+		// Split checks up to clarify logging/debugging.
+		if !ls.Empty() && ls.Matches(labels.Set(node.GetLabels())) {
+			logrus.Tracef("Matched labelSelctors")
 			retNodes = append(retNodes, node)
+			continue
+		} else {
+			logrus.Tracef("Did not match labelSelctors")
+		}
+		if nodeMatchesNodeSelector(&node, nodeSelector) {
+			logrus.Tracef("Matched affinity")
+			retNodes = append(retNodes, node)
+			continue
+		} else {
+			logrus.Tracef("Did not match labelSelctors")
 		}
 	}
 	return retNodes
@@ -257,7 +295,6 @@ func (p *Plugin) Monitor(ctx context.Context, kubeclient kubernetes.Interface, a
 		podsFound[node.Name] = false
 		podsReported[node.Name] = false
 	}
-
 	for {
 		// Sleep between each poll, which should give the DaemonSet
 		// enough time to create pods
@@ -391,6 +428,9 @@ func makeErrorResultsForNodes(resultType string, errdata map[string]interface{},
 // If the nodeSelector has multiple expressions/terms; this method returns the union of the nodes
 // satisfying the individual terms.
 func nodeMatchesNodeSelector(node *v1.Node, sel *v1.NodeSelector) bool {
+	if sel == nil || node == nil {
+		return false
+	}
 	for _, term := range sel.NodeSelectorTerms {
 		// We only support MatchExpressions at this time.
 		for _, exp := range term.MatchExpressions {

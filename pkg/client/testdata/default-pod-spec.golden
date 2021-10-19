@@ -76,6 +76,8 @@ data:
       hostIPC: true
       hostNetwork: true
       hostPID: true
+      nodeSelector:
+        kubernetes.io/os: linux
       serviceAccountName: sonobuoy-serviceaccount
       tolerations:
       - operator: Exists
