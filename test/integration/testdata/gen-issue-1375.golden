@@ -123,6 +123,21 @@ data:
       - mountPath: /tmp/sonobuoy/config
         name: sonobuoy-e2e-vol
   plugin-1.yaml: |
+    podSpec:
+      containers: []
+      dnsPolicy: ClusterFirstWithHostNet
+      hostIPC: true
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: sonobuoy-serviceaccount
+      tolerations:
+      - operator: Exists
+      volumes:
+      - hostPath:
+          path: /
+        name: root
     sonobuoy-config:
       driver: DaemonSet
       plugin-name: systemd-logs

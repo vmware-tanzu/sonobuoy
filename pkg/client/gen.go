@@ -326,7 +326,7 @@ func mergeEnv(e1, e2 []corev1.EnvVar, removeKeys map[string]struct{}) []corev1.E
 
 func SystemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 	trueVal := true
-	return &manifest.Manifest{
+	m := &manifest.Manifest{
 		SonobuoyConfig: manifest.SonobuoyConfig{
 			PluginName:   "systemd-logs",
 			Driver:       "DaemonSet",
@@ -364,6 +364,14 @@ func SystemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 			},
 		},
 	}
+
+	m.PodSpec = &manifest.PodSpec{
+		PodSpec: driver.DefaultPodSpec(m.SonobuoyConfig.Driver),
+	}
+	// systemd-logs only makes sense on linux.
+	// TODO(jschnake): Instead of systemd-logs, make an os-agnostic log gathering plugin.
+	m.PodSpec.PodSpec.NodeSelector = map[string]string{"kubernetes.io/os": "linux"}
+	return m
 }
 
 func E2EManifest(cfg *GenConfig) *manifest.Manifest {

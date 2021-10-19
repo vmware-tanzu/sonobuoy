@@ -577,6 +577,24 @@ func TestExpectedResults(t *testing.T) {
 		return p
 	}
 
+	pluginWithNodeSelector := func(key, val string) *Plugin {
+		p := &Plugin{
+			Base: driver.Base{
+				Definition: manifest.Manifest{
+					SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myPlugin"},
+				},
+			},
+		}
+		if len(key) > 0 {
+			p.Base.Definition.PodSpec = &manifest.PodSpec{
+				PodSpec: corev1.PodSpec{
+					NodeSelector: map[string]string{key: val},
+				},
+			}
+		}
+		return p
+	}
+
 	testCases := []struct {
 		desc   string
 		p      *Plugin
@@ -638,6 +656,12 @@ func TestExpectedResults(t *testing.T) {
 				{Key: "foo", Operator: corev1.NodeSelectorOpNotIn, Values: []string{"bar", "baz"}},
 				{Key: "foo", Operator: corev1.NodeSelectorOpIn, Values: []string{"bar"}},
 			}),
+		}, {
+			desc: "Can use nodeSelector field",
+			expect: []plugin.ExpectedResult{
+				{NodeName: "node2", ResultType: "myPlugin"},
+			},
+			p: pluginWithNodeSelector("foo", "bar"),
 		},
 	}
 	for _, tc := range testCases {
