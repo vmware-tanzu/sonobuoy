@@ -19,6 +19,7 @@ package app
 import (
 	"flag"
 	"fmt"
+
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 
@@ -60,6 +61,7 @@ func NewSonobuoyCommand() *cobra.Command {
 	cmds.AddCommand(NewCmdImages())
 	cmds.AddCommand(NewCmdResults())
 	cmds.AddCommand(NewCmdSplat())
+	cmds.AddCommand(NewCmdWait())
 
 	cmds.AddCommand(NewCmdPlugin())
 

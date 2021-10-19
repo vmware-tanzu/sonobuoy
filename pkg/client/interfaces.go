@@ -17,6 +17,7 @@ limitations under the License.
 package client
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"regexp"
@@ -27,7 +28,10 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 )
 
@@ -113,6 +117,49 @@ type RunConfig struct {
 	GenFile    string
 	Wait       time.Duration
 	WaitOutput string
+}
+
+// GetNamespace will return the namespace from the genconfig or, if loading from a file, will
+// dynamically parse the file and return the namespace from the first namespaced object.
+func (rc *RunConfig) GetNamespace() string {
+	if rc != nil && rc.GenConfig.Config != nil {
+		return rc.GenConfig.Config.Namespace
+	}
+
+	// If loading from a file we have to find the namespace dynamically.
+	manifest, err := loadManifestFromFile(rc.GenFile)
+	if err != nil {
+		panic(errors.Wrap(err, "loading manifest"))
+	}
+
+	buf := bytes.NewBuffer(manifest)
+	d := yaml.NewYAMLOrJSONDecoder(buf, bufferSize)
+
+	for {
+		ext := runtime.RawExtension{}
+		if err := d.Decode(&ext); err != nil {
+			if err == io.EOF {
+				break
+			}
+			panic(errors.Wrap(err, "couldn't decode template"))
+		}
+
+		// Skip over empty or partial objects
+		ext.Raw = bytes.TrimSpace(ext.Raw)
+		if len(ext.Raw) == 0 || bytes.Equal(ext.Raw, []byte("null")) {
+			continue
+		}
+
+		obj := &unstructured.Unstructured{}
+		if err := runtime.DecodeInto(scheme.Codecs.UniversalDecoder(), ext.Raw, obj); err != nil {
+			panic(errors.Wrap(err, "couldn't decode template"))
+		}
+
+		if len(obj.GetNamespace()) > 0 {
+			return obj.GetNamespace()
+		}
+	}
+	return ""
 }
 
 // Validate checks the config to determine if it is valid.
