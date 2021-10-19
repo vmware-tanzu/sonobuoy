@@ -54,7 +54,7 @@ func NewCmdLogs() *cobra.Command {
 	)
 	AddKubeconfigFlag(&f.kubeconfig, cmd.Flags())
 	AddNamespaceFlag(&f.namespace, cmd.Flags())
-	cmd.Flags().StringVarP(&f.plugin, pluginFlag, "p", "", "Show logs only for a specific plugin")
+	cmd.Flags().StringVarP(&f.plugin, pluginFlag, "p", "", "Show logs only for a specific plugin. If 'sonobuoy' is provided, only shows the aggregator logs.")
 	return cmd
 }
 

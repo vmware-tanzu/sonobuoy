@@ -149,7 +149,12 @@ func (r *Reader) Read(p []byte) (int, error) {
 // all the pods have been reported.
 func getPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh chan *v1.Pod) error {
 	listOptions := metav1.ListOptions{}
-	if cfg.Plugin != "" {
+	switch cfg.Plugin {
+	case "":
+	case "sonobuoy":
+		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, "sonobuoy-component", "aggregator")
+		listOptions = metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)}
+	default:
 		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, "sonobuoy-plugin", cfg.Plugin)
 		listOptions = metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)}
 	}
@@ -158,13 +163,13 @@ func getPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh chan
 	if err != nil {
 		return errors.Wrap(err, "failed to list pods")
 	}
-
-	go func() {
-		for _, p := range podList.Items {
-			podCh <- &p
+	go func(pods []v1.Pod) {
+		for _, p := range pods {
+			// DeepCopy avoids a weird data race when reading the data that caused the first pod to often get lost.
+			podCh <- p.DeepCopy()
 		}
 		close(podCh)
-	}()
+	}(podList.Items)
 
 	return nil
 }
@@ -178,7 +183,9 @@ func watchPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh ch
 	listOptions := metav1.ListOptions{TimeoutSeconds: &timeoutSeconds}
 	if cfg.Plugin != "" {
 		selector := metav1.AddLabelToSelector(&metav1.LabelSelector{}, "sonobuoy-plugin", cfg.Plugin)
-		listOptions = metav1.ListOptions{LabelSelector: metav1.FormatLabelSelector(selector)}
+		listOptions = metav1.ListOptions{
+			LabelSelector: metav1.FormatLabelSelector(selector),
+		}
 	}
 
 	lw := &cache.ListWatch{
@@ -244,6 +251,7 @@ func (s *SonobuoyClient) LogReader(cfg *LogConfig) (*Reader, error) {
 		for pod := range podCh {
 			for _, container := range pod.Spec.Containers {
 				wg.Add(1)
+
 				ls := &logStreamer{
 					ns:        pod.Namespace,
 					pod:       pod.Name,
