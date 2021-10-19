@@ -63,7 +63,6 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 	buf := bytes.NewBuffer(manifest)
 	d := yaml.NewYAMLOrJSONDecoder(buf, bufferSize)
 
-	var createdNamespace string
 	for {
 		ext := runtime.RawExtension{}
 		if err := d.Decode(&ext); err != nil {
@@ -92,13 +91,6 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 			return errors.Wrap(err, "could not get object namespace")
 		}
 
-		// The namespace value is required if Wait is enabled in order to check the status.
-		// It may not be available within the RunConfig but we can retrieve it from the
-		// namespace of objects within the manifest.
-		if createdNamespace == "" && namespace != "" {
-			createdNamespace = namespace
-		}
-
 		// err is used to determine output for user; but first extract resource
 		_, err = c.dynamicClient.CreateObject(obj)
 		resource, err2 := c.dynamicClient.ResourceVersion(obj)
@@ -111,81 +103,90 @@ func (c *SonobuoyClient) RunManifest(cfg *RunConfig, manifest []byte) error {
 	}
 
 	if cfg.Wait > time.Duration(0) {
-		// The runCondition will be a closure around this variable so that subsequent
-		// polling attempts know if the status has been present yet.
-		seenStatus := false
+		return c.WaitForRun(cfg)
+	}
 
-		// Printer allows us to more easily add output conditionally throughout the runCondition.
-		var printer = func(string) {}
-		if cfg.WaitOutput == progressMode {
-			lastMsg := ""
-			seenLines := map[string]struct{}{}
-			printer = func(s string) {
-				if s == lastMsg {
-					fmt.Println("...")
-					return
-				}
-				lines := strings.Split(s, "\n")
-				for _, l := range lines {
-					lKey := stripSpaces(l)
-					if _, ok := seenLines[lKey]; !ok {
-						seenLines[lKey] = struct{}{}
-						fmt.Printf("%v %v\n", time.Now().Format("15:04:05"), l)
-					}
-				}
-				lastMsg = s
+	return nil
+}
+
+// WaitForRun handles the 'wait' from sonobuoy run --wait. "Attaches" to the sonobuoy run
+// in the configured namespace and then returns when completed. Returns errors encountered
+func (c *SonobuoyClient) WaitForRun(cfg *RunConfig) error {
+	// The runCondition will be a closure around this variable so that subsequent
+	// polling attempts know if the status has been present yet.
+	seenStatus := false
+
+	ns := cfg.GetNamespace()
+
+	// Printer allows us to more easily add output conditionally throughout the runCondition.
+	var printer = func(string) {}
+	if cfg.WaitOutput == progressMode {
+		lastMsg := ""
+		seenLines := map[string]struct{}{}
+		printer = func(s string) {
+			if s == lastMsg {
+				fmt.Println("...")
+				return
 			}
+			lines := strings.Split(s, "\n")
+			for _, l := range lines {
+				lKey := stripSpaces(l)
+				if _, ok := seenLines[lKey]; !ok {
+					seenLines[lKey] = struct{}{}
+					fmt.Printf("%v %v\n", time.Now().Format("15:04:05"), l)
+				}
+			}
+			lastMsg = s
 		}
-		runCondition := func() (bool, error) {
+	}
+	runCondition := func() (bool, error) {
 
-			// Get the Aggregator pod and check if its status is completed or terminated.
-			status, err := c.GetStatus(&StatusConfig{Namespace: createdNamespace})
-			switch {
-			case err != nil && seenStatus:
-				printer(fmt.Sprintf("Failed to check status of the aggregator: %v", err))
-				return false, errors.Wrap(err, "failed to get status")
-			case err != nil && !seenStatus:
-				// Allow more time for the status to reported.
-				printer("Waiting for the aggregator to get tagged with its current status...")
-				return false, nil
-			case status != nil:
-				seenStatus = true
-			}
+		// Get the Aggregator pod and check if its status is completed or terminated.
+		status, err := c.GetStatus(&StatusConfig{Namespace: ns})
+		switch {
+		case err != nil && seenStatus:
+			printer(fmt.Sprintf("Failed to check status of the aggregator: %v", err))
+			return false, errors.Wrap(err, "failed to get status")
+		case err != nil && !seenStatus:
+			// Allow more time for the status to reported.
+			printer("Waiting for the aggregator to get tagged with its current status...")
+			return false, nil
+		case status != nil:
+			seenStatus = true
+		}
 
-			// if nil below was added for coverage on staticcheck
-			// TODO: ensure this is the desired behavior
-			if status == nil {
-				printer("Aggregator status is nil after having been applied previously. Report this as an error.")
-				return false, nil
-			}
-
-			switch {
-			case status.Status == aggregation.CompleteStatus:
-				printer(aggregatorStatusToProgress(status))
-				return true, nil
-			case status.Status == aggregation.FailedStatus:
-				printer(aggregatorStatusToProgress(status))
-				return true, fmt.Errorf("pod entered a fatal terminal status: %v", status.Status)
-			}
-			printer(aggregatorStatusToProgress(status))
+		// if nil below was added for coverage on staticcheck
+		// TODO: ensure this is the desired behavior
+		if status == nil {
+			printer("Aggregator status is nil after having been applied previously. Report this as an error.")
 			return false, nil
 		}
 
-		switch cfg.WaitOutput {
-		case spinnerMode:
-			var s = getSpinnerInstance()
-			s.Start()
-			defer s.Stop()
-		case progressMode:
-			// handled by conditionFunc since it has to be part of the polling.
-			// Could use channels but that will lead to future issues.
+		switch {
+		case status.Status == aggregation.CompleteStatus:
+			printer(aggregatorStatusToProgress(status))
+			return true, nil
+		case status.Status == aggregation.FailedStatus:
+			printer(aggregatorStatusToProgress(status))
+			return true, fmt.Errorf("pod entered a fatal terminal status: %v", status.Status)
 		}
-		err := wait.Poll(pollInterval, cfg.Wait, runCondition)
-		if err != nil {
-			return errors.Wrap(err, "waiting for run to finish")
-		}
+		printer(aggregatorStatusToProgress(status))
+		return false, nil
 	}
 
+	switch cfg.WaitOutput {
+	case spinnerMode:
+		var s = getSpinnerInstance()
+		s.Start()
+		defer s.Stop()
+	case progressMode:
+		// handled by conditionFunc since it has to be part of the polling.
+		// Could use channels but that will lead to future issues.
+	}
+	err := wait.Poll(pollInterval, cfg.Wait, runCondition)
+	if err != nil {
+		return errors.Wrap(err, "waiting for run to finish")
+	}
 	return nil
 }
 
