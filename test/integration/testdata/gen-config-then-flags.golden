@@ -102,13 +102,13 @@ data:
       - name: SONOBUOY_K8S_VERSION
         value: ignore
       - name: SONOBUOY_RESULTS_DIR
-        value: /tmp/sonobuoy/results
+        value: /tmp/sonobuoy
       image: k8s.gcr.io/conformance:ignore
       imagePullPolicy: Always
       name: e2e
       resources: {}
       volumeMounts:
-      - mountPath: /tmp/results
+      - mountPath: /tmp/sonobuoy
         name: results
   plugin-1.yaml: |
     podSpec:
@@ -143,8 +143,6 @@ data:
         valueFrom:
           fieldRef:
             fieldPath: spec.nodeName
-      - name: RESULTS_DIR
-        value: /tmp/results
       - name: SONOBUOY
         value: "true"
       - name: SONOBUOY_CONFIG_DIR
@@ -152,7 +150,7 @@ data:
       - name: SONOBUOY_K8S_VERSION
         value: ignore
       - name: SONOBUOY_RESULTS_DIR
-        value: /tmp/sonobuoy/results
+        value: /tmp/sonobuoy
       image: sonobuoy/systemd-logs:v0.4
       imagePullPolicy: Always
       name: systemd-logs
@@ -160,7 +158,7 @@ data:
       securityContext:
         privileged: true
       volumeMounts:
-      - mountPath: /tmp/results
+      - mountPath: /tmp/sonobuoy
         name: results
       - mountPath: /node
         name: root

@@ -46,7 +46,7 @@ const (
 	// AggregatorContainerName is the name of the main container in the aggregator pod.
 	AggregatorContainerName = "kube-sonobuoy"
 	// AggregatorResultsPath is the location in the main container of the aggregator pod where results will be archived.
-	AggregatorResultsPath = "/tmp/sonobuoy"
+	AggregatorResultsPath = "/tmp/sonobuoy/results"
 	// DefaultSonobuoyPullPolicy is the default pull policy used in the Sonobuoy config.
 	DefaultSonobuoyPullPolicy = "IfNotPresent"
 	// DefaultQueryQPS is the number of queries per second Sonobuoy will make when gathering data.

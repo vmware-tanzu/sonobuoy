@@ -170,7 +170,8 @@ func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate, progres
 			},
 		},
 		{
-			Name:  "RESULTS_DIR",
+			// This should actually have the cfg.ResultsDir value but it is not available.
+			Name:  "SONOBUOY_RESULTS_DIR",
 			Value: plugin.ResultsDir,
 		},
 		{

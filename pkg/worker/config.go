@@ -40,7 +40,7 @@ func LoadConfig() (*plugin.WorkerConfig, error) {
 
 	viper.BindEnv("aggregatorurl", "AGGREGATOR_URL")
 	viper.BindEnv("nodename", "NODE_NAME")
-	viper.BindEnv("resultsdir", "RESULTS_DIR")
+	viper.BindEnv("resultsdir", "SONOBUOY_RESULTS_DIR")
 	viper.BindEnv("resulttype", "RESULT_TYPE")
 
 	viper.BindEnv("cacert", "CA_CERT")

@@ -43,5 +43,5 @@ spec:
   name: e2e
   resources: {}
   volumeMounts:
-  - mountPath: /tmp/results
+  - mountPath: /tmp/sonobuoy/results
     name: results
