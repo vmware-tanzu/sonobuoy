@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"time"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 
@@ -49,18 +48,6 @@ func getPodLogOptions(cfg *config.Config) *v1.PodLogOptions {
 		Timestamps:   podLogLimits.Timestamps,
 		TailLines:    podLogLimits.TailLines,
 		LimitBytes:   podLogLimits.LimitBytes,
-	}
-
-	// TODO: investigate using LimitBytes (SizeLimitBytes is deprecated)
-	//       and SinceSeconds (TimeLimitDuration is deprecated)
-	// Only set values if they have values greater than 0 (as in they user specified).
-	limitBytes := podLogLimits.SizeLimitBytes(0)                           //nolint:staticcheck
-	sinceSeconds := int64(podLogLimits.TimeLimitDuration(0) / time.Second) //nolint:staticcheck
-	if limitBytes > 0 {
-		options.LimitBytes = &limitBytes
-	}
-	if sinceSeconds > 0 {
-		options.SinceSeconds = &sinceSeconds
 	}
 
 	return options
