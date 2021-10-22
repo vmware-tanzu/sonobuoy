@@ -102,9 +102,14 @@ func NewCmdPlugin() *cobra.Command {
 func getPluginCacheLocation() string {
 	usePath := os.Getenv(SonobuoyDirEnvKey)
 	if len(usePath) == 0 {
+		logrus.Tracef("No %v was set, using default: %v", SonobuoyDirEnvKey, defaultSonobuoyDir)
 		usePath = defaultSonobuoyDir
+	} else {
+		logrus.Tracef("%v set to %v", SonobuoyDirEnvKey, usePath)
 	}
 	expandedPath, err := expandPath(usePath)
+	logrus.Tracef("%v:%v expanded to: %v", SonobuoyDirEnvKey, usePath, expandedPath)
+
 	if err != nil {
 		logrus.Errorf("failed to expand sonobuoy directory %q: %v", usePath, err)
 		return ""
@@ -231,7 +236,11 @@ func installPlugin(installedDir, filename, src string) error {
 	}
 
 	newPath := filepath.Join(installedDir, filename)
+
+	// Disable plugin caching on this temporary pluginList value by saying it has already bin initialized to the empty string.
 	var pl pluginList
+	pl.initInstallDir = true
+
 	if err := pl.Set(src); err != nil {
 		return err
 	}

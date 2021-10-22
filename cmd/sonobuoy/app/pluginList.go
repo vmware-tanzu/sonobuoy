@@ -48,6 +48,11 @@ type pluginList struct {
 	// in the present working directory or a URL. If blank, the list won't be able to load
 	// plugins without specfying the whole path (or a relative one from the cwd).
 	InstallDir string
+
+	// initInstallDir is a flag to show us if we have looked up the plugin cache location yet.
+	// Don't want to do this too early or else it happens before flags like `--level=trace` have been
+	// parsed, leading to misleading logs.
+	initInstallDir bool
 }
 
 const (
@@ -88,7 +93,7 @@ func (p *pluginList) Set(str string) error {
 	}
 
 	// Load first from cache, then special cases (e2e/systemd-logs), then local file.
-	if p.InstallDir != "" {
+	if p.GetInstallDir() != "" {
 		handled, err := p.loadPluginsFromInstalled(str, renameAs)
 		if handled {
 			if err != nil {
@@ -126,7 +131,7 @@ func isURL(s string) bool {
 
 func (p *pluginList) loadPluginsFromInstalled(str, renameAs string) (handled bool, returnErr error) {
 	// If empty, disable cache instead of err.
-	if len(p.InstallDir) == 0 {
+	if len(p.GetInstallDir()) == 0 {
 		return false, nil
 	}
 
@@ -234,4 +239,21 @@ func loadManifest(bytes []byte) (*manifest.Manifest, error) {
 func isNotExist(e error) bool {
 	_, ok := errors.Cause(e).(*pluginNotFoundError)
 	return ok
+}
+
+// GetInstallDir should be used instead of referencing InstallDir directly. It allows
+// for lazy lookup of the cache location.
+func (p *pluginList) GetInstallDir() string {
+	if p.initInstallDir {
+		return p.InstallDir
+	}
+
+	if !featureEnabled(FeaturePluginInstallation) {
+		p.InstallDir = ""
+	} else {
+		p.InstallDir = getPluginCacheLocation()
+	}
+	p.initInstallDir = true
+
+	return p.InstallDir
 }
