@@ -148,6 +148,8 @@ jobs:
         run: |
           docker load -i build/linux/amd64/sonobuoy-img-linux-amd64-${{ github.run_id }}.tar
           docker load -i build/linux/arm64/sonobuoy-img-linux-arm64-${{ github.run_id }}.tar
+          docker load -i build/linux/ppc64le/sonobuoy-img-linux-ppc64le-${{ github.run_id }}.tar
+          docker load -i build/linux/s390x/sonobuoy-img-linux-s390x-${{ github.run_id }}.tar
           docker image ls
       - name: Login to Docker Hub
         uses: docker/login-action@v1
