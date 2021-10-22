@@ -79,11 +79,6 @@ func LoadConfig() (*Config, error) {
 	// 4 - Any other settings
 	cfg.Version = buildinfo.Version
 
-	// Make the results dir overridable with an environment variable
-	if resultsDir, ok := os.LookupEnv("RESULTS_DIR"); ok {
-		cfg.ResultsDir = resultsDir
-	}
-
 	// If the loaded config doesn't have its own UUID, create one
 	if cfg.UUID == "" {
 		cfgUuid, _ := uuid.NewV4()

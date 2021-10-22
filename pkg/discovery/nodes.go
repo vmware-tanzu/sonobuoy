@@ -56,7 +56,7 @@ func gatherNodeData(nodeNames []string, restclient rest.Interface, cfg *config.C
 
 	for _, name := range nodeNames {
 		// Create the output for each node
-		out := path.Join(cfg.OutputDir(), HostsLocation, name)
+		out := path.Join(cfg.AggregatorUUIDDir(), HostsLocation, name)
 		logrus.Infof("Creating host results for %v under %v\n", name, out)
 		if err := os.MkdirAll(out, 0755); err != nil {
 			return err

@@ -25,7 +25,7 @@ import (
 func copyFile(src, dst string) (int64, error) {
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to stat src file %q: %w", src, err)
 	}
 
 	if !sourceFileStat.Mode().IsRegular() {
@@ -34,15 +34,15 @@ func copyFile(src, dst string) (int64, error) {
 
 	source, err := os.Open(src)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to open src file %q: %w", src, err)
 	}
 	defer source.Close()
 
 	destination, err := os.Create(dst)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to create dst file %q: %w", dst, err)
 	}
 	defer destination.Close()
 	nBytes, err := io.Copy(destination, source)
-	return nBytes, err
+	return nBytes, fmt.Errorf("failed to copy file contents: %w", err)
 }

@@ -30,6 +30,8 @@ spec:
     value: \[Disruptive\]|NoExecuteTaintManager
   - name: E2E_USE_GO_RUNNER
     value: "true"
+  - name: RESULTS_DIR
+    value: /tmp/sonobuoy/results
   - name: SONOBUOY
     value: "true"
   - name: SONOBUOY_CONFIG_DIR
@@ -43,5 +45,5 @@ spec:
   name: e2e
   resources: {}
   volumeMounts:
-  - mountPath: /tmp/results
+  - mountPath: /tmp/sonobuoy/results
     name: results

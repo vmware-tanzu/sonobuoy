@@ -46,13 +46,13 @@ const (
 	envVarKeyExtraArgs = "E2E_EXTRA_ARGS"
 
 	// sonobuoyKey is just a true/false env to indicate that the container was launched/tagged by Sonobuoy.
-	sonobuoyKey           = "SONOBUOY"
-	sonobuoyK8sVersionKey = "SONOBUOY_K8S_VERSION"
-	sonobuoyResultsDirKey = "SONOBUOY_RESULTS_DIR"
-	sonobuoyConfigDirKey  = "SONOBUOY_CONFIG_DIR"
+	sonobuoyKey                 = "SONOBUOY"
+	sonobuoyK8sVersionKey       = "SONOBUOY_K8S_VERSION"
+	sonobuoyResultsDirKey       = "SONOBUOY_RESULTS_DIR"
+	sonobuoyLegacyResultsDirKey = "RESULTS_DIR"
+	sonobuoyConfigDirKey        = "SONOBUOY_CONFIG_DIR"
 
-	sonobuoyDefaultConfigDir  = "/tmp/sonobuoy/config"
-	sonobuoyDefaultResultsDir = "/tmp/sonobuoy/results"
+	sonobuoyDefaultConfigDir = "/tmp/sonobuoy/config"
 )
 
 // templateValues are used for direct template substitution for manifest generation.
@@ -278,7 +278,8 @@ func applyAutoEnvVars(imageVersion string, env map[string]map[string]string, plu
 			env[p.SonobuoyConfig.PluginName] = map[string]string{}
 		}
 		env[p.SonobuoyConfig.PluginName][sonobuoyK8sVersionKey] = imageVersion
-		env[p.SonobuoyConfig.PluginName][sonobuoyResultsDirKey] = sonobuoyDefaultResultsDir
+		env[p.SonobuoyConfig.PluginName][sonobuoyResultsDirKey] = plugin.ResultsDir
+		env[p.SonobuoyConfig.PluginName][sonobuoyLegacyResultsDirKey] = plugin.ResultsDir
 		env[p.SonobuoyConfig.PluginName][sonobuoyConfigDirKey] = sonobuoyDefaultConfigDir
 		env[p.SonobuoyConfig.PluginName][sonobuoyKey] = "true"
 		plugins[i].Spec.Image = strings.ReplaceAll(plugins[i].Spec.Image, "$"+sonobuoyK8sVersionKey, imageVersion)

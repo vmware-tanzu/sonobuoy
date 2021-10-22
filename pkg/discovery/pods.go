@@ -89,7 +89,7 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			outdir := path.Join(cfg.OutputDir(), PodLogsLocation, pod.Namespace, pod.Name, "logs")
+			outdir := path.Join(cfg.AggregatorUUIDDir(), PodLogsLocation, pod.Namespace, pod.Name, "logs")
 			if err = os.MkdirAll(outdir, 0755); err != nil {
 				return errors.WithStack(err)
 			}

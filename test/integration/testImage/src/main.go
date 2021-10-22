@@ -20,11 +20,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	doneFile   = "/tmp/results/done"
-	resultsDir = "/tmp/results"
-)
-
 func main() {
 	rootCmd := &cobra.Command{Use: "testImage", Version: "0.0.1"}
 	rootCmd.AddCommand(cmdSingleFile)

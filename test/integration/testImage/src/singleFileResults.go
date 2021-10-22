@@ -34,7 +34,7 @@ var cmdSingleFile = &cobra.Command{
 
 func reportSingleFile(cmd *cobra.Command, args []string) error {
 	targetFile := args[0]
-	resultsFile := filepath.Join(resultsDir, filepath.Base(targetFile))
+	resultsFile := filepath.Join(os.Getenv("SONOBUOY_RESULTS_DIR"), filepath.Base(targetFile))
 
 	// Copy file to location Sonobuoy can get it.
 	_, err := copyFile(targetFile, resultsFile)
@@ -43,6 +43,6 @@ func reportSingleFile(cmd *cobra.Command, args []string) error {
 	}
 
 	// Report location to Sonobuoy.
-	err = ioutil.WriteFile(doneFile, []byte(resultsFile), os.FileMode(0666))
+	err = ioutil.WriteFile(filepath.Join(os.Getenv("SONOBUOY_RESULTS_DIR"), "done"), []byte(resultsFile), os.FileMode(0666))
 	return errors.Wrap(err, "failed to write to done file")
 }

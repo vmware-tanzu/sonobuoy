@@ -39,7 +39,7 @@ var (
 	tarCmd = []string{
 		"/sonobuoy",
 		"splat",
-		config.AggregatorResultsPath,
+		pluginaggregation.ResultsDir,
 	}
 )
 

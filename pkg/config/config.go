@@ -23,6 +23,7 @@ import (
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	pluginaggregation "github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -45,6 +46,8 @@ const (
 	AggregatorContainerName = "kube-sonobuoy"
 	// AggregatorResultsPath is the location in the main container of the aggregator pod where results will be archived.
 	AggregatorResultsPath = "/tmp/sonobuoy"
+	// DefaultResultsDir is the results directory the plugin/worker will use to coordinate results.
+	DefaultResultsDir = "/tmp/sonobuoy/results"
 	// DefaultSonobuoyPullPolicy is the default pull policy used in the Sonobuoy config.
 	DefaultSonobuoyPullPolicy = "IfNotPresent"
 	// DefaultQueryQPS is the number of queries per second Sonobuoy will make when gathering data.
@@ -105,7 +108,6 @@ type Config struct {
 	Description string `json:"Description" mapstructure:"Description"`
 	UUID        string `json:"UUID" mapstructure:"UUID"`
 	Version     string `json:"Version" mapstructure:"Version"`
-	ResultsDir  string `json:"ResultsDir" mapstructure:"ResultsDir"`
 
 	///////////////////////////////////////////////
 	// Query options
@@ -244,17 +246,16 @@ func (cfg *Config) FilterResources(filter []string) []string {
 	return results
 }
 
-// OutputDir returns the directory under the ResultsDir containing the
+// AggregatorUUIDDir returns the directory under the ResultsDir containing the
 // UUID for this run.
-func (cfg *Config) OutputDir() string {
-	return path.Join(cfg.ResultsDir, cfg.UUID)
+func (cfg *Config) AggregatorUUIDDir() string {
+	return path.Join(pluginaggregation.ResultsDir, cfg.UUID)
 }
 
 // New returns a newly-constructed Config object with default values.
 func New() *Config {
 	var cfg Config
 	cfg.Description = "DEFAULT"
-	cfg.ResultsDir = AggregatorResultsPath
 	cfg.Version = buildinfo.Version
 
 	cfg.Filters.Namespaces = ".*"

@@ -149,9 +149,9 @@ func QueryResources(
 	}
 
 	// 1. Create the parent directory we will use to store the results
-	outdir := filepath.Join(cfg.OutputDir(), ClusterResourceLocation)
+	outdir := filepath.Join(cfg.AggregatorUUIDDir(), ClusterResourceLocation)
 	if ns != nil {
-		outdir = filepath.Join(cfg.OutputDir(), NSResourceLocation, *ns)
+		outdir = filepath.Join(cfg.AggregatorUUIDDir(), NSResourceLocation, *ns)
 	}
 
 	if err := os.MkdirAll(outdir, 0755); err != nil {
@@ -346,7 +346,7 @@ func queryServerVersion(kubeClient kubernetes.Interface, recorder *QueryRecorder
 
 	objqry := func() (interface{}, error) { return kubeClient.Discovery().ServerVersion() }
 	query := func() (time.Duration, error) {
-		return timedObjectQuery(cfg.OutputDir(), "serverversion.json", objqry)
+		return timedObjectQuery(cfg.AggregatorUUIDDir(), "serverversion.json", objqry)
 	}
 	timedQuery(recorder, "serverversion", "", query)
 
@@ -360,7 +360,7 @@ func queryServerGroups(kubeClient kubernetes.Interface, recorder *QueryRecorder,
 	}
 	objqry := func() (interface{}, error) { return kubeClient.Discovery().ServerGroups() }
 	query := func() (time.Duration, error) {
-		return timedObjectQuery(cfg.OutputDir(), "servergroups.json", objqry)
+		return timedObjectQuery(cfg.AggregatorUUIDDir(), "servergroups.json", objqry)
 	}
 	timedQuery(recorder, "servergroups", "", query)
 

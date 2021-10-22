@@ -80,8 +80,8 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// 1. Create the directory which will store the results, including the
 	// `meta` directory inside it (which we always need regardless of
 	// config)
-	outpath := filepath.Join(cfg.ResultsDir, cfg.UUID)
-	metapath := filepath.Join(outpath, MetaLocation)
+	outpathWithUUID := filepath.Join(pluginaggregation.ResultsDir, cfg.UUID)
+	metapath := filepath.Join(outpathWithUUID, MetaLocation)
 	err = os.MkdirAll(metapath, 0755)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create directory to store results"))
@@ -149,7 +149,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	}
 
 	// 4. Run the plugin aggregator. Save this error for clear logging later.
-	runErr := pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.Namespace, outpath)
+	runErr := pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.Namespace, outpathWithUUID)
 	trackErrorsFor("running plugins")(runErr)
 
 	// 5. Run the queries
@@ -220,13 +220,13 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// Postprocessing before we create the tarball.
 	for _, p := range cfg.LoadedPlugins {
 		logrus.WithField("plugin", p.GetName()).Trace("Post-processing")
-		item, errs := results.PostProcessPlugin(p, outpath)
+		item, errs := results.PostProcessPlugin(p, outpathWithUUID)
 		for _, e := range errs {
 			logrus.Errorf("Error processing plugin %v: %v", p.GetName(), e)
 		}
 
 		// Save results object regardless of errors; it is our best effort to understand the results.
-		if err := results.SaveProcessedResults(p.GetName(), outpath, item); err != nil {
+		if err := results.SaveProcessedResults(p.GetName(), outpathWithUUID, item); err != nil {
 			logrus.Errorf("Unable to save results for plugin %v: %v", p.GetName(), err)
 		}
 
@@ -243,7 +243,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 			Tracef("Saving plugin definition")
 		runInfo.LoadedPlugins = append(runInfo.LoadedPlugins, p.GetName())
 		trackErrorsFor("saving plugin info")(
-			dumpPlugin(p, outpath),
+			dumpPlugin(p, outpathWithUUID),
 		)
 	}
 
@@ -257,10 +257,10 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 
 	// 8. tarball up results YYYYMMDDHHMM_sonobuoy_UID.tar.gz
 	filename := fmt.Sprintf("%v_sonobuoy_%v.tar.gz", t.Format("200601021504"), cfg.UUID)
-	tb := filepath.Join(cfg.ResultsDir, filename)
-	err = tarball.DirToTarball(outpath, tb, true)
+	tb := filepath.Join(pluginaggregation.ResultsDir, filename)
+	err = tarball.DirToTarball(outpathWithUUID, tb, true)
 	if err == nil {
-		defer os.RemoveAll(outpath)
+		defer os.RemoveAll(outpathWithUUID)
 	}
 	trackErrorsFor("assembling results tarball")(err)
 

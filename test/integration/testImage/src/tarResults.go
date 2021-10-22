@@ -58,14 +58,14 @@ func reportTarFile(cmd *cobra.Command, args []string) error {
 	}
 
 	// Create tarball.
-	tb := filepath.Join(resultsDir, "results.tar.gz")
+	tb := filepath.Join(os.Getenv("SONOBUOY_RESULTS_DIR"), "results.tar.gz")
 	err = tarDir(outPath, tb, true)
 	if err != nil {
 		return errors.Wrap(err, "failed to create tarball")
 	}
 
 	// Report location to Sonobuoy.
-	err = ioutil.WriteFile(doneFile, []byte(tb), os.FileMode(0666))
+	err = ioutil.WriteFile(filepath.Join(os.Getenv("SONOBUOY_RESULTS_DIR"), "done"), []byte(tb), os.FileMode(0666))
 	return errors.Wrap(err, "failed to write to done file")
 }
 

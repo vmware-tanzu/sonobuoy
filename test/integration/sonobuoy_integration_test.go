@@ -69,8 +69,9 @@ func runSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args strin
 		command.Env = append(command.Env, v)
 	}
 	t.Logf("Running %q with env: %v\n", command.String(), command.Env)
-
-	return combinedOutput, command.Run()
+	err := command.Run()
+	t.Log(combinedOutput.String())
+	return combinedOutput, err
 }
 
 func mustRunSonobuoyCommand(t *testing.T, args string) bytes.Buffer {
@@ -98,7 +99,7 @@ func mustRunSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args s
 	if err := command.Run(); err != nil {
 		t.Fatalf("Expected %q to not error but got error: %q with stdout: %q and stderr: %q", args, err, stdout.String(), stderr.String())
 	}
-
+	t.Log(stdout.String())
 	return stdout
 }
 

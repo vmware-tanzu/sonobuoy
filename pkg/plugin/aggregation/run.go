@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/pkg/errors"
@@ -97,7 +98,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	logrus.Infof("Starting server Expected Results: %v", expectedResults)
 
 	// 1. Await results from each plugin
-	aggr := NewAggregator(outdir+"/plugins", expectedResults)
+	aggr := NewAggregator(filepath.Join(outdir, "plugins"), expectedResults)
 	doneAggr := make(chan bool, 1)
 	stopWaitCh := make(chan bool, 1)
 

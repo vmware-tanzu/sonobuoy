@@ -39,6 +39,11 @@ import (
 const (
 	gzipMimeType       = "application/gzip"
 	defaultRetryWindow = 120 * time.Second
+
+	// ResultsDir is the location at which the aggregator will put results for the client to download.
+	// Note that this is different than the plugin.ResultsDir due to historical reasons (though it would
+	// be great to move thsi to /tmp/sonobuoy/results as well.
+	ResultsDir = "/tmp/results"
 )
 
 // Aggregator is responsible for taking results from an HTTP server (configured
@@ -46,7 +51,8 @@ const (
 // been seen so far, so that we can return when all expected results are
 // present and accounted for.
 type Aggregator struct {
-	// OutputDir is the directory to write the node results
+	// OutputDir is the path where results will be stored. Typically uses a default value
+	// but testing may inject other values.
 	OutputDir string
 
 	// Results stores a map of check-in results the server has seen
@@ -111,7 +117,8 @@ type keyer interface {
 }
 
 // NewAggregator constructs a new Aggregator object to write the given result
-// set out to the given output directory.
+// set out to the standard results directory. The UUID will be used for naming throughout
+// to ensure uniqueness.
 func NewAggregator(outputDir string, expected []plugin.ExpectedResult) *Aggregator {
 	aggr := &Aggregator{
 		OutputDir:             outputDir,

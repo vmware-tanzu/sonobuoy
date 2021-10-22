@@ -13,6 +13,6 @@ spec:
   name: plugin
   resources: {}
   volumeMounts:
-  - mountPath: /tmp/results
+  - mountPath: /tmp/sonobuoy/results
     name: results
 

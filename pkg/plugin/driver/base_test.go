@@ -188,7 +188,7 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 		expectedEnvVars := []v1.EnvVar{
 			{
 				Name:  "RESULTS_DIR",
-				Value: "/tmp/results",
+				Value: "/tmp/sonobuoy/results",
 			},
 			{
 				Name:  "RESULT_TYPE",
@@ -247,7 +247,7 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 		expectedVolume := v1.VolumeMount{
 			Name:      "results",
 			ReadOnly:  false,
-			MountPath: "/tmp/results",
+			MountPath: "/tmp/sonobuoy/results",
 		}
 		if len(container.VolumeMounts) != 1 {
 			return fmt.Errorf("expected the container to have one volume mount, got %v", len(container.VolumeMounts))
