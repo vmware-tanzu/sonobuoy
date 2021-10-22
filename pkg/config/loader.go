@@ -113,15 +113,7 @@ func LoadConfig() (*Config, error) {
 // Validate returns a list of errors for the configuration, if any are found.
 func (cfg *Config) Validate() (errorsList []error) {
 	podLogLimits := &cfg.Limits.PodLogs
-
-	if _, defaulted, err := podLogLimits.sizeLimitBytes(); err != nil && !defaulted {
-		errorsList = append(errorsList, err)
-	}
-
-	if _, defaulted, err := podLogLimits.timeLimitDuration(); err != nil && !defaulted {
-		errorsList = append(errorsList, err)
-	}
-
+	
 	if podLogLimits.SinceTime != nil && podLogLimits.SinceSeconds != nil {
 		errorsList = append(errorsList, errors.New("Only one of sinceSeconds or sinceTime may be specified."))
 	}

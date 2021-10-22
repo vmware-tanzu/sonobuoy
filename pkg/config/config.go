@@ -20,9 +20,7 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 
-	"github.com/c2h5oh/datasize"
 	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -231,12 +229,6 @@ type PodLogLimits struct {
 	// slightly more or slightly less than the specified limit.
 	// +optional
 	LimitBytes *int64 `json:"LimitBytes" mapstructure:"LimitBytes"`
-
-	// Deprecated: use LimitBytes instead
-	LimitSize string `json:"LimitSize" mapstructure:"LimitSize"`
-
-	// Deprecated: use SinceSeconds instead
-	LimitTime string `json:"LimitTime" mapstructure:"LimitTime"`
 }
 
 // FilterResources is a utility function used to parse Resources
@@ -256,56 +248,6 @@ func (cfg *Config) FilterResources(filter []string) []string {
 // UUID for this run.
 func (cfg *Config) OutputDir() string {
 	return path.Join(cfg.ResultsDir, cfg.UUID)
-}
-
-// Deprecated: use PodLogLimits.LimitBytes instead
-// SizeLimitBytes returns how many bytes the configuration is set to limit,
-// returning defaultVal if not set.
-func (c PodLogLimits) SizeLimitBytes(defaultVal int64) int64 {
-	val, defaulted, err := c.sizeLimitBytes()
-
-	// Ignore error, since we should have already caught it in validation
-	if err != nil || defaulted {
-		return defaultVal
-	}
-
-	return val
-}
-
-// Deprecated: use PodLogLimits.LimitBytes instead
-func (c PodLogLimits) sizeLimitBytes() (val int64, defaulted bool, err error) {
-	str := c.LimitSize
-	if str == "" {
-		return 0, true, nil
-	}
-
-	var bs datasize.ByteSize
-	err = bs.UnmarshalText([]byte(str))
-	return int64(bs.Bytes()), false, err
-}
-
-// Deprecated: use PodLogLimits.SinceSeconds instead
-// TimeLimitDuration returns the duration the configuration is set to limit, returning defaultVal if not set.
-func (c PodLogLimits) TimeLimitDuration(defaultVal time.Duration) time.Duration {
-	val, defaulted, err := c.timeLimitDuration()
-
-	// Ignore error, since we should have already caught it in validation
-	if err != nil || defaulted {
-		return defaultVal
-	}
-
-	return val
-}
-
-// Deprecated: use PodLogLimits.SinceSeconds instead
-func (c PodLogLimits) timeLimitDuration() (val time.Duration, defaulted bool, err error) {
-	str := c.LimitTime
-	if str == "" {
-		return 0, true, nil
-	}
-
-	val, err = time.ParseDuration(str)
-	return val, false, err
 }
 
 // New returns a newly-constructed Config object with default values.
