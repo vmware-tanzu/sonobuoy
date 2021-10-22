@@ -78,9 +78,7 @@ func NewPlugin(dfn manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy,
 
 // ExpectedResults returns the list of results expected for this daemonset.
 func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
-
 	nodes = p.filterByNodeSelector(nodes)
-	logrus.Errorf("schnake expected results! nodes %v", nodes)
 	ret := make([]plugin.ExpectedResult, 0, len(nodes))
 
 	for _, node := range nodes {
@@ -197,7 +195,7 @@ func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificat
 
 	podSpec.Containers = append(podSpec.Containers,
 		p.Definition.Spec.Container,
-		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/sonobuoy", "worker", "single-node", "-v=5", "--logtostderr", "--sleep=" + defaultSleepSeconds}, []string{}, progressPort),
+		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/sonobuoy", "worker", "single-node", "--level=trace", "-v=6", "--logtostderr", "--sleep=" + defaultSleepSeconds}, []string{}, progressPort),
 	)
 
 	if len(p.ImagePullSecrets) > 0 {

@@ -98,14 +98,6 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddKubeConformanceImage(&cfg.pluginTransforms, genset)
 	AddSystemdLogsImage(&cfg.pluginTransforms, genset)
 
-	// This bit of logic enables the plugin management features of Sonobuoy which are currently
-	// in development. By placing it here we will impact any command that wants a full set of flags
-	// like the `gen` command. Meanwhile, if you just use an empty `pluginList` then caching will
-	// be disabled.
-	if featureEnabled(FeaturePluginInstallation) {
-		cfg.plugins.InstallDir = getPluginCacheLocation()
-	}
-
 	AddSecurityContextMode(&cfg.sonobuoyConfig.SecurityContextMode, genset)
 
 	AddSkipPreflightFlag(&cfg.skipPreflight, genset)
@@ -120,7 +112,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 		&cfg.genFile, "file", "f", "",
 		"If set, loads the file as if it were the output from sonobuoy gen. Set to `-` to read from stdin.",
 	)
-	
+
 	return genset
 }
 

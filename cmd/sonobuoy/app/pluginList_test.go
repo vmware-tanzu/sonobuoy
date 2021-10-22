@@ -120,6 +120,9 @@ func TestSetPluginList(t *testing.T) {
 				// No error
 			}
 
+			// We don't want to worry about diffs in the plugin cache location so just ignore those fields here.
+			tc.list.InstallDir, tc.list.initInstallDir = "", false
+
 			if diff := pretty.Compare(tc.expect, tc.list); diff != "" {
 				t.Fatalf("\n\n%s\n", diff)
 			}

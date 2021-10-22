@@ -211,6 +211,10 @@ func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate, progres
 			Name:  "SONOBUOY_PROGRESS_PORT",
 			Value: progressPort,
 		},
+		{
+			Name:  "SONOBUOY_DIR",
+			Value: "/tmp/sonobuoy",
+		},
 	}
 
 	return envVars

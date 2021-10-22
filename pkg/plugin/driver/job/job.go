@@ -116,7 +116,7 @@ func (p *Plugin) createPodDefinition(hostname string, cert *tls.Certificate, own
 
 	podSpec.Containers = append(podSpec.Containers,
 		p.Definition.Spec.Container,
-		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/sonobuoy"}, []string{"worker", "global", "-v", "5", "--logtostderr"}, progressPort),
+		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/sonobuoy"}, []string{"worker", "global", "--level=trace", "-v=6", "--logtostderr"}, progressPort),
 	)
 
 	if len(p.ImagePullSecrets) > 0 {
