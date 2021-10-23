@@ -18,6 +18,8 @@ package worker
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -28,10 +30,24 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/vmware-tanzu/sonobuoy/pkg/tarball"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 const (
 	localProgressURLPath = "/progress"
+
+	SonobuoyNSEnvKey              = "SONOBUOY_NS"
+	SonobuoyPluginPodEnvKey       = "SONOBUOY_PLUGIN_POD"
+	SonobuoyWorkerContainerEnvKey = "SONOBUOY_WORKER_CONTAINER"
+)
+
+var (
+	// apiClient is used to check the status of this pod and other containers in it. If it is
+	// nil, those checks will be skipped.
+	apiClient kubernetes.Interface
 )
 
 func init() {
@@ -39,6 +55,18 @@ func init() {
 	if err != nil {
 		logrus.Error(err)
 	}
+}
+
+func initAPIClient() (kubernetes.Interface, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate in-cluster client config, unable to tar results without donefile: %w", err)
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate in-cluster api-client, unable to tar results without donefile: %w", err)
+	}
+	return clientset, nil
 }
 
 // RelayProgressUpdates start listening to the given port and will use the client to post progressUpdates
@@ -86,6 +114,15 @@ func relayProgress(aggregatorURL string, client *http.Client) func(w http.Respon
 func GatherResults(waitfile string, url string, client *http.Client, stopc <-chan struct{}) error {
 	logrus.WithField("waitfile", waitfile).Info("Waiting for waitfile")
 	ticker := time.NewTicker(time.Duration(1) * time.Second)
+	containerTicker, assumeResults := time.NewTicker(time.Duration(5)*time.Second), false
+
+	var err error
+	apiClient, err = initAPIClient()
+	if err != nil {
+		logrus.Errorln(err)
+		containerTicker.Stop()
+	}
+
 	// TODO(chuckha) evaluate wait.Until [https://github.com/kubernetes/apimachinery/blob/e9ff529c66f83aeac6dff90f11ea0c5b7c4d626a/pkg/util/wait/wait.go]
 	for {
 		select {
@@ -98,8 +135,54 @@ func GatherResults(waitfile string, url string, client *http.Client, stopc <-cha
 		case <-stopc:
 			logrus.Info("Did not receive plugin results in time. Shutting down worker.")
 			return nil
+		case <-containerTicker.C:
+			// Check if worker is the only container left running (and the others stopped as completed).
+			// If so, just report the whole results directory as results.
+			if assumeResults {
+				dir := filepath.Dir(waitfile)
+				tarballPath := filepath.Join(dir, "out.tar.gz")
+				logrus.Infof("All other containers have completed but not results have been submitted. Tarring up results directory (%v) as submitted automatically.", dir)
+				if err := tarball.DirToTarball(dir, tarballPath, true); err != nil {
+					logrus.Errorf("Failed to tar directory %v: %v", dir, err)
+				}
+				if err := os.WriteFile(waitfile, []byte(tarballPath), 0644); err != nil {
+					logrus.Errorf("Failed to write donefile (%v) with contents %q: %v", waitfile, tarballPath, err)
+				}
+				containerTicker.Stop()
+			}
+			if !assumeResults && allOtherContainersCompleted(os.Getenv(SonobuoyNSEnvKey), os.Getenv(SonobuoyPluginPodEnvKey), os.Getenv(SonobuoyWorkerContainerEnvKey)) {
+				// Don't be too quick to return everything; give a few ticks to avoid a race.
+				assumeResults = true
+			}
 		}
 	}
+}
+
+func allOtherContainersCompleted(myNS, myPod, myContainer string) bool {
+	if apiClient == nil {
+		return false
+	}
+	pod, err := apiClient.CoreV1().Pods(myNS).Get(context.TODO(), myPod, metav1.GetOptions{})
+	if err != nil {
+		logrus.Errorf("Failed to get pod that worker is running within: %v", err)
+		return false
+	}
+
+	for _, cs := range pod.Status.ContainerStatuses {
+		if cs.Name == myContainer {
+			continue
+		}
+
+		if cs.LastTerminationState.Terminated != nil && cs.LastTerminationState.Terminated.ExitCode == 0 {
+			continue
+		} else if cs.State.Terminated != nil && cs.State.Terminated.ExitCode == 0 {
+			continue
+		} else {
+			return false
+		}
+	}
+
+	return true
 }
 
 func handleWaitFile(resultFile, url string, client *http.Client) error {

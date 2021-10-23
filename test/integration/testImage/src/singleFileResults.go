@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -27,22 +28,29 @@ import (
 
 var cmdSingleFile = &cobra.Command{
 	Use:   "single-file",
-	Short: "Returns a single file as results",
-	Args:  cobra.ExactArgs(1),
+	Short: "Returns a single file as results.",
+	Long:  "Writes all the given files to the results directory but only writes the done file (if applicable) for the last one.",
+	Args:  cobra.MinimumNArgs(1),
 	RunE:  reportSingleFile,
 }
 
 func reportSingleFile(cmd *cobra.Command, args []string) error {
-	targetFile := args[0]
-	resultsFile := filepath.Join(resultsDir, filepath.Base(targetFile))
+	resultsFile := filepath.Join(resultsDir, filepath.Base(args[0]))
+	for _, targetFile := range args {
+		f := filepath.Join(resultsDir, filepath.Base(targetFile))
 
-	// Copy file to location Sonobuoy can get it.
-	_, err := copyFile(targetFile, resultsFile)
-	if err != nil {
-		return errors.Wrapf(err, "failed to copy file %v to %v", targetFile, resultsFile)
+		// Copy file to location Sonobuoy can get it.
+		_, err := copyFile(targetFile, f)
+		if err != nil {
+			return errors.Wrapf(err, "failed to copy file %v to %v", targetFile, resultsFile)
+		}
 	}
 
 	// Report location to Sonobuoy.
-	err = ioutil.WriteFile(doneFile, []byte(resultsFile), os.FileMode(0666))
+	if cmd.Flags().Lookup("no-done").Value.String() == "true" {
+		fmt.Println("no-done is set, exiting without writing done file")
+		return nil
+	}
+	err := ioutil.WriteFile(doneFile, []byte(resultsFile), os.FileMode(0666))
 	return errors.Wrap(err, "failed to write to done file")
 }
