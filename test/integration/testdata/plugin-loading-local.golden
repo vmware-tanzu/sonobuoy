@@ -52,7 +52,7 @@ rules:
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"DEFAULT","UUID":"","Version":"*STATIC_FOR_TESTING*","ResultsDir":"/tmp/sonobuoy","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:*STATIC_FOR_TESTING*","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}
+    {"Description":"DEFAULT","UUID":"","Version":"*STATIC_FOR_TESTING*","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:*STATIC_FOR_TESTING*","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}
 kind: ConfigMap
 metadata:
   labels:
@@ -73,6 +73,8 @@ data:
       command:
       - ./run.sh
       env:
+      - name: RESULTS_DIR
+        value: /tmp/sonobuoy/results
       - name: SONOBUOY
         value: "true"
       - name: SONOBUOY_CONFIG_DIR
@@ -86,7 +88,7 @@ data:
       name: plugin
       resources: {}
       volumeMounts:
-      - mountPath: /tmp/results
+      - mountPath: /tmp/sonobuoy/results
         name: results
 kind: ConfigMap
 metadata:

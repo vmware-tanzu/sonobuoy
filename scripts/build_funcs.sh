@@ -261,7 +261,7 @@ gen_manifest_and_push_all() {
 
 # Removes a given image from docker. Image name (not registry) should be the first
 # and only argument.
-remove-image() {
+remove_image() {
     docker rmi -f "$(docker images "$REGISTRY/$1" -a -q)" || true
 }
 
@@ -273,7 +273,7 @@ clean() {
     rm -f "$TARGET"
     rm -rf build
 
-    remove-image "$TARGET"
+    remove_image "$TARGET"
     set -e
 }
 
@@ -292,8 +292,8 @@ push_kind_images() {
     docker push "$REGISTRY/kind-node:$KIND_K8S_TAG"
 }
 
-# check-kind-env will show you what will be built/tagged before doing so with kind_images
-check-kind-env() {
+# check_kind_env will show you what will be built/tagged before doing so with kind_images
+check_kind_env() {
     if [ -z "$K8S_PATH" ] ; then
         echo K8S_PATH is undefined
         exit 1

@@ -34,7 +34,7 @@ func TestGenerateManifest(t *testing.T) {
 			inputcm: &client.GenConfig{
 				Config: nil,
 			},
-			expected: &config.Config{},
+			expected: config.New(),
 		},
 		{
 			name: "Defaults in yield a default manifest.",
@@ -212,6 +212,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			inputcm: &client.GenConfig{
 				DynamicPlugins: []string{"e2e"},
 				KubeVersion:    "v99+static.testing",
+				Config:         staticConfig(),
 			},
 			goldenFile: filepath.Join("testdata", "manual-e2e.golden"),
 		}, {
@@ -223,6 +224,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 					},
 				},
 				KubeVersion: "v99+static.testing",
+				Config:      staticConfig(),
 			},
 			goldenFile: filepath.Join("testdata", "manual-custom-plugin.golden"),
 		}, {
@@ -235,6 +237,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 					},
 				},
 				KubeVersion: "v99+static.testing",
+				Config:      staticConfig(),
 			},
 			goldenFile: filepath.Join("testdata", "manual-custom-plugin-plus-e2e.golden"),
 		}, {
@@ -247,6 +250,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 					},
 				},
 				KubeVersion: "v99+static.testing",
+				Config:      staticConfig(),
 			},
 			goldenFile: filepath.Join("testdata", "manual-custom-plugin-plus-systemd.golden"),
 		}, {
@@ -257,6 +261,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 					{SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "a"}},
 				},
 				KubeVersion: "v99+static.testing",
+				Config:      staticConfig(),
 			},
 			expectErr: "plugin YAML generation: plugin names must be unique, got duplicated plugin name 'a'",
 		}, {
@@ -282,15 +287,18 @@ func TestGenerateManifestGolden(t *testing.T) {
 			name: "ImagePullSecrets is set on plugins and aggregator",
 			inputcm: &client.GenConfig{
 				DynamicPlugins: []string{"e2e"},
-				Config: &config.Config{
-					ImagePullSecrets: "foo",
-				},
+				Config: fromConfig(func(c *config.Config) *config.Config {
+					c.ImagePullSecrets = "foo"
+					return c
+				}),
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "imagePullSecrets.golden"),
-		}, {
+		},
+		{
 			name: "Env overrides",
 			inputcm: &client.GenConfig{
+				Config:         staticConfig(),
 				DynamicPlugins: []string{"e2e"},
 				PluginEnvOverrides: map[string]map[string]string{
 					"e2e": {"E2E_SKIP": "override", "E2E_DRYRUN": "true"},
@@ -301,6 +309,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 		}, {
 			name: "Env overrides must match plugin names",
 			inputcm: &client.GenConfig{
+				Config:         staticConfig(),
 				DynamicPlugins: []string{"e2e"},
 				PluginEnvOverrides: map[string]map[string]string{
 					"e2e2": {"E2E_SKIP": "override", "E2E_DRYRUN": "true"},
@@ -311,6 +320,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 		}, {
 			name: "Default pod spec is included if requested and no other pod spec provided",
 			inputcm: &client.GenConfig{
+				Config:             staticConfig(),
 				ShowDefaultPodSpec: true,
 				KubeVersion:        "v99+static.testing",
 			},
@@ -318,6 +328,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 		}, {
 			name: "E2E_USE_GO_RUNNER can be overridden/removed",
 			inputcm: &client.GenConfig{
+				Config:         staticConfig(),
 				DynamicPlugins: []string{"e2e"},
 				PluginEnvOverrides: map[string]map[string]string{
 					"e2e": {"E2E_USE_GO_RUNNER": ""},
@@ -328,6 +339,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 		}, {
 			name: "Existing pod spec is not modified if default pod spec is requested",
 			inputcm: &client.GenConfig{
+				Config:             staticConfig(),
 				ShowDefaultPodSpec: true,
 				StaticPlugins: []*manifest.Manifest{
 					{
@@ -341,6 +353,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 		}, {
 			name: "E2E images >= v1.17 support progress",
 			inputcm: &client.GenConfig{
+				Config:         staticConfig(),
 				DynamicPlugins: []string{"e2e"},
 				KubeVersion:    "v99+static.testing",
 			},
@@ -349,15 +362,17 @@ func TestGenerateManifestGolden(t *testing.T) {
 			name: "ProgressUpdatesPort is customizable for e2e",
 			inputcm: &client.GenConfig{
 				DynamicPlugins: []string{"e2e"},
-				Config: &config.Config{
-					ProgressUpdatesPort: "1234",
-				},
+				Config: fromConfig(func(c *config.Config) *config.Config {
+					c.ProgressUpdatesPort = "1234"
+					return c
+				}),
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "e2e-progress-custom-port.golden"),
 		}, {
 			name: "E2E images >= v1.17 will not override E2E_EXTRA_ARGS if specified by user",
 			inputcm: &client.GenConfig{
+				Config:         staticConfig(),
 				DynamicPlugins: []string{"e2e"},
 				PluginEnvOverrides: map[string]map[string]string{
 					"e2e": {"E2E_EXTRA_ARGS": "user-defined"},

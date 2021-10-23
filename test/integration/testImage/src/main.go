@@ -17,13 +17,31 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 )
 
 const (
-	doneFile   = "/tmp/results/done"
-	resultsDir = "/tmp/results"
+	doneFileBase      = "done"
+	defaultResultsDir = "/tmp/sonobuoy/results"
 )
+
+var (
+	doneFile   string
+	resultsDir string
+)
+
+func init() {
+	resultsDir = os.Getenv("SONOBUOY_RESULTS_DIR")
+	if resultsDir == "" {
+		resultsDir = defaultResultsDir
+	}
+	doneFile = filepath.Join(resultsDir, doneFileBase)
+	fmt.Printf("Using results dir %v and donefile %v\n", resultsDir, doneFile)
+}
 
 func main() {
 	rootCmd := &cobra.Command{Use: "testImage", Version: "0.0.1"}

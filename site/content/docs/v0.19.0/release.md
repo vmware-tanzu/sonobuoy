@@ -12,7 +12,7 @@ Is this release for a Kubernetes release?  If so, apply the following steps:
 Ensure the upstream conformance script is working appropriately:
   * Build the kind images for this new version.
     1. Checkout K8s locally at the tag in question
-    1. Run `make check-kind-env` to ensure the repo/tag are correct
+    1. Run `make check_kind_env` to ensure the repo/tag are correct
     1. Run `make kind_images`
     1. Run `make push_kind_images`
   * Update the `kind-config.yaml` file with the new image version [here](https://github.com/vmware-tanzu/sonobuoy/blob/main/kind-config.yaml).

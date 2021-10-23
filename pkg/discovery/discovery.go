@@ -80,7 +80,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// 1. Create the directory which will store the results, including the
 	// `meta` directory inside it (which we always need regardless of
 	// config)
-	outpath := filepath.Join(cfg.ResultsDir, cfg.UUID)
+	outpath := filepath.Join(config.AggregatorResultsPath, cfg.UUID)
 	metapath := filepath.Join(outpath, MetaLocation)
 	err = os.MkdirAll(metapath, 0755)
 	if err != nil {
@@ -149,7 +149,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	}
 
 	// 4. Run the plugin aggregator. Save this error for clear logging later.
-	runErr := pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.Namespace, outpath)
+	runErr := pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.ResultsDir, cfg.Namespace, outpath)
 	trackErrorsFor("running plugins")(runErr)
 
 	// 5. Run the queries
@@ -257,7 +257,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 
 	// 8. tarball up results YYYYMMDDHHMM_sonobuoy_UID.tar.gz
 	filename := fmt.Sprintf("%v_sonobuoy_%v.tar.gz", t.Format("200601021504"), cfg.UUID)
-	tb := filepath.Join(cfg.ResultsDir, filename)
+	tb := filepath.Join(config.AggregatorResultsPath, filename)
 	err = tarball.DirToTarball(outpath, tb, true)
 	if err == nil {
 		defer os.RemoveAll(outpath)

@@ -44,6 +44,7 @@ const (
 	// AggregatorContainerName is the name of the main container in the aggregator pod.
 	AggregatorContainerName = "kube-sonobuoy"
 	// AggregatorResultsPath is the location in the main container of the aggregator pod where results will be archived.
+	// It is different from the default results path for plugins (/tmp/sonobuoy/results).
 	AggregatorResultsPath = "/tmp/sonobuoy"
 	// DefaultSonobuoyPullPolicy is the default pull policy used in the Sonobuoy config.
 	DefaultSonobuoyPullPolicy = "IfNotPresent"
@@ -244,17 +245,18 @@ func (cfg *Config) FilterResources(filter []string) []string {
 	return results
 }
 
-// OutputDir returns the directory under the ResultsDir containing the
+// OutputDir returns the aggregator directory under the ResultsDir containing the
 // UUID for this run.
 func (cfg *Config) OutputDir() string {
-	return path.Join(cfg.ResultsDir, cfg.UUID)
+	return path.Join(AggregatorResultsPath, cfg.UUID)
 }
 
 // New returns a newly-constructed Config object with default values.
 func New() *Config {
 	var cfg Config
 	cfg.Description = "DEFAULT"
-	cfg.ResultsDir = AggregatorResultsPath
+	// Note: The resultsDir here is just for the plugins, not the aggregator.
+	cfg.ResultsDir = plugin.ResultsDir
 	cfg.Version = buildinfo.Version
 
 	cfg.Filters.Namespaces = ".*"

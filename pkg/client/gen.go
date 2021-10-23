@@ -31,7 +31,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
-	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	manifesthelper "github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest/helper"
@@ -46,13 +45,13 @@ const (
 	envVarKeyExtraArgs = "E2E_EXTRA_ARGS"
 
 	// sonobuoyKey is just a true/false env to indicate that the container was launched/tagged by Sonobuoy.
-	sonobuoyKey           = "SONOBUOY"
-	sonobuoyK8sVersionKey = "SONOBUOY_K8S_VERSION"
-	sonobuoyResultsDirKey = "SONOBUOY_RESULTS_DIR"
-	sonobuoyConfigDirKey  = "SONOBUOY_CONFIG_DIR"
+	sonobuoyKey                 = "SONOBUOY"
+	sonobuoyK8sVersionKey       = "SONOBUOY_K8S_VERSION"
+	sonobuoyResultsDirKey       = "SONOBUOY_RESULTS_DIR"
+	sonobuoyLegacyResultsDirKey = "RESULTS_DIR"
+	sonobuoyConfigDirKey        = "SONOBUOY_CONFIG_DIR"
 
-	sonobuoyDefaultConfigDir  = "/tmp/sonobuoy/config"
-	sonobuoyDefaultResultsDir = "/tmp/sonobuoy/results"
+	sonobuoyDefaultConfigDir = "/tmp/sonobuoy/config"
 )
 
 // templateValues are used for direct template substitution for manifest generation.
@@ -91,7 +90,7 @@ func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
 	return b, err
 }
 
-// GenerateManifest fills in a template with a Sonobuoy config and also provides the objects
+// GenerateManifestAndPlugins fills in a template with a Sonobuoy config and also provides the objects
 // representing the plugins. This is useful if you want to do any structured handling of the resulting
 // plugins that would have been run.
 func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*manifest.Manifest, error) {
@@ -104,12 +103,11 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 	}
 
 	// Allow nil cfg.Config but avoid dereference errors.
-	conf := &config.Config{}
-	if cfg.Config != nil {
-		conf = cfg.Config
+	if cfg.Config == nil {
+		cfg.Config = config.New()
 	}
 
-	marshalledConfig, err := json.Marshal(conf)
+	marshalledConfig, err := json.Marshal(cfg.Config)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "couldn't marshall selector")
 	}
@@ -150,7 +148,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 	// Apply our universal transforms; only applies to ImagePullPolicy. Overrides all
 	// plugin values.
 	for _, p := range plugins {
-		p.Spec.ImagePullPolicy = corev1.PullPolicy(conf.ImagePullPolicy)
+		p.Spec.ImagePullPolicy = corev1.PullPolicy(cfg.Config.ImagePullPolicy)
 	}
 
 	// Apply transforms. Ensure this is before handling configmaps and applying the k8s_version.
@@ -195,7 +193,8 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		return nil, nil, errors.Wrap(err, "plugin YAML generation")
 	}
 
-	cfg.PluginEnvOverrides, plugins = applyAutoEnvVars(cfg.KubeVersion, cfg.PluginEnvOverrides, plugins)
+	cfg.PluginEnvOverrides, plugins = applyAutoEnvVars(cfg.KubeVersion, cfg.Config.ResultsDir, cfg.PluginEnvOverrides, plugins)
+	autoAttachResultsDir(plugins, cfg.Config.ResultsDir)
 
 	for pluginName, envVars := range cfg.PluginEnvOverrides {
 		found := false
@@ -239,12 +238,12 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 
 	tmplVals := &templateValues{
 		SonobuoyConfig:    string(marshalledConfig),
-		SonobuoyImage:     conf.WorkerImage,
-		Namespace:         conf.Namespace,
+		SonobuoyImage:     cfg.Config.WorkerImage,
+		Namespace:         cfg.Config.Namespace,
 		EnableRBAC:        cfg.EnableRBAC,
-		ImagePullPolicy:   conf.ImagePullPolicy,
-		ImagePullSecrets:  conf.ImagePullSecrets,
-		CustomAnnotations: conf.CustomAnnotations,
+		ImagePullPolicy:   cfg.Config.ImagePullPolicy,
+		ImagePullSecrets:  cfg.Config.ImagePullSecrets,
+		CustomAnnotations: cfg.Config.CustomAnnotations,
 		SSHKey:            base64.StdEncoding.EncodeToString(sshKeyData),
 
 		Plugins: pluginYAML,
@@ -253,7 +252,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 
 		ConfigMaps: configs,
 
-		SecurityContext: secContextFromMode(conf.SecurityContextMode),
+		SecurityContext: secContextFromMode(cfg.Config.SecurityContextMode),
 
 		KlogLevel: errlog.GetLevelForGlog(),
 		LogLevel:  logrus.GetLevel().String(),
@@ -268,7 +267,28 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 	return buf.Bytes(), plugins, nil
 }
 
-func applyAutoEnvVars(imageVersion string, env map[string]map[string]string, plugins []*manifest.Manifest) (map[string]map[string]string, []*manifest.Manifest) {
+// autoAttachResultsDir will either add the volumemount for the results dir or modify the existing
+// one to have the right path set.
+func autoAttachResultsDir(plugins []*manifest.Manifest, resultsDir string) {
+	for _, p := range plugins {
+		foundOnPlugin := false
+		for i, vm := range p.Spec.VolumeMounts {
+			if vm.Name == "results" {
+				p.Spec.VolumeMounts[i].MountPath = resultsDir
+				foundOnPlugin = true
+				break
+			}
+		}
+		if !foundOnPlugin {
+			p.Spec.VolumeMounts = append(p.Spec.VolumeMounts, corev1.VolumeMount{
+				Name:      "results",
+				MountPath: resultsDir,
+			})
+		}
+	}
+}
+
+func applyAutoEnvVars(imageVersion, resultsDir string, env map[string]map[string]string, plugins []*manifest.Manifest) (map[string]map[string]string, []*manifest.Manifest) {
 	// Set env on all plugins and swap out dynamic images.
 	if env == nil {
 		env = map[string]map[string]string{}
@@ -278,7 +298,8 @@ func applyAutoEnvVars(imageVersion string, env map[string]map[string]string, plu
 			env[p.SonobuoyConfig.PluginName] = map[string]string{}
 		}
 		env[p.SonobuoyConfig.PluginName][sonobuoyK8sVersionKey] = imageVersion
-		env[p.SonobuoyConfig.PluginName][sonobuoyResultsDirKey] = sonobuoyDefaultResultsDir
+		env[p.SonobuoyConfig.PluginName][sonobuoyResultsDirKey] = resultsDir
+		env[p.SonobuoyConfig.PluginName][sonobuoyLegacyResultsDirKey] = resultsDir
 		env[p.SonobuoyConfig.PluginName][sonobuoyConfigDirKey] = sonobuoyDefaultConfigDir
 		env[p.SonobuoyConfig.PluginName][sonobuoyKey] = "true"
 		plugins[i].Spec.Image = strings.ReplaceAll(plugins[i].Spec.Image, "$"+sonobuoyK8sVersionKey, imageVersion)
@@ -340,7 +361,8 @@ func SystemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 				ImagePullPolicy: corev1.PullPolicy(cfg.ImagePullPolicy),
 				Env: []corev1.EnvVar{
 					{Name: "CHROOT_DIR", Value: "/node"},
-					{Name: "RESULTS_DIR", Value: plugin.ResultsDir},
+					{Name: "RESULTS_DIR", Value: cfg.Config.ResultsDir},
+					{Name: "SONOBUOY_RESULTS_DIR", Value: cfg.Config.ResultsDir},
 					{Name: "NODE_NAME",
 						ValueFrom: &corev1.EnvVarSource{
 							FieldRef: &corev1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
@@ -352,10 +374,6 @@ func SystemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 				},
 				VolumeMounts: []corev1.VolumeMount{
 					{
-						ReadOnly:  false,
-						Name:      "results",
-						MountPath: plugin.ResultsDir,
-					}, {
 						ReadOnly:  false,
 						Name:      "root",
 						MountPath: "/node",
@@ -396,13 +414,6 @@ func E2EManifest(cfg *GenConfig) *manifest.Manifest {
 					{Name: "E2E_SKIP", Value: cfg.PluginEnvOverrides["e2e"]["E2E_SKIP"]},
 					{Name: "E2E_PARALLEL", Value: cfg.PluginEnvOverrides["e2e"]["E2E_PARALLEL"]},
 					{Name: "E2E_USE_GO_RUNNER", Value: "true"},
-				},
-				VolumeMounts: []corev1.VolumeMount{
-					{
-						ReadOnly:  false,
-						Name:      "results",
-						MountPath: plugin.ResultsDir,
-					},
 				},
 			},
 		},

@@ -25,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -159,7 +158,7 @@ func getKeyPEM(key *ecdsa.PrivateKey) ([]byte, error) {
 	}), nil
 }
 
-func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate, progressPort string) []v1.EnvVar {
+func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate, progressPort, resultDir string) []v1.EnvVar {
 	envVars := []v1.EnvVar{
 		{
 			Name: "NODE_NAME",
@@ -171,7 +170,11 @@ func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate, progres
 		},
 		{
 			Name:  "RESULTS_DIR",
-			Value: plugin.ResultsDir,
+			Value: resultDir,
+		},
+		{
+			Name:  "SONOBUOY_RESULTS_DIR",
+			Value: resultDir,
 		},
 		{
 			Name:  "RESULT_TYPE",
@@ -221,19 +224,19 @@ func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate, progres
 }
 
 // CreateWorkerContainerDefintion creates the container definition to run the Sonobuoy worker for a plugin.
-func (b *Base) CreateWorkerContainerDefintion(hostname string, cert *tls.Certificate, command, args []string, progressPort string) v1.Container {
+func (b *Base) CreateWorkerContainerDefintion(hostname string, cert *tls.Certificate, command, args []string, progressPort, resultDir string) v1.Container {
 	container := v1.Container{
 		Name:            "sonobuoy-worker",
 		Image:           b.SonobuoyImage,
 		Command:         command,
 		Args:            args,
-		Env:             b.workerEnvironment(hostname, cert, progressPort),
+		Env:             b.workerEnvironment(hostname, cert, progressPort, resultDir),
 		ImagePullPolicy: v1.PullPolicy(b.ImagePullPolicy),
 		VolumeMounts: []v1.VolumeMount{
 			{
 				Name:      "results",
 				ReadOnly:  false,
-				MountPath: plugin.ResultsDir,
+				MountPath: resultDir,
 			},
 		},
 	}
