@@ -185,6 +185,22 @@ func TestSimpleRun(t *testing.T) {
 	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 }
 
+// TestNoDoneFile runs two plugins which do not write their own done file and we check that the
+// worker realizes this and submits results for them.
+func TestNoDoneFile(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	ns, cleanup := getNamespace(t)
+	defer cleanup()
+
+	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-manual-no-done.yaml -p testImage/yaml/ds-manual-no-done.yaml -n %v", ns)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
+	tb := mustDownloadTarball(ctx, t, ns)
+	tb = saveToArtifacts(t, tb)
+}
+
 // TestRetrieveAndExtractWithPodLogs tests that we are able to extract the files
 // from the tarball via the retrieve command. It also ensures that we dont
 // regress on #1415, that plugin pod logs should be gathered.

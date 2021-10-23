@@ -65,6 +65,12 @@ func reportTarFile(cmd *cobra.Command, args []string) error {
 	}
 
 	// Report location to Sonobuoy.
+	if cmd.Flags().Lookup("no-done").Value.String() == "true" {
+		fmt.Println("no-done is set, exiting without writing done file")
+		return nil
+	}
+
+	// Report location to Sonobuoy.
 	err = ioutil.WriteFile(doneFile, []byte(tb), os.FileMode(0666))
 	return errors.Wrap(err, "failed to write to done file")
 }

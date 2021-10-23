@@ -45,6 +45,10 @@ func init() {
 
 func main() {
 	rootCmd := &cobra.Command{Use: "testImage", Version: "0.0.1"}
+	rootCmd.PersistentFlags().Bool(
+		"no-done", false,
+		"Use this if you want the plugin to exit without writing the done file to the worker.",
+	)
 	rootCmd.AddCommand(cmdSingleFile)
 	rootCmd.AddCommand(cmdTarFile)
 	rootCmd.Execute()
