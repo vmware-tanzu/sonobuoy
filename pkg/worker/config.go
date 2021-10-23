@@ -27,11 +27,6 @@ const (
 	defaultProgressUpdatesPort = "8099"
 )
 
-func setConfigDefaults(ac *plugin.WorkerConfig) {
-	ac.ResultsDir = plugin.ResultsDir
-	ac.ProgressUpdatesPort = defaultProgressUpdatesPort
-}
-
 // LoadConfig loads the configuration for the sonobuoy worker from environment
 // variables, returning a plugin.WorkerConfig struct with defaults applied
 func LoadConfig() (*plugin.WorkerConfig, error) {
@@ -40,7 +35,7 @@ func LoadConfig() (*plugin.WorkerConfig, error) {
 
 	viper.BindEnv("aggregatorurl", "AGGREGATOR_URL")
 	viper.BindEnv("nodename", "NODE_NAME")
-	viper.BindEnv("resultsdir", "RESULTS_DIR")
+	viper.BindEnv("resultsdir", "SONOBUOY_RESULTS_DIR")
 	viper.BindEnv("resulttype", "RESULT_TYPE")
 
 	viper.BindEnv("cacert", "CA_CERT")
@@ -48,7 +43,8 @@ func LoadConfig() (*plugin.WorkerConfig, error) {
 	viper.BindEnv("clientkey", "CLIENT_KEY")
 	viper.BindEnv("progressport", "SONOBUOY_PROGRESS_PORT")
 
-	setConfigDefaults(config)
+	viper.SetDefault("resultsdir", plugin.ResultsDir)
+	viper.SetDefault("progressport", defaultProgressUpdatesPort)
 
 	if err = viper.Unmarshal(config); err != nil {
 		return nil, errors.WithStack(err)

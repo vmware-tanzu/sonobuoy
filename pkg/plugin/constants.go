@@ -21,7 +21,7 @@ const (
 	GracefulShutdownPeriod = 60
 
 	// ResultsDir is the directory where results will be available in Sonobuoy plugin containers.
-	ResultsDir = "/tmp/results"
+	ResultsDir = "/tmp/sonobuoy/results"
 
 	// TimeoutErrMsg is the message used when Sonobuoy experiences a timeout while waiting for results.
 	TimeoutErrMsg = "Plugin timeout while waiting for results so there are no results. Check pod logs or other cluster details for more information as to why this occurred."

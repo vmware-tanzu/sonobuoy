@@ -74,12 +74,13 @@ func runSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args strin
 }
 
 func mustRunSonobuoyCommand(t *testing.T, args string) bytes.Buffer {
-	return mustRunSonobuoyCommandWithContext(context.Background(), t, args)
+	return mustRunSonobuoyCommandWithContext(context.Background(), t, "", args)
 }
 
 // mustRunSonobuoyCommandWithContext runs the Sonobuoy CLI with the given context and arguments.
-// It returns stdout and fails the test immediately if there are any errors.
-func mustRunSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args string, env ...string) bytes.Buffer {
+// It returns stdout and fails the test immediately if there are any errors. The namespace argument
+// is only for debugging and you should still include the -n flag to your command.
+func mustRunSonobuoyCommandWithContext(ctx context.Context, t *testing.T, ns, args string, env ...string) bytes.Buffer {
 	var stdout, stderr bytes.Buffer
 
 	command := exec.CommandContext(ctx, sonobuoy, strings.Fields(args)...)
@@ -96,7 +97,15 @@ func mustRunSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args s
 
 	t.Logf("Running %q with env: %v\n", command.String(), command.Env)
 	if err := command.Run(); err != nil {
-		t.Fatalf("Expected %q to not error but got error: %q with stdout: %q and stderr: %q", args, err, stdout.String(), stderr.String())
+		t.Errorf("Expected %q to not error but got error: %q with stdout: %q and stderr: %q", args, err, stdout.String(), stderr.String())
+
+		// Try and get logs to help debug the issue; most commonly we just see timeouts here which aren't helpful.
+		o, err := runSonobuoyCommand(t, fmt.Sprintf("logs -n %v", ns))
+		if err != nil {
+			t.Errorf("Tried to get logs to help debug this problem but got another error: %v", err)
+		} else {
+			t.Logf("Checked sonobuoy logs, got: %v", o.String())
+		}
 	}
 
 	return stdout
@@ -112,7 +121,9 @@ func runSonobuoyCommand(t *testing.T, args string) (bytes.Buffer, error) {
 // asynchronously afterwards.
 func getNamespace(t *testing.T) (string, func()) {
 	ns := "sonobuoy-" + strings.ToLower(t.Name())
-	return ns, func() { cleanup(t, ns) }
+	return ns, func() {
+		cleanup(t, ns)
+	}
 }
 
 // cleanup runs sonobuoy delete for the given namespace. If no namespace is provided, it will
@@ -139,7 +150,7 @@ func TestUseNamespaceFromManifest(t *testing.T) {
 	defer cleanup()
 
 	genArgs := fmt.Sprintf("gen -p testImage/yaml/job-junit-passing-singlefile.yaml -n %v", ns)
-	genStdout := mustRunSonobuoyCommandWithContext(ctx, t, genArgs)
+	genStdout := mustRunSonobuoyCommandWithContext(ctx, t, ns, genArgs)
 
 	// Write the contents of gen to a temp file
 	tmpfile, err := ioutil.TempFile("", "gen.*.yaml")
@@ -158,7 +169,7 @@ func TestUseNamespaceFromManifest(t *testing.T) {
 
 	// Pass the gen output to sonobuoy run
 	runArgs := fmt.Sprintf("run --wait -f %v", tmpfile.Name())
-	mustRunSonobuoyCommandWithContext(ctx, t, runArgs)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, runArgs)
 }
 
 // TestSimpleRun runs a simple plugin to check that it runs successfully
@@ -171,7 +182,7 @@ func TestSimpleRun(t *testing.T) {
 	defer cleanup()
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-passing-singlefile.yaml -n %v", ns)
-	mustRunSonobuoyCommandWithContext(ctx, t, args)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 }
 
 // TestRetrieveAndExtractWithPodLogs tests that we are able to extract the files
@@ -186,7 +197,7 @@ func TestRetrieveAndExtractWithPodLogs(t *testing.T) {
 	defer cleanup()
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-passing-singlefile.yaml -p testImage/yaml/ds-junit-passing-tar.yaml -n %v", ns)
-	mustRunSonobuoyCommandWithContext(ctx, t, args)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 
 	// Create tmpdir and extract contents into it
 	tmpdir, err := ioutil.TempDir("", "TestRetrieveAndExtract")
@@ -195,7 +206,7 @@ func TestRetrieveAndExtractWithPodLogs(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpdir)
 	args = fmt.Sprintf("retrieve %v -n %v --extract", tmpdir, ns)
-	mustRunSonobuoyCommandWithContext(ctx, t, args)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 
 	// Check that the files are there. Lots of ways to test this but I'm simply going to check that we have
 	// a "lot" of files.
@@ -234,6 +245,22 @@ func TestRetrieveAndExtractWithPodLogs(t *testing.T) {
 	}
 }
 
+// TestCustomResultsDir tests that resultsDir is respected in plugins (job and ds) and
+// and we are able to still retrieve/read results from the aggregator.
+func TestCustomResultsDir(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	ns, cleanup := getNamespace(t)
+	defer cleanup()
+
+	args := fmt.Sprintf("run --config testImage/resources/resultsdir.json --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-passing-singlefile.yaml -p testImage/yaml/ds-junit-passing-tar.yaml -n %v", ns)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
+	tb := mustDownloadTarball(ctx, t, ns)
+	saveToArtifacts(t, tb)
+}
+
 // TestQuick runs a real "--mode quick" check against the cluster to ensure that it passes.
 func TestQuick(t *testing.T) {
 	t.Parallel()
@@ -244,7 +271,7 @@ func TestQuick(t *testing.T) {
 	defer cleanup()
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait --mode=quick -n %v", ns)
-	mustRunSonobuoyCommandWithContext(ctx, t, args)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 
 	checkStatusForPluginErrors(ctx, t, ns, "e2e", 0)
 	tb := mustDownloadTarball(ctx, t, ns)
@@ -262,13 +289,13 @@ func TestConfigmaps(t *testing.T) {
 	defer cleanup()
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-singlefile-configmap.yaml -n %v", ns)
-	mustRunSonobuoyCommandWithContext(ctx, t, args)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 	tb := mustDownloadTarball(ctx, t, ns)
 	tb = saveToArtifacts(t, tb)
 
 	// Retrieve the sonobuoy results file from the tarball
 	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tb, "job-junit-singlefile-configmap")
-	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, resultsArgs)
+	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, ns, resultsArgs)
 	var resultItem results.Item
 	yaml.Unmarshal(resultsYaml.Bytes(), &resultItem)
 	expectedStatus := "passed"
@@ -296,7 +323,7 @@ func checkStatusForPluginErrors(ctx context.Context, t *testing.T, ns, plugin st
 	}
 
 	args := fmt.Sprintf(`status --json -n %v`, ns)
-	out := mustRunSonobuoyCommandWithContext(ctx, t, args)
+	out := mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 	for _, v := range expectVals {
 		if !strings.Contains(out.String(), v) {
 			t.Errorf("Expected output of %q to contain %q but output was %v", args, v, out.String())
@@ -306,7 +333,7 @@ func checkStatusForPluginErrors(ctx context.Context, t *testing.T, ns, plugin st
 
 func mustDownloadTarball(ctx context.Context, t *testing.T, ns string) string {
 	args := fmt.Sprintf("retrieve -n %v", ns)
-	tarballName := mustRunSonobuoyCommandWithContext(ctx, t, args)
+	tarballName := mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 	t.Logf("Tarball downloaded to: %v", tarballName.String())
 	return strings.TrimSpace(tarballName.String())
 }
@@ -381,14 +408,14 @@ func TestManualResultsJob(t *testing.T) {
 	defer cleanup()
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-manual.yaml -n %v", ns)
-	mustRunSonobuoyCommandWithContext(ctx, t, args)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 
 	tb := mustDownloadTarball(ctx, t, ns)
 	tb = saveToArtifacts(t, tb)
 
 	// Retrieve the sonobuoy results file from the tarball
 	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tb, "job-manual")
-	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, resultsArgs)
+	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, ns, resultsArgs)
 	var resultItem results.Item
 	yaml.Unmarshal(resultsYaml.Bytes(), &resultItem)
 	expectedStatus := "manual-results-1: 1, manual-results-2: 1"
@@ -406,14 +433,14 @@ func TestManualResultsDaemonSet(t *testing.T) {
 	defer cleanup()
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/ds-manual.yaml -n %v", ns)
-	mustRunSonobuoyCommandWithContext(ctx, t, args)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 
 	tb := mustDownloadTarball(ctx, t, ns)
 	tb = saveToArtifacts(t, tb)
 
 	// Retrieve the sonobuoy results file from the tarball
 	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tb, "ds-manual")
-	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, resultsArgs)
+	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, ns, resultsArgs)
 	var resultItem results.Item
 	yaml.Unmarshal(resultsYaml.Bytes(), &resultItem)
 
@@ -436,14 +463,14 @@ func TestManualResultsWithNestedDetails(t *testing.T) {
 	defer cleanup()
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/manual-with-arbitrary-details.yaml -n %v", ns)
-	mustRunSonobuoyCommandWithContext(ctx, t, args)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 
 	tb := mustDownloadTarball(ctx, t, ns)
 	tb = saveToArtifacts(t, tb)
 
 	// Retrieve the sonobuoy results file from the tarball
 	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tb, "manual-with-arbitrary-details")
-	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, resultsArgs)
+	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, ns, resultsArgs)
 
 	var resultItem results.Item
 	yaml.Unmarshal(resultsYaml.Bytes(), &resultItem)
@@ -790,11 +817,11 @@ func TestPluginLoading_LocalGolden(t *testing.T) {
 		t.Fatal("Expected a failure since no plugin was installed but got none")
 	}
 
-	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin install hello-world.yaml ./testdata/plugins/good/hello-world.yaml", envVars...)
-	output := mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
+	_ = mustRunSonobuoyCommandWithContext(ctx, t, "", "plugin install hello-world.yaml ./testdata/plugins/good/hello-world.yaml", envVars...)
+	output := mustRunSonobuoyCommandWithContext(ctx, t, "", "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	checkFileMatchesOrUpdate(t, output.String(), installedPluginFile, tmpDir)
 
-	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin uninstall hello-world.yaml", envVars...)
+	_ = mustRunSonobuoyCommandWithContext(ctx, t, "", "plugin uninstall hello-world.yaml", envVars...)
 	_, e = runSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	if e == nil {
 		t.Fatal("Expected a failure since no plugin was installed but got none")
@@ -813,16 +840,16 @@ func TestPluginLoading_LocalGolden(t *testing.T) {
 	}
 	defer os.Remove("hello-world.yaml")
 
-	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
+	output = mustRunSonobuoyCommandWithContext(ctx, t, "", "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	checkFileMatchesOrUpdate(t, output.String(), localPluginFile, tmpDir)
 
-	_ = mustRunSonobuoyCommandWithContext(ctx, t, "plugin install hello-world.yaml ./testdata/plugins/good/hello-world.yaml", envVars...)
-	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
+	_ = mustRunSonobuoyCommandWithContext(ctx, t, "", "plugin install hello-world.yaml ./testdata/plugins/good/hello-world.yaml", envVars...)
+	output = mustRunSonobuoyCommandWithContext(ctx, t, "", "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	checkFileMatchesOrUpdate(t, output.String(), installedPluginFile, tmpDir)
 
 	// Disable the feature explicitly and ensure we aren't using it.
 	envVars = append(envVars, "SONOBUOY_PLUGIN_INSTALLATION=false")
-	output = mustRunSonobuoyCommandWithContext(ctx, t, "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
+	output = mustRunSonobuoyCommandWithContext(ctx, t, "", "gen -p hello-world.yaml --kubernetes-version=v123.456.789", envVars...)
 	checkFileMatchesOrUpdate(t, output.String(), localPluginFile, tmpDir)
 
 	if err := os.Remove("hello-world.yaml"); err != nil {

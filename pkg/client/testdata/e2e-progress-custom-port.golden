@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: 
+  name: sonobuoy
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -10,18 +10,18 @@ metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-serviceaccount
-  namespace: 
+  namespace: sonobuoy
 ---
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"","UUID":"","Version":"","ResultsDir":"","Resources":null,"Filters":{"Namespaces":"","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"","SonobuoyNamespace":null,"FieldSelectors":null,"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"Server":{"bindaddress":"","bindport":0,"advertiseaddress":"","timeoutseconds":0},"Plugins":null,"PluginSearchPath":null,"Namespace":"","WorkerImage":"","ImagePullPolicy":"","ImagePullSecrets":"","ProgressUpdatesPort":"1234","SecurityContextMode":""}
+    {"Description":"DEFAULT","UUID":"","Version":"static-version-for-testing","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:static-version-for-testing","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","ProgressUpdatesPort":"1234","SecurityContextMode":"nonroot"}
 kind: ConfigMap
 metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-config-cm
-  namespace: 
+  namespace: sonobuoy
 ---
 apiVersion: v1
 data:
@@ -55,6 +55,8 @@ data:
       - name: E2E_SKIP
       - name: E2E_USE_GO_RUNNER
         value: "true"
+      - name: RESULTS_DIR
+        value: /tmp/sonobuoy/results
       - name: SONOBUOY
         value: "true"
       - name: SONOBUOY_CONFIG_DIR
@@ -64,17 +66,18 @@ data:
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
       image: k8s.gcr.io/conformance:v99+static.testing
+      imagePullPolicy: IfNotPresent
       name: e2e
       resources: {}
       volumeMounts:
-      - mountPath: /tmp/results
+      - mountPath: /tmp/sonobuoy/results
         name: results
 kind: ConfigMap
 metadata:
   labels:
     component: sonobuoy
   name: sonobuoy-plugins-cm
-  namespace: 
+  namespace: sonobuoy
 ---
 apiVersion: v1
 kind: Pod
@@ -84,7 +87,7 @@ metadata:
     sonobuoy-component: aggregator
     tier: analysis
   name: sonobuoy
-  namespace: 
+  namespace: sonobuoy
 spec:
   securityContext:
     runAsUser: 1000
@@ -96,8 +99,8 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: 
-    imagePullPolicy: 
+    image: sonobuoy/sonobuoy:static-version-for-testing
+    imagePullPolicy: IfNotPresent
     name: kube-sonobuoy
     command: ["/sonobuoy"]
     args: ["aggregator", "--no-exit", "--level=info", "-v=4", "--alsologtostderr"]
@@ -130,7 +133,7 @@ metadata:
     component: sonobuoy
     sonobuoy-component: aggregator
   name: sonobuoy-aggregator
-  namespace: 
+  namespace: sonobuoy
 spec:
   ports:
   - port: 8080

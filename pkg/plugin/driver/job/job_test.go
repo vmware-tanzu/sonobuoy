@@ -103,7 +103,7 @@ func TestCreatePodDefinition(t *testing.T) {
 		t.Fatalf("couldn't make client certificate %v", err)
 	}
 
-	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "")
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results")
 
 	expectedName := fmt.Sprintf("sonobuoy-%v-job-%v", pluginName, testPlugin.SessionID)
 	if pod.Name != expectedName {
@@ -198,7 +198,7 @@ func TestCreatePodDefinitionUsesDefaultPodSpec(t *testing.T) {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "")
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results")
 
 	expectedServiceAccount := "sonobuoy-serviceaccount"
 	if pod.Spec.ServiceAccountName != expectedServiceAccount {
@@ -243,7 +243,7 @@ func TestCreatePodDefinitionUsesProvidedPodSpec(t *testing.T) {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "")
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results")
 
 	if pod.Spec.ServiceAccountName != expectedServiceAccountName {
 		t.Errorf("expected pod spec to have provided service account name %q, got %q", expectedServiceAccountName, pod.Spec.ServiceAccountName)
@@ -280,7 +280,7 @@ func TestCreatePodDefinitionAddsToExistingResourcesInPodSpec(t *testing.T) {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "")
+	pod := testPlugin.createPodDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results")
 
 	// Existing container in pod spec, plus 2 added by Sonobuoy
 	expectedNumContainers := 3
@@ -325,7 +325,7 @@ func TestCreatePodDefinitionSetsOwnerReference(t *testing.T) {
 		},
 	}
 
-	pod := testPlugin.createPodDefinition("", clientCert, &aggregatorPod, "")
+	pod := testPlugin.createPodDefinition("", clientCert, &aggregatorPod, "", "/tmp/sonobuoy/results")
 	ownerReferences := pod.ObjectMeta.OwnerReferences
 
 	if len(ownerReferences) != 1 {
@@ -509,7 +509,7 @@ func TestMonitor(t *testing.T) {
 
 			p := &Plugin{}
 			ctx, cancel := context.WithCancel(context.Background())
-			ch := make(chan (*plugin.Result), 1)
+			ch := make(chan *plugin.Result, 1)
 
 			wasStillMonitoring := false
 			if tc.cancelContext {

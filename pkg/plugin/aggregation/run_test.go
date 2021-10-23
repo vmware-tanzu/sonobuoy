@@ -139,7 +139,7 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 				return true, nil, tc.podCreationError
 			})
 
-			doneCh, timeoutCh := make(chan (struct{}), 1), make(chan (struct{}), 1)
+			doneCh, timeoutCh := make(chan struct{}, 1), make(chan struct{}, 1)
 			if tc.cancelContext {
 				cancel()
 			} else {
@@ -152,7 +152,7 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 			}
 
 			go func() {
-				a.RunAndMonitorPlugin(ctx, testTimeout, tc.plugin, fclient, nil, "testname", testCert, &corev1.Pod{}, "")
+				a.RunAndMonitorPlugin(ctx, testTimeout, tc.plugin, fclient, nil, "testname", testCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results")
 				doneCh <- struct{}{}
 			}()
 
@@ -206,7 +206,7 @@ type MockCleanupPlugin struct {
 	cleanedUp   bool
 }
 
-func (cp *MockCleanupPlugin) Run(_ kubernetes.Interface, _ string, _ *tls.Certificate, _ *corev1.Pod, _ string) error {
+func (cp *MockCleanupPlugin) Run(_ kubernetes.Interface, _ string, _ *tls.Certificate, _ *corev1.Pod, _, _ string) error {
 	return nil
 }
 
@@ -277,7 +277,7 @@ func TestCleanup(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			var plugins []plugin.Interface = make([]plugin.Interface, len(tc.plugins))
+			var plugins = make([]plugin.Interface, len(tc.plugins))
 			for i, p := range tc.plugins {
 				plugins[i] = p
 			}

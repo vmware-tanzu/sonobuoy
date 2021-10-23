@@ -95,6 +95,8 @@ data:
         value: \[Disruptive\]|NoExecuteTaintManager
       - name: E2E_USE_GO_RUNNER
         value: "true"
+      - name: RESULTS_DIR
+        value: /tmp/sonobuoy
       - name: SONOBUOY
         value: "true"
       - name: SONOBUOY_CONFIG_DIR
@@ -102,13 +104,13 @@ data:
       - name: SONOBUOY_K8S_VERSION
         value: ignore
       - name: SONOBUOY_RESULTS_DIR
-        value: /tmp/sonobuoy/results
+        value: /tmp/sonobuoy
       image: k8s.gcr.io/conformance:ignore
       imagePullPolicy: Always
       name: e2e
       resources: {}
       volumeMounts:
-      - mountPath: /tmp/results
+      - mountPath: /tmp/sonobuoy
         name: results
   plugin-1.yaml: |
     podSpec:
@@ -144,7 +146,7 @@ data:
           fieldRef:
             fieldPath: spec.nodeName
       - name: RESULTS_DIR
-        value: /tmp/results
+        value: /tmp/sonobuoy
       - name: SONOBUOY
         value: "true"
       - name: SONOBUOY_CONFIG_DIR
@@ -152,7 +154,7 @@ data:
       - name: SONOBUOY_K8S_VERSION
         value: ignore
       - name: SONOBUOY_RESULTS_DIR
-        value: /tmp/sonobuoy/results
+        value: /tmp/sonobuoy
       image: sonobuoy/systemd-logs:v0.4
       imagePullPolicy: Always
       name: systemd-logs
@@ -160,10 +162,10 @@ data:
       securityContext:
         privileged: true
       volumeMounts:
-      - mountPath: /tmp/results
-        name: results
       - mountPath: /node
         name: root
+      - mountPath: /tmp/sonobuoy
+        name: results
 kind: ConfigMap
 metadata:
   labels:

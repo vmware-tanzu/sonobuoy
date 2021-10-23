@@ -18,7 +18,7 @@ func TestLoadConfig(t *testing.T) {
 		{
 			desc: "No environment variables results in default config values",
 			expectedCfg: &plugin.WorkerConfig{
-				ResultsDir:          "/tmp/results",
+				ResultsDir:          "/tmp/sonobuoy/results",
 				ProgressUpdatesPort: "8099",
 			},
 		},

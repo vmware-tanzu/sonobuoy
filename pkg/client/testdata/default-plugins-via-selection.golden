@@ -15,7 +15,7 @@ metadata:
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"DEFAULT","UUID":"","Version":"static-version-for-testing","ResultsDir":"/tmp/sonobuoy","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":[],"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:static-version-for-testing","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}
+    {"Description":"DEFAULT","UUID":"","Version":"static-version-for-testing","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":[],"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:static-version-for-testing","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}
 kind: ConfigMap
 metadata:
   labels:
@@ -55,6 +55,8 @@ data:
       - name: E2E_SKIP
       - name: E2E_USE_GO_RUNNER
         value: "true"
+      - name: RESULTS_DIR
+        value: /tmp/sonobuoy/results
       - name: SONOBUOY
         value: "true"
       - name: SONOBUOY_CONFIG_DIR
@@ -68,7 +70,7 @@ data:
       name: e2e
       resources: {}
       volumeMounts:
-      - mountPath: /tmp/results
+      - mountPath: /tmp/sonobuoy/results
         name: results
   plugin-1.yaml: |
     podSpec:
@@ -104,7 +106,7 @@ data:
           fieldRef:
             fieldPath: spec.nodeName
       - name: RESULTS_DIR
-        value: /tmp/results
+        value: /tmp/sonobuoy/results
       - name: SONOBUOY
         value: "true"
       - name: SONOBUOY_CONFIG_DIR
@@ -120,10 +122,10 @@ data:
       securityContext:
         privileged: true
       volumeMounts:
-      - mountPath: /tmp/results
-        name: results
       - mountPath: /node
         name: root
+      - mountPath: /tmp/sonobuoy/results
+        name: results
 kind: ConfigMap
 metadata:
   labels:
