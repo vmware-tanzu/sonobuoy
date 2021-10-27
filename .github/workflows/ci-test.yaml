@@ -128,6 +128,12 @@ jobs:
           source ./scripts/build.sh
           load_test_images_into_cluster
           VERBOSE=true SONOBUOY_CLI=../../build/linux/amd64/sonobuoy integration
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: sonobuoy-test-archives-${{ github.run_id }}
+          path: |
+            /tmp/artifacts
   push-images:
     if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
