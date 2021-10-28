@@ -25,10 +25,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
-
-	"github.com/pkg/errors"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
@@ -50,6 +49,7 @@ const (
 	sonobuoyResultsDirKey       = "SONOBUOY_RESULTS_DIR"
 	sonobuoyLegacyResultsDirKey = "RESULTS_DIR"
 	sonobuoyConfigDirKey        = "SONOBUOY_CONFIG_DIR"
+	sonobuoyProgressPortKey     = "SONOBUOY_PROGRESS_PORT"
 
 	sonobuoyDefaultConfigDir = "/tmp/sonobuoy/config"
 )
@@ -193,38 +193,10 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		return nil, nil, errors.Wrap(err, "plugin YAML generation")
 	}
 
-	cfg.PluginEnvOverrides, plugins = applyAutoEnvVars(cfg.KubeVersion, cfg.Config.ResultsDir, cfg.PluginEnvOverrides, plugins)
+	cfg.PluginEnvOverrides, plugins = applyAutoEnvVars(cfg.KubeVersion, cfg.Config.ResultsDir, cfg.Config.ProgressUpdatesPort, cfg.PluginEnvOverrides, plugins)
 	autoAttachResultsDir(plugins, cfg.Config.ResultsDir)
-
-	for pluginName, envVars := range cfg.PluginEnvOverrides {
-		found := false
-		for _, p := range plugins {
-			if p.SonobuoyConfig.PluginName == pluginName {
-				found = true
-				newEnv := []corev1.EnvVar{}
-				removeVals := map[string]struct{}{}
-				for k, v := range envVars {
-					if v != "" {
-						newEnv = append(newEnv, corev1.EnvVar{Name: k, Value: v})
-					} else {
-						removeVals[k] = struct{}{}
-					}
-				}
-				p.Spec.Env = mergeEnv(newEnv, p.Spec.Env, removeVals)
-			}
-		}
-
-		// Require overrides to target existing plugins and provide a helpful message if there is a mismatch.
-		// Dont error if the plugin in question is "e2e" since we default to setting those values regardless of
-		// if they choose that plugin or not.
-		if !found && pluginName != e2ePluginName {
-			pluginNames := []string{}
-			for _, p := range plugins {
-				pluginNames = append(pluginNames, p.SonobuoyConfig.PluginName)
-			}
-
-			return nil, nil, fmt.Errorf("failed to override env vars for plugin %v, no plugin with that name found; have plugins: %v", pluginName, pluginNames)
-		}
+	if err := applyEnvOverrides(cfg.PluginEnvOverrides, plugins); err != nil {
+		return nil, nil, err
 	}
 
 	pluginYAML := []string{}
@@ -267,20 +239,71 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 	return buf.Bytes(), plugins, nil
 }
 
+func applyEnvOverrides(pluginEnvOverrides map[string]map[string]string, plugins []*manifest.Manifest) error {
+	for pluginName, envVars := range pluginEnvOverrides {
+		found := false
+		for _, p := range plugins {
+			if p.SonobuoyConfig.PluginName == pluginName {
+				found = true
+				newEnv := []corev1.EnvVar{}
+				removeVals := map[string]struct{}{}
+				for k, v := range envVars {
+					if v != "" {
+						newEnv = append(newEnv, corev1.EnvVar{Name: k, Value: v})
+					} else {
+						removeVals[k] = struct{}{}
+					}
+				}
+				p.Spec.Env = mergeEnv(newEnv, p.Spec.Env, removeVals)
+				if p.PodSpec != nil {
+					for i := range p.PodSpec.Containers {
+						p.PodSpec.Containers[i].Env = mergeEnv(newEnv, p.PodSpec.Containers[i].Env, removeVals)
+					}
+				}
+			}
+		}
+
+		// Require overrides to target existing plugins and provide a helpful message if there is a mismatch.
+		// Dont error if the plugin in question is "e2e" since we default to setting those values regardless of
+		// if they choose that plugin or not.
+		if !found && pluginName != e2ePluginName {
+			pluginNames := []string{}
+			for _, p := range plugins {
+				pluginNames = append(pluginNames, p.SonobuoyConfig.PluginName)
+			}
+
+			return fmt.Errorf("failed to override env vars for plugin %v, no plugin with that name found; have plugins: %v", pluginName, pluginNames)
+		}
+	}
+	return nil
+}
+
 // autoAttachResultsDir will either add the volumemount for the results dir or modify the existing
 // one to have the right path set.
 func autoAttachResultsDir(plugins []*manifest.Manifest, resultsDir string) {
-	for _, p := range plugins {
+	for i := range plugins {
+		containers := []*corev1.Container{&plugins[i].Spec.Container}
+		if plugins[i].PodSpec != nil {
+			for i := range plugins[i].PodSpec.Containers {
+				containers = append(containers, &plugins[i].PodSpec.Containers[i])
+			}
+		}
+		addOrUpdateResultsMount(resultsDir, containers...)
+	}
+}
+
+func addOrUpdateResultsMount(resultsDir string, containers ...*corev1.Container) {
+	for ci := range containers {
 		foundOnPlugin := false
-		for i, vm := range p.Spec.VolumeMounts {
+		for vmi, vm := range containers[ci].VolumeMounts {
 			if vm.Name == "results" {
-				p.Spec.VolumeMounts[i].MountPath = resultsDir
+				containers[ci].VolumeMounts[vmi].MountPath = resultsDir
 				foundOnPlugin = true
 				break
 			}
 		}
 		if !foundOnPlugin {
-			p.Spec.VolumeMounts = append(p.Spec.VolumeMounts, corev1.VolumeMount{
+			containers[ci].VolumeMounts = append(containers[ci].VolumeMounts, corev1.VolumeMount{
 				Name:      "results",
 				MountPath: resultsDir,
 			})
@@ -288,7 +311,7 @@ func autoAttachResultsDir(plugins []*manifest.Manifest, resultsDir string) {
 	}
 }
 
-func applyAutoEnvVars(imageVersion, resultsDir string, env map[string]map[string]string, plugins []*manifest.Manifest) (map[string]map[string]string, []*manifest.Manifest) {
+func applyAutoEnvVars(imageVersion, resultsDir, progressPort string, env map[string]map[string]string, plugins []*manifest.Manifest) (map[string]map[string]string, []*manifest.Manifest) {
 	// Set env on all plugins and swap out dynamic images.
 	if env == nil {
 		env = map[string]map[string]string{}
@@ -300,6 +323,7 @@ func applyAutoEnvVars(imageVersion, resultsDir string, env map[string]map[string
 		env[p.SonobuoyConfig.PluginName][sonobuoyK8sVersionKey] = imageVersion
 		env[p.SonobuoyConfig.PluginName][sonobuoyResultsDirKey] = resultsDir
 		env[p.SonobuoyConfig.PluginName][sonobuoyLegacyResultsDirKey] = resultsDir
+		env[p.SonobuoyConfig.PluginName][sonobuoyProgressPortKey] = progressPort
 		env[p.SonobuoyConfig.PluginName][sonobuoyConfigDirKey] = sonobuoyDefaultConfigDir
 		env[p.SonobuoyConfig.PluginName][sonobuoyKey] = "true"
 		plugins[i].Spec.Image = strings.ReplaceAll(plugins[i].Spec.Image, "$"+sonobuoyK8sVersionKey, imageVersion)

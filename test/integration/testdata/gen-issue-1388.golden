@@ -101,6 +101,8 @@ data:
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
         value: ignore
+      - name: SONOBUOY_PROGRESS_PORT
+        value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
       image: k8s.gcr.io/conformance:ignore
@@ -151,6 +153,8 @@ data:
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
         value: ignore
+      - name: SONOBUOY_PROGRESS_PORT
+        value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
       image: sonobuoy/systemd-logs:v0.4
