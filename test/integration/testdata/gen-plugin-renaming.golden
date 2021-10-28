@@ -82,6 +82,8 @@ data:
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
         value: ignore
+      - name: SONOBUOY_PROGRESS_PORT
+        value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
       image: sonobuoy/testimage:v0.1
@@ -108,6 +110,8 @@ data:
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
         value: ignore
+      - name: SONOBUOY_PROGRESS_PORT
+        value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
       image: hello:v9
