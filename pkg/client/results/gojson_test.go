@@ -16,29 +16,33 @@ func Test_GojsonEventToItem(t *testing.T) {
 		want  *Item
 	}{
 		{
-			name:  "Empty is unknown",
+			name:  "Empty skipped",
 			event: testEvent{},
-			want:  &Item{Status: StatusUnknown},
+			want:  nil,
+		}, {
+			name:  "Empty is unknown",
+			event: testEvent{Test: "test"},
+			want:  &Item{Name: "test", Status: StatusUnknown},
 		}, {
 			name:  "Pass",
-			event: testEvent{Action: actionPass},
-			want:  &Item{Status: StatusPassed},
+			event: testEvent{Test: "test", Action: actionPass},
+			want:  &Item{Name: "test", Status: StatusPassed},
 		}, {
 			name:  "Failure",
-			event: testEvent{Action: actionFail},
-			want:  &Item{Status: StatusFailed},
+			event: testEvent{Test: "test", Action: actionFail},
+			want:  &Item{Name: "test", Status: StatusFailed},
 		}, {
 			name:  "Skip",
-			event: testEvent{Action: actionSkip},
-			want:  &Item{Status: StatusSkipped},
+			event: testEvent{Test: "test", Action: actionSkip},
+			want:  &Item{Name: "test", Status: StatusSkipped},
 		}, {
 			name:  "Others unknown",
-			event: testEvent{Action: "weirdvalue"},
-			want:  &Item{Status: StatusUnknown},
+			event: testEvent{Test: "test", Action: "weirdvalue"},
+			want:  &Item{Name: "test", Status: StatusUnknown},
 		}, {
 			name:  "Name is correct",
-			event: testEvent{Action: actionPass, Test: "testname"},
-			want:  &Item{Status: StatusPassed, Name: "testname"},
+			event: testEvent{Test: "test", Action: actionPass},
+			want:  &Item{Name: "test", Status: StatusPassed},
 		},
 	}
 	for _, tt := range tests {
@@ -106,6 +110,58 @@ func Test_GojsonProcessReader(t *testing.T) {
 				Items: []Item{
 					{Name: "test1", Status: StatusFailed},
 					{Name: "test2", Status: StatusPassed},
+				},
+			},
+		}, {
+			name: "Real example",
+			args: args{
+				r: strings.NewReader(`{"Action":"run","Test":"TestListPods"}
+{"Action":"output","Test":"TestListPods","Output":"=== RUN   TestListPods\n"}
+{"Action":"output","Test":"TestListPods","Output":"    main_test.go:74: Creating NS custom-64d for test TestListPods\n"}
+{"Action":"run","Test":"TestListPods/pod_list"}
+{"Action":"output","Test":"TestListPods/pod_list","Output":"=== RUN   TestListPods/pod_list\n"}
+{"Action":"run","Test":"TestListPods/pod_list/pods_from_kube-system"}
+{"Action":"output","Test":"TestListPods/pod_list/pods_from_kube-system","Output":"=== RUN   TestListPods/pod_list/pods_from_kube-system\n"}
+{"Action":"output","Test":"TestListPods/pod_list/pods_from_kube-system","Output":"    custom_test.go:35: found 12 pods\n"}
+{"Action":"cont","Test":"TestListPods"}
+{"Action":"output","Test":"TestListPods","Output":"=== CONT  TestListPods\n"}
+{"Action":"output","Test":"TestListPods","Output":"    main_test.go:83: Deleting NS custom-64d for test TestListPods\n"}
+{"Action":"output","Test":"TestListPods","Output":"--- PASS: TestListPods (0.03s)\n"}
+{"Action":"output","Test":"TestListPods/pod_list","Output":"    --- PASS: TestListPods/pod_list (0.01s)\n"}
+{"Action":"output","Test":"TestListPods/pod_list/pods_from_kube-system","Output":"        --- PASS: TestListPods/pod_list/pods_from_kube-system (0.01s)\n"}
+{"Action":"pass","Test":"TestListPods/pod_list/pods_from_kube-system"}
+{"Action":"pass","Test":"TestListPods/pod_list"}
+{"Action":"pass","Test":"TestListPods"}
+{"Action":"run","Test":"TestLongTest"}
+{"Action":"output","Test":"TestLongTest","Output":"=== RUN   TestLongTest\n"}
+{"Action":"output","Test":"TestLongTest","Output":"    main_test.go:74: Creating NS custom-715 for test TestLongTest\n"}
+{"Action":"run","Test":"TestLongTest/pod_list"}
+{"Action":"output","Test":"TestLongTest/pod_list","Output":"=== RUN   TestLongTest/pod_list\n"}
+{"Action":"run","Test":"TestLongTest/pod_list/pods_from_kube-system"}
+{"Action":"output","Test":"TestLongTest/pod_list/pods_from_kube-system","Output":"=== RUN   TestLongTest/pod_list/pods_from_kube-system\n"}
+{"Action":"cont","Test":"TestLongTest"}
+{"Action":"output","Test":"TestLongTest","Output":"=== CONT  TestLongTest\n"}
+{"Action":"output","Test":"TestLongTest","Output":"    main_test.go:83: Deleting NS custom-715 for test TestLongTest\n"}
+{"Action":"output","Test":"TestLongTest","Output":"--- PASS: TestLongTest (50.03s)\n"}
+{"Action":"output","Test":"TestLongTest/pod_list","Output":"    --- PASS: TestLongTest/pod_list (50.02s)\n"}
+{"Action":"output","Test":"TestLongTest/pod_list/pods_from_kube-system","Output":"        --- PASS: TestLongTest/pod_list/pods_from_kube-system (50.02s)\n"}
+{"Action":"pass","Test":"TestLongTest/pod_list/pods_from_kube-system"}
+{"Action":"pass","Test":"TestLongTest/pod_list"}
+{"Action":"pass","Test":"TestLongTest"}
+{"Action":"output","Output":"PASS\n"}
+{"Action":"pass"}
+`),
+				name: "suite",
+			},
+			want: Item{
+				Name: "suite", Status: StatusPassed,
+				Items: []Item{
+					{Name: "TestListPods/pod_list/pods_from_kube-system", Status: StatusPassed},
+					{Name: "TestListPods/pod_list", Status: StatusPassed},
+					{Name: "TestListPods", Status: StatusPassed},
+					{Name: "TestLongTest/pod_list/pods_from_kube-system", Status: StatusPassed},
+					{Name: "TestLongTest/pod_list", Status: StatusPassed},
+					{Name: "TestLongTest", Status: StatusPassed},
 				},
 			},
 		},
