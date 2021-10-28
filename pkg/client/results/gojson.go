@@ -111,8 +111,8 @@ func gojsonProcessReader(r io.Reader, name string, metadata map[string]string) (
 	}
 
 	decoder := json.NewDecoder(r)
-	currentTest := testEvent{}
 	for {
+		currentTest := testEvent{}
 		if err := decoder.Decode(&currentTest); err == io.EOF {
 			break
 		} else if err != nil {
@@ -136,6 +136,11 @@ func gojsonEventToItem(event testEvent) *Item {
 		actionCont, actionBench, actionOutput, actionPause, actionRun,
 	}, event.Action) {
 		logrus.WithField("action", event.Action).WithField("test", event.Test).Trace("Skipping gojson event")
+		return nil
+	}
+
+	if event.Test == "" {
+		logrus.WithField("action", event.Action).Trace("Skipping gojson event due to no test name attached")
 		return nil
 	}
 
