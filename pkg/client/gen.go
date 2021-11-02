@@ -130,6 +130,13 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		cfg.DynamicPlugins = []string{e2ePluginName, systemdLogsName}
 	}
 
+	// Skip plugins will just remove all plugins. Only added to support a zero-plugin
+	// use case where the user just wants to use Sonobuoy for data gathering.
+	if cfg.Config.SkipPlugins {
+		cfg.DynamicPlugins = nil
+		cfg.StaticPlugins = nil
+	}
+
 	plugins := []*manifest.Manifest{}
 	for _, v := range cfg.DynamicPlugins {
 		switch v {

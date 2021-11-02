@@ -124,6 +124,7 @@ type Config struct {
 	PluginSelections []plugin.Selection       `json:"Plugins" mapstructure:"Plugins"`
 	PluginSearchPath []string                 `json:"PluginSearchPath" mapstructure:"PluginSearchPath"`
 	Namespace        string                   `json:"Namespace" mapstructure:"Namespace"`
+	SkipPlugins      bool                     `json:"SkipPlugins,omitempty"`
 	LoadedPlugins    []plugin.Interface       `json:"-"` // this is assigned when plugins are loaded.
 
 	///////////////////////////////////////////////
