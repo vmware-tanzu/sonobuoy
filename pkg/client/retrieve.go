@@ -30,17 +30,10 @@ import (
 	pluginaggregation "github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
-)
-
-var (
-	tarCmd = []string{
-		"/sonobuoy",
-		"splat",
-		config.AggregatorResultsPath,
-	}
 )
 
 type DeletionError struct {
@@ -76,6 +69,7 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 		return nil, nil, errors.Wrap(err, "failed to get the name of the aggregator pod to fetch results from")
 	}
 
+	logrus.Tracef("Running command %v on the aggregator", tarCmd(cfg.Path))
 	restClient := client.CoreV1().RESTClient()
 	req := restClient.Post().
 		Resource("pods").
@@ -85,7 +79,7 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 		Param("container", config.AggregatorContainerName)
 	req.VersionedParams(&corev1.PodExecOptions{
 		Container: config.AggregatorContainerName,
-		Command:   tarCmd,
+		Command:   tarCmd(cfg.Path),
 		Stdin:     false,
 		Stdout:    true,
 		Stderr:    false,
@@ -267,4 +261,12 @@ func dirExists(path string) (bool, error) {
 		return false, nil
 	}
 	return false, err
+}
+
+func tarCmd(path string) []string {
+	return []string{
+		"/sonobuoy",
+		"splat",
+		path,
+	}
 }

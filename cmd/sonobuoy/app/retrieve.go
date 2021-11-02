@@ -39,6 +39,7 @@ type retrieveFlags struct {
 	extract        bool
 	outputLocation string
 	filename       string
+	aggregatorPath string
 }
 
 func NewCmdRetrieve() *cobra.Command {
@@ -54,6 +55,7 @@ func NewCmdRetrieve() *cobra.Command {
 	AddNamespaceFlag(&rcvFlags.namespace, cmd.Flags())
 	AddExtractFlag(&rcvFlags.extract, cmd.Flags())
 	AddFilenameFlag(&rcvFlags.filename, cmd.Flags())
+	AddRetrievePathFlag(&rcvFlags.aggregatorPath, cmd.Flags())
 
 	return cmd
 }
@@ -72,7 +74,10 @@ func retrieveResultsCmd(opts *retrieveFlags) func(cmd *cobra.Command, args []str
 		}
 
 		// Get a reader that contains the tar output of the results directory.
-		reader, ec, err := sbc.RetrieveResults(&client.RetrieveConfig{Namespace: opts.namespace})
+		reader, ec, err := sbc.RetrieveResults(&client.RetrieveConfig{
+			Namespace: opts.namespace,
+			Path:      opts.aggregatorPath,
+		})
 		if err != nil {
 			errlog.LogError(err)
 			os.Exit(1)
