@@ -189,6 +189,9 @@ func (dc *DeleteConfig) Validate() error {
 type RetrieveConfig struct {
 	// Namespace is the namespace the sonobuoy aggregator is running in.
 	Namespace string
+	// Path is the location that the aggregator stores results in. Should
+	// usually be the same value but can help with debugging some issues.
+	Path string
 }
 
 // Validate checks the config to determine if it is valid.

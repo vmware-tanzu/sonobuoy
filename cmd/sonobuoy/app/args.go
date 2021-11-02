@@ -49,6 +49,7 @@ const (
 	e2eRegistryConfigFlag   = "e2e-repo-config"
 	pluginImageFlag         = "plugin-image"
 	filenameFlag            = "filename"
+	retrievePathFlag        = "retrieve-path"
 	securityContextModeFlag = "security-context-mode"
 
 	// Quick runs a single E2E test and the systemd log tests.
@@ -424,6 +425,14 @@ func AddFilenameFlag(str *string, flags *pflag.FlagSet) {
 	flags.StringVarP(
 		str, filenameFlag, "f", "",
 		"Specify the name of the downloaded file. If empty, defaults to the name of the tarball in the pod.",
+	)
+}
+
+// AddRetrievePathFlag initialises a namespace flag.
+func AddRetrievePathFlag(str *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		str, retrievePathFlag, config.AggregatorResultsPath,
+		"Specify the path to retrieve from the aggregator pod.",
 	)
 }
 
