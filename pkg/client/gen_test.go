@@ -208,6 +208,17 @@ func TestGenerateManifestGolden(t *testing.T) {
 			},
 			goldenFile: filepath.Join("testdata", "default-plugins-via-nil-selection.golden"),
 		}, {
+			name: "Plugins skipped entirely if config specifies",
+			inputcm: &client.GenConfig{
+				Config: fromConfig(func(c *config.Config) *config.Config {
+					c.PluginSelections = []plugin.Selection{}
+					c.SkipPlugins = true
+					return c
+				}),
+				KubeVersion: "v99+static.testing",
+			},
+			goldenFile: filepath.Join("testdata", "no-plugins-via-option.golden"),
+		}, {
 			name: "Manually specify e2e",
 			inputcm: &client.GenConfig{
 				DynamicPlugins: []string{"e2e"},
@@ -418,6 +429,22 @@ func TestGenerateManifestGolden(t *testing.T) {
 				},
 			},
 			goldenFile: filepath.Join("testdata", "plugin-configmaps.golden"),
+		}, {
+			name: "ImagePullPolicy applied to all plugins",
+			inputcm: &client.GenConfig{
+				Config:      staticConfig(),
+				KubeVersion: "v99+static.testing",
+				StaticPlugins: []*manifest.Manifest{
+					{
+						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myplugin1"},
+						Spec:           manifest.Container{Container: v1.Container{ImagePullPolicy: "Never"}},
+					}, {
+						SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myplugin2"},
+						Spec:           manifest.Container{Container: v1.Container{ImagePullPolicy: "Always"}},
+					},
+				},
+			},
+			goldenFile: filepath.Join("testdata", "imagePullPolicy-all-plugins.golden"),
 		}, {
 			name: "ImagePullPolicy applied to all plugins",
 			inputcm: &client.GenConfig{
