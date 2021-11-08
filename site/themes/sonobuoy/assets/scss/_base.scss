@@ -251,3 +251,12 @@ body td,
 body th {
     border: 1px solid black; padding:10px;
 }
+
+blockquote {
+    margin: 5px;
+    border-left: 10px grey solid;
+    border-right: 10px grey solid;
+    border-radius: 15px;
+    padding: 11px 11px 11px 35px;
+    background-color: #efefef
+}
