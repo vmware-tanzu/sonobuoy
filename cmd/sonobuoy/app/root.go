@@ -101,9 +101,17 @@ func prerunChecks(cmd *cobra.Command, args []string) error {
 	logrus.Tracef("Invoked command %v with args %v and flags %v", cmd.Name(), args, flagsDebug)
 
 	// Difficult to do checks like this within the flag themselves (since they dont know
-	// about each other).
+	// about each other). Splitting up checks into varous 'ifs' for ease of reading/writing even if not most succinct.
 	if flagsSet["mode"] && (flagsSet["e2e-focus"] || flagsSet["e2e-skip"]) {
-		logrus.Warnf("mode flag and e2e-focus/skip flags both set and may collide")
+		logrus.Warnf("mode flag and e2e-focus/skip flags both provided and may cause unintended behavior")
+	}
+
+	if flagsSet["rerun-failed"] && (flagsSet["e2e-focus"] || flagsSet["e2e-skip"]) {
+		logrus.Warnf("rerun-failed flag and e2e-focus/skip flags both provided and may cause unintended behavior")
+	}
+
+	if flagsSet["rerun-failed"] && flagsSet["mode"] {
+		logrus.Warnf("rerun-failed flag and mode flags both provided and may cause unintended behavior")
 	}
 
 	if flagsSet["kube-conformance-image"] && (flagsSet["kubernetes-version"] || flagsSet["kube-conformance-image-version"]) {
