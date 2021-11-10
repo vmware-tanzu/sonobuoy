@@ -168,7 +168,7 @@ We recommend adding your desired customizations to the plugin definition itself.
 
 [systemd-repo]: https://github.com/heptio/sonobuoy-plugin-systemd-logs
 [e2e]: https://github.com/vmware-tanzu/sonobuoy/blob/main/examples/plugins.d/heptio-e2e.yaml
-[conformance]: https://github.com/kubernetes/kubernetes/tree/master/cluster/images/conformance
+[conformance]: https://github.com/kubernetes/kubernetes/tree/master/test/conformance/image
 [e2ePlugin]: e2eplugin.md
 [kubernetes-podspecs]: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core
 [customPluginsBlog]: https://blogs.vmware.com/cloudnative/2019/04/30/sonobuoy-plugins-custom-testing/

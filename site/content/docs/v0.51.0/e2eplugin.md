@@ -71,4 +71,4 @@ See the [official documentation][conformanceDocs] for Kubernetes's existing conf
 
 [configs]: https://docs.google.com/spreadsheets/d/1LxSqBzjOxfGx3cmtZ4EbB_BGCxT_wlxW_xgHVVa23es/edit#gid=0
 [conformanceDocs]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-testing/e2e-tests.md#conformance-tests
-[kubernetesRepo]: https://github.com/kubernetes/kubernetes/tree/master/cluster/images/conformance
+[kubernetesRepo]: https://github.com/kubernetes/kubernetes/tree/master/test/conformance/image

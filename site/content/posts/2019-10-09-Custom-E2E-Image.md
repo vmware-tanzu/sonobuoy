@@ -16,7 +16,7 @@ slug: custom-e2e-image
 
 Sonobuoy can be used to run any set of custom tests and data-gathering logic, but the most common use case continues to be running the Kubernetes E2E tests.
 
-The [E2E test image](https://github.com/kubernetes/kubernetes/tree/master/cluster/images/conformance) is maintained by the Kubernetes community and is automatically generated for each release of Kubernetes. The test image bundles:
+The [E2E test image](https://github.com/kubernetes/kubernetes/tree/master/test/conformance/image) is maintained by the Kubernetes community and is automatically generated for each release of Kubernetes. The test image bundles:
 
 - The binary, which contains the test logic
 - Ginkgo, a tool for running tests
@@ -49,7 +49,7 @@ The only downside to this approach is that it is only available for clusters usi
 
 # Building Your Own Test Image
 
-I’ve often referred people to the Kubernetes repo (and its [instructions](https://github.com/kubernetes/kubernetes/tree/master/cluster/images/conformance#how-to-release-by-hand)) when they need help building a custom test image.  That approach would surely work, but it involves actually building the Kubernetes tests yourself, which may tax your local machine or be difficult to set up the first time.
+I’ve often referred people to the Kubernetes repo (and its [instructions](https://github.com/kubernetes/kubernetes/tree/master/test/conformance/image#how-to-release-by-hand)) when they need help building a custom test image.  That approach would surely work, but it involves actually building the Kubernetes tests yourself, which may tax your local machine or be difficult to set up the first time.
 
 For most users, I’d recommend taking a much simpler approach: Just built a new image based on the existing one and swap out the script as needed.
 
