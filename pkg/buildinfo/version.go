@@ -19,8 +19,9 @@ limitations under the License.
 // worrying about introducing circular dependencies.
 package buildinfo
 
-// Version is the current version of Sonobuoy, set by the go linker's -X flag at build time
-var Version = "v0.54.0"
+// Version is the current version of Sonobuoy, set by the go linker's -X flag at build time.
+// Ensure that this is bumped manually as well so that Sonobuoy, as a library, also has the right version.
+var Version = "v0.55.0"
 
 // GitSHA is the actual commit that is being built, set by the go linker's -X flag at build time.
 var GitSHA string
