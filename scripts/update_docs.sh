@@ -7,8 +7,32 @@ set -x
 # build_func.sh yourself. This is just a best effort for local dev.
 GITHUB_WORKSPACE=${GITHUB_WORKSPACE:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}
 DIR="$(cd "$GITHUB_WORKSPACE" || exit; cd ..; pwd)"
-VERSION="$1"
-TOC_NAME="$(echo "${VERSION}"toc|sed s/\\./-/g)"
+
+while getopts "bv:" opt; do
+case $opt in
+  v)
+    VERSION="$OPTARG"
+    TOC_NAME="$(echo "${VERSION}"toc|sed s/\\./-/g)"
+    ;;
+  b)
+    BUMP=true
+    ;;
+  \?)
+    echo "Invalid option: -$OPTARG" >&2
+    exit 1
+    ;;
+  :)
+    echo "Option -$OPTARG requires an argument." >&2
+    exit 1
+    ;;
+esac
+done
+
+if [ -z "${VERSION}" ]
+then
+  echo "-v requires argument to proceed"
+  exit 1
+fi
 
 read -r -d '' CONFIG_VERSION_BLOCK << EOM
   docs_latest: v.*
@@ -74,25 +98,30 @@ EOM
 OLD_FOOTER_BLOCK="cta_url: \/docs\/v.*"
 NEW_FOOTER_BLOCK="cta_url: \/docs\/${VERSION}"
 
-if [ -z "${VERSION}" ]
+if [ $BUMP ]
 then
-        echo "Should be called with version as first argument. No argument given, not creating docs."
-else
-    docker run --rm \
-        -v "${DIR}":/root \
-        debian:stretch-slim \
-        /bin/sh -c \
-        "rm -rf /root/site/content/docs/${VERSION} && \
-        cp -r /root/site/content/docs/main /root/site/content/docs/${VERSION} && \
-        sed -i 's/site\/docs\/main\///g' /root/site/content/docs/${VERSION}/_index.md && \
-        sed -i 's/docs\/img/img/g' /root/site/content/docs/${VERSION}/_index.md && \
-        sed -i 's/sonobuoy\/tree\/main/sonobuoy\/tree\/${VERSION}/g' /root/site/content/docs/${VERSION}/_index.md && \
-        sed -i 's/sonobuoy.io\/docs\/main/sonobuoy.io\/docs\/${VERSION}/g' /root/site/content/docs/${VERSION}/_index.md && \
-        cp /root/site/data/docs/main-toc.yml /root/site/data/docs/${TOC_NAME}.yml && \
-        perl -i -0pe 's/${CONFIG_VERSION_BLOCK}/${NEW_VERSION_BLOCK}/' /root/site/config.yaml && \
-        perl -i -0pe 's/${OLD_SCOPE_BLOCK}/${NEW_SCOPE_BLOCK}/' /root/site/config.yaml && \
-        perl -i -0pe 's/${OLD_TOC_BLOCK}/${NEW_TOC_BLOCK}/' /root/site/data/docs/toc-mapping.yml && \
-        perl -i -0pe 's/${MAIN_FRONTMATTER}/${RELEASE_FRONTMATTER}/' /root/site/content/docs/${VERSION}/index-frontmatter.yaml && \
-        perl -i -0pe 's/${MAIN_FRONTMATTER}/${RELEASE_FRONTMATTER}/' /root/site/content/docs/${VERSION}/_index.md && \
-        sed -i 's/${OLD_FOOTER_BLOCK}/${NEW_FOOTER_BLOCK}/' /root/site/config.yaml"
+  echo "-bump was triggered, modifying buildinfo.Version: $OPTARG" >&2
+  docker run --rm \
+      -v "${DIR}":/root \
+      debian:stretch-slim \
+      /bin/sh -c \
+      "sed -i 's/var Version.*/var Version = ${VERSION}/' /root/pkg/buildinfo/version.go"
 fi
+
+docker run --rm \
+  -v "${DIR}":/root \
+  debian:stretch-slim \
+  /bin/sh -c \
+  "rm -rf /root/site/content/docs/${VERSION} && \
+  cp -r /root/site/content/docs/main /root/site/content/docs/${VERSION} && \
+  sed -i 's/site\/docs\/main\///g' /root/site/content/docs/${VERSION}/_index.md && \
+  sed -i 's/docs\/img/img/g' /root/site/content/docs/${VERSION}/_index.md && \
+  sed -i 's/sonobuoy\/tree\/main/sonobuoy\/tree\/${VERSION}/g' /root/site/content/docs/${VERSION}/_index.md && \
+  sed -i 's/sonobuoy.io\/docs\/main/sonobuoy.io\/docs\/${VERSION}/g' /root/site/content/docs/${VERSION}/_index.md && \
+  cp /root/site/data/docs/main-toc.yml /root/site/data/docs/${TOC_NAME}.yml && \
+  perl -i -0pe 's/${CONFIG_VERSION_BLOCK}/${NEW_VERSION_BLOCK}/' /root/site/config.yaml && \
+  perl -i -0pe 's/${OLD_SCOPE_BLOCK}/${NEW_SCOPE_BLOCK}/' /root/site/config.yaml && \
+  perl -i -0pe 's/${OLD_TOC_BLOCK}/${NEW_TOC_BLOCK}/' /root/site/data/docs/toc-mapping.yml && \
+  perl -i -0pe 's/${MAIN_FRONTMATTER}/${RELEASE_FRONTMATTER}/' /root/site/content/docs/${VERSION}/index-frontmatter.yaml && \
+  perl -i -0pe 's/${MAIN_FRONTMATTER}/${RELEASE_FRONTMATTER}/' /root/site/content/docs/${VERSION}/_index.md && \
+  sed -i 's/${OLD_FOOTER_BLOCK}/${NEW_FOOTER_BLOCK}/' /root/site/config.yaml"
