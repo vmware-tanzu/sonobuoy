@@ -51,6 +51,7 @@ const (
 	filenameFlag            = "filename"
 	retrievePathFlag        = "retrieve-path"
 	securityContextModeFlag = "security-context-mode"
+	aggregatorPermissionsFlag = "aggregator-permissions"
 
 	// Quick runs a single E2E test and the systemd log tests.
 	Quick string = "quick"
@@ -174,6 +175,13 @@ func AddSecurityContextMode(mode *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		mode, securityContextModeFlag, "nonroot",
 		"Type of security context to use for the aggregator pod. Allowable values are [none, nonroot]",
+	)
+}
+
+func AddAggregatorPermissions(mode *string, flags *pflag.FlagSet){
+	flags.StringVar(
+		mode, aggregatorPermissionsFlag, "clusterAdmin",
+		"Type of aggregator permission to use in the cluster. Allowable values are [namespaced, clusterAdmin]"
 	)
 }
 

@@ -64,6 +64,8 @@ const (
 	// DefaultSecurityContextMode is a shorthand for common security context values. Default is nonroot which sets
 	// runAsUser, runAsGroup, and fsGroup. 'none' skips setting those it entirely since Windows does not support them.
 	DefaultSecurityContextMode = "nonroot"
+
+	DefaultAggregatorPermissions = "clusterAdmin"
 )
 
 var (
@@ -134,6 +136,7 @@ type Config struct {
 	ImagePullPolicy   string            `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
 	ImagePullSecrets  string            `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
 	CustomAnnotations map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
+	AggregatorPermissions string        `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
 
 	// ProgressUpdatesPort is the port on which the Sonobuoy worker will listen for status updates from its plugin.
 	ProgressUpdatesPort string `json:"ProgressUpdatesPort,omitempty" mapstructure:"ProgressUpdatesPort"`
@@ -292,6 +295,8 @@ func New() *Config {
 	cfg.ProgressUpdatesPort = DefaultProgressUpdatesPort
 
 	cfg.SecurityContextMode = DefaultSecurityContextMode
+
+	cfg.AggregatorPermissions = DefaultAggregatorPermissions
 
 	return &cfg
 }

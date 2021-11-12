@@ -67,6 +67,8 @@ type templateValues struct {
 	CustomAnnotations map[string]string
 	SSHKey            string
 
+	AggregatorPermissions string
+
 	NodeSelectors map[string]string
 
 	// configmap name, filename, string
@@ -224,6 +226,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		ImagePullSecrets:  cfg.Config.ImagePullSecrets,
 		CustomAnnotations: cfg.Config.CustomAnnotations,
 		SSHKey:            base64.StdEncoding.EncodeToString(sshKeyData),
+		AggregatorPermissions: cfg.Config.AggregatorPermissions,
 
 		Plugins: pluginYAML,
 
