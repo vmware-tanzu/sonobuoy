@@ -25,6 +25,7 @@ import (
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/image"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
+	"github.com/vmware-tanzu/sonobuoy/pkg/types"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -170,9 +171,9 @@ func AddKubeconfigFlag(cfg *Kubeconfig, flags *pflag.FlagSet) {
 	flags.StringVar(&cfg.Context, kubecontext, "", "Context in the kubeconfig to use.")
 }
 
-func AddSecurityContextMode(mode *string, flags *pflag.FlagSet) {
-	flags.StringVar(
-		mode, securityContextModeFlag, "nonroot",
+func AddSecurityContextMode(mode *types.SecurityContextMode, flags *pflag.FlagSet) {
+	flags.Var(
+		mode, securityContextModeFlag,
 		"Type of security context to use for the aggregator pod. Allowable values are [none, nonroot]",
 	)
 }

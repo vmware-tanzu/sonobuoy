@@ -23,6 +23,7 @@ import (
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
+	"github.com/vmware-tanzu/sonobuoy/pkg/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -142,7 +143,7 @@ type Config struct {
 	// important for two cases: local security prevents running without specifying non-root users and Windows
 	// nodes do not currently support runAsUser/Group settings so if we default so something we need to allow
 	// users to opt out easily.
-	SecurityContextMode string `json:"SecurityContextMode" mapstructure:"SecurityContextMode"`
+	SecurityContextMode types.SecurityContextMode `json:"SecurityContextMode" mapstructure:"SecurityContextMode"`
 }
 
 // LimitConfig is a configuration on the limits of various responses, such as limits of sizes

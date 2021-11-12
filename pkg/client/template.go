@@ -20,6 +20,8 @@ import (
 	_ "embed"
 	"strings"
 	"text/template"
+
+	"github.com/vmware-tanzu/sonobuoy/pkg/types"
 )
 
 // TemplateFuncs exports (currently singular) functions to be used inside the template
@@ -43,14 +45,14 @@ var (
 // secContextFromMode turns a simple string "mode" into the security context it refers to. Users could
 // completely customize this by using 'sonobuoy gen' and editing it, but this provides a fast/easy way
 // to switch between common values.
-func secContextFromMode(mode string) string {
+func secContextFromMode(mode types.SecurityContextMode) string {
 	// TODO(jschnake): Seems like we should be using an actual object and marshalling it
 	// but we get into version issues (at time of writing this fsgroup is a new, beta feature).
 	// Just explicitly writing it for now and we can evolve this if other use cases come up.
 	switch mode {
-	case "none":
+	case types.SecurityContextModeNone:
 		return ""
-	case "nonroot":
+	case types.SecurityContextModeNonRoot:
 		return "securityContext:\n    runAsUser: 1000\n    runAsGroup: 3000\n    fsGroup: 2000"
 	default:
 		return "securityContext:\n    runAsUser: 1000\n    runAsGroup: 3000\n    fsGroup: 2000"
