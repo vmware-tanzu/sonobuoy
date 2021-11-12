@@ -67,7 +67,7 @@ type templateValues struct {
 	CustomAnnotations map[string]string
 	SSHKey            string
 
-	AggregatorPermissions string
+	ClusterAdmin bool
 
 	NodeSelectors map[string]string
 
@@ -226,7 +226,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		ImagePullSecrets:  cfg.Config.ImagePullSecrets,
 		CustomAnnotations: cfg.Config.CustomAnnotations,
 		SSHKey:            base64.StdEncoding.EncodeToString(sshKeyData),
-		AggregatorPermissions: cfg.Config.AggregatorPermissions,
+		ClusterAdmin:      cfg.Config.AggregatorPermissions == config.AggregatorPermissionsClusterAdmin,
 
 		Plugins: pluginYAML,
 

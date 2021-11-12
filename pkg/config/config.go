@@ -65,7 +65,8 @@ const (
 	// runAsUser, runAsGroup, and fsGroup. 'none' skips setting those it entirely since Windows does not support them.
 	DefaultSecurityContextMode = "nonroot"
 
-	DefaultAggregatorPermissions = "clusterAdmin"
+	AggregatorPermissionsClusterAdmin = "clusterAdmin"
+	DefaultAggregatorPermissions      = AggregatorPermissionsClusterAdmin
 )
 
 var (
@@ -132,11 +133,11 @@ type Config struct {
 	///////////////////////////////////////////////
 	// Sonobuoy configuration
 	///////////////////////////////////////////////
-	WorkerImage       string            `json:"WorkerImage" mapstructure:"WorkerImage"`
-	ImagePullPolicy   string            `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
-	ImagePullSecrets  string            `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
-	CustomAnnotations map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
-	AggregatorPermissions string        `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
+	WorkerImage           string            `json:"WorkerImage" mapstructure:"WorkerImage"`
+	ImagePullPolicy       string            `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
+	ImagePullSecrets      string            `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
+	CustomAnnotations     map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
+	AggregatorPermissions string            `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
 
 	// ProgressUpdatesPort is the port on which the Sonobuoy worker will listen for status updates from its plugin.
 	ProgressUpdatesPort string `json:"ProgressUpdatesPort,omitempty" mapstructure:"ProgressUpdatesPort"`

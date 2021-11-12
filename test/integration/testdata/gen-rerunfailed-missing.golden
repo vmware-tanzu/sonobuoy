@@ -10,7 +10,7 @@ Available Commands:
 
 Flags:
       --aggregator-node-selector nodeSelectors   Node selectors to add to the aggregator. Values can be given multiple times and are in the form key:value (default map[])
-      --aggregator-permissions string            Type of aggregator permissions to be applied in the cluster. Allowable values are [namespaced, clusterAdmin] (default clusterAdmin)
+      --aggregator-permissions string            Type of aggregator permission to use in the cluster. Allowable values are [namespaced, clusterAdmin] (default "clusterAdmin")
       --config Sonobuoy config                   Path to a sonobuoy configuration JSON file.
       --context string                           Context in the kubeconfig to use.
       --dns-namespace string                     The namespace to check for DNS pods during preflight checks. (default "kube-system")
