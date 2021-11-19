@@ -48,7 +48,7 @@ const (
 	PostProcessedResultsFile = "sonobuoy_results.yaml"
 
 	// MetadataFileKey is the key used in an Item's metadata field when the Item is
-	// representing the a file summary (and its leaf nodes are individual tests or suites).
+	// representing the a file summary (and its leaf nodes are individual tests or Suites).
 	MetadataFileKey = "file"
 
 	// MetadataTypeKey is the key used in an Item's metadata field when describing what type
