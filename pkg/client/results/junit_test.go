@@ -123,12 +123,12 @@ func TestJUnitResult_UnmarshalXML(t *testing.T) {
 	tcs := []struct {
 		desc   string
 		input  string
-		expect junitResult
+		expect JUnitResult
 	}{
 		{
 			desc:  "top-level testsuites",
 			input: `<testsuites><testsuite name="testsuite1"></testsuite><testsuite name="testsuite2"></testsuite></testsuites>`,
-			expect: junitResult{
+			expect: JUnitResult{
 				suites: JUnitTestSuites{
 					Suites: []JUnitTestSuite{
 						{Name: "testsuite1"},
@@ -139,7 +139,7 @@ func TestJUnitResult_UnmarshalXML(t *testing.T) {
 		}, {
 			desc:  "top-level testsuite",
 			input: `<testsuite name="testsuite1"></testsuite>`,
-			expect: junitResult{
+			expect: JUnitResult{
 				suites: JUnitTestSuites{
 					Suites: []JUnitTestSuite{
 						{Name: "testsuite1"},
@@ -149,7 +149,7 @@ func TestJUnitResult_UnmarshalXML(t *testing.T) {
 		}, {
 			desc:  "Empty testsuite name gets filled with unique values",
 			input: `<testsuite></testsuite>`,
-			expect: junitResult{
+			expect: JUnitResult{
 				suites: JUnitTestSuites{
 					Suites: []JUnitTestSuite{
 						{Name: "testsuite-001"},
@@ -159,7 +159,7 @@ func TestJUnitResult_UnmarshalXML(t *testing.T) {
 		}, {
 			desc:  "Empty testsuite names get filled with unique values",
 			input: `<testsuites><testsuite></testsuite><testsuite></testsuite></testsuites>`,
-			expect: junitResult{
+			expect: JUnitResult{
 				suites: JUnitTestSuites{
 					Suites: []JUnitTestSuite{
 						{Name: "testsuite-001"},
@@ -172,7 +172,7 @@ func TestJUnitResult_UnmarshalXML(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			out := junitResult{}
+			out := JUnitResult{}
 			err := xml.Unmarshal([]byte(tc.input), &out)
 			if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
