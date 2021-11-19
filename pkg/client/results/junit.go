@@ -42,20 +42,20 @@ const (
 	JUnitErrorKey = "error"
 )
 
-// junitResult is a wrapper around the suite[s] which enable results to
+// JUnitResult is a wrapper around the suite[s] which enable results to
 // be either a single suite or a collection of suites. For instance,
 // e2e tests (which use the onsi/ginkgo reporter) report a single, top-level
 // testsuite whereas other tools report a top-level testsuites object
 // which may have 1+ testsuite children. Only one of the fields should be
 // set, not both.
-type junitResult struct {
+type JUnitResult struct {
 	suites JUnitTestSuites
 }
 
 // UnmarshalXML will unmarshal the document into either the 'Suites'
 // field of the JUnitResult. If a single testsuite is found (instead of a testsuites object)
 // it is unmarshalled and then added into the set of JUnitResult.Suites.Suites
-func (j *junitResult) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+func (j *JUnitResult) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	var returnErr error
 	if start.Name.Local == "testsuites" {
 		returnErr = d.DecodeElement(&j.suites, &start)
@@ -220,7 +220,7 @@ func junitProcessReader(r io.Reader, name string, metadata map[string]string) (I
 	}
 
 	decoder := xml.NewDecoder(r)
-	junitResults := junitResult{}
+	junitResults := JUnitResult{}
 	if err := decoder.Decode(&junitResults); err != nil {
 		rootItem.Status = StatusUnknown
 		if rootItem.Metadata == nil {
