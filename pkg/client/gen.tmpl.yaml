@@ -14,7 +14,11 @@ metadata:
 {{- if .EnableRBAC }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+{{- if .ClusterAdmin }}
 kind: ClusterRoleBinding
+{{- else }}
+kind: RoleBinding
+{{- end }}
 metadata:
   labels:
     component: sonobuoy

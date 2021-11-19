@@ -1,4 +1,3 @@
-time="STATIC_TIME_FOR_TESTING" level=warning msg="kube-conformance-image flag and kubernetes-version/kube-conformance-image-version flags both set and may collide"
 ---
 apiVersion: v1
 kind: Namespace
@@ -13,47 +12,10 @@ metadata:
   name: sonobuoy-serviceaccount
   namespace: sonobuoy
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    component: sonobuoy
-    namespace: sonobuoy
-  name: sonobuoy-serviceaccount-sonobuoy
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: sonobuoy-serviceaccount-sonobuoy
-subjects:
-- kind: ServiceAccount
-  name: sonobuoy-serviceaccount
-  namespace: sonobuoy
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    component: sonobuoy
-    namespace: sonobuoy
-  name: sonobuoy-serviceaccount-sonobuoy
-rules:
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - '*'
-- nonResourceURLs:
-  - '/metrics'
-  - '/logs'
-  - '/logs/*'
-  verbs:
-  - 'get'
----
 apiVersion: v1
 data:
   config.json: |
-    {"Description":"DEFAULT","UUID":"","Version":"*STATIC_FOR_TESTING*","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:*STATIC_FOR_TESTING*","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","AggregatorPermissions":"clusterAdmin","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}
+    {"Description":"DEFAULT","UUID":"","Version":"static-version-for-testing","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:static-version-for-testing","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","AggregatorPermissions":"somethingelse","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}
 kind: ConfigMap
 metadata:
   labels:
@@ -89,11 +51,8 @@ data:
       - name: E2E_EXTRA_ARGS
         value: --progress-report-url=http://localhost:8099/progress
       - name: E2E_FOCUS
-        value: \[Conformance\]
       - name: E2E_PARALLEL
-        value: "false"
       - name: E2E_SKIP
-        value: \[Disruptive\]|NoExecuteTaintManager
       - name: E2E_USE_GO_RUNNER
         value: "true"
       - name: RESULTS_DIR
@@ -103,12 +62,12 @@ data:
       - name: SONOBUOY_CONFIG_DIR
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
-        value: v9.8.7
+        value: v99+static.testing
       - name: SONOBUOY_PROGRESS_PORT
         value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      image: k8s.gcr.io/conformance:v9.8.7
+      image: k8s.gcr.io/conformance:v99+static.testing
       imagePullPolicy: IfNotPresent
       name: e2e
       resources: {}
@@ -155,7 +114,7 @@ data:
       - name: SONOBUOY_CONFIG_DIR
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
-        value: v9.8.7
+        value: v99+static.testing
       - name: SONOBUOY_PROGRESS_PORT
         value: "8099"
       - name: SONOBUOY_RESULTS_DIR
@@ -198,7 +157,7 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: sonobuoy/sonobuoy:*STATIC_FOR_TESTING*
+    image: sonobuoy/sonobuoy:static-version-for-testing
     imagePullPolicy: IfNotPresent
     name: kube-sonobuoy
     command: ["/sonobuoy"]
@@ -241,4 +200,3 @@ spec:
   selector:
     sonobuoy-component: aggregator
   type: ClusterIP
-

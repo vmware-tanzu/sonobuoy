@@ -34,23 +34,24 @@ import (
 )
 
 const (
-	namespaceFlag           = "namespace"
-	sonobuoyImageFlag       = "sonobuoy-image"
-	imagePullPolicyFlag     = "image-pull-policy"
-	pluginFlag              = "plugin"
-	timeoutFlag             = "timeout"
-	waitOutputFlag          = "wait-output"
-	customRegistryFlag      = "custom-registry"
-	kubeconfig              = "kubeconfig"
-	kubecontext             = "context"
-	e2eFocusFlag            = "e2e-focus"
-	e2eSkipFlag             = "e2e-skip"
-	e2eParallelFlag         = "e2e-parallel"
-	e2eRegistryConfigFlag   = "e2e-repo-config"
-	pluginImageFlag         = "plugin-image"
-	filenameFlag            = "filename"
-	retrievePathFlag        = "retrieve-path"
-	securityContextModeFlag = "security-context-mode"
+	namespaceFlag             = "namespace"
+	sonobuoyImageFlag         = "sonobuoy-image"
+	imagePullPolicyFlag       = "image-pull-policy"
+	pluginFlag                = "plugin"
+	timeoutFlag               = "timeout"
+	waitOutputFlag            = "wait-output"
+	customRegistryFlag        = "custom-registry"
+	kubeconfig                = "kubeconfig"
+	kubecontext               = "context"
+	e2eFocusFlag              = "e2e-focus"
+	e2eSkipFlag               = "e2e-skip"
+	e2eParallelFlag           = "e2e-parallel"
+	e2eRegistryConfigFlag     = "e2e-repo-config"
+	pluginImageFlag           = "plugin-image"
+	filenameFlag              = "filename"
+	retrievePathFlag          = "retrieve-path"
+	securityContextModeFlag   = "security-context-mode"
+	aggregatorPermissionsFlag = "aggregator-permissions"
 
 	// Quick runs a single E2E test and the systemd log tests.
 	Quick string = "quick"
@@ -174,6 +175,13 @@ func AddSecurityContextMode(mode *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		mode, securityContextModeFlag, "nonroot",
 		"Type of security context to use for the aggregator pod. Allowable values are [none, nonroot]",
+	)
+}
+
+func AddAggregatorPermissionsFlag(mode *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		mode, aggregatorPermissionsFlag, "clusterAdmin",
+		"Type of aggregator permission to use in the cluster. Allowable values are [namespaced, clusterAdmin]",
 	)
 }
 

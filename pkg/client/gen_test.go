@@ -461,6 +461,16 @@ func TestGenerateManifestGolden(t *testing.T) {
 				},
 			},
 			goldenFile: filepath.Join("testdata", "imagePullPolicy-all-plugins.golden"),
+		}, {
+			name: "AggregatorPermissions for non-cluster admin",
+			inputcm: &client.GenConfig{
+				Config: fromConfig(func(c *config.Config) *config.Config {
+					c.AggregatorPermissions = "somethingelse"
+					return c
+				}),
+				KubeVersion: "v99+static.testing",
+			},
+			goldenFile: filepath.Join("testdata", "aggregatorpermissions-noncluster-admin.golden"),
 		},
 	}
 
