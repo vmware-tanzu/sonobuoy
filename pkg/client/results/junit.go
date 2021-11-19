@@ -49,7 +49,7 @@ const (
 // which may have 1+ testsuite children. Only one of the fields should be
 // set, not both.
 type JUnitResult struct {
-	suites JUnitTestSuites
+	Suites JUnitTestSuites
 }
 
 // UnmarshalXML will unmarshal the document into either the 'Suites'
@@ -58,15 +58,15 @@ type JUnitResult struct {
 func (j *JUnitResult) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	var returnErr error
 	if start.Name.Local == "testsuites" {
-		returnErr = d.DecodeElement(&j.suites, &start)
+		returnErr = d.DecodeElement(&j.Suites, &start)
 	} else {
 		var s JUnitTestSuite
 		returnErr = d.DecodeElement(&s, &start)
-		j.suites = JUnitTestSuites{Suites: []JUnitTestSuite{s}}
+		j.Suites = JUnitTestSuites{Suites: []JUnitTestSuite{s}}
 	}
-	for i := range j.suites.Suites {
-		if j.suites.Suites[i].Name == "" {
-			j.suites.Suites[i].Name = fmt.Sprintf("testsuite-%03d", i+1)
+	for i := range j.Suites.Suites {
+		if j.Suites.Suites[i].Name == "" {
+			j.Suites.Suites[i].Name = fmt.Sprintf("testsuite-%03d", i+1)
 		}
 	}
 	return returnErr
@@ -230,7 +230,7 @@ func junitProcessReader(r io.Reader, name string, metadata map[string]string) (I
 		return rootItem, errors.Wrap(err, "decoding junit")
 	}
 
-	for _, ts := range junitResults.suites.Suites {
+	for _, ts := range junitResults.Suites.Suites {
 		suiteItem := Item{
 			Name:   ts.Name,
 			Status: StatusPassed,

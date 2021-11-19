@@ -129,7 +129,7 @@ func TestJUnitResult_UnmarshalXML(t *testing.T) {
 			desc:  "top-level testsuites",
 			input: `<testsuites><testsuite name="testsuite1"></testsuite><testsuite name="testsuite2"></testsuite></testsuites>`,
 			expect: JUnitResult{
-				suites: JUnitTestSuites{
+				Suites: JUnitTestSuites{
 					Suites: []JUnitTestSuite{
 						{Name: "testsuite1"},
 						{Name: "testsuite2"},
@@ -140,7 +140,7 @@ func TestJUnitResult_UnmarshalXML(t *testing.T) {
 			desc:  "top-level testsuite",
 			input: `<testsuite name="testsuite1"></testsuite>`,
 			expect: JUnitResult{
-				suites: JUnitTestSuites{
+				Suites: JUnitTestSuites{
 					Suites: []JUnitTestSuite{
 						{Name: "testsuite1"},
 					},
@@ -150,7 +150,7 @@ func TestJUnitResult_UnmarshalXML(t *testing.T) {
 			desc:  "Empty testsuite name gets filled with unique values",
 			input: `<testsuite></testsuite>`,
 			expect: JUnitResult{
-				suites: JUnitTestSuites{
+				Suites: JUnitTestSuites{
 					Suites: []JUnitTestSuite{
 						{Name: "testsuite-001"},
 					},
@@ -160,7 +160,7 @@ func TestJUnitResult_UnmarshalXML(t *testing.T) {
 			desc:  "Empty testsuite names get filled with unique values",
 			input: `<testsuites><testsuite></testsuite><testsuite></testsuite></testsuites>`,
 			expect: JUnitResult{
-				suites: JUnitTestSuites{
+				Suites: JUnitTestSuites{
 					Suites: []JUnitTestSuite{
 						{Name: "testsuite-001"},
 						{Name: "testsuite-002"},
@@ -180,9 +180,9 @@ func TestJUnitResult_UnmarshalXML(t *testing.T) {
 
 			// XMLName fields complicate the comparison since it is set during
 			// deserialization. Unset all those values before comparing.
-			out.suites.XMLName = xml.Name{}
-			for i := range out.suites.Suites {
-				out.suites.Suites[i].XMLName = xml.Name{}
+			out.Suites.XMLName = xml.Name{}
+			for i := range out.Suites.Suites {
+				out.Suites.Suites[i].XMLName = xml.Name{}
 			}
 
 			if diff := pretty.Compare(out, tc.expect); diff != "" {
