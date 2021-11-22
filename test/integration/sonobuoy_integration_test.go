@@ -649,6 +649,10 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "warning given if rerun-failed set withother mode/focus/skip flags",
 			cmdLine:    "gen --rerun-failed testdata/results-4-e2e-failures.tar.gz --mode=certified-conformance --kubernetes-version=ignore",
 			expectFile: "testdata/gen-mode-and-rerun.golden",
+		}, {
+			desc:       "multiple plugins and multiple containers issue 1528",
+			cmdLine:    "gen -p testdata/plugins/good/sidecar.yaml -p testdata/plugins/good/hello-world.yaml --kubernetes-version=ignore",
+			expectFile: "testdata/gen-issue-1528.golden",
 		},
 	}
 	for _, tc := range testCases {

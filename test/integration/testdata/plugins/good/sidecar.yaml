@@ -1,0 +1,19 @@
+podSpec:
+  containers:
+    - name: sidecar
+      image: foo/baz:0.1.2
+      imagePullPolicy: Always
+  restartPolicy: Never
+  serviceAccountName: sonobuoy-serviceaccount
+sonobuoy-config:
+  driver: Job
+  plugin-name: sidecarplugin
+  result-format: junit
+spec:
+  image: foo/bar:0.1.2
+  imagePullPolicy: Always
+  name: plugin
+  resources: {}
+  volumes:
+  - name: results
+    emptyDir: {}

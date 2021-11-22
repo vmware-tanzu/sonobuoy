@@ -291,11 +291,11 @@ func applyEnvOverrides(pluginEnvOverrides map[string]map[string]string, plugins 
 // autoAttachResultsDir will either add the volumemount for the results dir or modify the existing
 // one to have the right path set.
 func autoAttachResultsDir(plugins []*manifest.Manifest, resultsDir string) {
-	for i := range plugins {
-		containers := []*corev1.Container{&plugins[i].Spec.Container}
-		if plugins[i].PodSpec != nil {
-			for i := range plugins[i].PodSpec.Containers {
-				containers = append(containers, &plugins[i].PodSpec.Containers[i])
+	for pluginIndex := range plugins {
+		containers := []*corev1.Container{&plugins[pluginIndex].Spec.Container}
+		if plugins[pluginIndex].PodSpec != nil {
+			for containerIndex := range plugins[pluginIndex].PodSpec.Containers {
+				containers = append(containers, &plugins[pluginIndex].PodSpec.Containers[containerIndex])
 			}
 		}
 		addOrUpdateResultsMount(resultsDir, containers...)
