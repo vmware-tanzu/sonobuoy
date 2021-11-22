@@ -9,3 +9,9 @@ Filename: testdata/plugins/good/hw-2.yaml
 Plugin name (in aggregator): hello-world2
 Source URL: 
 Description: 
+---
+Run as: sidecar
+Filename: testdata/plugins/good/sidecar.yaml
+Plugin name (in aggregator): sidecarplugin
+Source URL: 
+Description: 
