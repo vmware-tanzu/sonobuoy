@@ -145,7 +145,7 @@ func (p *Plugin) filterByNodeSelector(nodes []v1.Node) []v1.Node {
 	return retNodes
 }
 
-func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificate, ownerPod *v1.Pod, progressPort, resultDir string) appsv1.DaemonSet {
+func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificate, ownerPod *v1.Pod, progressPort, resultDir, doneFile string) appsv1.DaemonSet {
 	ds := appsv1.DaemonSet{}
 	annotations := map[string]string{
 		"sonobuoy-driver": p.GetDriver(),
@@ -195,7 +195,7 @@ func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificat
 
 	podSpec.Containers = append(podSpec.Containers,
 		p.Definition.Spec.Container,
-		p.CreateWorkerContainerDefintion(hostname, cert, []string{"/sonobuoy", "worker", "single-node", "--level=trace", "-v=6", "--logtostderr", "--sleep=" + defaultSleepSeconds}, []string{}, progressPort, resultDir),
+		p.CreateWorkerContainerDefinition(hostname, cert, []string{"/sonobuoy", "worker", "single-node", "--level=trace", "-v=6", "--logtostderr", fmt.Sprintf("--sleep=%v", defaultSleepSeconds), fmt.Sprintf("--done-file=%v", doneFile)}, []string{}, progressPort, resultDir),
 	)
 
 	if len(p.ImagePullSecrets) > 0 {
@@ -220,8 +220,8 @@ func (p *Plugin) createDaemonSetDefinition(hostname string, cert *tls.Certificat
 }
 
 // Run dispatches worker pods according to the DaemonSet's configuration.
-func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod, progressPort, resultDir string) error {
-	daemonSet := p.createDaemonSetDefinition(fmt.Sprintf("https://%s", hostname), cert, ownerPod, progressPort, resultDir)
+func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls.Certificate, ownerPod *v1.Pod, progressPort, resultDir, doneFile string) error {
+	daemonSet := p.createDaemonSetDefinition(fmt.Sprintf("https://%s", hostname), cert, ownerPod, progressPort, resultDir, doneFile)
 
 	secret, err := p.MakeTLSSecret(cert, ownerPod)
 	if err != nil {

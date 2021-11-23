@@ -68,7 +68,7 @@ func (t *timeoutErr) Error() string { return t.e.Error() }
 // 4. Hook the shared monitoring channel up to aggr's IngestResults() function
 // 5. Block until aggr shows all results accounted for (results come in through
 //    the HTTP callback), stopping the HTTP server on completion
-func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, progressPort, pluginResultsDir, namespace, outdir string) error {
+func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, progressPort, pluginResultsDir, namespace, outdir, doneFile string) error {
 	// Construct a list of things we'll need to dispatch
 	if len(plugins) == 0 {
 		logrus.Info("Skipping host data gathering: no plugins defined")
@@ -187,7 +187,7 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 	for _, p := range plugins {
 		logrus.WithField("plugin", p.GetName()).Info("Running plugin")
-		go aggr.RunAndMonitorPlugin(context.Background(), time.Duration(cfg.TimeoutSeconds)*time.Second, p, client, nodes.Items, cfg.AdvertiseAddress, certs[p.GetName()], aggregatorPod, progressPort, pluginResultsDir)
+		go aggr.RunAndMonitorPlugin(context.Background(), time.Duration(cfg.TimeoutSeconds)*time.Second, p, client, nodes.Items, cfg.AdvertiseAddress, certs[p.GetName()], aggregatorPod, progressPort, pluginResultsDir, doneFile)
 	}
 
 	// 6. Wait for aggr to show that all results are accounted for
@@ -226,7 +226,7 @@ func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
 
 // RunAndMonitorPlugin will start a plugin then monitor it for errors starting/running.
 // Errors detected will be handled by saving an error result in the aggregator.Results.
-func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, timeout time.Duration, p plugin.Interface, client kubernetes.Interface, nodes []corev1.Node, address string, cert *tls.Certificate, aggregatorPod *corev1.Pod, progressPort, pluginResultDir string) {
+func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, timeout time.Duration, p plugin.Interface, client kubernetes.Interface, nodes []corev1.Node, address string, cert *tls.Certificate, aggregatorPod *corev1.Pod, progressPort, pluginResultDir, doneFile string) {
 	monitorCh := make(chan *plugin.Result, 1)
 
 	// Give the ingestion routine a tad more time to avoid races where the monitor routine, at timeout, tries
@@ -234,7 +234,7 @@ func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, timeout time.Durat
 	ctxMonitor, cancelMonitor := context.WithTimeout(ctx, timeout)
 	ctxIngest, cancelIngest := context.WithTimeout(ctx, timeout+timeoutMonitoringOffset)
 
-	if err := p.Run(client, address, cert, aggregatorPod, progressPort, pluginResultDir); err != nil {
+	if err := p.Run(client, address, cert, aggregatorPod, progressPort, pluginResultDir, doneFile); err != nil {
 		err := errors.Wrapf(err, "error running plugin %v", p.GetName())
 		logrus.Error(err)
 		monitorCh <- utils.MakeErrorResult(p.GetName(), map[string]interface{}{"error": err.Error()}, "")

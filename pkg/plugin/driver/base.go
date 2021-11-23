@@ -239,8 +239,8 @@ func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate, progres
 	return envVars
 }
 
-// CreateWorkerContainerDefintion creates the container definition to run the Sonobuoy worker for a plugin.
-func (b *Base) CreateWorkerContainerDefintion(hostname string, cert *tls.Certificate, command, args []string, progressPort, resultDir string) v1.Container {
+// CreateWorkerContainerDefinition creates the container definition to run the Sonobuoy worker for a plugin.
+func (b *Base) CreateWorkerContainerDefinition(hostname string, cert *tls.Certificate, command, args []string, progressPort, resultDir string) v1.Container {
 	container := v1.Container{
 		Name:            "sonobuoy-worker",
 		Image:           b.SonobuoyImage,

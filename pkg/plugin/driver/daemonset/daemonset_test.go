@@ -104,7 +104,7 @@ func TestCreateDaemonSetDefintion(t *testing.T) {
 		t.Fatalf("couldn't make client certificate %v", err)
 	}
 
-	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results")
+	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results", "done")
 
 	expectedName := fmt.Sprintf("sonobuoy-%v-daemon-set-%v", pluginName, testDaemonSet.SessionID)
 	if daemonSet.Name != expectedName {
@@ -205,7 +205,7 @@ func TestCreateDaemonSetDefintionUsesDefaultPodSpec(t *testing.T) {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results")
+	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results", "done")
 	podSpec := daemonSet.Spec.Template.Spec
 
 	expectedServiceAccount := "sonobuoy-serviceaccount"
@@ -246,7 +246,7 @@ func TestCreateDaemonSetDefintionUsesProvidedPodSpec(t *testing.T) {
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results")
+	daemonSet := testDaemonSet.createDaemonSetDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results", "done")
 	podSpec := daemonSet.Spec.Template.Spec
 
 	if podSpec.ServiceAccountName != expectedServiceAccountName {
@@ -281,7 +281,7 @@ func TestCreateDaemonSetDefinitionAddsToExistingResourcesInPodSpec(t *testing.T)
 		t.Fatalf("couldn't create client certificate: %v", err)
 	}
 
-	daemonSet := testPlugin.createDaemonSetDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results")
+	daemonSet := testPlugin.createDaemonSetDefinition("", clientCert, &corev1.Pod{}, "", "/tmp/sonobuoy/results", "done")
 	podSpec := daemonSet.Spec.Template.Spec
 
 	// Existing container in pod spec, plus 2 added by Sonobuoy
@@ -328,7 +328,7 @@ func TestCreateDaemonSetDefinitionSetsOwnerReference(t *testing.T) {
 		},
 	}
 
-	daemonSet := testPlugin.createDaemonSetDefinition("", clientCert, &aggregatorPod, "", "/tmp/sonobuoy/results")
+	daemonSet := testPlugin.createDaemonSetDefinition("", clientCert, &aggregatorPod, "", "/tmp/sonobuoy/results", "done")
 	ownerReferences := daemonSet.ObjectMeta.OwnerReferences
 
 	if len(ownerReferences) != 1 {

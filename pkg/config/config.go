@@ -139,6 +139,9 @@ type Config struct {
 	CustomAnnotations     map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
 	AggregatorPermissions string            `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
 
+	// DoneFile is the file which the worker will wait for (and read) to determine and to submit the results (path is in the file).
+	DoneFile string `json:"DoneFile,omitempty" mapstructure:"DoneFile"`
+
 	// ProgressUpdatesPort is the port on which the Sonobuoy worker will listen for status updates from its plugin.
 	ProgressUpdatesPort string `json:"ProgressUpdatesPort,omitempty" mapstructure:"ProgressUpdatesPort"`
 

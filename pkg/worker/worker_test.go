@@ -139,6 +139,27 @@ func TestRunGlobalCleanup(t *testing.T) {
 	})
 }
 
+func TestRunCustomDoneFile(t *testing.T) {
+	expectedResults := []plugin.ExpectedResult{
+		{ResultType: "systemd_logs"},
+	}
+	stopc := make(chan struct{}, 1)
+	stopc <- struct{}{}
+	withAggregator(t, expectedResults, func(aggr *aggregation.Aggregator, srv *authtest.Server) {
+		url, err := aggregation.GlobalResultURL(srv.URL, "systemd_logs")
+		if err != nil {
+			t.Fatalf("unexpected error getting global result url %v", err)
+		}
+
+		withTempDir(t, func(tmpdir string) {
+			err := GatherResults(filepath.Join(tmpdir, "customDone"), url, srv.Client(), stopc)
+			if err != nil {
+				t.Fatalf("Got error running agent: %v", err)
+			}
+		})
+	})
+}
+
 func TestRelayProgress(t *testing.T) {
 	tcs := []struct {
 		desc           string

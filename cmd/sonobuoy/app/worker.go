@@ -39,6 +39,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	doneFileFlag    = "done-file"
+	defaultDoneFile = "done"
+)
+
 // NewCmdWorker is the cobra command that acts as the entrypoint for Sonobuoy when running
 // as a sidecar with a plugin. It will wait for a 'done' file then transmit the results to the
 // aggregator pod.
@@ -49,7 +54,7 @@ func NewCmdWorker() *cobra.Command {
 		Hidden: true,
 		Args:   cobra.ExactArgs(0),
 	}
-
+	workerCmd.PersistentFlags().String(doneFileFlag, defaultDoneFile, "Name of the file the worker will wait for to submit results. It will be rooted in the results directory and must contain the full path to the results to upload.")
 	workerCmd.AddCommand(newSingleNodeCmd())
 	workerCmd.AddCommand(newGlobalCmd())
 
@@ -126,14 +131,22 @@ func loadAndValidateConfig() (*plugin.WorkerConfig, error) {
 }
 
 func runGatherGlobal(cmd *cobra.Command, args []string) error {
-	return runGather(true)
+	doneFile, err := cmd.Flags().GetString(doneFileFlag)
+	if err != nil {
+		return err
+	}
+	return runGather(true, doneFile)
 }
 
 // runGatherSingleNode returns a closure which will run the data gathering and then sleep
 // for the specified amount of seconds.
 func runGatherSingleNode(sleep *int64) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if err := runGather(false); err != nil {
+		doneFile, err := cmd.Flags().GetString(doneFileFlag)
+		if err != nil {
+			return err
+		}
+		if err := runGather(false, doneFile); err != nil {
 			return err
 		}
 		switch {
@@ -153,7 +166,7 @@ func runGatherSingleNode(sleep *int64) func(cmd *cobra.Command, args []string) e
 	}
 }
 
-func runGather(global bool) error {
+func runGather(global bool, doneFile string) error {
 	cfg, err := loadAndValidateConfig()
 	if err != nil {
 		return errors.Wrap(err, "loading config")
@@ -186,7 +199,7 @@ func runGather(global bool) error {
 	}
 
 	go worker.RelayProgressUpdates(cfg.ProgressUpdatesPort, progressURL.String(), client)
-	err = worker.GatherResults(filepath.Join(cfg.ResultsDir, "done"), resultURL.String(), client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
+	err = worker.GatherResults(filepath.Join(cfg.ResultsDir, doneFile), resultURL.String(), client, sigHandler(plugin.GracefulShutdownPeriod*time.Second))
 
 	return errors.Wrap(err, "gathering results")
 }

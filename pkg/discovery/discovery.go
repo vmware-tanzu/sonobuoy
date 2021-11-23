@@ -149,7 +149,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	}
 
 	// 4. Run the plugin aggregator. Save this error for clear logging later.
-	runErr := pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.ResultsDir, cfg.Namespace, outpath)
+	runErr := pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.ResultsDir, cfg.Namespace, outpath, cfg.DoneFile)
 	trackErrorsFor("running plugins")(runErr)
 
 	// 5. Run the queries
