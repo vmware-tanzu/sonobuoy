@@ -21,7 +21,7 @@ metadata:
   name: sonobuoy-serviceaccount-sonobuoy
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: RoleBinding
   name: sonobuoy-serviceaccount-sonobuoy
 subjects:
 - kind: ServiceAccount
@@ -240,4 +240,3 @@ spec:
   selector:
     sonobuoy-component: aggregator
   type: ClusterIP
-
