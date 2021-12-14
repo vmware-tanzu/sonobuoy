@@ -1,9 +1,11 @@
 ---
+{{- if .ClusterAdmin }}
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {{.Namespace}}
 ---
+{{- end }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -22,11 +24,17 @@ kind: RoleBinding
 metadata:
   labels:
     component: sonobuoy
-    namespace: {{.Namespace}}
   name: sonobuoy-serviceaccount-{{.Namespace}}
+{{- if not .ClusterAdmin }}
+  namespace: {{.Namespace}}
+{{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
+{{- if .ClusterAdmin }}
   kind: ClusterRole
+{{- else }}
+  kind: Role
+{{- end }}
   name: sonobuoy-serviceaccount-{{.Namespace}}
 subjects:
 - kind: ServiceAccount
@@ -34,12 +42,18 @@ subjects:
   namespace: {{.Namespace}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+{{- if .ClusterAdmin }}
 kind: ClusterRole
+{{- else }}
+kind: Role
+{{- end }}
 metadata:
   labels:
     component: sonobuoy
-    namespace: {{.Namespace}}
   name: sonobuoy-serviceaccount-{{.Namespace}}
+{{- if not .ClusterAdmin }}
+  namespace: {{.Namespace}}
+{{- end }}
 rules:
 - apiGroups:
   - '*'
@@ -47,12 +61,14 @@ rules:
   - '*'
   verbs:
   - '*'
+{{- if .ClusterAdmin }}
 - nonResourceURLs:
   - '/metrics'
   - '/logs'
   - '/logs/*'
   verbs:
   - 'get'
+{{- end }}
 {{- end }}
 {{- if .SSHKey }}
 ---
