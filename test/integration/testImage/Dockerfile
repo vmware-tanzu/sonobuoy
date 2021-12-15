@@ -29,3 +29,4 @@ WORKDIR /
 COPY --from=base /go/bin/testImage /testImage
 COPY resources /resources
 CMD [ "/testImage" ]
+

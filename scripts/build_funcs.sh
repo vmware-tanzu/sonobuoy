@@ -52,6 +52,10 @@ stress() {
 }
 
 integration() {
+  # Download linux kubectl and move into default path for tests
+  curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.23.0/bin/linux/amd64/kubectl
+  chmod +x ./kubectl
+
     docker run --rm \
         -v "$(pwd)":$BUILDMNT \
         -v /tmp/artifacts:/tmp/artifacts \
@@ -60,9 +64,20 @@ integration() {
         -w "$BUILDMNT" \
         --env ARTIFACTS_DIR=/tmp/artifacts \
         --env SONOBUOY_CLI="$SONOBUOY_CLI" \
+        --env KUBECTL_CLI="$KUBECTL_CLI" \
         --network host \
         "$BUILD_IMAGE" \
     go test ${VERBOSE:+-v} -tags=integration "$GOTARGET"/test/integration/...
+}
+
+local_integration(){
+  # Build linx binary and move into default path for tests
+  build_binary_GOOS_GOARCH linux amd64
+  cp ./build/linux/amd64/sonobuoy ./sonobuoy
+  # Download linux kubectl and move into default path for tests
+  curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.23.0/bin/linux/amd64/kubectl
+  chmod +x ./kubectl
+  integration
 }
 
 lint() {
