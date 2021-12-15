@@ -109,8 +109,8 @@ func (i DockerClient) DeleteImages(images []string, retries int) []error {
 	return errs
 }
 
-func (i DockerClient) RunImage(image string, args ...string) ([]string, error) {
-	output, err := i.dockerClient.Run(image, args...)
+func (i DockerClient) RunImage(image string, entryPoint string, args ...string) ([]string, error) {
+	output, err := i.dockerClient.Run(image, entryPoint, args...)
 	if err != nil {
 		return []string{}, err
 	}
