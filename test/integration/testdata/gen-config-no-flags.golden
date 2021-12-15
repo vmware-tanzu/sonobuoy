@@ -1,4 +1,3 @@
----
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -41,16 +40,15 @@ rules:
   verbs:
   - '*'
 - nonResourceURLs:
-  - '/metrics'
-  - '/logs'
-  - '/logs/*'
+  - /metrics
+  - /logs
+  - /logs/*
   verbs:
-  - 'get'
+  - get
 ---
 apiVersion: v1
 data:
-  config.json: |
-    {"Description":"DEFAULT","UUID":"","Version":"vSubfieldTestVersion","ResultsDir":"/tmp/sonobuoy","Resources":["apiservices","certificatesigningrequests","clusterrolebindings","clusterroles","componentstatuses","configmaps","controllerrevisions","cronjobs","customresourcedefinitions","daemonsets","deployments","endpoints","ingresses","jobs","leases","limitranges","mutatingwebhookconfigurations","namespaces","networkpolicies","nodes","persistentvolumeclaims","persistentvolumes","poddisruptionbudgets","pods","podlogs","podsecuritypolicies","podtemplates","priorityclasses","replicasets","replicationcontrollers","resourcequotas","rolebindings","roles","servergroups","serverversion","serviceaccounts","services","statefulsets","storageclasses","validatingwebhookconfigurations","volumeattachments"],"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":12345},"Plugins":[{"name":"configpluginval"}],"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"configfileNS","WorkerImage":"configImg","ImagePullPolicy":"Never","ImagePullSecrets":"","AggregatorPermissions":"clusterAdmin","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}
+  config.json: '{"Description":"DEFAULT","UUID":"","Version":"vSubfieldTestVersion","ResultsDir":"/tmp/sonobuoy","Resources":["apiservices","certificatesigningrequests","clusterrolebindings","clusterroles","componentstatuses","configmaps","controllerrevisions","cronjobs","customresourcedefinitions","daemonsets","deployments","endpoints","ingresses","jobs","leases","limitranges","mutatingwebhookconfigurations","namespaces","networkpolicies","nodes","persistentvolumeclaims","persistentvolumes","poddisruptionbudgets","pods","podlogs","podsecuritypolicies","podtemplates","priorityclasses","replicasets","replicationcontrollers","resourcequotas","rolebindings","roles","servergroups","serverversion","serviceaccounts","services","statefulsets","storageclasses","validatingwebhookconfigurations","volumeattachments"],"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":12345},"Plugins":[{"name":"configpluginval"}],"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"configfileNS","WorkerImage":"configImg","ImagePullPolicy":"Never","ImagePullSecrets":"","AggregatorPermissions":"clusterAdmin","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}'
 kind: ConfigMap
 metadata:
   labels:
@@ -60,7 +58,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  plugin-0.yaml: |
+  plugin-0.yaml: |-
     podSpec:
       containers: []
       nodeSelector:
@@ -108,11 +106,10 @@ data:
       image: k8s.gcr.io/conformance:ignore
       imagePullPolicy: Never
       name: e2e
-      resources: {}
       volumeMounts:
       - mountPath: /tmp/sonobuoy
         name: results
-  plugin-1.yaml: |
+  plugin-1.yaml: |-
     podSpec:
       containers: []
       dnsPolicy: ClusterFirstWithHostNet
@@ -160,7 +157,6 @@ data:
       image: sonobuoy/systemd-logs:v0.4
       imagePullPolicy: Never
       name: systemd-logs
-      resources: {}
       securityContext:
         privileged: true
       volumeMounts:
@@ -185,12 +181,16 @@ metadata:
   name: sonobuoy
   namespace: configfileNS
 spec:
-  securityContext:
-    runAsUser: 1000
-    runAsGroup: 3000
-    fsGroup: 2000
   containers:
-  - env:
+  - args:
+    - aggregator
+    - --no-exit
+    - --level=info
+    - -v=4
+    - --alsologtostderr
+    command:
+    - /sonobuoy
+    env:
     - name: SONOBUOY_ADVERTISE_IP
       valueFrom:
         fieldRef:
@@ -198,8 +198,6 @@ spec:
     image: configImg
     imagePullPolicy: Never
     name: kube-sonobuoy
-    command: ["/sonobuoy"]
-    args: ["aggregator", "--no-exit", "--level=info", "-v=4", "--alsologtostderr"]
     volumeMounts:
     - mountPath: /etc/sonobuoy
       name: sonobuoy-config-volume
@@ -208,10 +206,14 @@ spec:
     - mountPath: /tmp/sonobuoy
       name: output-volume
   restartPolicy: Never
+  securityContext:
+    fsGroup: 2000
+    runAsGroup: 3000
+    runAsUser: 1000
   serviceAccountName: sonobuoy-serviceaccount
   tolerations:
-  - key: "kubernetes.io/e2e-evict-taint-key"
-    operator: "Exists"
+  - key: kubernetes.io/e2e-evict-taint-key
+    operator: Exists
   volumes:
   - configMap:
       name: sonobuoy-config-cm
@@ -238,4 +240,5 @@ spec:
   selector:
     sonobuoy-component: aggregator
   type: ClusterIP
+---
 

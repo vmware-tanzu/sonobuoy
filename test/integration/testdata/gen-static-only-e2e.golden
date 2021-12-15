@@ -1,4 +1,3 @@
----
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -41,16 +40,15 @@ rules:
   verbs:
   - '*'
 - nonResourceURLs:
-  - '/metrics'
-  - '/logs'
-  - '/logs/*'
+  - /metrics
+  - /logs
+  - /logs/*
   verbs:
-  - 'get'
+  - get
 ---
 apiVersion: v1
 data:
-  config.json: |
-    {"Description":"DEFAULT","UUID":"static","Version":"static","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:staticversion","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","AggregatorPermissions":"clusterAdmin","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}
+  config.json: '{"Description":"DEFAULT","UUID":"static","Version":"static","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:staticversion","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","AggregatorPermissions":"clusterAdmin","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}'
 kind: ConfigMap
 metadata:
   labels:
@@ -60,7 +58,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  plugin-0.yaml: |
+  plugin-0.yaml: |-
     podSpec:
       containers: []
       nodeSelector:
@@ -108,7 +106,6 @@ data:
       image: k8s.gcr.io/conformance:v123.456.789
       imagePullPolicy: IfNotPresent
       name: e2e
-      resources: {}
       volumeMounts:
       - mountPath: /tmp/sonobuoy/results
         name: results
@@ -129,12 +126,16 @@ metadata:
   name: sonobuoy
   namespace: sonobuoy
 spec:
-  securityContext:
-    runAsUser: 1000
-    runAsGroup: 3000
-    fsGroup: 2000
   containers:
-  - env:
+  - args:
+    - aggregator
+    - --no-exit
+    - --level=info
+    - -v=4
+    - --alsologtostderr
+    command:
+    - /sonobuoy
+    env:
     - name: SONOBUOY_ADVERTISE_IP
       valueFrom:
         fieldRef:
@@ -142,8 +143,6 @@ spec:
     image: sonobuoy/sonobuoy:staticversion
     imagePullPolicy: IfNotPresent
     name: kube-sonobuoy
-    command: ["/sonobuoy"]
-    args: ["aggregator", "--no-exit", "--level=info", "-v=4", "--alsologtostderr"]
     volumeMounts:
     - mountPath: /etc/sonobuoy
       name: sonobuoy-config-volume
@@ -152,10 +151,14 @@ spec:
     - mountPath: /tmp/sonobuoy
       name: output-volume
   restartPolicy: Never
+  securityContext:
+    fsGroup: 2000
+    runAsGroup: 3000
+    runAsUser: 1000
   serviceAccountName: sonobuoy-serviceaccount
   tolerations:
-  - key: "kubernetes.io/e2e-evict-taint-key"
-    operator: "Exists"
+  - key: kubernetes.io/e2e-evict-taint-key
+    operator: Exists
   volumes:
   - configMap:
       name: sonobuoy-config-cm
@@ -182,4 +185,5 @@ spec:
   selector:
     sonobuoy-component: aggregator
   type: ClusterIP
+---
 
