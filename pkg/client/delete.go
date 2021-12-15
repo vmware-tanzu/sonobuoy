@@ -32,8 +32,8 @@ import (
 
 const (
 	clusterRoleFieldName      = "component"
-	clusterRoleFieldNamespace = "namespace"
 	clusterRoleFieldValue     = "sonobuoy"
+	clusterRoleFieldNamespace = "namespace"
 	spinnerMode               = "Spinner"
 	progressMode              = "Progress"
 	pollFreq                  = 5 * time.Second
@@ -151,13 +151,15 @@ func cleanupNamespace(namespace string, client kubernetes.Interface) (ConditionF
 }
 
 func deleteRBAC(client kubernetes.Interface, cfg *DeleteConfig) (ConditionFuncWithProgress, error) {
-	// ClusterRole and ClusterRoleBindings aren't namespaced, so delete them seperately
+	// ClusterRole and ClusterRoleBindings aren't namespaced, so delete them separately.
 	selector := metav1.AddLabelToSelector(
 		&metav1.LabelSelector{},
 		clusterRoleFieldName,
 		clusterRoleFieldValue,
 	)
-	if cfg != nil {
+
+	// Just delete the one for the target namespace unless using DeleteAll.
+	if cfg != nil && !cfg.DeleteAll {
 		selector = metav1.AddLabelToSelector(
 			selector,
 			clusterRoleFieldNamespace,
@@ -171,29 +173,31 @@ func deleteRBAC(client kubernetes.Interface, cfg *DeleteConfig) (ConditionFuncWi
 	}
 
 	rbacDeleteCondition := func() (string, bool, error) {
-		bindingList, err := client.RbacV1().ClusterRoleBindings().List(context.TODO(), listOpts)
+		clusterBindingList, err := client.RbacV1().ClusterRoleBindings().List(context.TODO(), listOpts)
 		if err != nil {
 			return fmt.Sprintf("Error encountered when checking for ClusterRoleBindings: %v", err), false, err
 		}
-		if len(bindingList.Items) > 0 {
+		if len(clusterBindingList.Items) > 0 {
 			names := []string{}
-			for _, i := range bindingList.Items {
+			for _, i := range clusterBindingList.Items {
 				names = append(names, i.Name)
 			}
 			return fmt.Sprintf("Still found %v ClusterRoleBindings to delete: %v", len(names), names), false, nil
 		}
 
-		roleList, err := client.RbacV1().ClusterRoles().List(context.TODO(), listOpts)
+		clusterRoleList, err := client.RbacV1().ClusterRoles().List(context.TODO(), listOpts)
 		if err != nil {
 			return fmt.Sprintf("Error encountered when checking for ClusterRoleBindings: %v", err), false, err
 		}
-		if len(bindingList.Items) > 0 {
+		if len(clusterRoleList.Items) > 0 {
 			names := []string{}
-			for _, i := range roleList.Items {
+			for _, i := range clusterRoleList.Items {
 				names = append(names, i.Name)
 			}
 			return fmt.Sprintf("Still found %v ClusterRoles to delete: %v", len(names), names), false, nil
 		}
+
+		// Roles and role bindings (not cluster-wide) will be deleted as the namespace is deleted.
 
 		return "Deleted all ClusterRoles and ClusterRoleBindings.", true, nil
 	}

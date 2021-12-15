@@ -431,7 +431,7 @@ func generateRBAC(w io.Writer, cfg *GenConfig) error {
 		crb.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"})
 
 		crb.Name = fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace)
-		crb.Labels = map[string]string{"component": "sonobuoy"}
+		crb.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
 		crb.RoleRef = v1.RoleRef{
 			Name:     fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace),
 			Kind:     "ClusterRole",
@@ -445,7 +445,7 @@ func generateRBAC(w io.Writer, cfg *GenConfig) error {
 			},
 		}
 		cr.Name = fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace)
-		cr.Labels = map[string]string{"component": "sonobuoy"}
+		cr.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
 		cr.Rules = []v1.PolicyRule{
 			{
 				APIGroups: []string{"*"},
@@ -467,7 +467,7 @@ func generateRBAC(w io.Writer, cfg *GenConfig) error {
 		rb.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "RoleBinding"})
 		rb.Name = "sonobuoy-serviceaccount-sonobuoy"
 		rb.Namespace = cfg.Config.Namespace
-		rb.Labels = map[string]string{"component": "sonobuoy"}
+		rb.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
 		rb.RoleRef = v1.RoleRef{
 			Name:     "sonobuoy-serviceaccount-sonobuoy",
 			Kind:     "Role",
@@ -482,7 +482,7 @@ func generateRBAC(w io.Writer, cfg *GenConfig) error {
 		}
 		r.Name = "sonobuoy-serviceaccount-sonobuoy"
 		r.Namespace = cfg.Config.Namespace
-		r.Labels = map[string]string{"component": "sonobuoy"}
+		r.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
 		r.Rules = []v1.PolicyRule{
 			{
 				APIGroups: []string{"*"},

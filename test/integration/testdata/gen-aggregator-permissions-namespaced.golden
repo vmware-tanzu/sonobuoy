@@ -11,6 +11,7 @@ kind: RoleBinding
 metadata:
   labels:
     component: sonobuoy
+    namespace: sonobuoy
   name: sonobuoy-serviceaccount-sonobuoy
   namespace: sonobuoy
 roleRef:
@@ -27,6 +28,7 @@ kind: Role
 metadata:
   labels:
     component: sonobuoy
+    namespace: sonobuoy
   name: sonobuoy-serviceaccount-sonobuoy
   namespace: sonobuoy
 rules:

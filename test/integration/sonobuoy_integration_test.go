@@ -25,6 +25,7 @@ import (
 
 const (
 	defaultSonobuoyPath = "../../sonobuoy"
+	defaultKubectlPath  = "../../kubectl"
 	bash                = "/bin/bash"
 	defaultTestTimeout  = 2 * time.Minute
 )
@@ -32,6 +33,9 @@ const (
 var (
 	// Path to the Sonobuoy CLI
 	sonobuoy string
+
+	// Path to the kubectl CLI
+	kubectl string
 
 	// A tmp dir to imitate a typical users HOME directory. Useful due to plugin cache logic which
 	// typically requires _some_ way to determine a home directory.
@@ -52,12 +56,21 @@ func findSonobuoyCLI() (string, error) {
 	return sonobuoyPath, nil
 }
 
-// runSonobuoyCommandWithContext runs the Sonobuoy CLI with the given context and arguments.
-// It returns any encountered error and the stdout and stderr from the command execution.
-func runSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args string, env ...string) (bytes.Buffer, error) {
+func findKubectlCLI() (string, error) {
+	kubectlPath := os.Getenv("KUBECTL_CLI")
+	if kubectlPath == "" {
+		kubectlPath = defaultKubectlPath
+	}
+	if _, err := os.Stat(kubectlPath); os.IsNotExist(err) {
+		return "", err
+	}
+	return kubectlPath, nil
+}
+
+func runCommandWithContext(ctx context.Context, t *testing.T, cmd, args string, env ...string) (bytes.Buffer, error) {
 	var combinedOutput bytes.Buffer
 
-	command := exec.CommandContext(ctx, sonobuoy, strings.Fields(args)...)
+	command := exec.CommandContext(ctx, cmd, strings.Fields(args)...)
 	command.Stdout = &combinedOutput
 	command.Stderr = &combinedOutput
 
@@ -71,6 +84,12 @@ func runSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args strin
 	t.Logf("Running %q with env: %v\n", command.String(), command.Env)
 
 	return combinedOutput, command.Run()
+}
+
+// runSonobuoyCommandWithContext runs the Sonobuoy CLI with the given context and arguments.
+// It returns any encountered error and the stdout and stderr from the command execution.
+func runSonobuoyCommandWithContext(ctx context.Context, t *testing.T, args string, env ...string) (bytes.Buffer, error) {
+	return runCommandWithContext(ctx, t, sonobuoy, args, env...)
 }
 
 func mustRunSonobuoyCommand(t *testing.T, args string) bytes.Buffer {
@@ -119,19 +138,22 @@ func runSonobuoyCommand(t *testing.T, args string) (bytes.Buffer, error) {
 
 // getNamespace returns the namespace to use for the current test and a function to clean it up
 // asynchronously afterwards.
-func getNamespace(t *testing.T) (string, func()) {
+func getNamespace(t *testing.T) (string, func(wait bool)) {
 	ns := "sonobuoy-" + strings.ToLower(t.Name())
-	return ns, func() {
-		cleanup(t, ns)
+	return ns, func(wait bool) {
+		cleanup(t, ns, wait)
 	}
 }
 
 // cleanup runs sonobuoy delete for the given namespace. If no namespace is provided, it will
 // omit the namespace argument and use the default.
-func cleanup(t *testing.T, namespace string) {
+func cleanup(t *testing.T, namespace string, wait bool) {
 	args := "delete"
 	if namespace != "" {
 		args += " -n " + namespace
+	}
+	if wait {
+		args += " --wait"
 	}
 
 	out, err := runSonobuoyCommand(t, args)
@@ -147,7 +169,7 @@ func TestUseNamespaceFromManifest(t *testing.T) {
 	defer cancel()
 
 	ns, cleanup := getNamespace(t)
-	defer cleanup()
+	defer cleanup(false)
 
 	genArgs := fmt.Sprintf("gen -p testImage/yaml/job-junit-passing-singlefile.yaml -n %v", ns)
 	genStdout := mustRunSonobuoyCommandWithContext(ctx, t, ns, genArgs)
@@ -179,7 +201,7 @@ func TestSimpleRun(t *testing.T) {
 	defer cancel()
 
 	ns, cleanup := getNamespace(t)
-	defer cleanup()
+	defer cleanup(false)
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-passing-singlefile.yaml -n %v", ns)
 	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
@@ -193,7 +215,7 @@ func TestNoDoneFile(t *testing.T) {
 	defer cancel()
 
 	ns, cleanup := getNamespace(t)
-	defer cleanup()
+	defer cleanup(false)
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-manual-no-done.yaml -p testImage/yaml/ds-manual-no-done.yaml -n %v", ns)
 	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
@@ -210,7 +232,7 @@ func TestRetrieveAndExtractWithPodLogs(t *testing.T) {
 	defer cancel()
 
 	ns, cleanup := getNamespace(t)
-	defer cleanup()
+	defer cleanup(false)
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-passing-singlefile.yaml -p testImage/yaml/ds-junit-passing-tar.yaml -n %v", ns)
 	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
@@ -269,7 +291,7 @@ func TestCustomResultsDir(t *testing.T) {
 	defer cancel()
 
 	ns, cleanup := getNamespace(t)
-	defer cleanup()
+	defer cleanup(false)
 
 	args := fmt.Sprintf("run --config testImage/resources/resultsdir.json --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-passing-singlefile.yaml -p testImage/yaml/ds-junit-passing-tar.yaml -n %v", ns)
 	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
@@ -277,14 +299,21 @@ func TestCustomResultsDir(t *testing.T) {
 	saveToArtifacts(t, tb)
 }
 
-// TestQuick runs a real "--mode quick" check against the cluster to ensure that it passes.
+// TestQuick runs a real "--mode quick" check against the cluster to ensure that it passes
+// as well as it gets deleted as expected.
 func TestQuick(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
 	ns, cleanup := getNamespace(t)
-	defer cleanup()
+	// Doing a deletion check here rather than as a separate test so-as not to waste the extra compute time.
+	defer func(t *testing.T, ns string) {
+		if err := deleteComplete(t, ns); err != nil {
+			t.Fatalf("Failed to completely delete resources: %v", err)
+		}
+	}(t, ns)
+	defer cleanup(true)
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait --mode=quick -n %v", ns)
 	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
@@ -296,13 +325,30 @@ func TestQuick(t *testing.T) {
 	checkTarballPluginForErrors(t, tb, "e2e", 0)
 }
 
+// deleteComplete is the logic that checks that we deleted the namespace and our clusterRole[Bindings]
+func deleteComplete(t *testing.T, ns string) error {
+	out, err := runCommandWithContext(context.TODO(), t, kubectl, fmt.Sprintf("get clusterroles sonobuoy-serviceaccount-%v -o yaml", ns))
+	if err == nil {
+		return fmt.Errorf("ClusterRole %q still exists:\n%v\n", fmt.Sprintf("sonobuoy-serviceaccount-%v", ns), out.String())
+	}
+	out, err = runCommandWithContext(context.TODO(), t, kubectl, fmt.Sprintf("get namespace %v -o yaml", ns))
+	if err == nil {
+		return fmt.Errorf("Namespace %q still exists:\n%v\n", ns, out.String())
+	}
+	out, err = runCommandWithContext(context.TODO(), t, kubectl, fmt.Sprintf("get clusterrolebinding sonobuoy-serviceaccount-%v -o yaml", ns))
+	if err == nil {
+		return fmt.Errorf("ClusterRoleBinding %q still exists:\n%v\n", fmt.Sprintf("sonobuoy-serviceaccount-%v", ns), out.String())
+	}
+	return nil
+}
+
 func TestConfigmaps(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
 	defer cancel()
 
 	ns, cleanup := getNamespace(t)
-	defer cleanup()
+	defer cleanup(false)
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-junit-singlefile-configmap.yaml -n %v", ns)
 	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
@@ -421,7 +467,7 @@ func TestManualResultsJob(t *testing.T) {
 	defer cancel()
 
 	ns, cleanup := getNamespace(t)
-	defer cleanup()
+	defer cleanup(false)
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-manual.yaml -n %v", ns)
 	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
@@ -446,7 +492,7 @@ func TestManualResultsDaemonSet(t *testing.T) {
 	defer cancel()
 
 	ns, cleanup := getNamespace(t)
-	defer cleanup()
+	defer cleanup(false)
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/ds-manual.yaml -n %v", ns)
 	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
@@ -476,7 +522,7 @@ func TestManualResultsWithNestedDetails(t *testing.T) {
 	defer cancel()
 
 	ns, cleanup := getNamespace(t)
-	defer cleanup()
+	defer cleanup(false)
 
 	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/manual-with-arbitrary-details.yaml -n %v", ns)
 	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
@@ -514,7 +560,12 @@ func TestMain(m *testing.M) {
 		fmt.Printf("Skipping integration tests: failed to find sonobuoy CLI: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Using Sonobuoy CLI at %q\n", sonobuoy)
+	kubectl, err = findKubectlCLI()
+	if err != nil {
+		fmt.Printf("Skipping integration tests: failed to find kubectl CLI: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Using kubectl CLI at %q\n", kubectl)
 
 	// Creating so we get a clean location for HOME; important due to the plugin cache logic.
 	testHome, err = ioutil.TempDir("", "sonobuoy_int_test_home_*")
@@ -636,7 +687,6 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "gen with aggregator permissions namespaced",
 			cmdLine:    "gen --aggregator-permissions=namespaced --kubernetes-version=ignore",
 			expectFile: "testdata/gen-aggregator-permissions-namespaced.golden",
-
 		}, {
 			desc:       "allow plugin renaming",
 			cmdLine:    "gen -p testdata/hello-world.yaml@goodbye -p testImage/yaml/job-junit-passing-singlefile.yaml@customname --kubernetes-version=ignore",
