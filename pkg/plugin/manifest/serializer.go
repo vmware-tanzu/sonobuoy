@@ -43,19 +43,20 @@ var Decoder kuberuntime.Decoder
 var GroupVersion = schema.GroupVersion{Group: "sonobuoy", Version: "v0"}
 
 func init() {
-	schema := kuberuntime.NewScheme()
-	schema.AddKnownTypes(GroupVersion,
+	myschema := kuberuntime.NewScheme()
+	myschema.AddKnownTypes(GroupVersion,
 		&Container{},
 		&Manifest{},
 		&Volume{},
 		&PodSpec{},
 	)
-	codecs := serializer.NewCodecFactory(schema)
+	codecs := serializer.NewCodecFactory(myschema)
 
-	serializer := json.NewYAMLSerializer(
+	serializer := json.NewSerializerWithOptions(
 		json.DefaultMetaFactory,
 		&creator{},
 		&typer{},
+		json.SerializerOptions{Yaml: true},
 	)
 
 	Encoder = codecs.EncoderForVersion(serializer, GroupVersion)
@@ -101,11 +102,11 @@ type typer struct{}
 
 func (t *typer) ObjectKinds(obj kuberuntime.Object) ([]schema.GroupVersionKind, bool, error) {
 	switch obj.(type) {
-	case (*Container):
+	case *Container:
 		return []schema.GroupVersionKind{GroupVersion.WithKind(kindContainer)}, true, nil
-	case (*Manifest):
+	case *Manifest:
 		return []schema.GroupVersionKind{GroupVersion.WithKind(kindManifest)}, true, nil
-	case (*Volume):
+	case *Volume:
 		return []schema.GroupVersionKind{GroupVersion.WithKind(kindVolume)}, true, nil
 	default:
 		return []schema.GroupVersionKind{}, false, errors.New("no known kind")

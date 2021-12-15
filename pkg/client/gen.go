@@ -21,20 +21,24 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
-
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
+	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	manifesthelper "github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest/helper"
-
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/rbac/v1"
+	kuberuntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	kyaml "sigs.k8s.io/yaml"
 )
 
 const (
@@ -54,37 +58,25 @@ const (
 	sonobuoyDefaultConfigDir = "/tmp/sonobuoy/config"
 )
 
-// templateValues are used for direct template substitution for manifest generation.
-type templateValues struct {
-	Plugins []string
+var (
+	// A few messy lines get output and this is the easiest way to remove them. Consider using
+	// regexp to avoid whitespace repeats but ultimately that could be slower/more complicated.
+	removeLines = [][]byte{
+		// Remove creationTimestamp manually; see https://github.com/kubernetes-sigs/controller-tools/issues/402
+		[]byte("\n  creationTimestamp: null\n"),
+		[]byte("\n        resources: {}\n"),
+		[]byte("\n      resources: {}\n"),
+		[]byte("\n    resources: {}\n"),
+		[]byte("\nstatus: {}\n"),
+		[]byte("\nspec: {}\n"),
+		[]byte("\nstatus:\n"),
+		[]byte("\n  loadBalancer: {}\n"),
+	}
 
-	SonobuoyConfig    string
-	SonobuoyImage     string
-	Namespace         string
-	EnableRBAC        bool
-	ImagePullPolicy   string
-	ImagePullSecrets  string
-	CustomAnnotations map[string]string
-	SSHKey            string
-
-	ClusterAdmin bool
-
-	NodeSelectors map[string]string
-
-	// configmap name, filename, string
-	ConfigMaps map[string]map[string]string
-
-	// CustomRegistries should be a multiline yaml string which represents
-	// the file contents of KUBE_TEST_REPO_LIST, the overrides for k8s e2e
-	// registries.
-	CustomRegistries string
-
-	SecurityContext string
-
-	// Translate our log level into a glog value to for the aggregator/workers (e.g. the 9 in -v=9)
-	KlogLevel int
-	LogLevel  string
-}
+	defaultRunAsUser  int64 = 1000
+	defaultRunAsGroup int64 = 3000
+	defaultFSGroup    int64 = 2000
+)
 
 // GenerateManifest fills in a template with a Sonobuoy config
 func (c *SonobuoyClient) GenerateManifest(cfg *GenConfig) ([]byte, error) {
@@ -107,20 +99,6 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 	// Allow nil cfg.Config but avoid dereference errors.
 	if cfg.Config == nil {
 		cfg.Config = config.New()
-	}
-
-	marshalledConfig, err := json.Marshal(cfg.Config)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "couldn't marshall selector")
-	}
-
-	sshKeyData := []byte{}
-	if len(cfg.SSHKeyPath) > 0 {
-		var err error
-		sshKeyData, err = ioutil.ReadFile(cfg.SSHKeyPath)
-		if err != nil {
-			return nil, nil, errors.Wrapf(err, "unable to read SSH key file: %v", cfg.SSHKeyPath)
-		}
 	}
 
 	// If the user didnt provide plugins at all fallback to our original
@@ -197,7 +175,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		)
 	}
 
-	err = checkPluginsUnique(plugins)
+	err := checkPluginsUnique(plugins)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "plugin YAML generation")
 	}
@@ -208,45 +186,335 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		return nil, nil, err
 	}
 
-	pluginYAML := []string{}
-	for _, v := range plugins {
-		yaml, err := manifesthelper.ToYAML(v, cfg.ShowDefaultPodSpec)
-		if err != nil {
-			return nil, nil, err
-		}
-		pluginYAML = append(pluginYAML, strings.TrimSpace(string(yaml)))
-	}
-
-	tmplVals := &templateValues{
-		SonobuoyConfig:    string(marshalledConfig),
-		SonobuoyImage:     cfg.Config.WorkerImage,
-		Namespace:         cfg.Config.Namespace,
-		EnableRBAC:        cfg.EnableRBAC,
-		ImagePullPolicy:   cfg.Config.ImagePullPolicy,
-		ImagePullSecrets:  cfg.Config.ImagePullSecrets,
-		CustomAnnotations: cfg.Config.CustomAnnotations,
-		SSHKey:            base64.StdEncoding.EncodeToString(sshKeyData),
-		ClusterAdmin:      cfg.Config.AggregatorPermissions == config.AggregatorPermissionsClusterAdmin,
-
-		Plugins: pluginYAML,
-
-		NodeSelectors: cfg.NodeSelectors,
-
-		ConfigMaps: configs,
-
-		SecurityContext: secContextFromMode(cfg.Config.SecurityContextMode),
-
-		KlogLevel: errlog.GetLevelForGlog(),
-		LogLevel:  logrus.GetLevel().String(),
-	}
-
 	var buf bytes.Buffer
-
-	if err := genManifest.Execute(&buf, tmplVals); err != nil {
-		return nil, nil, errors.Wrap(err, "couldn't execute manifest template")
+	if err := generateYAMLComponents(&buf, cfg, plugins, configs); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to generate YAML from configuration")
 	}
 
 	return buf.Bytes(), plugins, nil
+}
+
+func generateYAMLComponents(w io.Writer, cfg *GenConfig, plugins []*manifest.Manifest, configs map[string]map[string]string) error {
+	if err := generateNS(w, *cfg); err != nil {
+		return err
+	}
+	if err := generateServiceAcct(w, cfg); err != nil {
+		return err
+	}
+	if err := generateRBAC(w, cfg); err != nil {
+		return err
+	}
+	if err := generateConfigMap(w, cfg); err != nil {
+		return err
+	}
+	if err := generateSecret(w, cfg); err != nil {
+		return err
+	}
+	if err := generatePluginConfigmap(w, cfg, plugins); err != nil {
+		return err
+	}
+	if err := generateAdditionalConfigmaps(w, cfg, configs); err != nil {
+		return err
+	}
+	if err := generateAggregatorAndService(w, cfg); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func generateAdditionalConfigmaps(w io.Writer, cfg *GenConfig, configs map[string]map[string]string) error {
+	// Must iterate through in a predictable manner.
+	pluginNames := []string{}
+	for pluginName := range configs {
+		pluginNames = append(pluginNames, pluginName)
+	}
+	sort.Strings(pluginNames)
+
+	for _, pluginName := range pluginNames {
+		cm := &corev1.ConfigMap{Data: map[string]string{}}
+		cm.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "ConfigMap"})
+		cm.Name = fmt.Sprintf("plugin-%v-cm", pluginName)
+		cm.Namespace = cfg.Config.Namespace
+
+		filenames := []string{}
+		for filename := range configs[pluginName] {
+			filenames = append(filenames, filename)
+		}
+		sort.Strings(filenames)
+		for _, filename := range filenames {
+			cm.Data[filename] = configs[pluginName][filename]
+		}
+		if err := appendAsYAML(w, cm); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func generatePluginConfigmap(w io.Writer, cfg *GenConfig, plugins []*manifest.Manifest) error {
+	cm := &corev1.ConfigMap{Data: map[string]string{}}
+	cm.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "ConfigMap"})
+	cm.Name = "sonobuoy-plugins-cm"
+	cm.Namespace = cfg.Config.Namespace
+	cm.Labels = map[string]string{"component": "sonobuoy"}
+	for i, p := range plugins {
+		b, err := manifesthelper.ToYAML(p, cfg.ShowDefaultPodSpec)
+		if err != nil {
+			return errors.Wrapf(err, "failed to serialize plugin %v", p.SonobuoyConfig.PluginName)
+		}
+		cm.Data[fmt.Sprintf("plugin-%v.yaml", i)] = strings.TrimSpace(string(b))
+	}
+	return appendAsYAML(w, cm)
+}
+
+func objToYAML(w io.Writer, o kuberuntime.Object) error {
+	output, err := kyaml.Marshal(o)
+	if err != nil {
+		return err
+	}
+
+	// We currently use bytes.Replace for ease/speed but we have to repeat extra lines due to varying whitespace.
+	// May consider doing regexp but it will probably result in it being slower/more
+	for _, removeLine := range removeLines {
+		output = bytes.ReplaceAll(output, removeLine, []byte{'\n'})
+	}
+
+	_, err = fmt.Fprint(w, string(output))
+	return err
+}
+
+func appendAsYAML(w io.Writer, o kuberuntime.Object) error {
+	if err := objToYAML(w, o); err != nil {
+		return err
+	}
+	_, err := w.Write([]byte("---\n"))
+	return err
+}
+
+func generateSecret(w io.Writer, cfg *GenConfig) error {
+	if len(cfg.SSHKeyPath) == 0 {
+		return nil
+	}
+
+	sshKeyData, err := ioutil.ReadFile(cfg.SSHKeyPath)
+	if err != nil {
+		return errors.Wrapf(err, "unable to read SSH key file: %v", cfg.SSHKeyPath)
+	}
+
+	s := &corev1.Secret{
+		Type: corev1.SecretTypeOpaque,
+		Data: map[string][]byte{"id_rsa": []byte(base64.StdEncoding.EncodeToString(sshKeyData))},
+	}
+	s.Name = "ssh-key"
+	s.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Secret"})
+
+	return appendAsYAML(w, s)
+}
+
+func generateAggregatorAndService(w io.Writer, cfg *GenConfig) error {
+	p := &corev1.Pod{}
+	p.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Pod"})
+	p.Name = "sonobuoy"
+	p.Namespace = cfg.Config.Namespace
+	p.Labels = map[string]string{
+		"component":          "sonobuoy",
+		"sonobuoy-component": "aggregator",
+		"tier":               "analysis",
+	}
+	p.Spec = corev1.PodSpec{
+		Containers: []corev1.Container{
+			{
+				Name:            "kube-sonobuoy",
+				Command:         []string{"/sonobuoy"},
+				Args:            []string{"aggregator", "--no-exit", fmt.Sprintf("--level=%v", logrus.GetLevel().String()), fmt.Sprintf("-v=%v", errlog.GetLevelForGlog()), "--alsologtostderr"},
+				Image:           cfg.Config.WorkerImage,
+				ImagePullPolicy: corev1.PullPolicy(cfg.ImagePullPolicy),
+				VolumeMounts: []corev1.VolumeMount{
+					{MountPath: "/etc/sonobuoy", Name: "sonobuoy-config-volume"},
+					{MountPath: "/plugins.d", Name: "sonobuoy-plugins-volume"},
+					{MountPath: config.AggregatorResultsPath, Name: "output-volume"},
+				},
+				Env: []corev1.EnvVar{
+					{
+						Name:      "SONOBUOY_ADVERTISE_IP",
+						ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "status.podIP"}},
+					},
+				},
+			},
+		},
+		Volumes: []corev1.Volume{
+			{Name: "sonobuoy-config-volume", VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: "sonobuoy-config-cm"}}}},
+			{Name: "sonobuoy-plugins-volume", VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{LocalObjectReference: corev1.LocalObjectReference{Name: "sonobuoy-plugins-cm"}}}},
+			{Name: "output-volume", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
+		},
+		ServiceAccountName: "sonobuoy-serviceaccount",
+		Tolerations: []corev1.Toleration{
+			{Key: "kubernetes.io/e2e-evict-taint-key", Operator: corev1.TolerationOpExists},
+		},
+		RestartPolicy: corev1.RestartPolicyNever,
+	}
+	if len(cfg.Config.ImagePullSecrets) > 0 {
+		p.Spec.ImagePullSecrets = []corev1.LocalObjectReference{{Name: cfg.Config.ImagePullSecrets}}
+	}
+	if len(cfg.NodeSelectors) > 0 {
+		p.Spec.NodeSelector = cfg.NodeSelectors
+	}
+	if len(cfg.Config.CustomAnnotations) > 0 {
+		p.ObjectMeta.Annotations = cfg.Config.CustomAnnotations
+	}
+
+	switch cfg.Config.SecurityContextMode {
+	case "none":
+	case "nonroot":
+		p.Spec.SecurityContext = &corev1.PodSecurityContext{
+			RunAsUser:  &defaultRunAsUser,
+			RunAsGroup: &defaultRunAsGroup,
+			FSGroup:    &defaultFSGroup,
+		}
+	default:
+		p.Spec.SecurityContext = &corev1.PodSecurityContext{
+			RunAsUser:  &defaultRunAsUser,
+			RunAsGroup: &defaultRunAsGroup,
+			FSGroup:    &defaultFSGroup,
+		}
+	}
+	ser := &corev1.Service{
+		Spec: corev1.ServiceSpec{
+			Selector: map[string]string{"sonobuoy-component": "aggregator"},
+			Type:     "ClusterIP",
+			Ports: []corev1.ServicePort{
+				{
+					Port:       8080,
+					Protocol:   corev1.ProtocolTCP,
+					TargetPort: intstr.IntOrString{IntVal: 8080},
+				},
+			},
+		},
+	}
+	ser.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Service"})
+	ser.Name = "sonobuoy-aggregator"
+	ser.Namespace = cfg.Config.Namespace
+	ser.Labels = map[string]string{
+		"component":          "sonobuoy",
+		"sonobuoy-component": "aggregator",
+	}
+	if err := appendAsYAML(w, p); err != nil {
+		return err
+	}
+	return appendAsYAML(w, ser)
+}
+
+func generateConfigMap(w io.Writer, cfg *GenConfig) error {
+	// No error path here for better organization; unlikely this will happen
+	// and the user gets an error message and their run will fail in a pretty clear manner.
+	marshalledConfig, err := json.Marshal(cfg.Config)
+	if err != nil {
+		return errors.Wrap(err, "unable to marshal config into JSON")
+	}
+	cm := &corev1.ConfigMap{}
+	cm.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "ConfigMap"})
+	cm.Name = "sonobuoy-config-cm"
+	cm.Namespace = cfg.Config.Namespace
+	cm.Labels = map[string]string{"component": "sonobuoy"}
+	cm.Data = map[string]string{"config.json": string(marshalledConfig)}
+	return appendAsYAML(w, cm)
+}
+
+func generateRBAC(w io.Writer, cfg *GenConfig) error {
+	if !cfg.EnableRBAC {
+		return nil
+	}
+	if cfg.Config.AggregatorPermissions == config.AggregatorPermissionsClusterAdmin {
+		cr, crb := &v1.ClusterRole{}, &v1.ClusterRoleBinding{}
+		cr.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRole"})
+		crb.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"})
+
+		crb.Name = fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace)
+		crb.Labels = map[string]string{"component": "sonobuoy"}
+		crb.RoleRef = v1.RoleRef{
+			Name:     fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace),
+			Kind:     "ClusterRole",
+			APIGroup: "rbac.authorization.k8s.io",
+		}
+		crb.Subjects = []v1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      "sonobuoy-serviceaccount",
+				Namespace: cfg.Config.Namespace,
+			},
+		}
+		cr.Name = fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace)
+		cr.Labels = map[string]string{"component": "sonobuoy"}
+		cr.Rules = []v1.PolicyRule{
+			{
+				APIGroups: []string{"*"},
+				Resources: []string{"*"},
+				Verbs:     []string{"*"},
+			},
+			{
+				NonResourceURLs: []string{"/metrics", "/logs", "/logs/*"},
+				Verbs:           []string{"get"},
+			},
+		}
+		if err := appendAsYAML(w, crb); err != nil {
+			return err
+		}
+		return appendAsYAML(w, cr)
+	} else {
+		r, rb := &v1.Role{}, &v1.RoleBinding{}
+		r.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Role"})
+		rb.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "RoleBinding"})
+		rb.Name = "sonobuoy-serviceaccount-sonobuoy"
+		rb.Namespace = cfg.Config.Namespace
+		rb.Labels = map[string]string{"component": "sonobuoy"}
+		rb.RoleRef = v1.RoleRef{
+			Name:     "sonobuoy-serviceaccount-sonobuoy",
+			Kind:     "Role",
+			APIGroup: "rbac.authorization.k8s.io",
+		}
+		rb.Subjects = []v1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      "sonobuoy-serviceaccount",
+				Namespace: cfg.Config.Namespace,
+			},
+		}
+		r.Name = "sonobuoy-serviceaccount-sonobuoy"
+		r.Namespace = cfg.Config.Namespace
+		r.Labels = map[string]string{"component": "sonobuoy"}
+		r.Rules = []v1.PolicyRule{
+			{
+				APIGroups: []string{"*"},
+				Resources: []string{"*"},
+				Verbs:     []string{"*"},
+			},
+		}
+		if err := appendAsYAML(w, rb); err != nil {
+			return err
+		}
+		return appendAsYAML(w, r)
+	}
+}
+
+func generateServiceAcct(w io.Writer, cfg *GenConfig) error {
+	sa := &corev1.ServiceAccount{}
+	sa.Name = "sonobuoy-serviceaccount"
+	sa.Namespace = cfg.Config.Namespace
+	sa.Labels = map[string]string{"component": "sonobuoy"}
+	sa.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "ServiceAccount"})
+	return appendAsYAML(w, sa)
+}
+
+func generateNS(w io.Writer, cfg GenConfig) error {
+	if cfg.Config.AggregatorPermissions != config.AggregatorPermissionsClusterAdmin {
+		return nil
+	}
+
+	ns := &corev1.Namespace{}
+	ns.Name = cfg.Config.Namespace
+	ns.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Namespace"})
+	return appendAsYAML(w, ns)
 }
 
 func applyEnvOverrides(pluginEnvOverrides map[string]map[string]string, plugins []*manifest.Manifest) error {
