@@ -29,7 +29,6 @@ import (
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
-	"github.com/vmware-tanzu/sonobuoy/pkg/dynamic"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	pluginaggregation "github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
@@ -46,6 +45,10 @@ import (
 
 const (
 	pluginDefinitionFilename = "defintion.json"
+
+	// MetaLocation is the place under which snapshot metadata (query times, config) is stored
+	// Also stored in query.go
+	MetaLocation = "meta"
 )
 
 type RunInfo struct {
@@ -59,16 +62,6 @@ type timeout interface {
 
 // Run is the main entrypoint for discovery.
 func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
-	// Adjust QPS/Burst so that the queries execute as quickly as possible.
-	restConf.QPS = float32(cfg.QPS)
-	restConf.Burst = cfg.Burst
-
-	apiHelper, err := dynamic.NewAPIHelperFromRESTConfig(restConf)
-	if err != nil {
-		errlog.LogError(err)
-		return errCount + 1
-	}
-
 	kubeClient, err := kubernetes.NewForConfig(restConf)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create kubernetes client"))
@@ -124,14 +117,6 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 			}),
 	)
 
-	// 2. Get the list of namespaces and apply the regex filter on the namespace
-	logrus.Infof("Filtering namespaces based on the following regex:%s", cfg.Filters.Namespaces)
-	nslist, err := FilterNamespaces(kubeClient, cfg.Filters.Namespaces)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "could not filter namespaces"))
-		return errCount + 1
-	}
-
 	// 3. Dump the config.json we used to run our test
 	if blob, err := json.Marshal(cfg); err == nil {
 		logrus.Trace("Recording the marshalled Sonobuoy config")
@@ -152,32 +137,6 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	runErr := pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.ResultsDir, cfg.Namespace, outpath)
 	trackErrorsFor("running plugins")(runErr)
 
-	// 5. Run the queries
-	recorder := NewQueryRecorder()
-	clusterResources, nsResources, err := getAllFilteredResources(apiHelper, cfg.Resources)
-	if err != nil {
-		errlog.LogError(errors.Wrap(err, "unable to filter resources"))
-		return errCount + 1
-	}
-
-	trackErrorsFor("querying cluster resources")(
-		QueryHostData(kubeClient, recorder, cfg),
-	)
-
-	trackErrorsFor("querying cluster resources")(
-		QueryResources(apiHelper, recorder, clusterResources, nil, cfg),
-	)
-
-	trackErrorsFor("querying server info")(
-		QueryServerData(kubeClient, recorder, cfg),
-	)
-
-	for _, ns := range nslist {
-		trackErrorsFor("querying resources under namespace " + ns)(
-			QueryResources(apiHelper, recorder, nsResources, &ns, cfg),
-		)
-	}
-
 	// Add a log line at the end of the run for clarity. Common problem in timeout situations is that
 	// users do not find the timeout message in the middle of the run logs. Can't just add it with a `defer`
 	// since we'd also like this to appear in the podlogs that get put into the tarball.
@@ -185,34 +144,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		logrus.Errorf("Timeout occurred when running plugins. Inspect logs further for details.")
 	}
 
-	// query pod logs
-	if cfg.Resources == nil || sliceContains(cfg.Resources, "podlogs") {
-
-		// Eliminate duplicate pods when query by namespaces and query by fieldSelectors
-		visitedPods := make(map[string]struct{})
-
-		nsFilter := getPodLogNamespaceFilter(cfg)
-		if len(nsFilter) > 0 {
-			nsListLogs, _ := FilterNamespaces(kubeClient, nsFilter)
-			for _, ns := range nsListLogs {
-				trackErrorsFor("querying pod logs under namespace " + ns)(
-					QueryPodLogs(kubeClient, recorder, ns, cfg, visitedPods),
-				)
-			}
-		}
-		trackErrorsFor("querying pod logs by field selectors")(
-			QueryPodLogs(kubeClient, recorder, "", cfg, visitedPods),
-		)
-	} else {
-		logrus.Infof("podlogs not specified in non-nil Resources, skipping getting podlogs")
-	}
-
 	logrus.Infof("Log lines after this point will not appear in the downloaded tarball.")
-
-	// 6. Dump the query times
-	trackErrorsFor("recording query times")(
-		recorder.DumpQueryData(filepath.Join(metapath, "query-time.json")),
-	)
 
 	// 7. Clean up after the plugins
 	pluginaggregation.Cleanup(kubeClient, cfg.LoadedPlugins)
@@ -254,6 +186,11 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		err = ioutil.WriteFile(filepath.Join(metapath, results.InfoFile), blob, 0644)
 		trackErrorsFor("saving" + results.InfoFile)(err)
 	}
+
+	// Run queries.
+	trackErrorsFor("running queries")(
+		QueryCluster(restConf, cfg),
+	)
 
 	// 8. tarball up results YYYYMMDDHHMM_sonobuoy_UID.tar.gz
 	filename := fmt.Sprintf("%v_sonobuoy_%v.tar.gz", t.Format("200601021504"), cfg.UUID)
@@ -336,20 +273,6 @@ func dumpPlugin(p plugin.Interface, outputDir string) error {
 		os.FileMode(0644),
 	)
 	return errors.Wrapf(err, "writing plugin %v definition to yaml", p.GetName())
-}
-
-// Targeted namespaces will be specified by cfg.Limits.PodLogs.Namespaces OR cfg.Limits.PodLogs.SonobuoyNamespace.
-func getPodLogNamespaceFilter(cfg *config.Config) string {
-	nsfilter := cfg.Limits.PodLogs.Namespaces
-
-	if cfg.Limits.PodLogs.SonobuoyNamespace != nil && *cfg.Limits.PodLogs.SonobuoyNamespace {
-		if len(nsfilter) > 0 {
-			nsfilter = fmt.Sprintf("%s|%s", nsfilter, cfg.Namespace)
-		} else {
-			nsfilter = cfg.Namespace
-		}
-	}
-	return nsfilter
 }
 
 // updateStatus changes the summary status of the sonobuoy pod in order to
