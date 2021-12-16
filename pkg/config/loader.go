@@ -23,6 +23,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/buildinfo"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	pluginloader "github.com/vmware-tanzu/sonobuoy/pkg/plugin/loader"
@@ -38,15 +39,14 @@ const (
 
 // LoadConfig will load the current sonobuoy configuration using the filesystem
 // and environment variables, and returns a config object
-func LoadConfig() (*Config, error) {
+func LoadConfig(pathsToTry ...string) (*Config, error) {
 	cfg := &Config{}
 
-	var pathsToTry []string
 	envCfgFileName := os.Getenv("SONOBUOY_CONFIG")
 	if envCfgFileName != "" {
-		pathsToTry = []string{envCfgFileName}
+		pathsToTry = append(pathsToTry, envCfgFileName)
 	} else {
-		pathsToTry = []string{defaultCfgFileName, fallbackCfgFileName}
+		pathsToTry = append(pathsToTry, defaultCfgFileName, fallbackCfgFileName)
 	}
 
 	jsonFile, fpath, err := openFiles(pathsToTry...)
@@ -54,6 +54,7 @@ func LoadConfig() (*Config, error) {
 		return nil, errors.Wrap(err, "open config")
 	}
 	defer jsonFile.Close()
+	logrus.Tracef("Loading config from file: %v", fpath)
 
 	b, err := ioutil.ReadAll(jsonFile)
 	if err != nil {
@@ -64,35 +65,9 @@ func LoadConfig() (*Config, error) {
 		return nil, errors.Wrapf(err, "unmarshal config file %q", fpath)
 	}
 
-	// 3 - figure out what address we will tell pods to dial for aggregation
-	if cfg.Aggregation.AdvertiseAddress == "" {
-		if ip := os.Getenv("SONOBUOY_ADVERTISE_IP"); ip != "" {
-			cfg.Aggregation.AdvertiseAddress = fmt.Sprintf("[%v]:%d", ip, cfg.Aggregation.BindPort)
-		} else {
-			hostname, _ := os.Hostname()
-			if hostname != "" {
-				cfg.Aggregation.AdvertiseAddress = fmt.Sprintf("%v:%d", hostname, cfg.Aggregation.BindPort)
-			}
-		}
-	}
+	cfg.Resolve()
 
-	// 4 - Any other settings
-	cfg.Version = buildinfo.Version
-
-	// Make the results dir overridable with an environment variable
-	if resultsDir, ok := os.LookupEnv("RESULTS_DIR"); ok {
-		cfg.ResultsDir = resultsDir
-	}
-
-	// If the loaded config doesn't have its own UUID, create one
-	if cfg.UUID == "" {
-		cfgUuid, _ := uuid.NewV4()
-		cfg.UUID = cfgUuid.String()
-	}
-
-	// 5 - Load any plugins we have
-	err = loadAllPlugins(cfg)
-	if err != nil {
+	if err := loadAllPlugins(cfg); err != nil {
 		return nil, err
 	}
 
@@ -107,13 +82,40 @@ func LoadConfig() (*Config, error) {
 		return nil, errors.Errorf("invalid configuration: %v", strings.Join(errstrs, ", "))
 	}
 
+	logrus.Tracef("Config loaded: %#v", *cfg)
 	return cfg, err
+}
+
+func (cfg *Config) Resolve() {
+	// Figure out what address we will tell pods to dial for aggregation
+	if cfg.Aggregation.AdvertiseAddress == "" {
+		if ip := os.Getenv("SONOBUOY_ADVERTISE_IP"); ip != "" {
+			cfg.Aggregation.AdvertiseAddress = fmt.Sprintf("[%v]:%d", ip, cfg.Aggregation.BindPort)
+		} else {
+			hostname, _ := os.Hostname()
+			if hostname != "" {
+				cfg.Aggregation.AdvertiseAddress = fmt.Sprintf("%v:%d", hostname, cfg.Aggregation.BindPort)
+			}
+		}
+	}
+
+	cfg.Version = buildinfo.Version
+
+	// Make the results dir overridable with an environment variable
+	if resultsDir, ok := os.LookupEnv("RESULTS_DIR"); ok {
+		cfg.ResultsDir = resultsDir
+	}
+
+	if cfg.UUID == "" {
+		cfgUuid, _ := uuid.NewV4()
+		cfg.UUID = cfgUuid.String()
+	}
 }
 
 // Validate returns a list of errors for the configuration, if any are found.
 func (cfg *Config) Validate() (errorsList []error) {
 	podLogLimits := &cfg.Limits.PodLogs
-	
+
 	if podLogLimits.SinceTime != nil && podLogLimits.SinceSeconds != nil {
 		errorsList = append(errorsList, errors.New("Only one of sinceSeconds or sinceTime may be specified."))
 	}
@@ -170,11 +172,13 @@ func openFiles(paths ...string) (*os.File, string, error) {
 	var err error
 
 	for _, path = range paths {
+		logrus.Tracef("Trying path: %v", path)
 		f, err = os.Open(path)
 		switch {
 		case err == nil:
 			return f, path, nil
 		case err != nil && os.IsNotExist(err):
+			logrus.Tracef("File %q does not exist", path)
 			continue
 		default:
 			return nil, path, errors.Wrap(err, "opening config file")

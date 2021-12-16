@@ -110,6 +110,7 @@ type Config struct {
 	UUID        string `json:"UUID" mapstructure:"UUID"`
 	Version     string `json:"Version" mapstructure:"Version"`
 	ResultsDir  string `json:"ResultsDir" mapstructure:"ResultsDir"`
+	QueryDir    string `json:"QueryDir,omitempty" mapstructure:"QueryDir"`
 
 	///////////////////////////////////////////////
 	// Query options
@@ -250,10 +251,21 @@ func (cfg *Config) FilterResources(filter []string) []string {
 	return results
 }
 
-// OutputDir returns the aggregator directory under the ResultsDir containing the
-// UUID for this run.
+// OutputDir returns the AggregatorResultsPath/:UUID. Hard-coded aggregator results path
+// to avoid miscommunication between the local host and aggregator during retrieve.
 func (cfg *Config) OutputDir() string {
 	return path.Join(AggregatorResultsPath, cfg.UUID)
+}
+
+// QueryOutputDir returns the QueryDir if set and falls back to the
+// AggregatorResultsPath/:UUID to work on the aggregator by default.
+func (cfg *Config) QueryOutputDir() string {
+	// Override option for when running via CLI.
+	if len(cfg.QueryDir) > 0 {
+		return cfg.QueryDir
+	}
+	// Default for when running via aggregator.
+	return cfg.OutputDir()
 }
 
 // New returns a newly-constructed Config object with default values.
