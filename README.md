@@ -23,8 +23,9 @@ more about the new release cycles in [our blog][decoupling-sonobuoy-k8s].
 
 ## Prerequisites
 
-* Access to an up-and-running Kubernetes cluster. If you do not have a cluster, we recommend following
-  the [AWS Quickstart for Kubernetes][quickstart] instructions.
+* Access to an up-and-running Kubernetes cluster. If you do not have a cluster, we recommend either:
+  * following the [AWS Quickstart for Kubernetes][quickstart] instructions.
+  * setting up a local cluster using [KinD][kind]
 
 * An admin `kubeconfig` file, and the KUBECONFIG environment variable set.
 
@@ -226,6 +227,8 @@ See [the list of releases][releases] to find out about feature changes.
 [issue1388]: https://sonobuoy.io/docs/issue1388
 
 [k8s]: https://github.com/kubernetes/kubernetes
+
+[kind]: https://github.com/kubernetes-sigs/kind
 
 [linux]: https://kubernetes.io/docs/tasks/tools/install-kubectl/#tabset-1
 
