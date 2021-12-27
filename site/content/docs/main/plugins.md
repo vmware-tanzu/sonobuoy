@@ -84,9 +84,11 @@ to present results metadata to the end user such as the number of passed/failed 
 the number of files gathered.
 
 This inspection process is informed by the YAML that described the plugin defintion. The
-`result-type` field can be set to either `raw`, `junit`, or `manual`.
+`result-type` field can be set to either `raw`, `junit`, `gojson`, or `manual`.
 
 When set to `junit`, Sonobuoy will look for XML files and process them as junit test results.
+
+When set to `gojson`, Sonobuoy will look for JSON files and process them as JSON output from `go test` [See details here.](https://golang.org/cmd/test2json/)
 
 When set to `raw`, Sonobuoy will simply inspect all the files and record the number of files generated.
 

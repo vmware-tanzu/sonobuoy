@@ -159,8 +159,9 @@ For `DaemonSet` plugins, where results files will be generated for each node, th
 ## Summary
 
  - `sonobuoy results` can show you results of a plugin without extracting the tarball
-   - Plugins are either `junit`, `raw` or `manual` type currently
+   - Plugins are either `junit`, `gojson`, `raw` or `manual` type currently
    - When viewing `junit` results, json data is dumped for each test
+   - When viewing `gojson` results, json data is dumped for each test
    - When viewing `raw` results, file contents are dumped directly
    - When viewing `manual` results, results are included as provided by the plugin
  - Use the `--mode` flag to see either report, detail, or dump level data
