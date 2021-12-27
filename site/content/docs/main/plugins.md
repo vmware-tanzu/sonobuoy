@@ -8,6 +8,20 @@ When you first run Sonobuoy, an aggregator pod is created in the cluster which r
 
 The aggregator then waits for each plugin to report results back to it. If the plugin fails to launch correctly or does not report results within the timeout period, an error is recorded.
 
+Below are the useful resources to understand what plugins are and how they work, what plugins are available,
+how you can customize them, and how you can build your own:
+ 
+ - [Plugin Types](#plugin-types)
+ - [Built-in Plugins](#built-in-plugins)
+ - [Specifying Which Plugins To Run](#specifying-which-plugins-to-run)
+ - [How Plugins Work](#how-plugins-work)
+ - [Writing your own plugin](#writing-your-own-plugin)
+ - [Plugin Result Types](#plugin-result-types)
+ - [Customizing PodSpec options](#customizing-podspec-options)
+ - [Providing your own PodSpec](#providing-your-own-podspec)
+ - [Plugin Installation (Experimental Feature)](#plugin-installation-experimental-feature)
+ - [Existing Plugins][examplePlugins]
+
 ## Plugin Types
 
 There are two types of plugins:
