@@ -58,7 +58,7 @@ func QueryCluster(restConf *rest.Config, cfg *config.Config) error {
 		return errors.Wrap(err, "could not create kubernetes client")
 	}
 
-	// 1. Create the directory which will store the results, including the
+	// Create the directory which will store the results, including the
 	// `meta` directory inside it (which we always need regardless of
 	// config)
 	outpath := cfg.QueryOutputDir()
@@ -68,14 +68,7 @@ func QueryCluster(restConf *rest.Config, cfg *config.Config) error {
 		return errors.Wrap(err, "could not create directory to store results")
 	}
 
-	// 2. Get the list of namespaces and apply the regex filter on the namespace
-	logrus.Infof("Filtering namespaces based on the following regex:%s", cfg.Filters.Namespaces)
-	nslist, err := FilterNamespaces(kubeClient, cfg.Filters.Namespaces)
-	if err != nil {
-		return errors.Wrap(err, "could not filter namespaces")
-	}
-
-	// 5. Run the queries
+	// Run the queries
 	recorder := NewQueryRecorder()
 	clusterResources, nsResources, err := getAllFilteredResources(apiHelper, cfg.Resources)
 	if err != nil {
@@ -94,39 +87,51 @@ func QueryCluster(restConf *rest.Config, cfg *config.Config) error {
 		logrus.Errorf("Failed to query server data: %v", err)
 	}
 
+	// Get the list of namespaces and apply the regex filter on the namespace
+	logrus.Infof("Filtering namespaces based on the following regex:%s", cfg.Filters.Namespaces)
+	nslist, err := FilterNamespaces(kubeClient, cfg.Filters.Namespaces, cfg.Namespace)
+	if err != nil {
+		logrus.Errorf("could not filter namespaces, will not query every namespace: %v", err)
+	}
+
 	for _, ns := range nslist {
 		if err := QueryResources(apiHelper, recorder, nsResources, &ns, cfg); err != nil {
 			logrus.Errorf("Failed to query resources for namespace %q: %v", ns, err)
 		}
 	}
 
-	// query pod logs
+	// Query pod logs
 	if cfg.Resources == nil || sliceContains(cfg.Resources, "podlogs") {
-
 		// Eliminate duplicate pods when query by namespaces and query by fieldSelectors
 		visitedPods := make(map[string]struct{})
 
+		// Query by namespace if there is a filter.
 		nsFilter := getPodLogNamespaceFilter(cfg)
 		if len(nsFilter) > 0 {
-			nsListLogs, _ := FilterNamespaces(kubeClient, nsFilter)
+			var nsListLogs []string
+			if cfg.Limits.PodLogs.SonobuoyNamespace != nil && *cfg.Limits.PodLogs.SonobuoyNamespace {
+				nsListLogs, _ = FilterNamespaces(kubeClient, nsFilter, cfg.Namespace)
+			} else {
+				nsListLogs, _ = FilterNamespaces(kubeClient, nsFilter)
+			}
 			for _, ns := range nsListLogs {
 				logrus.Info("querying pod logs under namespace " + ns)
 				if err := QueryPodLogs(kubeClient, recorder, ns, cfg, visitedPods); err != nil {
 					logrus.Errorf("Failed to query pod logs for namespace %q: %v", ns, err)
 				}
-
 			}
 		}
-		logrus.Info("querying pod logs by field selectors")
+
+		// Now query by field selectors by not providing a namespace.
+		// visitedPods will prevent us from duplicating logs.
 		if err := QueryPodLogs(kubeClient, recorder, "", cfg, visitedPods); err != nil {
 			logrus.Errorf("Failed to query pod logs: %v", err)
 		}
-
 	} else {
 		logrus.Infof("podlogs not specified in non-nil Resources, skipping getting podlogs")
 	}
 
-	// 6. Dump the query times
+	// Dump the query times
 	logrus.Infof("recording query times at %v", filepath.Join(metapath, "query-time.json"))
 	if err := recorder.DumpQueryData(filepath.Join(metapath, "query-time.json")); err != nil {
 		logrus.Errorf("Failed to write query times: %v", err)
@@ -135,13 +140,19 @@ func QueryCluster(restConf *rest.Config, cfg *config.Config) error {
 	return nil
 }
 
-// FilterNamespaces filter the list of namespaces according to the filter string
-func FilterNamespaces(kubeClient kubernetes.Interface, filter string) ([]string, error) {
+// FilterNamespaces filter the list of namespaces according to the filter string. If unable
+// to query all the namespaces, an optional defaultNS can be provided which will be added
+// to the returned list if it matches the filter.
+func FilterNamespaces(kubeClient kubernetes.Interface, filter string, defaultNS ...string) ([]string, error) {
 	var validns []string
 	re := regexp.MustCompile(filter)
 	nslist, err := kubeClient.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return nil, errors.WithStack(err)
+		// Even if we can't get all namespaces, check the current one and add it to the list.
+		if len(defaultNS) > 0 && re.MatchString(defaultNS[0]) {
+			validns = append(validns, defaultNS[0])
+		}
+		return validns, errors.WithStack(err)
 	}
 
 	for _, ns := range nslist.Items {
@@ -265,7 +276,7 @@ func QueryResources(
 		logrus.Info("Running cluster queries")
 	}
 
-	// 1. Create the parent directory we will use to store the results
+	// Create the parent directory we will use to store the results
 	outdir := filepath.Join(cfg.QueryOutputDir(), ClusterResourceLocation)
 	if ns != nil {
 		outdir = filepath.Join(cfg.QueryOutputDir(), NSResourceLocation, *ns)
@@ -275,7 +286,7 @@ func QueryResources(
 		return errors.WithStack(err)
 	}
 
-	// 2. Setup label filter if there is one.
+	// Setup label filter if there is one.
 	opts := metav1.ListOptions{}
 	if len(cfg.Filters.LabelSelector) > 0 {
 		if _, err := labels.Parse(cfg.Filters.LabelSelector); err != nil {
@@ -285,17 +296,19 @@ func QueryResources(
 		}
 	}
 
-	if ns != nil && len(*ns) > 0 {
-		opts.FieldSelector = "metadata.namespace=" + *ns
-	}
-
-	// 3. Execute the query
+	// Execute the query
 	for _, gvr := range resources {
 		lister := func() (*unstructured.UnstructuredList, error) {
 			resourceClient := client.Client.Resource(gvr)
-			resources, err := resourceClient.List(context.TODO(), opts)
-
-			return resources, errors.Wrapf(err, "listing resource %v", gvr)
+			if ns != nil && len(*ns) > 0 {
+				// Use a namespaced query rather than using a metadata.namespace filter to
+				// avoid permissions issues.
+				objs, err := resourceClient.Namespace(*ns).List(context.TODO(), opts)
+				return objs, errors.Wrapf(err, "listing resource %v", gvr)
+			} else {
+				objs, err := resourceClient.List(context.TODO(), opts)
+				return objs, errors.Wrapf(err, "listing resource %v", gvr)
+			}
 		}
 
 		// The core group is just the empty string but for clarity and consistency, refer to it as core.
@@ -402,7 +415,7 @@ func QueryPodLogs(kubeClient kubernetes.Interface, recorder *QueryRecorder, ns s
 			return err
 		}
 	} else {
-		logrus.Infoln("Collecting Pod Logs by FieldSelectors", cfg.Limits.PodLogs.FieldSelectors)
+		logrus.Infof("Collecting Pod Logs by FieldSelectors: %q", cfg.Limits.PodLogs.FieldSelectors)
 		for _, fieldSelector := range cfg.Limits.PodLogs.FieldSelectors {
 			opts.FieldSelector = fieldSelector
 			err := gatherPodLogs(kubeClient, ns, opts, cfg, visitedPods)
@@ -426,7 +439,6 @@ func QueryHostData(kubeClient kubernetes.Interface, recorder *QueryRecorder, cfg
 
 	start := time.Now()
 
-	// TODO(chuckha) look at FieldSelector for list options{}
 	nodeList, err := kubeClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get node list")

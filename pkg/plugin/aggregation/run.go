@@ -32,6 +32,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/utils"
 	sonotime "github.com/vmware-tanzu/sonobuoy/pkg/time"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -80,7 +81,11 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 	// TODO: there are other places that iterate through the CoreV1.Nodes API
 	// call, we should only do this in one place and cache it.
 	nodes, err := client.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
+	switch {
+	case apierrors.IsUnauthorized(err) || apierrors.IsForbidden(err):
+		logrus.Warningf("Unauthorized to query cluster nodes; continuing with empty node list. Daemonset plugins will be ignored as a result.")
+		nodes = &corev1.NodeList{}
+	case err != nil:
 		return errors.WithStack(err)
 	}
 
