@@ -132,7 +132,7 @@ func cleanupNamespace(namespace string, client kubernetes.Interface) (ConditionF
 			return fmt.Sprintf("Namespace %q has been deleted", namespace), true, nil
 		}
 		if err != nil {
-			status := fmt.Sprintf("Error encountered while trying to delete namespace %q: %v", ns.Name, err)
+			status := fmt.Sprintf("Error encountered while waiting for namespace deletion %q: %v", ns.Name, err)
 			return status, false, err
 		}
 		if ns != nil {
