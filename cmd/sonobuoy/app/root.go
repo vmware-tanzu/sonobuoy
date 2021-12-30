@@ -119,6 +119,11 @@ func prerunChecks(cmd *cobra.Command, args []string) error {
 	if flagsSet["kube-conformance-image"] && (flagsSet["kubernetes-version"] || flagsSet["kube-conformance-image-version"]) {
 		logrus.Warnf("kube-conformance-image flag and kubernetes-version/kube-conformance-image-version flags both set and may collide")
 	}
+
+	if flagsSet[e2eRegistryConfigFlag] && flagsSet[e2eRegistryFlag] {
+		logrus.Warnf("%v and %v flags are both set and may collide", e2eRegistryConfigFlag, e2eRegistryFlag)
+	}
+
 	return nil
 }
 

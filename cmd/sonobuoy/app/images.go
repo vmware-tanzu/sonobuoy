@@ -40,6 +40,7 @@ const (
 
 type imagesFlags struct {
 	e2eRegistryConfig string
+	e2eRegistry       string
 	plugins           []string
 	kubeconfig        Kubeconfig
 	customRegistry    string
@@ -108,7 +109,7 @@ func pullCmd() *cobra.Command {
 				errlog.LogError(err)
 				os.Exit(1)
 			}
-			if errs := pullImages(flags.plugins, flags.e2eRegistryConfig, version, client); len(errs) > 0 {
+			if errs := pullImages(flags.plugins, flags.e2eRegistry, flags.e2eRegistryConfig, version, client); len(errs) > 0 {
 				for _, err := range errs {
 					errlog.LogError(err)
 				}
@@ -118,6 +119,7 @@ func pullCmd() *cobra.Command {
 		Args: cobra.ExactArgs(0),
 	}
 	AddE2ERegistryConfigFlag(&flags.e2eRegistryConfig, pullCmd.Flags())
+	AddE2ERegistryFlag(&flags.e2eRegistry, pullCmd.Flags())
 	AddKubeconfigFlag(&flags.kubeconfig, pullCmd.Flags())
 	AddPluginListFlag(&flags.plugins, pullCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, pullCmd.Flags())
@@ -132,8 +134,8 @@ func pushCmd() *cobra.Command {
 		Use:   "push",
 		Short: "Pushes images to docker registry for a specific plugin",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if contains(flags.plugins, e2ePlugin) && len(flags.e2eRegistryConfig) == 0 {
-				return fmt.Errorf("required flag %q not set", e2eRegistryConfigFlag)
+			if contains(flags.plugins, e2ePlugin) && len(flags.e2eRegistryConfig) == 0 && len(flags.e2eRegistry) == 0 {
+				return fmt.Errorf("required either flag %q or %q, but neither set", e2eRegistryConfigFlag, e2eRegistryFlag)
 			}
 			return nil
 		},
@@ -159,11 +161,11 @@ func pushCmd() *cobra.Command {
 		Args: cobra.ExactArgs(0),
 	}
 	AddE2ERegistryConfigFlag(&flags.e2eRegistryConfig, pushCmd.Flags())
+	AddE2ERegistryFlag(&flags.e2eRegistry, pushCmd.Flags())
 	AddKubeconfigFlag(&flags.kubeconfig, pushCmd.Flags())
 	AddPluginListFlag(&flags.plugins, pushCmd.Flags())
 	AddCustomRegistryFlag(&flags.customRegistry, pushCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, pushCmd.Flags())
-	pushCmd.MarkFlagRequired(customRegistryFlag)
 	AddKubernetesVersionFlag(&flags.k8sVersion, &transformSink, pushCmd.Flags())
 
 	return pushCmd
@@ -194,6 +196,7 @@ func downloadCmd() *cobra.Command {
 		Args: cobra.ExactArgs(0),
 	}
 	AddE2ERegistryConfigFlag(&flags.e2eRegistryConfig, downloadCmd.Flags())
+	AddE2ERegistryFlag(&flags.e2eRegistry, downloadCmd.Flags())
 	AddKubeconfigFlag(&flags.kubeconfig, downloadCmd.Flags())
 	AddPluginListFlag(&flags.plugins, downloadCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, downloadCmd.Flags())
@@ -225,6 +228,7 @@ func deleteCmd() *cobra.Command {
 		Args: cobra.ExactArgs(0),
 	}
 	AddE2ERegistryConfigFlag(&flags.e2eRegistryConfig, deleteCmd.Flags())
+	AddE2ERegistryFlag(&flags.e2eRegistry, deleteCmd.Flags())
 	AddKubeconfigFlag(&flags.kubeconfig, deleteCmd.Flags())
 	AddPluginListFlag(&flags.plugins, deleteCmd.Flags())
 	AddDryRunFlag(&flags.dryRun, deleteCmd.Flags())
@@ -259,18 +263,28 @@ func listImages(plugins []string, k8sVersion string, client image.Client) error 
 		return errors.Wrap(err, "unable to collect images of plugins")
 	}
 	sort.Strings(images)
-	for _, image := range images {
-		fmt.Println(image)
+	for _, img := range images {
+		fmt.Println(img)
 	}
 	return nil
 }
 
-func pullImages(plugins []string, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
+func pullImages(plugins []string, e2eRegistry, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
 	images, err := collectPluginsImages(plugins, k8sVersion, client)
 	if err != nil {
 		return []error{err, errors.Errorf("unable to collect images of plugins")}
 	}
-	if e2eRegistryConfig != "" {
+	switch {
+	case e2eRegistry != "":
+		imagePairs, err := convertImagesToPairs(images, e2eRegistry, "", k8sVersion)
+		if err != nil {
+			return []error{err}
+		}
+		images = []string{}
+		for _, imagePair := range imagePairs {
+			images = append(images, imagePair.Dst)
+		}
+	case e2eRegistryConfig != "":
 		imagePairs, err := convertImagesToPairs(images, "", e2eRegistryConfig, k8sVersion)
 		if err != nil {
 			return []error{err}
@@ -365,6 +379,11 @@ func translateRegistry(imageURL string, customRegistry string, customRegistryLis
 	countParts := len(parts)
 	registryAndUser := strings.Join(parts[:countParts-1], "/")
 
+	if len(customRegistry) > 0 {
+		return fmt.Sprintf("%s/%s", customRegistry, parts[countParts-1])
+	}
+
+	// For now, if not given a customRegistry, assume they gave the customRegistryList as non-nil.
 	switch registryAndUser {
 	case "gcr.io/e2e-test-images":
 		registryAndUser = customRegistryList.PromoterE2eRegistry
