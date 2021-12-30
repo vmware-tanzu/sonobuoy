@@ -1,0 +1,17 @@
+Mode: certified-conformance
+Description: Certified conformance mode runs the entire conformance suite, even disruptive tests. This is typically run in a dev environment to earn the CNCF Certified Kubernetes status.
+E2E_FOCUS: \[Conformance\]
+E2E_SKIP: 
+E2E_PARALLEL: false
+
+Mode: non-disruptive-conformance
+Description: Non-destructive conformance mode runs all of the conformance tests except those that would disrupt other cluster operations (e.g. tests that may cause nodes to be restarted or impact cluster permissions).
+E2E_FOCUS: \[Conformance\]
+E2E_SKIP: \[Disruptive\]|NoExecuteTaintManager
+E2E_PARALLEL: false
+
+Mode: quick
+Description: Quick mode runs a single test to create and destroy a pod. Fastest way to check basic cluster operation.
+E2E_FOCUS: Pods should be submitted and removed
+E2E_SKIP: 
+E2E_PARALLEL: false

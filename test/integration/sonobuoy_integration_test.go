@@ -725,6 +725,10 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "Support for KUBE_TEST_REPO in e2e plugin",
 			cmdLine:    "gen -p e2e --e2e-repo foo --kubernetes-version=ignore",
 			expectFile: "testdata/gen-kube-test-repo.golden",
+		}, {
+			desc:       "sonobuoy modes command",
+			cmdLine:    "modes",
+			expectFile: "testdata/modes.golden",
 		},
 	}
 	for _, tc := range testCases {
