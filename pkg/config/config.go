@@ -65,8 +65,10 @@ const (
 	// runAsUser, runAsGroup, and fsGroup. 'none' skips setting those it entirely since Windows does not support them.
 	DefaultSecurityContextMode = "nonroot"
 
-	AggregatorPermissionsClusterAdmin = "clusterAdmin"
-	DefaultAggregatorPermissions      = AggregatorPermissionsClusterAdmin
+	AggregatorPermissionsClusterAdmin   = "clusterAdmin"
+	AggregatorPermissionsClusterRead    = "clusterRead"
+	AggregatorPermissionsNamespaceAdmin = "namespaceAdmin"
+	DefaultAggregatorPermissions        = AggregatorPermissionsClusterAdmin
 )
 
 var (

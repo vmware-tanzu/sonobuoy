@@ -421,79 +421,164 @@ func generateConfigMap(w io.Writer, cfg *GenConfig) error {
 	return appendAsYAML(w, cm)
 }
 
+func clusterAdminRBAC(w io.Writer, cfg *GenConfig) error {
+	cr, crb := &v1.ClusterRole{}, &v1.ClusterRoleBinding{}
+	cr.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRole"})
+	crb.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"})
+
+	crb.Name = fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace)
+	crb.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
+	crb.RoleRef = v1.RoleRef{
+		Name:     fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace),
+		Kind:     "ClusterRole",
+		APIGroup: "rbac.authorization.k8s.io",
+	}
+	crb.Subjects = []v1.Subject{
+		{
+			Kind:      "ServiceAccount",
+			Name:      "sonobuoy-serviceaccount",
+			Namespace: cfg.Config.Namespace,
+		},
+	}
+	cr.Name = fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace)
+	cr.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
+	cr.Rules = []v1.PolicyRule{
+		{
+			APIGroups: []string{"*"},
+			Resources: []string{"*"},
+			Verbs:     []string{"*"},
+		},
+		{
+			NonResourceURLs: []string{"/metrics", "/logs", "/logs/*"},
+			Verbs:           []string{"get"},
+		},
+	}
+	if err := appendAsYAML(w, crb); err != nil {
+		return err
+	}
+	return appendAsYAML(w, cr)
+}
+
+func clusterReadRBAC(w io.Writer, cfg *GenConfig) error {
+	cr, crb := &v1.ClusterRole{}, &v1.ClusterRoleBinding{}
+	cr.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRole"})
+	crb.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"})
+
+	crb.Name = fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace)
+	crb.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
+	crb.RoleRef = v1.RoleRef{
+		Name:     fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace),
+		Kind:     "ClusterRole",
+		APIGroup: "rbac.authorization.k8s.io",
+	}
+	crb.Subjects = []v1.Subject{
+		{
+			Kind:      "ServiceAccount",
+			Name:      "sonobuoy-serviceaccount",
+			Namespace: cfg.Config.Namespace,
+		},
+	}
+	cr.Name = fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace)
+	cr.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
+	cr.Rules = []v1.PolicyRule{
+		{
+			APIGroups: []string{"*"},
+			Resources: []string{"*"},
+			Verbs:     []string{"get", "list", "watch"},
+		},
+		{
+			NonResourceURLs: []string{"/metrics", "/logs", "/logs/*"},
+			Verbs:           []string{"get"},
+		},
+	}
+	if err := appendAsYAML(w, crb); err != nil {
+		return err
+	}
+	if err := appendAsYAML(w, cr); err != nil {
+		return err
+	}
+	r, rb := &v1.Role{}, &v1.RoleBinding{}
+	r.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Role"})
+	rb.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "RoleBinding"})
+	rb.Name = "sonobuoy-serviceaccount-sonobuoy"
+	rb.Namespace = cfg.Config.Namespace
+	rb.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
+	rb.RoleRef = v1.RoleRef{
+		Name:     "sonobuoy-serviceaccount-sonobuoy",
+		Kind:     "Role",
+		APIGroup: "rbac.authorization.k8s.io",
+	}
+	rb.Subjects = []v1.Subject{
+		{
+			Kind:      "ServiceAccount",
+			Name:      "sonobuoy-serviceaccount",
+			Namespace: cfg.Config.Namespace,
+		},
+	}
+	r.Name = "sonobuoy-serviceaccount-sonobuoy"
+	r.Namespace = cfg.Config.Namespace
+	r.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
+	r.Rules = []v1.PolicyRule{
+		{
+			APIGroups: []string{"*"},
+			Resources: []string{"*"},
+			Verbs:     []string{"*"},
+		},
+	}
+	if err := appendAsYAML(w, rb); err != nil {
+		return err
+	}
+	return appendAsYAML(w, r)
+}
+func namespaceAdminRBAC(w io.Writer, cfg *GenConfig) error {
+	r, rb := &v1.Role{}, &v1.RoleBinding{}
+	r.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Role"})
+	rb.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "RoleBinding"})
+	rb.Name = "sonobuoy-serviceaccount-sonobuoy"
+	rb.Namespace = cfg.Config.Namespace
+	rb.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
+	rb.RoleRef = v1.RoleRef{
+		Name:     "sonobuoy-serviceaccount-sonobuoy",
+		Kind:     "Role",
+		APIGroup: "rbac.authorization.k8s.io",
+	}
+	rb.Subjects = []v1.Subject{
+		{
+			Kind:      "ServiceAccount",
+			Name:      "sonobuoy-serviceaccount",
+			Namespace: cfg.Config.Namespace,
+		},
+	}
+	r.Name = "sonobuoy-serviceaccount-sonobuoy"
+	r.Namespace = cfg.Config.Namespace
+	r.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
+	r.Rules = []v1.PolicyRule{
+		{
+			APIGroups: []string{"*"},
+			Resources: []string{"*"},
+			Verbs:     []string{"*"},
+		},
+	}
+	if err := appendAsYAML(w, rb); err != nil {
+		return err
+	}
+	return appendAsYAML(w, r)
+}
+
 func generateRBAC(w io.Writer, cfg *GenConfig) error {
 	if !cfg.EnableRBAC {
 		return nil
 	}
-	if cfg.Config.AggregatorPermissions == config.AggregatorPermissionsClusterAdmin {
-		cr, crb := &v1.ClusterRole{}, &v1.ClusterRoleBinding{}
-		cr.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRole"})
-		crb.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRoleBinding"})
 
-		crb.Name = fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace)
-		crb.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
-		crb.RoleRef = v1.RoleRef{
-			Name:     fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace),
-			Kind:     "ClusterRole",
-			APIGroup: "rbac.authorization.k8s.io",
-		}
-		crb.Subjects = []v1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      "sonobuoy-serviceaccount",
-				Namespace: cfg.Config.Namespace,
-			},
-		}
-		cr.Name = fmt.Sprintf("sonobuoy-serviceaccount-%v", cfg.Config.Namespace)
-		cr.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
-		cr.Rules = []v1.PolicyRule{
-			{
-				APIGroups: []string{"*"},
-				Resources: []string{"*"},
-				Verbs:     []string{"*"},
-			},
-			{
-				NonResourceURLs: []string{"/metrics", "/logs", "/logs/*"},
-				Verbs:           []string{"get"},
-			},
-		}
-		if err := appendAsYAML(w, crb); err != nil {
-			return err
-		}
-		return appendAsYAML(w, cr)
-	} else {
-		r, rb := &v1.Role{}, &v1.RoleBinding{}
-		r.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Role"})
-		rb.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "RoleBinding"})
-		rb.Name = "sonobuoy-serviceaccount-sonobuoy"
-		rb.Namespace = cfg.Config.Namespace
-		rb.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
-		rb.RoleRef = v1.RoleRef{
-			Name:     "sonobuoy-serviceaccount-sonobuoy",
-			Kind:     "Role",
-			APIGroup: "rbac.authorization.k8s.io",
-		}
-		rb.Subjects = []v1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      "sonobuoy-serviceaccount",
-				Namespace: cfg.Config.Namespace,
-			},
-		}
-		r.Name = "sonobuoy-serviceaccount-sonobuoy"
-		r.Namespace = cfg.Config.Namespace
-		r.Labels = map[string]string{clusterRoleFieldName: clusterRoleFieldValue, clusterRoleFieldNamespace: cfg.Config.Namespace}
-		r.Rules = []v1.PolicyRule{
-			{
-				APIGroups: []string{"*"},
-				Resources: []string{"*"},
-				Verbs:     []string{"*"},
-			},
-		}
-		if err := appendAsYAML(w, rb); err != nil {
-			return err
-		}
-		return appendAsYAML(w, r)
+	switch cfg.Config.AggregatorPermissions {
+	case config.AggregatorPermissionsClusterAdmin:
+		return clusterAdminRBAC(w, cfg)
+	case config.AggregatorPermissionsNamespaceAdmin:
+		return namespaceAdminRBAC(w, cfg)
+	case config.AggregatorPermissionsClusterRead:
+		return clusterReadRBAC(w, cfg)
+	default:
+		return fmt.Errorf("unknown aggregator permission: %v", cfg.Config.AggregatorPermissions)
 	}
 }
 
