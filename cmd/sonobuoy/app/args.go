@@ -53,24 +53,6 @@ const (
 	retrievePathFlag          = "retrieve-path"
 	securityContextModeFlag   = "security-context-mode"
 	aggregatorPermissionsFlag = "aggregator-permissions"
-
-	// Quick runs a single E2E test and the systemd log tests.
-	Quick string = "quick"
-
-	// NonDisruptiveConformance runs all of the `Conformance` E2E tests which are not marked as disuprtive and the systemd log tests.
-	NonDisruptiveConformance string = "non-disruptive-conformance"
-
-	// CertifiedConformance runs all of the `Conformance` E2E tests and the systemd log tests.
-	CertifiedConformance string = "certified-conformance"
-
-	// nonDisruptiveSkipList should generally just need to skip disruptive tests since upstream
-	// will disallow the other types of tests from being tagged as Conformance. However, in v1.16
-	// two disruptive tests were  not marked as such, meaning we needed to specify them here to ensure
-	// user workload safety. See https://github.com/kubernetes/kubernetes/issues/82663
-	// and https://github.com/kubernetes/kubernetes/issues/82787
-	nonDisruptiveSkipList = `\[Disruptive\]|NoExecuteTaintManager`
-	conformanceFocus      = `\[Conformance\]`
-	quickFocus            = "Pods should be submitted and removed"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
@@ -226,12 +208,12 @@ func AddLegacyE2EFlags(env *PluginEnvVars, pluginTransforms *map[string][]func(*
 		env:  env,
 		name: "",
 	}
-	if err := m.Set(NonDisruptiveConformance); err != nil {
+	if err := m.Set(E2eModeNonDisruptiveConformance); err != nil {
 		panic("Failed to initial mode flag")
 	}
 	fs.VarP(
 		m, "mode", "m",
-		fmt.Sprintf("What mode to run the e2e plugin in. Valid modes are %s.", []string{NonDisruptiveConformance, CertifiedConformance, Quick}),
+		fmt.Sprintf("What mode to run the e2e plugin in. Valid modes are %s.", validE2eModes()),
 	)
 	fs.Var(
 		&envVarModierFlag{
@@ -499,31 +481,21 @@ func (m *Mode) String() string { return m.name }
 func (m *Mode) Type() string   { return "Mode" }
 func (m *Mode) Set(str string) error {
 	lcase := strings.ToLower(str)
-	switch lcase {
-	case NonDisruptiveConformance:
-		if err := m.env.Set(fmt.Sprintf("e2e.E2E_FOCUS=%v", conformanceFocus)); err != nil {
-			return fmt.Errorf("failed to set flag with value %v", str)
-		}
-		if err := m.env.Set(fmt.Sprintf("e2e.E2E_SKIP=%v", nonDisruptiveSkipList)); err != nil {
-			return fmt.Errorf("failed to set flag with value %v", str)
-		}
-	case Quick:
-		if err := m.env.Set(fmt.Sprintf("e2e.E2E_FOCUS=%v", quickFocus)); err != nil {
-			return fmt.Errorf("failed to set flag with value %v", str)
-		}
-		if err := m.env.Set("e2e.E2E_SKIP"); err != nil {
-			return fmt.Errorf("failed to set flag with value %v", str)
-		}
-	case CertifiedConformance:
-		if err := m.env.Set(fmt.Sprintf("e2e.E2E_FOCUS=%v", conformanceFocus)); err != nil {
-			return fmt.Errorf("failed to set flag with value %v", str)
-		}
-		if err := m.env.Set("e2e.E2E_SKIP"); err != nil {
-			return fmt.Errorf("failed to set flag with value %v", str)
-		}
-	default:
+	mode, ok := validModes[lcase]
+	if !ok {
 		return fmt.Errorf("unknown mode %v", lcase)
 	}
+
+	if err := m.env.Set(fmt.Sprintf("e2e.E2E_FOCUS=%v", mode.focus)); err != nil {
+		return fmt.Errorf("failed to set flag with value %v", str)
+	}
+	if err := m.env.Set(fmt.Sprintf("e2e.E2E_SKIP=%v", mode.skip)); err != nil {
+		return fmt.Errorf("failed to set flag with value %v", str)
+	}
+	if err := m.env.Set(fmt.Sprintf("e2e.E2E_PARALLEL=%v", mode.parallel)); err != nil {
+		return fmt.Errorf("failed to set flag with value %v", str)
+	}
+
 	m.name = lcase
 	return nil
 }
