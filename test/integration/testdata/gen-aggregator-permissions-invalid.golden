@@ -1,0 +1,1 @@
+time="STATIC_TIME_FOR_TESTING" level=error msg="error attempting to generate sonobuoy manifest: failed to generate YAML from configuration: unknown aggregator permission: invalid"

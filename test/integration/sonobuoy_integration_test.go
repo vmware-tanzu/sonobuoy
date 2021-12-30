@@ -694,9 +694,17 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			cmdLine:    "gen --security-context-mode=none --kubernetes-version=ignore",
 			expectFile: "testdata/gen-security-context-none.golden",
 		}, {
-			desc:       "gen with aggregator permissions namespaced",
-			cmdLine:    "gen --aggregator-permissions=namespaced --kubernetes-version=ignore",
+			desc:       "gen with aggregator permissions namespaceAdmin",
+			cmdLine:    "gen --aggregator-permissions=namespaceAdmin --kubernetes-version=ignore",
 			expectFile: "testdata/gen-aggregator-permissions-namespaced.golden",
+		}, {
+			desc:       "gen with aggregator permissions clusterRead",
+			cmdLine:    "gen --aggregator-permissions=clusterRead --kubernetes-version=ignore",
+			expectFile: "testdata/gen-aggregator-permissions-clusterRead.golden",
+		}, {
+			desc:       "gen with aggregator permissions invalid",
+			cmdLine:    "gen --aggregator-permissions=invalid --kubernetes-version=ignore",
+			expectFile: "testdata/gen-aggregator-permissions-invalid.golden",
 		}, {
 			desc:       "allow plugin renaming",
 			cmdLine:    "gen -p testdata/hello-world.yaml@goodbye -p testImage/yaml/job-junit-passing-singlefile.yaml@customname --kubernetes-version=ignore",
