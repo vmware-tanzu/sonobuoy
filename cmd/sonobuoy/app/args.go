@@ -47,6 +47,7 @@ const (
 	e2eSkipFlag               = "e2e-skip"
 	e2eParallelFlag           = "e2e-parallel"
 	e2eRegistryConfigFlag     = "e2e-repo-config"
+	e2eRegistryFlag           = "e2e-repo"
 	pluginImageFlag           = "plugin-image"
 	filenameFlag              = "filename"
 	retrievePathFlag          = "retrieve-path"
@@ -189,7 +190,15 @@ func AddAggregatorPermissionsFlag(mode *string, flags *pflag.FlagSet) {
 func AddE2ERegistryConfigFlag(cfg *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		cfg, e2eRegistryConfigFlag, "",
-		"Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images. Required when pushing images for the e2e plugin.",
+		"Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.",
+	)
+}
+
+// AddE2ERegistryFlag adds a e2eRegistryFlag flag to the provided command.
+func AddE2ERegistryFlag(cfg *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		cfg, e2eRegistryFlag, "",
+		"Specify a registry for KUBE_TEST_REPO, overriding registries for test images.",
 	)
 }
 
@@ -271,6 +280,11 @@ func AddLegacyE2EFlags(env *PluginEnvVars, pluginTransforms *map[string][]func(*
 			transforms: *pluginTransforms,
 		}, e2eRegistryConfigFlag,
 		"Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.",
+	)
+
+	fs.Var(
+		&envVarModierFlag{plugin: e2ePlugin, field: "KUBE_TEST_REPO", PluginEnvVars: *env}, e2eRegistryFlag,
+		"Specify a registry to use as the default for pulling Kubernetes test images. Same as providing --e2e-repo-config but specifying the same repo repeatedly.",
 	)
 }
 

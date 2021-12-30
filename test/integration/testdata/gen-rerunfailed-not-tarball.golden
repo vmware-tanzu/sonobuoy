@@ -16,6 +16,7 @@ Flags:
       --dns-namespace string                     The namespace to check for DNS pods during preflight checks. (default "kube-system")
       --dns-pod-labels strings                   The label selectors to use for locating DNS pods during preflight checks. Can be specified multiple times or as a comma-separated list. (default [k8s-app=kube-dns,k8s-app=coredns])
       --e2e-focus envModifier                    Specify the E2E_FOCUS value for the e2e plugin, specifying which tests to run. Shorthand for --plugin-env=e2e.E2E_FOCUS=<string> (default \[Conformance\])
+      --e2e-repo envModifier                     Specify a registry to use as the default for pulling Kubernetes test images. Same as providing --e2e-repo-config but specifying the same repo repeatedly.
       --e2e-repo-config yaml-filepath            Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.
       --e2e-skip envModifier                     Specify the E2E_SKIP value for the e2e plugin, specifying which tests to skip. Shorthand for --plugin-env=e2e.E2E_SKIP=<string> (default \[Disruptive\]|NoExecuteTaintManager)
   -f, --file -                                   If set, loads the file as if it were the output from sonobuoy gen. Set to - to read from stdin.

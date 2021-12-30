@@ -56,7 +56,9 @@ sonobuoy run --kube-conformance-image $PRIVATE_REG/conformance:$CLUSTER_VERSION
 The end-to-end tests use a number of different images across multiple registries.
 When running the `e2e` plugin, you must provide a mapping that details which custom registries should be used instead of the public registries.
 
-This mapping is a YAML file which maps the registry category to the corresponding registry URL.
+If you need only a single, custom registry, use the `--e2e-repo` flag to specify that all test registry should be set to the same, given value.
+
+If you need multiple registries, you must provide a mapping that the upstream Kubernetes tests understand. It is provided via a YAML file which maps the registry category to the corresponding registry URL.
 The keys in this file are specified in the Kubernetes test framework.
 The tests for each minor version of Kubernetes use a different set of registries so the mapping you create will depend on which Kubernetes version you are testing against.
 
@@ -87,17 +89,22 @@ sonobuoy images pull
 > You may see these errors when running the above command. This is expected behaviour.
 > These images are referenced by some end-to-end tests, but **not** by the conformance tests.
 
-To push the images, you must provide the mapping using the `--e2e-repo-config` flag as follows: 
+To push the images, you must provide the mapping using the `--e2e-repo` or `--e2e-repo-config` flag as follows: 
 
 ```
+sonobuoy images push --e2e-repo <your registry>
+// OR
 sonobuoy images push --e2e-repo-config <path/to/custom-repo-config.yaml>
 ```
 
-Sonobuoy will read the mapping config and will push the images to the repositories defined in that mapping.
+If you are pushing to a single registry; use the first flag; if you need fine-grained controle
+over which images go to which registry, use the second.
 
-When running the `e2e` plugin, you will need to provide this file using the same flag as follows:
+When running the `e2e` plugin, you will need to provide this information using the same flag as follows:
 
 ```
+sonobuoy run --e2e-repo <your registry>
+// OR
 sonobuoy run --e2e-repo-config <path/to/custom-repo-config.yaml>
 ```
 

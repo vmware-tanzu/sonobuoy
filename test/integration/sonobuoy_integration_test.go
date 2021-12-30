@@ -713,6 +713,10 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "multiple plugins and multiple containers issue 1528",
 			cmdLine:    "gen -p testdata/plugins/good/sidecar.yaml -p testdata/plugins/good/hello-world.yaml --kubernetes-version=ignore",
 			expectFile: "testdata/gen-issue-1528.golden",
+		}, {
+			desc:       "Support for KUBE_TEST_REPO in e2e plugin",
+			cmdLine:    "gen -p e2e --e2e-repo foo --kubernetes-version=ignore",
+			expectFile: "testdata/gen-kube-test-repo.golden",
 		},
 	}
 	for _, tc := range testCases {
