@@ -213,3 +213,9 @@ errors out on Windows, causing the pod to be unable to properly start up.
 [framework-flags]: https://github.com/kubernetes/kubernetes/blob/master/test/e2e/framework/test_context.go
 
 [testsuiteblog]: https://sonobuoy.io/understanding-e2e-tests
+
+[sonobuoy-query]: sonobuoy-query.md
+
+### The information gathered on the cluster is useful for me, but do I have to run a plugin to obtain it?
+
+No, you can run the cluster queries via the command `sonobuoy query`. Read more details about it [here][sonobuoy-query].
