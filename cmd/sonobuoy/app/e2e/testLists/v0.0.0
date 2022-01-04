@@ -1,4 +1,0 @@
-[sig-storage] In-tree Volumes [Driver: emptydir] [Testpattern: Dynamic PV (ntfs)][sig-windows] volumes should allow exec of files on the volume
-[sig-api-machinery] AdmissionWebhook [Privileged:ClusterAdmin] should include webhook resources in discovery documents [Conformance]
-[sig-api-machinery] CustomResourcePublishOpenAPI [Privileged:ClusterAdmin] works for multiple CRDs of different groups [Conformance]
-[sig-apps] StatefulSet [k8s.io] Basic StatefulSet functionality [StatefulSetBasic] Should recreate evicted statefulset [Conformance]
