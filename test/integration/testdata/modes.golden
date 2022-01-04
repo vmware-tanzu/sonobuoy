@@ -4,8 +4,14 @@ E2E_FOCUS: \[Conformance\]
 E2E_SKIP: 
 E2E_PARALLEL: false
 
+Mode: conformance-lite
+Description: An unofficial mode of running the e2e tests which removes some of the longest running tests so that your tests can complete in the fastest time possible while maximizing coverage.
+E2E_FOCUS: \[Conformance\]
+E2E_SKIP: Serial|Slow|Disruptive|\[sig-apps\] StatefulSet Basic StatefulSet functionality \[StatefulSetBasic\] should have a working scale subresource \[Conformance\]|\[sig-network\] EndpointSlice sho... (truncated) ...
+E2E_PARALLEL: true
+
 Mode: non-disruptive-conformance
-Description: Non-destructive conformance mode runs all of the conformance tests except those that would disrupt other cluster operations (e.g. tests that may cause nodes to be restarted or impact cluster permissions).
+Description: Non-destructive conformance mode runs all of the conformance tests except those that would disrupt other cluster operations (e.g. tests that may cause nodes to be restarted or impact clus... (truncated) ...
 E2E_FOCUS: \[Conformance\]
 E2E_SKIP: \[Disruptive\]|NoExecuteTaintManager
 E2E_PARALLEL: false
