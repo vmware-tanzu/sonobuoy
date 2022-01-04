@@ -2,6 +2,7 @@ package app
 
 import (
 	"bufio"
+	"compress/gzip"
 	"embed"
 	"fmt"
 	"io"
@@ -199,14 +200,19 @@ func getTestsStdin() ([]string, error) {
 }
 
 func getTestsOffline(version string) ([]string, error) {
-	f, err := e2eTestListFS.Open(filepath.Join("e2e", "testLists", version))
+	filename := version + ".gz"
+	f, err := e2eTestListFS.Open(filepath.Join("e2e", "testLists", filename))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open embedded file %v", version)
 	}
 
-	logrus.Tracef("Using embedded file %v to obtain E2E test list", version)
-	defer f.Close()
-	return testsFromReader(f)
+	logrus.Tracef("Using embedded file %v to obtain E2E test list", filename)
+	r, err := gzip.NewReader(f)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to processess file %v as a gzip reader", filename)
+	}
+	defer r.Close()
+	return testsFromReader(r)
 }
 
 func testsFromReader(r io.Reader) ([]string, error) {
@@ -235,10 +241,14 @@ func getTestsOnline(baseURL, version string) ([]string, error) {
 		return nil, errors.Wrapf(err, "unexpected status (%v %v) when attempting to GET URL %q, attempt 'offline' input if issues persist", resp.Status, resp.StatusCode, listURL)
 	}
 
-	defer resp.Body.Close()
-	return testsFromReader(resp.Body)
+	r, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to process response body as gzip reader")
+	}
+	defer r.Close()
+	return testsFromReader(r)
 }
 
 func testURL(baseURL, version string) string {
-	return fmt.Sprintf("%v/%v", baseURL, version)
+	return fmt.Sprintf("%v/%v.gz", baseURL, version)
 }
