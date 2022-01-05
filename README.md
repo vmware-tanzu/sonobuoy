@@ -185,6 +185,11 @@ issues, let us know.
 These versions of Sonobuoy have a bug that runs the wrong set of tests without additional actions. See more
 details [here][issue1388]. The simplest way to avoid this is to update your version of Sonobuoy to >= v0.53.2.
 
+## Strategy Document
+
+See our current [strategy document][strategy] for context on what our highest priority use cases and work items
+will be. Feel free to make comments on Github or start conversations in Slack.
+
 ## Contributing
 
 Thanks for taking the time to join our community and start contributing! We welcome pull requests. Feel free to dig
@@ -247,3 +252,5 @@ See [the list of releases][releases] to find out about feature changes.
 [snapshot]:https://sonobuoy.io/docs/snapshot
 
 [sonobuoyconfig]: https://sonobuoy.io/docs/sonobuoy-config
+
+[strategy]: https://sonobuoy.io/docs/strategy
