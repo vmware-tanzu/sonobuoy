@@ -1,6 +1,6 @@
-#Sonobuoy Strategy
+# Sonobuoy Strategy
 
-##The problem
+## The problem
 Users of Kubernetes value its ability to automate running complex systems at scale. However, little Kubernetes cluster validation is automated. As a result, skilled Kubernetes operators spend needless time performing manual tasks. Just as automated unit tests frontload the work of testing software by having the developer codify how to check that their code is functional, Kubernetes would benefit from automated test suites that allow skilled Kubernetes operators and developers to codify once how to test cluster capabilities and then have those checks run by whichever Kubernetes user needs this.
 
 Examples:
