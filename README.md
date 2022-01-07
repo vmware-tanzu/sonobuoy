@@ -82,6 +82,8 @@ sonobuoy delete --wait
 
 > Note: The --wait option ensures the Kubernetes namespace is deleted, avoiding conflicts if another Sonobuoy run is started quickly.
 
+If you have an issue with permissions in your cluster but you still want to run Sonobuoy, you can use `--aggregator-permissions` flag. Read more details about it [here][aggregator-permissions].
+
 ### Other Tests
 
 By default, `sonobuoy run` runs the Kubernetes conformance tests but this can easily be configured. The same plugin that
@@ -254,3 +256,5 @@ See [the list of releases][releases] to find out about feature changes.
 [sonobuoyconfig]: https://sonobuoy.io/docs/sonobuoy-config
 
 [strategy]: https://sonobuoy.io/docs/strategy
+
+[aggregator-permissions]: https://sonobuoy.io/docs/aggregator-permissions
