@@ -45,6 +45,8 @@ const (
 	e2ePluginName   = "e2e"
 	systemdLogsName = "systemd-logs"
 
+	aggregatorEnvOverrideKey = `sonobuoy`
+
 	envVarKeyExtraArgs = "E2E_EXTRA_ARGS"
 
 	// sonobuoyKey is just a true/false env to indicate that the container was launched/tagged by Sonobuoy.
@@ -175,7 +177,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		)
 	}
 
-	err := checkPluginsUnique(plugins)
+	err := checkPluginNames(plugins)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "plugin YAML generation")
 	}
@@ -378,6 +380,10 @@ func generateAggregatorAndService(w io.Writer, cfg *GenConfig) error {
 			RunAsGroup: &defaultRunAsGroup,
 			FSGroup:    &defaultFSGroup,
 		}
+	}
+	if len(cfg.PluginEnvOverrides) > 0 && cfg.PluginEnvOverrides[aggregatorEnvOverrideKey] != nil {
+		newEnv, removeVals := processEnvVals(cfg.PluginEnvOverrides[aggregatorEnvOverrideKey])
+		p.Spec.Containers[0].Env = mergeEnv(newEnv, p.Spec.Containers[0].Env, removeVals)
 	}
 	ser := &corev1.Service{
 		Spec: corev1.ServiceSpec{
@@ -608,15 +614,7 @@ func applyEnvOverrides(pluginEnvOverrides map[string]map[string]string, plugins 
 		for _, p := range plugins {
 			if p.SonobuoyConfig.PluginName == pluginName {
 				found = true
-				newEnv := []corev1.EnvVar{}
-				removeVals := map[string]struct{}{}
-				for k, v := range envVars {
-					if v != "" {
-						newEnv = append(newEnv, corev1.EnvVar{Name: k, Value: v})
-					} else {
-						removeVals[k] = struct{}{}
-					}
-				}
+				newEnv, removeVals := processEnvVals(envVars)
 				p.Spec.Env = mergeEnv(newEnv, p.Spec.Env, removeVals)
 				if p.PodSpec != nil {
 					for i := range p.PodSpec.Containers {
@@ -629,7 +627,7 @@ func applyEnvOverrides(pluginEnvOverrides map[string]map[string]string, plugins 
 		// Require overrides to target existing plugins and provide a helpful message if there is a mismatch.
 		// Dont error if the plugin in question is "e2e" since we default to setting those values regardless of
 		// if they choose that plugin or not.
-		if !found && pluginName != e2ePluginName {
+		if !found && pluginName != e2ePluginName && pluginName != aggregatorEnvOverrideKey {
 			pluginNames := []string{}
 			for _, p := range plugins {
 				pluginNames = append(pluginNames, p.SonobuoyConfig.PluginName)
@@ -639,6 +637,22 @@ func applyEnvOverrides(pluginEnvOverrides map[string]map[string]string, plugins 
 		}
 	}
 	return nil
+}
+
+// processEnvVals takes a map of key/value pairs representing env vars (from the --plugin-env flag)
+// and processes them to represent which envs should be added vs removed. These can then be
+// used with the mergeEnv function as needed to assign them into a pod.
+func processEnvVals(envVars map[string]string) ([]corev1.EnvVar, map[string]struct{}) {
+	newEnv := []corev1.EnvVar{}
+	removeVals := map[string]struct{}{}
+	for k, v := range envVars {
+		if v != "" {
+			newEnv = append(newEnv, corev1.EnvVar{Name: k, Value: v})
+		} else {
+			removeVals[k] = struct{}{}
+		}
+	}
+	return newEnv, removeVals
 }
 
 // autoAttachResultsDir will either add the volumemount for the results dir or modify the existing
@@ -694,9 +708,12 @@ func applyAutoEnvVars(imageVersion, resultsDir, progressPort string, env map[str
 	return env, plugins
 }
 
-func checkPluginsUnique(plugins []*manifest.Manifest) error {
+func checkPluginNames(plugins []*manifest.Manifest) error {
 	names := map[string]struct{}{}
 	for _, v := range plugins {
+		if v.SonobuoyConfig.PluginName == aggregatorEnvOverrideKey {
+			return fmt.Errorf("plugin name %q is a reserved value", aggregatorEnvOverrideKey)
+		}
 		if _, exists := names[v.SonobuoyConfig.PluginName]; exists {
 			return fmt.Errorf("plugin names must be unique, got duplicated plugin name '%v'", v.SonobuoyConfig.PluginName)
 		}

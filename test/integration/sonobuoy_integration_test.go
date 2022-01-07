@@ -729,6 +729,10 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "sonobuoy modes command",
 			cmdLine:    "modes",
 			expectFile: "testdata/modes.golden",
+		}, {
+			desc:       "sonobuoy plugin-env supports aggregator",
+			cmdLine:    "gen --plugin-env=sonobuoy.FOO=bar --kubernetes-version=ignore",
+			expectFile: "testdata/gen-plugin-env-sonobuoy.golden",
 		},
 	}
 	for _, tc := range testCases {
