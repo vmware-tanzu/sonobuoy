@@ -66,6 +66,8 @@ func NewSonobuoyCommand() *cobra.Command {
 	cmds.AddCommand(NewCmdQuery())
 	cmds.AddCommand(NewCmdModes())
 
+	cmds.AddCommand(NewCmdE2E())
+
 	cmds.AddCommand(NewCmdPlugin())
 
 	initKlog(cmds)
