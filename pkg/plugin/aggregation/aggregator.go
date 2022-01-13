@@ -248,7 +248,16 @@ func (a *Aggregator) processProgressUpdate(progress plugin.ProgressUpdate) error
 	// Set this as the most recent progress update. Another routine is responsible for updating the
 	// aggregator status annotation with that information.
 	a.progressMutex.Lock()
-	a.LatestProgressUpdates[progress.Key()] = &progress
+	if progress.IsAppending() {
+		existingStatus := a.LatestProgressUpdates[progress.Key()]
+		if existingStatus == nil {
+			existingStatus = &plugin.ProgressUpdate{}
+		}
+		resultStatus := plugin.CombineUpdates(*existingStatus, progress)
+		a.LatestProgressUpdates[progress.Key()] = &resultStatus
+	} else {
+		a.LatestProgressUpdates[progress.Key()] = &progress
+	}
 	a.progressMutex.Unlock()
 
 	return nil

@@ -408,6 +408,42 @@ func TestProcessProgressUpdates(t *testing.T) {
 					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "bye"}},
 				},
 			},
+		}, {
+			desc:            "Append to progress",
+			expectedResults: defaultExpectedResults,
+			events: []singleProgressEvent{
+				{
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "type1", Node: "global", Message: "hi", AppendTotals: true},
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "hi"}},
+				}, {
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "type1", Node: "global", Message: "msg2", AppendTotals: true, AppendCompleted: 3, AppendFailing: []string{"foo"}},
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "msg2", Total: 3, Completed: 3, Failures: []string{"foo"}}},
+				}, {
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "type1", Node: "global", Message: "msg3", AppendTotals: true, AppendCompleted: 4},
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "msg3", Total: 7, Completed: 7, Failures: []string{"foo"}}},
+				}, {
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "type1", Node: "global", Message: "msg4", AppendTotals: true, AppendCompleted: 5, AppendFailing: []string{"bar"}},
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "msg4", Total: 12, Completed: 12, Failures: []string{"foo", "bar"}}},
+				},
+			},
+		}, {
+			desc:            "Append to progress",
+			expectedResults: defaultExpectedResults,
+			events: []singleProgressEvent{
+				{
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "type1", Node: "global", Message: "hi", AppendTotals: true},
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "hi"}},
+				}, {
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "type1", Node: "global", Message: "msg2", AppendTotals: true, AppendCompleted: 3, AppendFailing: []string{"foo"}},
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "msg2", Total: 3, Completed: 3, Failures: []string{"foo"}}},
+				}, {
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "type1", Node: "global", Message: "NO_APPEND", Total: 33, Completed: 33},
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "NO_APPEND", Total: 33, Completed: 33}},
+				}, {
+					progressUpdate:          plugin.ProgressUpdate{PluginName: "type1", Node: "global", Message: "final", AppendTotals: true, AppendCompleted: 4},
+					expectedProgressUpdates: map[string]plugin.ProgressUpdate{"type1/global": {PluginName: "type1", Node: "global", Message: "final", Total: 37, Completed: 37}},
+				},
+			},
 		},
 	}
 
