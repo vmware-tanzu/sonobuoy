@@ -109,6 +109,63 @@ type ProgressUpdate struct {
 
 	Errors   []string `json:"errors,omitempty"`
 	Failures []string `json:"failures,omitempty"`
+
+	AppendTotals    bool     `json:"appendtotals,omitempty"`
+	AppendCompleted int64    `json:"appendcompleted,omitempty"`
+	AppendFailing   []string `json:"appendfailing,omitempty"`
+}
+
+// CombineUpdates applies a second progress update onto the first. Latest message
+// node and plugin name are always used.
+func CombineUpdates(p1, p2 ProgressUpdate) ProgressUpdate {
+	// If not appending, the new update is just the most recent one.
+	if !p2.IsAppending() {
+		return p2
+	}
+
+	p1.Node = p2.Node
+	p1.PluginName = p2.PluginName
+	p1.Timestamp = p2.Timestamp
+	p1.Message = p2.Message
+
+	// If we started from a known place, just append the new values.
+	if !p1.IsAppending() {
+		p1.Completed += p2.AppendCompleted
+		if p2.AppendTotals {
+			p1.Total += p2.AppendCompleted
+		}
+		if len(p2.AppendFailing) > 0 {
+			p1.Failures = append(p1.Failures, p2.AppendFailing...)
+		}
+		return p1
+	}
+
+	// Both are appending. Just return a single appending update with totals.
+	p1.AppendCompleted = p1.AppendCompleted + p2.AppendCompleted
+	if len(p2.AppendFailing) > 0 {
+		p1.AppendFailing = append(p1.AppendFailing, p2.AppendFailing...)
+	}
+	// If these differ the resulting update may not be the same as appending both updates individually
+	// since they would have had different impacts. Deferring to the second though.
+	p1.AppendTotals = p2.AppendTotals
+	return p1
+}
+
+func (p *ProgressUpdate) IsAppending() bool {
+	return p.AppendTotals || len(p.AppendFailing) > 0 || p.AppendCompleted > 0
+}
+
+func (p *ProgressUpdate) IsEmpty() bool {
+	return p.PluginName == "" &&
+		p.Node == "" &&
+		p.Message == "" &&
+		p.Total == 0 &&
+		p.Completed == 0 &&
+		len(p.Errors) == 0 &&
+		len(p.Failures) == 0 &&
+		!p.AppendTotals &&
+		p.AppendCompleted == 0 &&
+		len(p.AppendFailing) == 0
 }
 
 // IsSuccess returns whether the Result represents a successful plugin result,
