@@ -48,6 +48,10 @@ const (
 	nonDisruptiveSkipList = `\[Disruptive\]|NoExecuteTaintManager`
 	conformanceFocus      = `\[Conformance\]`
 	quickFocus            = "Pods should be submitted and removed"
+
+	E2eModeNetworking string = "conformance+networking"
+	networkingFocus   string = `\[Conformance\]|NetworkPolicy|sig-network|StatefulSet`
+	networkingSkip    string = `\[Disruptive\]`
 )
 
 // validModes is a map of the various valid modes. Name is duplicated as the key and in the e2eModeOptions itself.
@@ -63,6 +67,10 @@ var validModes = map[string]e2eModeOptions{
 	E2eModeCertifiedConformance: {
 		name: E2eModeCertifiedConformance, focus: conformanceFocus,
 		desc: "Certified conformance mode runs the entire conformance suite, even disruptive tests. This is typically run in a dev environment to earn the CNCF Certified Kubernetes status.",
+	},
+	E2eModeNetworking: {
+		name: E2eModeNetworking, focus: networkingFocus, skip: networkingSkip,
+		desc: "Networking focus is an unofficial selection of tests meant to test the networking capabilities of a cluster which goes beyond current Conformance tests.",
 	},
 }
 
