@@ -25,8 +25,8 @@ func TestCombineUpdates(t *testing.T) {
 		}, {
 			desc:   "p2 appends totals",
 			p1:     ProgressUpdate{Total: 1, Completed: 1, Message: "foo"},
-			p2:     ProgressUpdate{AppendTotals: true, AppendCompleted: 5, Message: "bar"},
-			expect: ProgressUpdate{Total: 6, Completed: 6, Message: "bar"},
+			p2:     ProgressUpdate{AppendTotals: true, AppendCompleted: 5, AppendFailing: []string{"a"}, Message: "bar"},
+			expect: ProgressUpdate{Total: 7, Completed: 6, Failures: []string{"a"}, Message: "bar"},
 		}, {
 			desc:   "both appending",
 			p1:     ProgressUpdate{AppendTotals: false, AppendCompleted: 2, AppendFailing: []string{"a", "b"}, Message: "foo"},
@@ -36,7 +36,12 @@ func TestCombineUpdates(t *testing.T) {
 			desc:   "starting from empty",
 			p1:     ProgressUpdate{},
 			p2:     ProgressUpdate{Node: "nonempty", AppendTotals: true, AppendCompleted: 5, AppendFailing: []string{"c", "d"}, Message: "bar"},
-			expect: ProgressUpdate{Node: "nonempty", Completed: 5, Total: 5, Failures: []string{"c", "d"}, Message: "bar"},
+			expect: ProgressUpdate{Node: "nonempty", Completed: 5, Total: 7, Failures: []string{"c", "d"}, Message: "bar"},
+		}, {
+			desc:   "appending failure included in totals but not completed",
+			p1:     ProgressUpdate{},
+			p2:     ProgressUpdate{Node: "nonempty", AppendTotals: true, AppendFailing: []string{"c", "d"}, Message: "bar"},
+			expect: ProgressUpdate{Node: "nonempty", Total: 2, Failures: []string{"c", "d"}, Message: "bar"},
 		},
 	}
 	for _, tc := range testCases {

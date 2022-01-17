@@ -133,6 +133,7 @@ func CombineUpdates(p1, p2 ProgressUpdate) ProgressUpdate {
 		p1.Completed += p2.AppendCompleted
 		if p2.AppendTotals {
 			p1.Total += p2.AppendCompleted
+			p1.Total += int64(len(p2.AppendFailing))
 		}
 		if len(p2.AppendFailing) > 0 {
 			p1.Failures = append(p1.Failures, p2.AppendFailing...)
