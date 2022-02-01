@@ -53,3 +53,40 @@ func TestCombineUpdates(t *testing.T) {
 		})
 	}
 }
+
+func TestProgressUpdateFormatting(t *testing.T) {
+	testCases := []struct {
+		desc   string
+		p ProgressUpdate
+		expect string
+	}{
+		{
+			desc:   "Zero total should produce NO 'Remaining:'",
+			p:     ProgressUpdate{Node: "nonempty", Completed: 1, Failures: []string{"c", "d"}, Message: "bar"},
+			expect: "Passed:  1, Failed:  2",
+		}, {
+			desc:   "When Total matches the total, Remaining SHOULD printed",
+			p:     ProgressUpdate{Node: "nonempty", Completed: 1, Total: 3, Failures: []string{"c", "d"}, Message: "bar"},
+			expect: "Passed:  1, Failed:  2, Remaining:  0",
+		}, {
+			desc:   "When Total is less than failures+completed, Remaining should NOT be printed",
+			p:     ProgressUpdate{Node: "nonempty", Completed: 2, Total: 1, Failures: []string{"c"}, Message: "bar"},
+			expect: "Passed:  2, Failed:  1",
+		}, {
+			desc:   "When Total is more than failures+completed, Remaining SHOULD be printed",
+			p:     ProgressUpdate{Node: "nonempty", Completed: 2, Total: 50, Failures: []string{"c", "d"}, Message: "bar"},
+			expect: "Passed:  2, Failed:  2, Remaining: 46",
+		}, {
+			desc:   "When total is negative, Remaining should NOT be printed",
+			p:     ProgressUpdate{Node: "nonempty", Completed: 2, Total: -1, Failures: []string{"c", "d"}, Message: "bar"},
+			expect: "Passed:  2, Failed:  2",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if got := tc.p.FormatPluginProgress(); got != tc.expect{
+				t.Fatalf("\n\n%s: expected '%s', got '%s'\n", tc.desc, tc.expect, got)
+			}
+		})
+	}
+}

@@ -1,6 +1,6 @@
-         PLUGIN     STATUS   RESULT   COUNT           PROGRESS
-            e2e   complete   failed       1   2/2 (1 failures)
-   systemd_logs   complete   failed       1                   
-   systemd_logs    running                2                   
+         PLUGIN     STATUS   RESULT   COUNT                                PROGRESS
+            e2e   complete   failed       1   Passed:  1, Failed:  1, Remaining:  0
+   systemd_logs   complete   failed       1                                        
+   systemd_logs    running                2                                        
 
 Sonobuoy is still running. Runs can take 60 minutes or more depending on cluster and plugin configuration.

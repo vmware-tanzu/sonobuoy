@@ -31,7 +31,6 @@ import (
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
-	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 )
 
@@ -194,7 +193,7 @@ func printAll(w io.Writer, status *aggregation.Status) error {
 
 	fmt.Fprintf(tw, "PLUGIN\tNODE\tSTATUS\tRESULT\tPROGRESS\t\n")
 	for _, pluginStatus := range status.Plugins {
-		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status, pluginStatus.ResultStatus, formatPluginProgress(pluginStatus.Progress))
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status, pluginStatus.ResultStatus, pluginStatus.Progress.FormatPluginProgress())
 	}
 
 	if err := tw.Flush(); err != nil {
@@ -203,13 +202,6 @@ func printAll(w io.Writer, status *aggregation.Status) error {
 
 	fmt.Fprintf(w, "\n%s\n", humanReadableStatus(status.Status))
 	return nil
-}
-
-func formatPluginProgress(p *plugin.ProgressUpdate) string {
-	if p == nil {
-		return ""
-	}
-	return fmt.Sprintf("%v/%v (%v failures)", p.Completed+int64(len(p.Failures)), p.Total, len(p.Failures))
 }
 
 func printSummary(w io.Writer, status *aggregation.Status) error {
@@ -233,7 +225,7 @@ func printSummary(w io.Writer, status *aggregation.Status) error {
 		}
 		totals[pStatus.Plugin][statusResultKey(pStatus)]++
 		if _, ok := progressMap[pStatus.Plugin]; !ok {
-			progressMap[pStatus.Plugin] = formatPluginProgress(pStatus.Progress)
+			progressMap[pStatus.Plugin] = pStatus.Progress.FormatPluginProgress()
 		} else {
 			// Dont complicate things by trying to show progress for N plugins at once. --show-all makes this easier.
 			progressMap[pStatus.Plugin] = ""
