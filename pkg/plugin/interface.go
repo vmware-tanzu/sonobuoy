@@ -22,6 +22,7 @@ import (
 	"io"
 	"path"
 	"time"
+	"fmt"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -263,4 +264,27 @@ func (s ProgressUpdate) Key() string {
 	}
 
 	return s.PluginName + "/" + nodeName
+}
+
+// FormatPluginProgress returns a string that represents the current progress
+// The string can then be used for printing updates.
+// The format of the output is the following:
+// Passed:S, Failed: F, Remaining: R
+// Where S, F and R are numbers, 
+// Corresponding to S = ProgressUpdate.Completed, F = len(ProgressUpdate.Failures),
+// and ProgressUpdate.Total - S - F respectively
+// and the ", Remaining: R" part is printed only if R is not negative
+// 
+func (s *ProgressUpdate) FormatPluginProgress() (output string) {
+	//Minumum size of each field, in characters
+	minSize := 3
+	if s == nil {
+		return ""
+	}
+	output = fmt.Sprintf("Passed:%[1]*[2]v, Failed:%[1]*[3]v", minSize, s.Completed, int64(len(s.Failures)))
+	var remaining int64 = s.Total - s.Completed - int64(len(s.Failures))
+	if remaining >= 0 {
+		output += fmt.Sprintf(", Remaining:%[1]*[2]v", minSize, remaining)
+	}
+	return output
 }

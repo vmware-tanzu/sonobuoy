@@ -29,7 +29,6 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 	"golang.org/x/term"
 	kubeerror "k8s.io/apimachinery/pkg/api/errors"
@@ -274,7 +273,7 @@ func printAll(w io.Writer, status *aggregation.Status) error {
 
 	fmt.Fprintf(tw, "PLUGIN\tNODE\tSTATUS\tRESULT\tPROGRESS\t\n")
 	for _, pluginStatus := range status.Plugins {
-		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status, pluginStatus.ResultStatus, formatPluginProgress(pluginStatus.Progress))
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t\n", pluginStatus.Plugin, pluginStatus.Node, pluginStatus.Status, pluginStatus.ResultStatus, pluginStatus.Progress.FormatPluginProgress())
 	}
 
 	if err := tw.Flush(); err != nil {
@@ -283,13 +282,6 @@ func printAll(w io.Writer, status *aggregation.Status) error {
 
 	fmt.Fprintf(w, "\n%s\n", humanReadableStatus(status.Status))
 	return nil
-}
-
-func formatPluginProgress(p *plugin.ProgressUpdate) string {
-	if p == nil {
-		return ""
-	}
-	return fmt.Sprintf("%v/%v (%v failures)", p.Completed+int64(len(p.Failures)), p.Total, len(p.Failures))
 }
 
 func defaultTabWriter(w io.Writer) *tabwriter.Writer {
