@@ -1,0 +1,27 @@
+name: Blog Reminder
+on:
+  schedule:
+  # First of the month
+  - cron: '0 0 1 * *'
+
+jobs:
+  blog_topical:
+    name: Blog writing reminder
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: New Blog Issue
+      uses: imjohnbo/issue-bot@v3
+      with:
+        labels: "documentation"
+        title: "Sonobuoy Blog"
+        body: |-
+          - [ ] Select author: _Name_
+          - [ ] Select publishing date. Usually staggered with the drumbeat blog.
+          - [ ] Choose a topic from #1597
+          - [ ] Write copy. Either on Github or in a separate document.
+          - [ ] Request review from two separate parties
+            - [ ] Reviewer 1 (_Name optional_) complete
+            - [ ] Reviewer 2 (_Name optional_) complete
+          - [ ] Create and merge PR
+          - [ ] Announce in #sonobuoy Slack
