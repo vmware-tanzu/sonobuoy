@@ -1,0 +1,25 @@
+name: Blog Reminder for Drumbeat
+on:
+  schedule:
+  # First of the month
+  - cron: '0 0 1 * *'
+
+jobs:
+  blog_drumbeat:
+    name: Drumbeat Blog Reminder
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: New drumbeat blog issue
+      uses: imjohnbo/issue-bot@v3
+      with:
+        labels: "documentation"
+        title: "Sonobuoy Blog: Drumbeat"
+        body: |-
+          - [ ] Select author: _Name_
+          - [ ] Write copy. Either on Github or in a separate document.
+          - [ ] Request review from two separate parties
+            - [ ] Reviewer 1 (_Name optional_) complete
+            - [ ] Reviewer 2 (_Name optional_) complete
+          - [ ] Create and merge PR
+          - [ ] Announce in #sonobuoy Slack

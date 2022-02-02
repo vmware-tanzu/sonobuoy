@@ -1,0 +1,25 @@
+name: Release Reminder
+on:
+  schedule:
+  # Every Sunday
+  - cron: '0 0 * * 0'
+
+jobs:
+  daily_standup:
+    name: Weekly Release Reminder
+    runs-on: ubuntu-latest
+    steps:
+
+    # Get the title, labels, assignees, and body of the issue template at the path,
+    # .github/ISSUE_TEMPLATE/my_template.md, if available.
+    - uses: imjohnbo/extract-issue-template-fields@v1
+      id: extract
+      with:
+        path: .github/ISSUE_TEMPLATE/weekly-release.md
+
+    # Create new issue with assignees, labels, title, and body
+    - uses: imjohnbo/issue-bot@v3
+      with:
+        labels: ${{ steps.extract.outputs.labels }}
+        title: ${{ steps.extract.outputs.title }}
+        body: ${{ steps.extract.outputs.body }}
