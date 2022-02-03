@@ -1,0 +1,4 @@
+.:53
+[INFO] plugin/reload: Running configuration MD5 = db32ca3650231d74073ff4cf814959a7
+CoreDNS-1.7.0
+linux/amd64, go1.14.4, f59c03d

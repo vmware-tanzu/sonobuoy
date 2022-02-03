@@ -192,6 +192,11 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		QueryCluster(restConf, cfg),
 	)
 
+	// Add health metadata
+	trackErrorsFor("adding health metadata")(
+		SaveHealthSummary(outpath),
+	)
+
 	// 8. tarball up results YYYYMMDDHHMM_sonobuoy_UID.tar.gz
 	filename := fmt.Sprintf("%v_sonobuoy_%v.tar.gz", t.Format("200601021504"), cfg.UUID)
 	tb := filepath.Join(config.AggregatorResultsPath, filename)

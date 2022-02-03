@@ -1,0 +1,94 @@
+[WARNING] Deprecated '--logger=capnslog' flag is set; use '--logger=zap' flag instead
+2022-01-27 14:37:20.684623 I | etcdmain: etcd Version: 3.4.13
+2022-01-27 14:37:20.684706 I | etcdmain: Git SHA: ae9734ed2
+2022-01-27 14:37:20.684724 I | etcdmain: Go Version: go1.12.17
+2022-01-27 14:37:20.684741 I | etcdmain: Go OS/Arch: linux/amd64
+2022-01-27 14:37:20.684771 I | etcdmain: setting maximum number of CPUs to 8, total number of available CPUs is 8
+[WARNING] Deprecated '--logger=capnslog' flag is set; use '--logger=zap' flag instead
+2022-01-27 14:37:20.684856 I | embed: peerTLS: cert = /etc/kubernetes/pki/etcd/peer.crt, key = /etc/kubernetes/pki/etcd/peer.key, trusted-ca = /etc/kubernetes/pki/etcd/ca.crt, client-cert-auth = true, crl-file = 
+2022-01-27 14:37:20.685588 I | embed: name = kind-control-plane
+2022-01-27 14:37:20.685621 I | embed: data dir = /var/lib/etcd
+2022-01-27 14:37:20.685633 I | embed: member dir = /var/lib/etcd/member
+2022-01-27 14:37:20.685646 I | embed: heartbeat = 100ms
+2022-01-27 14:37:20.685668 I | embed: election = 1000ms
+2022-01-27 14:37:20.685699 I | embed: snapshot count = 10000
+2022-01-27 14:37:20.685752 I | embed: advertise client URLs = https://172.18.0.4:2379
+2022-01-27 14:37:20.697957 I | etcdserver: starting member 5320353a7d98bdee in cluster b61dd090a9d8a70a
+raft2022/01/27 14:37:20 INFO: 5320353a7d98bdee switched to configuration voters=()
+raft2022/01/27 14:37:20 INFO: 5320353a7d98bdee became follower at term 0
+raft2022/01/27 14:37:20 INFO: newRaft 5320353a7d98bdee [peers: [], term: 0, commit: 0, applied: 0, lastindex: 0, lastterm: 0]
+raft2022/01/27 14:37:20 INFO: 5320353a7d98bdee became follower at term 1
+raft2022/01/27 14:37:20 INFO: 5320353a7d98bdee switched to configuration voters=(5989846029734297070)
+2022-01-27 14:37:20.700472 W | auth: simple token is not cryptographically signed
+2022-01-27 14:37:20.703939 I | etcdserver: starting server... [version: 3.4.13, cluster version: to_be_decided]
+2022-01-27 14:37:20.704328 I | etcdserver: 5320353a7d98bdee as single-node; fast-forwarding 9 ticks (election ticks 10)
+raft2022/01/27 14:37:20 INFO: 5320353a7d98bdee switched to configuration voters=(5989846029734297070)
+2022-01-27 14:37:20.704746 I | etcdserver/membership: added member 5320353a7d98bdee [https://172.18.0.4:2380] to cluster b61dd090a9d8a70a
+2022-01-27 14:37:20.706562 I | embed: ClientTLS: cert = /etc/kubernetes/pki/etcd/server.crt, key = /etc/kubernetes/pki/etcd/server.key, trusted-ca = /etc/kubernetes/pki/etcd/ca.crt, client-cert-auth = true, crl-file = 
+2022-01-27 14:37:20.706687 I | embed: listening for peers on 172.18.0.4:2380
+2022-01-27 14:37:20.706739 I | embed: listening for metrics on http://127.0.0.1:2381
+raft2022/01/27 14:37:20 INFO: 5320353a7d98bdee is starting a new election at term 1
+raft2022/01/27 14:37:20 INFO: 5320353a7d98bdee became candidate at term 2
+raft2022/01/27 14:37:20 INFO: 5320353a7d98bdee received MsgVoteResp from 5320353a7d98bdee at term 2
+raft2022/01/27 14:37:20 INFO: 5320353a7d98bdee became leader at term 2
+raft2022/01/27 14:37:20 INFO: raft.node: 5320353a7d98bdee elected leader 5320353a7d98bdee at term 2
+2022-01-27 14:37:21.000282 I | etcdserver: published {Name:kind-control-plane ClientURLs:[https://172.18.0.4:2379]} to cluster b61dd090a9d8a70a
+2022-01-27 14:37:21.000363 I | embed: ready to serve client requests
+2022-01-27 14:37:21.000925 I | etcdserver: setting up the initial cluster version to 3.4
+2022-01-27 14:37:21.001204 I | embed: ready to serve client requests
+2022-01-27 14:37:21.002632 I | embed: serving client requests on 127.0.0.1:2379
+2022-01-27 14:37:21.003326 N | etcdserver/membership: set the initial cluster version to 3.4
+2022-01-27 14:37:21.003702 I | etcdserver/api: enabled capabilities for version 3.4
+2022-01-27 14:37:21.007628 I | embed: serving client requests on 172.18.0.4:2379
+2022-01-27 14:37:42.284652 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:37:48.451683 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:37:55.187205 W | etcdserver: request "header:<ID:13686015525974425337 username:\"kube-apiserver-etcd-client\" auth_revision:1 > txn:<compare:<target:MOD key:\"/registry/pods/kube-system/kube-proxy-8jj5r\" mod_revision:509 > success:<request_put:<key:\"/registry/pods/kube-system/kube-proxy-8jj5r\" value_size:4489 >> failure:<request_range:<key:\"/registry/pods/kube-system/kube-proxy-8jj5r\" > >>" with result "size:16" took too long (214.205ms) to execute
+2022-01-27 14:37:55.187605 W | etcdserver: read-only range request "key:\"/registry/leases/kube-system/kube-scheduler\" " with result "range_response_count:1 size:494" took too long (247.7177ms) to execute
+2022-01-27 14:37:58.451871 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:38:08.418176 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:38:18.419022 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:38:28.418459 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:38:38.382655 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:38:48.384127 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:38:58.383965 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:39:08.348710 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:39:18.348296 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:39:28.348823 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:39:38.314173 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:39:48.315244 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:39:58.315227 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:40:08.279682 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:40:18.281301 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:40:28.281545 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:40:38.245304 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:40:48.245230 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:40:58.244709 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:41:08.211923 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:41:18.211853 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:41:28.214253 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:41:38.177275 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:41:48.178415 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:41:58.178129 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:42:08.143336 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:42:18.143126 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:42:28.144056 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:42:38.193185 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:42:48.192842 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:42:58.193689 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:43:08.159789 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:43:18.159816 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:43:28.159432 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:43:38.124935 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:43:48.124981 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:43:55.241270 W | etcdserver: read-only range request "key:\"/registry/services/endpoints/local-path-storage/rancher.io-local-path\" " with result "range_response_count:1 size:643" took too long (223.4448ms) to execute
+2022-01-27 14:43:55.494258 W | etcdserver: read-only range request "key:\"/registry/pods/\" range_end:\"/registry/pods0\" count_only:true " with result "range_response_count:0 size:7" took too long (134.3111ms) to execute
+2022-01-27 14:43:55.494447 W | etcdserver: read-only range request "key:\"/registry/apiextensions.k8s.io/customresourcedefinitions/\" range_end:\"/registry/apiextensions.k8s.io/customresourcedefinitions0\" count_only:true " with result "range_response_count:0 size:5" took too long (120.2588ms) to execute
+2022-01-27 14:43:58.125279 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:43:59.576495 W | etcdserver: read-only range request "key:\"/registry/leases/kube-system/kube-controller-manager\" " with result "range_response_count:1 size:522" took too long (291.0827ms) to execute
+2022-01-27 14:43:59.576542 W | etcdserver: read-only range request "key:\"/registry/leases/kube-system/kube-scheduler\" " with result "range_response_count:1 size:495" took too long (258.6063ms) to execute
+2022-01-27 14:43:59.576627 W | etcdserver: read-only range request "key:\"/registry/health\" " with result "range_response_count:0 size:5" took too long (266.8117ms) to execute
+2022-01-27 14:44:07.031231 W | etcdserver: read-only range request "key:\"/registry/minions/\" range_end:\"/registry/minions0\" " with result "range_response_count:3 size:12525" took too long (137.027ms) to execute
+2022-01-27 14:44:08.091475 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:44:18.090966 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:44:25.367266 I | etcdserver/api/etcdhttp: /health OK (status code 200)
+2022-01-27 14:44:28.090868 I | etcdserver/api/etcdhttp: /health OK (status code 200)

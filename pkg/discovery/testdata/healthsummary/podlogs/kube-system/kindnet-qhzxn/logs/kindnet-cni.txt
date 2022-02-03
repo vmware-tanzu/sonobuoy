@@ -1,0 +1,206 @@
+I0127 14:37:43.229440       1 main.go:65] hostIP = 172.18.0.4
+podIP = 172.18.0.4
+I0127 14:37:43.229880       1 main.go:74] setting mtu 1500 for CNI 
+I0127 14:37:43.726414       1 main.go:157] handling current node
+I0127 14:37:53.737528       1 main.go:157] handling current node
+I0127 14:37:53.737576       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:37:53.737591       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:37:53.738110       1 routes.go:47] Adding route {Ifindex: 0 Dst: 10.244.2.0/24 Src: <nil> Gw: 172.18.0.2 Flags: [] Table: 0} 
+I0127 14:37:53.738146       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:37:53.738173       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:37:53.738253       1 routes.go:47] Adding route {Ifindex: 0 Dst: 10.244.1.0/24 Src: <nil> Gw: 172.18.0.3 Flags: [] Table: 0} 
+I0127 14:38:03.708906       1 main.go:157] handling current node
+I0127 14:38:03.708933       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:38:03.708952       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:38:03.709041       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:38:03.709057       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:38:13.716170       1 main.go:157] handling current node
+I0127 14:38:13.716211       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:38:13.716227       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:38:13.716568       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:38:13.716600       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:38:23.727111       1 main.go:157] handling current node
+I0127 14:38:23.727154       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:38:23.727168       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:38:23.727248       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:38:23.727278       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:38:33.704064       1 main.go:157] handling current node
+I0127 14:38:33.704116       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:38:33.704134       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:38:33.704226       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:38:33.704263       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:38:43.756973       1 main.go:157] handling current node
+I0127 14:38:43.757022       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:38:43.757040       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:38:43.757158       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:38:43.757195       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:38:53.767428       1 main.go:157] handling current node
+I0127 14:38:53.767495       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:38:53.767512       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:38:53.767795       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:38:53.767879       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:39:03.740697       1 main.go:157] handling current node
+I0127 14:39:03.740750       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:39:03.740769       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:39:03.740860       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:39:03.740896       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:39:13.748677       1 main.go:157] handling current node
+I0127 14:39:13.748728       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:39:13.748748       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:39:13.748849       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:39:13.748872       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:39:23.759237       1 main.go:157] handling current node
+I0127 14:39:23.759418       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:39:23.759456       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:39:23.759582       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:39:23.759664       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:39:33.739157       1 main.go:157] handling current node
+I0127 14:39:33.739208       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:39:33.739229       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:39:33.739348       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:39:33.739385       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:39:43.745593       1 main.go:157] handling current node
+I0127 14:39:43.745639       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:39:43.745656       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:39:43.787039       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:39:43.787103       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:39:53.797010       1 main.go:157] handling current node
+I0127 14:39:53.797058       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:39:53.797076       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:39:53.797194       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:39:53.797236       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:40:03.773929       1 main.go:157] handling current node
+I0127 14:40:03.773983       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:40:03.774003       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:40:03.774102       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:40:03.774119       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:40:13.779412       1 main.go:157] handling current node
+I0127 14:40:13.779461       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:40:13.779476       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:40:13.779642       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:40:13.779677       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:40:23.789147       1 main.go:157] handling current node
+I0127 14:40:23.789194       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:40:23.789210       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:40:23.789454       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:40:23.789492       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:40:33.765149       1 main.go:157] handling current node
+I0127 14:40:33.765196       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:40:33.765215       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:40:33.765316       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:40:33.765355       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:40:43.771106       1 main.go:157] handling current node
+I0127 14:40:43.771155       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:40:43.771175       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:40:43.771269       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:40:43.771289       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:40:53.783701       1 main.go:157] handling current node
+I0127 14:40:53.783755       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:40:53.783792       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:40:53.783946       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:40:53.783985       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:41:03.761411       1 main.go:157] handling current node
+I0127 14:41:03.761464       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:41:03.761482       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:41:03.761706       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:41:03.761839       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:41:13.767342       1 main.go:157] handling current node
+I0127 14:41:13.767389       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:41:13.767408       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:41:13.767514       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:41:13.767554       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:41:23.777830       1 main.go:157] handling current node
+I0127 14:41:23.777863       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:41:23.777882       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:41:23.777983       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:41:23.778000       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:41:33.753169       1 main.go:157] handling current node
+I0127 14:41:33.753240       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:41:33.753257       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:41:33.753358       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:41:33.753389       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:41:43.758866       1 main.go:157] handling current node
+I0127 14:41:43.758917       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:41:43.758930       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:41:43.759015       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:41:43.759037       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:41:53.766937       1 main.go:157] handling current node
+I0127 14:41:53.767058       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:41:53.767099       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:41:53.767353       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:41:53.767447       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:42:03.742442       1 main.go:157] handling current node
+I0127 14:42:03.742483       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:42:03.742499       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:42:03.742583       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:42:03.742614       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:42:13.748455       1 main.go:157] handling current node
+I0127 14:42:13.748500       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:42:13.748516       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:42:13.748616       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:42:13.748655       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:42:23.760527       1 main.go:157] handling current node
+I0127 14:42:23.760578       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:42:23.760595       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:42:23.760697       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:42:23.760735       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:42:33.818682       1 main.go:157] handling current node
+I0127 14:42:33.818736       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:42:33.818757       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:42:33.819092       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:42:33.819133       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:42:43.866269       1 main.go:157] handling current node
+I0127 14:42:43.866313       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:42:43.866328       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:42:43.866411       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:42:43.866445       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:42:53.875302       1 main.go:157] handling current node
+I0127 14:42:53.875345       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:42:53.875362       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:42:53.875646       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:42:53.875684       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:43:03.854426       1 main.go:157] handling current node
+I0127 14:43:03.854467       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:43:03.854483       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:43:03.854818       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:43:03.854857       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:43:13.863347       1 main.go:157] handling current node
+I0127 14:43:13.863396       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:43:13.863411       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:43:13.863507       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:43:13.863527       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:43:23.873527       1 main.go:157] handling current node
+I0127 14:43:23.873577       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:43:23.873594       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:43:23.873691       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:43:23.873723       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:43:33.846379       1 main.go:157] handling current node
+I0127 14:43:33.846425       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:43:33.846441       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:43:33.846555       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:43:33.846588       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:43:43.855965       1 main.go:157] handling current node
+I0127 14:43:43.855993       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:43:43.856007       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:43:43.856323       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:43:43.856657       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:43:53.871674       1 main.go:157] handling current node
+I0127 14:43:53.871700       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:43:53.871715       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:43:53.871881       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:43:53.871923       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:44:03.846415       1 main.go:157] handling current node
+I0127 14:44:03.846460       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:44:03.846474       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:44:03.846709       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:44:03.846740       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:44:13.855250       1 main.go:157] handling current node
+I0127 14:44:13.855287       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:44:13.855300       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:44:13.855382       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:44:13.855410       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
+I0127 14:44:23.860206       1 main.go:157] handling current node
+I0127 14:44:23.860243       1 main.go:168] Handling node with IP: 172.18.0.2
+I0127 14:44:23.860255       1 main.go:169] Node kind-worker has CIDR 10.244.2.0/24 
+I0127 14:44:23.860337       1 main.go:168] Handling node with IP: 172.18.0.3
+I0127 14:44:23.860369       1 main.go:169] Node kind-worker2 has CIDR 10.244.1.0/24 
