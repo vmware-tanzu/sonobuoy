@@ -1,0 +1,257 @@
+Flag --insecure-port has been deprecated, This flag has no effect now and will be removed in v1.24.
+I0127 14:37:20.025361       1 server.go:632] external host was not specified, using 172.18.0.4
+I0127 14:37:20.025998       1 server.go:182] Version: v1.20.0
+I0127 14:37:20.633755       1 shared_informer.go:240] Waiting for caches to sync for node_authorizer
+I0127 14:37:20.639040       1 plugins.go:158] Loaded 12 mutating admission controller(s) successfully in the following order: NamespaceLifecycle,LimitRanger,ServiceAccount,NodeRestriction,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,RuntimeClass,DefaultIngressClass,MutatingAdmissionWebhook.
+I0127 14:37:20.639192       1 plugins.go:161] Loaded 10 validating admission controller(s) successfully in the following order: LimitRanger,ServiceAccount,Priority,PersistentVolumeClaimResize,RuntimeClass,CertificateApproval,CertificateSigning,CertificateSubjectRestriction,ValidatingAdmissionWebhook,ResourceQuota.
+I0127 14:37:20.640764       1 plugins.go:158] Loaded 12 mutating admission controller(s) successfully in the following order: NamespaceLifecycle,LimitRanger,ServiceAccount,NodeRestriction,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,RuntimeClass,DefaultIngressClass,MutatingAdmissionWebhook.
+I0127 14:37:20.640854       1 plugins.go:161] Loaded 10 validating admission controller(s) successfully in the following order: LimitRanger,ServiceAccount,Priority,PersistentVolumeClaimResize,RuntimeClass,CertificateApproval,CertificateSigning,CertificateSubjectRestriction,ValidatingAdmissionWebhook,ResourceQuota.
+I0127 14:37:20.644131       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:20.644182       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+W0127 14:37:20.644928       1 clientconn.go:1223] grpc: addrConn.createTransport failed to connect to {https://127.0.0.1:2379  <nil> 0 <nil>}. Err :connection error: desc = "transport: Error while dialing dial tcp 127.0.0.1:2379: connect: connection refused". Reconnecting...
+I0127 14:37:21.635648       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.635712       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.654640       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.654679       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.662707       1 client.go:360] parsed scheme: "passthrough"
+I0127 14:37:21.662770       1 passthrough.go:48] ccResolverWrapper: sending update to cc: {[{https://127.0.0.1:2379  <nil> 0 <nil>}] <nil> <nil>}
+I0127 14:37:21.662790       1 clientconn.go:948] ClientConn switching balancer to "pick_first"
+I0127 14:37:21.663720       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.663771       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.702117       1 instance.go:289] Using reconciler: lease
+I0127 14:37:21.702970       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.703014       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.711859       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.711909       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.720052       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.720113       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.728015       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.728065       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.735455       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.735894       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.744246       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.744397       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.751610       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.751666       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.759717       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.759770       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.767066       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.767113       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.774842       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.774881       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.782352       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.782405       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.789854       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.789890       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.799221       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.799313       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.806927       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.808729       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.815967       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.816011       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.823331       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.823381       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.830265       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.830310       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.837441       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.837495       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.844866       1 rest.go:131] the default service ipfamily for this cluster is: IPv4
+I0127 14:37:21.923553       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.923591       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.932160       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.932212       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.942252       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.942556       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.950865       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.950912       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.961823       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.961937       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.971270       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.971356       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.979281       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.979646       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.988356       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.988408       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:21.996224       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:21.996312       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.005893       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.005958       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.016530       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.016580       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.026144       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.026648       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.034800       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.034846       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.043574       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.043624       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.050720       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.050929       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.058587       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.058633       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.069060       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.069113       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.076847       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.076909       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.085914       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.085945       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.095092       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.095125       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.102913       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.103005       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.110465       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.110514       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.118427       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.118472       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.127183       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.128424       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.135922       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.135972       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.145476       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.145519       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.169721       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.169851       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.178380       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.178513       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.187575       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.187682       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.199112       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.199154       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.207465       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.207511       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.214305       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.214344       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.222128       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.222187       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.232185       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.232298       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.260190       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.260334       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.267539       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.267588       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.274730       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.274779       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.282475       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.282546       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.289976       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.290028       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.297999       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.298049       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.307441       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.307491       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.314719       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.314770       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.321967       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.322015       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.329338       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.329416       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.336572       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.336617       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.344823       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.344869       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.351816       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.351867       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.359324       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.359387       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.366810       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.366857       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.374003       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.374060       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.381907       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.381952       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+W0127 14:37:22.504661       1 genericapiserver.go:419] Skipping API batch/v2alpha1 because it has no resources.
+W0127 14:37:22.526436       1 genericapiserver.go:419] Skipping API discovery.k8s.io/v1alpha1 because it has no resources.
+W0127 14:37:22.551071       1 genericapiserver.go:419] Skipping API node.k8s.io/v1alpha1 because it has no resources.
+W0127 14:37:22.569380       1 genericapiserver.go:419] Skipping API rbac.authorization.k8s.io/v1alpha1 because it has no resources.
+W0127 14:37:22.577502       1 genericapiserver.go:419] Skipping API scheduling.k8s.io/v1alpha1 because it has no resources.
+W0127 14:37:22.590926       1 genericapiserver.go:419] Skipping API storage.k8s.io/v1alpha1 because it has no resources.
+W0127 14:37:22.596706       1 genericapiserver.go:419] Skipping API flowcontrol.apiserver.k8s.io/v1alpha1 because it has no resources.
+W0127 14:37:22.608245       1 genericapiserver.go:419] Skipping API apps/v1beta2 because it has no resources.
+W0127 14:37:22.608294       1 genericapiserver.go:419] Skipping API apps/v1beta1 because it has no resources.
+I0127 14:37:22.628398       1 plugins.go:158] Loaded 12 mutating admission controller(s) successfully in the following order: NamespaceLifecycle,LimitRanger,ServiceAccount,NodeRestriction,TaintNodesByCondition,Priority,DefaultTolerationSeconds,DefaultStorageClass,StorageObjectInUseProtection,RuntimeClass,DefaultIngressClass,MutatingAdmissionWebhook.
+I0127 14:37:22.628478       1 plugins.go:161] Loaded 10 validating admission controller(s) successfully in the following order: LimitRanger,ServiceAccount,Priority,PersistentVolumeClaimResize,RuntimeClass,CertificateApproval,CertificateSigning,CertificateSubjectRestriction,ValidatingAdmissionWebhook,ResourceQuota.
+I0127 14:37:22.630376       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.630421       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:22.638866       1 client.go:360] parsed scheme: "endpoint"
+I0127 14:37:22.638934       1 endpoint.go:68] ccResolverWrapper: sending new addresses to cc: [{https://127.0.0.1:2379  <nil> 0 <nil>}]
+I0127 14:37:24.670585       1 dynamic_cafile_content.go:167] Starting request-header::/etc/kubernetes/pki/front-proxy-ca.crt
+I0127 14:37:24.670687       1 dynamic_serving_content.go:130] Starting serving-cert::/etc/kubernetes/pki/apiserver.crt::/etc/kubernetes/pki/apiserver.key
+I0127 14:37:24.670604       1 dynamic_cafile_content.go:167] Starting client-ca-bundle::/etc/kubernetes/pki/ca.crt
+I0127 14:37:24.670750       1 tlsconfig.go:240] Starting DynamicServingCertificateController
+I0127 14:37:24.670724       1 secure_serving.go:197] Serving securely on [::]:6443
+I0127 14:37:24.670906       1 available_controller.go:475] Starting AvailableConditionController
+I0127 14:37:24.670972       1 cache.go:32] Waiting for caches to sync for AvailableConditionController controller
+I0127 14:37:24.671202       1 customresource_discovery_controller.go:209] Starting DiscoveryController
+I0127 14:37:24.670924       1 dynamic_serving_content.go:130] Starting aggregator-proxy-cert::/etc/kubernetes/pki/front-proxy-client.crt::/etc/kubernetes/pki/front-proxy-client.key
+I0127 14:37:24.671457       1 controller.go:83] Starting OpenAPI AggregationController
+I0127 14:37:24.671470       1 controller.go:86] Starting OpenAPI controller
+I0127 14:37:24.671530       1 apf_controller.go:249] Starting API Priority and Fairness config controller
+I0127 14:37:24.671613       1 naming_controller.go:291] Starting NamingConditionController
+I0127 14:37:24.671668       1 establishing_controller.go:76] Starting EstablishingController
+I0127 14:37:24.671735       1 nonstructuralschema_controller.go:192] Starting NonStructuralSchemaConditionController
+I0127 14:37:24.671812       1 apiapproval_controller.go:186] Starting KubernetesAPIApprovalPolicyConformantConditionController
+I0127 14:37:24.671865       1 crd_finalizer.go:266] Starting CRDFinalizer
+I0127 14:37:24.672372       1 apiservice_controller.go:97] Starting APIServiceRegistrationController
+I0127 14:37:24.672402       1 cache.go:32] Waiting for caches to sync for APIServiceRegistrationController controller
+I0127 14:37:24.672451       1 autoregister_controller.go:141] Starting autoregister controller
+I0127 14:37:24.672482       1 cache.go:32] Waiting for caches to sync for autoregister controller
+I0127 14:37:24.672852       1 cluster_authentication_trust_controller.go:440] Starting cluster_authentication_trust_controller controller
+I0127 14:37:24.672884       1 shared_informer.go:240] Waiting for caches to sync for cluster_authentication_trust_controller
+I0127 14:37:24.673530       1 dynamic_cafile_content.go:167] Starting client-ca-bundle::/etc/kubernetes/pki/ca.crt
+I0127 14:37:24.673602       1 dynamic_cafile_content.go:167] Starting request-header::/etc/kubernetes/pki/front-proxy-ca.crt
+E0127 14:37:24.680039       1 controller.go:152] Unable to remove old endpoints from kubernetes service: StorageError: key not found, Code: 1, Key: /registry/masterleases/172.18.0.4, ResourceVersion: 0, AdditionalErrorMsg: 
+I0127 14:37:24.689334       1 crdregistration_controller.go:111] Starting crd-autoregister controller
+I0127 14:37:24.689370       1 shared_informer.go:240] Waiting for caches to sync for crd-autoregister
+I0127 14:37:24.721641       1 controller.go:606] quota admission added evaluator for: namespaces
+I0127 14:37:24.734180       1 shared_informer.go:247] Caches are synced for node_authorizer 
+I0127 14:37:24.771052       1 cache.go:39] Caches are synced for AvailableConditionController controller
+I0127 14:37:24.771692       1 apf_controller.go:253] Running API Priority and Fairness config worker
+I0127 14:37:24.772832       1 cache.go:39] Caches are synced for autoregister controller
+I0127 14:37:24.772866       1 cache.go:39] Caches are synced for APIServiceRegistrationController controller
+I0127 14:37:24.773040       1 shared_informer.go:247] Caches are synced for cluster_authentication_trust_controller 
+I0127 14:37:24.789739       1 shared_informer.go:247] Caches are synced for crd-autoregister 
+I0127 14:37:25.670434       1 controller.go:132] OpenAPI AggregationController: action for item : Nothing (removed from the queue).
+I0127 14:37:25.670512       1 controller.go:132] OpenAPI AggregationController: action for item k8s_internal_local_delegation_chain_0000000000: Nothing (removed from the queue).
+I0127 14:37:25.678796       1 storage_scheduling.go:132] created PriorityClass system-node-critical with value 2000001000
+I0127 14:37:25.683625       1 storage_scheduling.go:132] created PriorityClass system-cluster-critical with value 2000000000
+I0127 14:37:25.683654       1 storage_scheduling.go:148] all system priority classes are created successfully or already exist.
+I0127 14:37:26.222856       1 controller.go:606] quota admission added evaluator for: roles.rbac.authorization.k8s.io
+I0127 14:37:26.272568       1 controller.go:606] quota admission added evaluator for: rolebindings.rbac.authorization.k8s.io
+W0127 14:37:26.342165       1 lease.go:233] Resetting endpoints for master service "kubernetes" to [172.18.0.4]
+I0127 14:37:26.343925       1 controller.go:606] quota admission added evaluator for: endpoints
+I0127 14:37:26.349419       1 controller.go:606] quota admission added evaluator for: endpointslices.discovery.k8s.io
+I0127 14:37:27.520207       1 controller.go:606] quota admission added evaluator for: leases.coordination.k8s.io
+I0127 14:37:27.992442       1 controller.go:606] quota admission added evaluator for: serviceaccounts
+I0127 14:37:28.068694       1 controller.go:606] quota admission added evaluator for: deployments.apps
+I0127 14:37:28.250475       1 controller.go:606] quota admission added evaluator for: daemonsets.apps
+I0127 14:37:40.964112       1 controller.go:606] quota admission added evaluator for: controllerrevisions.apps
+I0127 14:37:41.314544       1 controller.go:606] quota admission added evaluator for: replicasets.apps
+I0127 14:38:06.051883       1 client.go:360] parsed scheme: "passthrough"
+I0127 14:38:06.052057       1 passthrough.go:48] ccResolverWrapper: sending update to cc: {[{https://127.0.0.1:2379  <nil> 0 <nil>}] <nil> <nil>}
+I0127 14:38:06.052101       1 clientconn.go:948] ClientConn switching balancer to "pick_first"
+I0127 14:38:47.197401       1 client.go:360] parsed scheme: "passthrough"
+I0127 14:38:47.197709       1 passthrough.go:48] ccResolverWrapper: sending update to cc: {[{https://127.0.0.1:2379  <nil> 0 <nil>}] <nil> <nil>}
+I0127 14:38:47.197939       1 clientconn.go:948] ClientConn switching balancer to "pick_first"
+I0127 14:39:28.075992       1 client.go:360] parsed scheme: "passthrough"
+I0127 14:39:28.076295       1 passthrough.go:48] ccResolverWrapper: sending update to cc: {[{https://127.0.0.1:2379  <nil> 0 <nil>}] <nil> <nil>}
+I0127 14:39:28.076435       1 clientconn.go:948] ClientConn switching balancer to "pick_first"
+I0127 14:40:07.696061       1 client.go:360] parsed scheme: "passthrough"
+I0127 14:40:07.696168       1 passthrough.go:48] ccResolverWrapper: sending update to cc: {[{https://127.0.0.1:2379  <nil> 0 <nil>}] <nil> <nil>}
+I0127 14:40:07.696192       1 clientconn.go:948] ClientConn switching balancer to "pick_first"
+I0127 14:40:49.165551       1 client.go:360] parsed scheme: "passthrough"
+I0127 14:40:49.165650       1 passthrough.go:48] ccResolverWrapper: sending update to cc: {[{https://127.0.0.1:2379  <nil> 0 <nil>}] <nil> <nil>}
+I0127 14:40:49.165685       1 clientconn.go:948] ClientConn switching balancer to "pick_first"
+I0127 14:41:28.821463       1 client.go:360] parsed scheme: "passthrough"
+I0127 14:41:28.821552       1 passthrough.go:48] ccResolverWrapper: sending update to cc: {[{https://127.0.0.1:2379  <nil> 0 <nil>}] <nil> <nil>}
+I0127 14:41:28.821567       1 clientconn.go:948] ClientConn switching balancer to "pick_first"
+I0127 14:42:05.651769       1 client.go:360] parsed scheme: "passthrough"
+I0127 14:42:05.651829       1 passthrough.go:48] ccResolverWrapper: sending update to cc: {[{https://127.0.0.1:2379  <nil> 0 <nil>}] <nil> <nil>}
+I0127 14:42:05.651890       1 clientconn.go:948] ClientConn switching balancer to "pick_first"
+I0127 14:42:49.401786       1 client.go:360] parsed scheme: "passthrough"
+I0127 14:42:49.401894       1 passthrough.go:48] ccResolverWrapper: sending update to cc: {[{https://127.0.0.1:2379  <nil> 0 <nil>}] <nil> <nil>}
+I0127 14:42:49.401945       1 clientconn.go:948] ClientConn switching balancer to "pick_first"
+I0127 14:43:28.381374       1 client.go:360] parsed scheme: "passthrough"
+I0127 14:43:28.381444       1 passthrough.go:48] ccResolverWrapper: sending update to cc: {[{https://127.0.0.1:2379  <nil> 0 <nil>}] <nil> <nil>}
+I0127 14:43:28.381468       1 clientconn.go:948] ClientConn switching balancer to "pick_first"
+I0127 14:43:59.372818       1 client.go:360] parsed scheme: "passthrough"
+I0127 14:43:59.372864       1 passthrough.go:48] ccResolverWrapper: sending update to cc: {[{https://127.0.0.1:2379  <nil> 0 <nil>}] <nil> <nil>}
+I0127 14:43:59.372883       1 clientconn.go:948] ClientConn switching balancer to "pick_first"

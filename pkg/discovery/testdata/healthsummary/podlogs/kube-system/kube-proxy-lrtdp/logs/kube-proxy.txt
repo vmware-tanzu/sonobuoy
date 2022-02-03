@@ -1,0 +1,14 @@
+I0127 14:37:43.200971       1 node.go:172] Successfully retrieved node IP: 172.18.0.4
+I0127 14:37:43.201120       1 server_others.go:142] kube-proxy node IP is an IPv4 address (172.18.0.4), assume IPv4 operation
+I0127 14:37:43.220140       1 server_others.go:185] Using iptables Proxier.
+I0127 14:37:43.220175       1 server_others.go:192] creating dualStackProxier for iptables.
+W0127 14:37:43.221129       1 server_others.go:492] detect-local-mode set to ClusterCIDR, but no IPv6 cluster CIDR defined, , defaulting to no-op detect-local for IPv6
+I0127 14:37:43.221570       1 server.go:650] Version: v1.20.0
+I0127 14:37:43.221926       1 conntrack.go:100] Set sysctl 'net/netfilter/nf_conntrack_tcp_timeout_established' to 86400
+I0127 14:37:43.222014       1 conntrack.go:100] Set sysctl 'net/netfilter/nf_conntrack_tcp_timeout_close_wait' to 3600
+I0127 14:37:43.222266       1 config.go:224] Starting endpoint slice config controller
+I0127 14:37:43.222303       1 shared_informer.go:240] Waiting for caches to sync for endpoint slice config
+I0127 14:37:43.222350       1 config.go:315] Starting service config controller
+I0127 14:37:43.222363       1 shared_informer.go:240] Waiting for caches to sync for service config
+I0127 14:37:43.322552       1 shared_informer.go:247] Caches are synced for service config 
+I0127 14:37:43.322652       1 shared_informer.go:247] Caches are synced for endpoint slice config 

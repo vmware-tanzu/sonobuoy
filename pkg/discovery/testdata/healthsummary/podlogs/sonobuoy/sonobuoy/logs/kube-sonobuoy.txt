@@ -1,0 +1,52 @@
+time="2022-01-27T14:43:37Z" level=info msg="Scanning plugins in ./plugins.d (pwd: /)"
+time="2022-01-27T14:43:37Z" level=info msg="Scanning plugins in /etc/sonobuoy/plugins.d (pwd: /)"
+time="2022-01-27T14:43:37Z" level=info msg="Directory (/etc/sonobuoy/plugins.d) does not exist"
+time="2022-01-27T14:43:37Z" level=info msg="Scanning plugins in ~/sonobuoy/plugins.d (pwd: /)"
+time="2022-01-27T14:43:37Z" level=info msg="Directory (~/sonobuoy/plugins.d) does not exist"
+time="2022-01-27T14:43:37Z" level=info msg="Starting server Expected Results: [{global e2e} {kind-control-plane systemd-logs} {kind-worker systemd-logs} {kind-worker2 systemd-logs}]"
+time="2022-01-27T14:43:37Z" level=info msg="Starting annotation update routine"
+time="2022-01-27T14:43:37Z" level=info msg="Starting aggregation server" address=0.0.0.0 port=8080
+time="2022-01-27T14:43:37Z" level=info msg="Running plugin" plugin=e2e
+time="2022-01-27T14:43:37Z" level=info msg="Running plugin" plugin=systemd-logs
+time="2022-01-27T14:44:01Z" level=info msg="received request" client_cert="[systemd-logs]" method=PUT node=kind-control-plane plugin_name=systemd-logs url=/api/v1/results/by-node/kind-control-plane/systemd-logs
+time="2022-01-27T14:44:01Z" level=info msg="received request" client_cert="[systemd-logs]" method=PUT node=kind-worker2 plugin_name=systemd-logs url=/api/v1/results/by-node/kind-worker2/systemd-logs
+time="2022-01-27T14:44:11Z" level=info msg="received request" client_cert="[systemd-logs]" method=PUT node=kind-worker plugin_name=systemd-logs url=/api/v1/results/by-node/kind-worker/systemd-logs
+time="2022-01-27T14:44:22Z" level=info msg="received request" client_cert="[e2e]" method=POST plugin_name=e2e url=/api/v1/progress/global/e2e
+time="2022-01-27T14:44:22Z" level=info msg="received request" client_cert="[e2e]" method=POST plugin_name=e2e url=/api/v1/progress/global/e2e
+time="2022-01-27T14:44:23Z" level=info msg="received request" client_cert="[e2e]" method=PUT plugin_name=e2e url=/api/v1/results/global/e2e
+time="2022-01-27T14:44:23Z" level=info msg="Last update to annotations on exit"
+time="2022-01-27T14:44:23Z" level=info msg="Shutting down aggregation server"
+time="2022-01-27T14:44:23Z" level=info msg="Log lines after this point will not appear in the downloaded tarball."
+time="2022-01-27T14:44:25Z" level=info msg="Resources is not set explicitly implying query all resources, but skipping secrets for safety. Specify the value explicitly in Resources to gather this data."
+time="2022-01-27T14:44:25Z" level=info msg="Collecting Node Configuration and Health..."
+time="2022-01-27T14:44:25Z" level=info msg="Creating host results for kind-control-plane under /tmp/sonobuoy/47514b70-9fd0-476c-b7bf-2565477f33a0/hosts/kind-control-plane\n"
+time="2022-01-27T14:44:25Z" level=info msg="Creating host results for kind-worker under /tmp/sonobuoy/47514b70-9fd0-476c-b7bf-2565477f33a0/hosts/kind-worker\n"
+time="2022-01-27T14:44:25Z" level=info msg="Creating host results for kind-worker2 under /tmp/sonobuoy/47514b70-9fd0-476c-b7bf-2565477f33a0/hosts/kind-worker2\n"
+time="2022-01-27T14:44:25Z" level=info msg="Running cluster queries"
+W0127 14:44:25.368656       1 warnings.go:70] v1 ComponentStatus is deprecated in v1.19+
+time="2022-01-27T14:44:25Z" level=info msg="Querying server version and API Groups"
+time="2022-01-27T14:44:25Z" level=info msg="Filtering namespaces based on the following regex:.*"
+time="2022-01-27T14:44:25Z" level=info msg="Namespace default Matched=true"
+time="2022-01-27T14:44:25Z" level=info msg="Namespace kube-node-lease Matched=true"
+time="2022-01-27T14:44:25Z" level=info msg="Namespace kube-public Matched=true"
+time="2022-01-27T14:44:25Z" level=info msg="Namespace kube-system Matched=true"
+time="2022-01-27T14:44:25Z" level=info msg="Namespace local-path-storage Matched=true"
+time="2022-01-27T14:44:25Z" level=info msg="Namespace pods-4049 Matched=true"
+time="2022-01-27T14:44:25Z" level=info msg="Namespace sonobuoy Matched=true"
+time="2022-01-27T14:44:25Z" level=info msg="Running ns query (default)"
+time="2022-01-27T14:44:25Z" level=info msg="Running ns query (kube-node-lease)"
+time="2022-01-27T14:44:26Z" level=info msg="Running ns query (kube-public)"
+time="2022-01-27T14:44:26Z" level=info msg="Running ns query (kube-system)"
+time="2022-01-27T14:44:27Z" level=info msg="Running ns query (local-path-storage)"
+time="2022-01-27T14:44:28Z" level=info msg="Running ns query (pods-4049)"
+time="2022-01-27T14:44:29Z" level=info msg="Running ns query (sonobuoy)"
+time="2022-01-27T14:44:30Z" level=info msg="Namespace default Matched=false"
+time="2022-01-27T14:44:30Z" level=info msg="Namespace kube-node-lease Matched=false"
+time="2022-01-27T14:44:30Z" level=info msg="Namespace kube-public Matched=false"
+time="2022-01-27T14:44:30Z" level=info msg="Namespace kube-system Matched=true"
+time="2022-01-27T14:44:30Z" level=info msg="Namespace local-path-storage Matched=false"
+time="2022-01-27T14:44:30Z" level=info msg="Namespace sonobuoy Matched=true"
+time="2022-01-27T14:44:30Z" level=info msg="querying pod logs under namespace kube-system"
+time="2022-01-27T14:44:30Z" level=info msg="Collecting Pod Logs by namespace (kube-system)"
+time="2022-01-27T14:44:30Z" level=info msg="querying pod logs under namespace sonobuoy"
+time="2022-01-27T14:44:30Z" level=info msg="Collecting Pod Logs by namespace (sonobuoy)"

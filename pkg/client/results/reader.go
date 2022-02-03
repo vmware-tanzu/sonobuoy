@@ -65,6 +65,9 @@ const (
 	// InfoFile contains data not that isn't strictly in another location
 	// but still relevent to post-processing or understanding the run in some way.
 	InfoFile = "info.json"
+
+	//Filename of the cluster health, relative to metadataDir
+	ClusterHealthFile = "clusterhealth.json"
 )
 
 // Versions corresponding to Kubernetes minor version values. We used to
@@ -397,4 +400,9 @@ func (r *Reader) FileReader(filename string) (io.Reader, error) {
 	}
 
 	return returnReader, nil
+}
+
+// Return the full path of the ClusterHealthFile
+func ClusterHealthFilePath() string {
+	return  path.Join(metadataDir, ClusterHealthFile)
 }

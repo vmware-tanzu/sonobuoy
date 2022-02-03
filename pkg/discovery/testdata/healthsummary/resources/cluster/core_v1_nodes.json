@@ -1,0 +1,583 @@
+{
+  "apiVersion": "v1",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Node",
+      "metadata": {
+        "annotations": {
+          "kubeadm.alpha.kubernetes.io/cri-socket": "unix:///run/containerd/containerd.sock",
+          "node.alpha.kubernetes.io/ttl": "0",
+          "volumes.kubernetes.io/controller-managed-attach-detach": "true"
+        },
+        "creationTimestamp": "2022-01-27T14:37:24Z",
+        "labels": {
+          "beta.kubernetes.io/arch": "amd64",
+          "beta.kubernetes.io/os": "linux",
+          "kubernetes.io/arch": "amd64",
+          "kubernetes.io/hostname": "kind-control-plane",
+          "kubernetes.io/os": "linux",
+          "node-role.kubernetes.io/control-plane": "",
+          "node-role.kubernetes.io/master": ""
+        },
+        "name": "kind-control-plane",
+        "resourceVersion": "1485",
+        "uid": "f8073940-9978-4744-99d3-1214656011d5"
+      },
+      "spec": {
+        "podCIDR": "10.244.0.0/24",
+        "podCIDRs": [
+          "10.244.0.0/24"
+        ],
+        "providerID": "kind://docker/kind/kind-control-plane",
+        "taints": [
+          {
+            "effect": "NoSchedule",
+            "key": "node-role.kubernetes.io/master"
+          }
+        ]
+      },
+      "status": {
+        "addresses": [
+          {
+            "address": "172.18.0.4",
+            "type": "InternalIP"
+          },
+          {
+            "address": "kind-control-plane",
+            "type": "Hostname"
+          }
+        ],
+        "allocatable": {
+          "cpu": "8",
+          "ephemeral-storage": "313501092Ki",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "30821896Ki",
+          "pods": "110"
+        },
+        "capacity": {
+          "cpu": "8",
+          "ephemeral-storage": "313501092Ki",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "30821896Ki",
+          "pods": "110"
+        },
+        "conditions": [
+          {
+            "lastHeartbeatTime": "2022-01-27T14:44:03Z",
+            "lastTransitionTime": "2022-01-27T14:37:20Z",
+            "message": "kubelet has sufficient memory available",
+            "reason": "KubeletHasSufficientMemory",
+            "status": "False",
+            "type": "MemoryPressure"
+          },
+          {
+            "lastHeartbeatTime": "2022-01-27T14:44:03Z",
+            "lastTransitionTime": "2022-01-27T14:37:20Z",
+            "message": "kubelet has no disk pressure",
+            "reason": "KubeletHasNoDiskPressure",
+            "status": "False",
+            "type": "DiskPressure"
+          },
+          {
+            "lastHeartbeatTime": "2022-01-27T14:44:03Z",
+            "lastTransitionTime": "2022-01-27T14:37:20Z",
+            "message": "kubelet has sufficient PID available",
+            "reason": "KubeletHasSufficientPID",
+            "status": "False",
+            "type": "PIDPressure"
+          },
+          {
+            "lastHeartbeatTime": "2022-01-27T14:44:03Z",
+            "lastTransitionTime": "2022-01-27T14:37:53Z",
+            "message": "kubelet is posting ready status",
+            "reason": "KubeletReady",
+            "status": "True",
+            "type": "Ready"
+          }
+        ],
+        "daemonEndpoints": {
+          "kubeletEndpoint": {
+            "Port": 10250
+          }
+        },
+        "images": [
+          {
+            "names": [
+              "k8s.gcr.io/etcd:3.4.13-0"
+            ],
+            "sizeBytes": 254659261
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-proxy:v1.20.0"
+            ],
+            "sizeBytes": 136866161
+          },
+          {
+            "names": [
+              "docker.io/sonobuoy/systemd-logs@sha256:0b8b2b7b43b03f7db26e7e4b99be402495b77b496f5a5b0425b3c226bc1e9cbd",
+              "docker.io/sonobuoy/systemd-logs:v0.4"
+            ],
+            "sizeBytes": 127795048
+          },
+          {
+            "names": [
+              "docker.io/kindest/kindnetd:v20200725-4d6bea59"
+            ],
+            "sizeBytes": 118720874
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-apiserver:v1.20.0"
+            ],
+            "sizeBytes": 95511851
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-controller-manager:v1.20.0"
+            ],
+            "sizeBytes": 88147263
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-scheduler:v1.20.0"
+            ],
+            "sizeBytes": 66088749
+          },
+          {
+            "names": [
+              "k8s.gcr.io/build-image/debian-base:v2.1.0"
+            ],
+            "sizeBytes": 53876619
+          },
+          {
+            "names": [
+              "k8s.gcr.io/coredns:1.7.0"
+            ],
+            "sizeBytes": 45355487
+          },
+          {
+            "names": [
+              "docker.io/rancher/local-path-provisioner:v0.0.14"
+            ],
+            "sizeBytes": 41982521
+          },
+          {
+            "names": [
+              "docker.io/sonobuoy/sonobuoy@sha256:f950a9ed5e4a943dfb640be1c763919c5016b34c6ce067d9a27c9a50972bf5e4",
+              "docker.io/sonobuoy/sonobuoy:v0.56.0"
+            ],
+            "sizeBytes": 17617785
+          },
+          {
+            "names": [
+              "k8s.gcr.io/pause:3.3"
+            ],
+            "sizeBytes": 685708
+          }
+        ],
+        "nodeInfo": {
+          "architecture": "amd64",
+          "bootID": "f562fa2d-50b1-4970-9c6f-b596bb198207",
+          "containerRuntimeVersion": "containerd://1.4.0",
+          "kernelVersion": "5.10.76-linuxkit",
+          "kubeProxyVersion": "v1.20.0",
+          "kubeletVersion": "v1.20.0",
+          "machineID": "0efde4fbc8194329b5916ea7f0896ee6",
+          "operatingSystem": "linux",
+          "osImage": "Ubuntu Groovy Gorilla (development branch)",
+          "systemUUID": "a5845bd1-ac45-40cf-98cd-fc2acb2241f6"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Node",
+      "metadata": {
+        "annotations": {
+          "kubeadm.alpha.kubernetes.io/cri-socket": "unix:///run/containerd/containerd.sock",
+          "node.alpha.kubernetes.io/ttl": "0",
+          "volumes.kubernetes.io/controller-managed-attach-detach": "true"
+        },
+        "creationTimestamp": "2022-01-27T14:37:53Z",
+        "labels": {
+          "beta.kubernetes.io/arch": "amd64",
+          "beta.kubernetes.io/os": "linux",
+          "kubernetes.io/arch": "amd64",
+          "kubernetes.io/hostname": "kind-worker",
+          "kubernetes.io/os": "linux"
+        },
+        "name": "kind-worker",
+        "resourceVersion": "1558",
+        "uid": "4351d7d3-cd74-4eea-85e9-d2a3f936e687"
+      },
+      "spec": {
+        "podCIDR": "10.244.2.0/24",
+        "podCIDRs": [
+          "10.244.2.0/24"
+        ],
+        "providerID": "kind://docker/kind/kind-worker"
+      },
+      "status": {
+        "addresses": [
+          {
+            "address": "172.18.0.2",
+            "type": "InternalIP"
+          },
+          {
+            "address": "kind-worker",
+            "type": "Hostname"
+          }
+        ],
+        "allocatable": {
+          "cpu": "8",
+          "ephemeral-storage": "313501092Ki",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "30821896Ki",
+          "pods": "110"
+        },
+        "capacity": {
+          "cpu": "8",
+          "ephemeral-storage": "313501092Ki",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "30821896Ki",
+          "pods": "110"
+        },
+        "conditions": [
+          {
+            "lastHeartbeatTime": "2022-02-03T19:02:54Z",
+            "lastTransitionTime": "2022-02-02T14:59:55Z",
+            "message": "kubelet has sufficient memory available",
+            "reason": "KubeletHasSufficientMemory",
+            "status": "False",
+            "type": "MemoryPressure"
+          },
+          {
+            "lastHeartbeatTime": "2022-02-03T19:02:54Z",
+            "lastTransitionTime": "2022-02-02T14:59:55Z",
+            "message": "kubelet has no disk pressure",
+            "reason": "KubeletHasNoDiskPressure",
+            "status": "False",
+            "type": "DiskPressure"
+          },
+          {
+            "lastHeartbeatTime": "2022-02-03T19:02:54Z",
+            "lastTransitionTime": "2022-02-02T14:59:55Z",
+            "message": "kubelet has sufficient PID available",
+            "reason": "KubeletHasSufficientPID",
+            "status": "False",
+            "type": "PIDPressure"
+          },
+          {
+            "lastHeartbeatTime": "2022-02-03T19:02:54Z",
+            "lastTransitionTime": "2022-02-02T14:59:55Z",
+            "message": "runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:docker: network plugin is not ready: cni config uninitialized",
+            "reason": "KubeletNotReady",
+            "status": "False",
+            "type": "Ready"
+          }
+        ],
+        "daemonEndpoints": {
+          "kubeletEndpoint": {
+            "Port": 10250
+          }
+        },
+        "images": [
+          {
+            "names": [
+              "k8s.gcr.io/etcd:3.4.13-0"
+            ],
+            "sizeBytes": 254659261
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-proxy:v1.20.0"
+            ],
+            "sizeBytes": 136866161
+          },
+          {
+            "names": [
+              "docker.io/sonobuoy/systemd-logs@sha256:0b8b2b7b43b03f7db26e7e4b99be402495b77b496f5a5b0425b3c226bc1e9cbd",
+              "docker.io/sonobuoy/systemd-logs:v0.4"
+            ],
+            "sizeBytes": 127795048
+          },
+          {
+            "names": [
+              "docker.io/kindest/kindnetd:v20200725-4d6bea59"
+            ],
+            "sizeBytes": 118720874
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-apiserver:v1.20.0"
+            ],
+            "sizeBytes": 95511851
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-controller-manager:v1.20.0"
+            ],
+            "sizeBytes": 88147263
+          },
+          {
+            "names": [
+              "k8s.gcr.io/conformance@sha256:be922a1bf1881eda96626df31c65fb4fa1910133ea8b36b0f2da4594fe7235e8",
+              "k8s.gcr.io/conformance:v1.20.0"
+            ],
+            "sizeBytes": 70202969
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-scheduler:v1.20.0"
+            ],
+            "sizeBytes": 66088749
+          },
+          {
+            "names": [
+              "k8s.gcr.io/build-image/debian-base:v2.1.0"
+            ],
+            "sizeBytes": 53876619
+          },
+          {
+            "names": [
+              "k8s.gcr.io/coredns:1.7.0"
+            ],
+            "sizeBytes": 45355487
+          },
+          {
+            "names": [
+              "docker.io/rancher/local-path-provisioner:v0.0.14"
+            ],
+            "sizeBytes": 41982521
+          },
+          {
+            "names": [
+              "docker.io/sonobuoy/sonobuoy@sha256:f950a9ed5e4a943dfb640be1c763919c5016b34c6ce067d9a27c9a50972bf5e4",
+              "docker.io/sonobuoy/sonobuoy:v0.56.0"
+            ],
+            "sizeBytes": 17617785
+          },
+          {
+            "names": [
+              "k8s.gcr.io/pause:3.3"
+            ],
+            "sizeBytes": 685708
+          }
+        ],
+        "nodeInfo": {
+          "architecture": "amd64",
+          "bootID": "f562fa2d-50b1-4970-9c6f-b596bb198207",
+          "containerRuntimeVersion": "containerd://1.4.0",
+          "kernelVersion": "5.10.76-linuxkit",
+          "kubeProxyVersion": "v1.20.0",
+          "kubeletVersion": "v1.20.0",
+          "machineID": "4657536ba4494139b275d813af98558c",
+          "operatingSystem": "linux",
+          "osImage": "Ubuntu Groovy Gorilla (development branch)",
+          "systemUUID": "5499115b-c387-4b1d-a4b0-685722b71bb8"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Node",
+      "metadata": {
+        "annotations": {
+          "kubeadm.alpha.kubernetes.io/cri-socket": "unix:///run/containerd/containerd.sock",
+          "node.alpha.kubernetes.io/ttl": "0",
+          "volumes.kubernetes.io/controller-managed-attach-detach": "true"
+        },
+        "creationTimestamp": "2022-01-27T14:37:53Z",
+        "labels": {
+          "beta.kubernetes.io/arch": "amd64",
+          "beta.kubernetes.io/os": "linux",
+          "kubernetes.io/arch": "amd64",
+          "kubernetes.io/hostname": "kind-worker2",
+          "kubernetes.io/os": "linux"
+        },
+        "name": "kind-worker2",
+        "resourceVersion": "1557",
+        "uid": "ef8e79b2-07c6-464c-beed-126964b7c90b"
+      },
+      "spec": {
+        "podCIDR": "10.244.1.0/24",
+        "podCIDRs": [
+          "10.244.1.0/24"
+        ],
+        "providerID": "kind://docker/kind/kind-worker2"
+      },
+      "status": {
+        "addresses": [
+          {
+            "address": "172.18.0.3",
+            "type": "InternalIP"
+          },
+          {
+            "address": "kind-worker2",
+            "type": "Hostname"
+          }
+        ],
+        "allocatable": {
+          "cpu": "8",
+          "ephemeral-storage": "313501092Ki",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "30821896Ki",
+          "pods": "110"
+        },
+        "capacity": {
+          "cpu": "8",
+          "ephemeral-storage": "313501092Ki",
+          "hugepages-1Gi": "0",
+          "hugepages-2Mi": "0",
+          "memory": "30821896Ki",
+          "pods": "110"
+        },
+        "conditions": [
+          {
+            "lastHeartbeatTime": "2022-01-27T14:44:23Z",
+            "lastTransitionTime": "2022-01-27T14:37:53Z",
+            "message": "kubelet has sufficient memory available",
+            "reason": "KubeletHasSufficientMemory",
+            "status": "False",
+            "type": "MemoryPressure"
+          },
+          {
+            "lastHeartbeatTime": "2022-01-27T14:44:23Z",
+            "lastTransitionTime": "2022-01-27T14:37:53Z",
+            "message": "kubelet has no disk pressure",
+            "reason": "KubeletHasNoDiskPressure",
+            "status": "False",
+            "type": "DiskPressure"
+          },
+          {
+            "lastHeartbeatTime": "2022-01-27T14:44:23Z",
+            "lastTransitionTime": "2022-01-27T14:37:53Z",
+            "message": "kubelet has sufficient PID available",
+            "reason": "KubeletHasSufficientPID",
+            "status": "False",
+            "type": "PIDPressure"
+          },
+          {
+            "lastHeartbeatTime": "2022-01-27T14:44:23Z",
+            "lastTransitionTime": "2022-01-27T14:38:03Z",
+            "message": "kubelet is posting ready status",
+            "reason": "KubeletReady",
+            "status": "True",
+            "type": "Ready"
+          }
+        ],
+        "daemonEndpoints": {
+          "kubeletEndpoint": {
+            "Port": 10250
+          }
+        },
+        "images": [
+          {
+            "names": [
+              "k8s.gcr.io/etcd:3.4.13-0"
+            ],
+            "sizeBytes": 254659261
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-proxy:v1.20.0"
+            ],
+            "sizeBytes": 136866161
+          },
+          {
+            "names": [
+              "docker.io/sonobuoy/systemd-logs@sha256:0b8b2b7b43b03f7db26e7e4b99be402495b77b496f5a5b0425b3c226bc1e9cbd",
+              "docker.io/sonobuoy/systemd-logs:v0.4"
+            ],
+            "sizeBytes": 127795048
+          },
+          {
+            "names": [
+              "docker.io/kindest/kindnetd:v20200725-4d6bea59"
+            ],
+            "sizeBytes": 118720874
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-apiserver:v1.20.0"
+            ],
+            "sizeBytes": 95511851
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-controller-manager:v1.20.0"
+            ],
+            "sizeBytes": 88147263
+          },
+          {
+            "names": [
+              "k8s.gcr.io/kube-scheduler:v1.20.0"
+            ],
+            "sizeBytes": 66088749
+          },
+          {
+            "names": [
+              "k8s.gcr.io/build-image/debian-base:v2.1.0"
+            ],
+            "sizeBytes": 53876619
+          },
+          {
+            "names": [
+              "k8s.gcr.io/coredns:1.7.0"
+            ],
+            "sizeBytes": 45355487
+          },
+          {
+            "names": [
+              "docker.io/rancher/local-path-provisioner:v0.0.14"
+            ],
+            "sizeBytes": 41982521
+          },
+          {
+            "names": [
+              "docker.io/sonobuoy/sonobuoy@sha256:f950a9ed5e4a943dfb640be1c763919c5016b34c6ce067d9a27c9a50972bf5e4",
+              "docker.io/sonobuoy/sonobuoy:v0.56.0"
+            ],
+            "sizeBytes": 17617785
+          },
+          {
+            "names": [
+              "docker.io/library/nginx@sha256:485b610fefec7ff6c463ced9623314a04ed67e3945b9c08d7e53a47f6d108dc7",
+              "docker.io/library/nginx:1.14-alpine"
+            ],
+            "sizeBytes": 6978806
+          },
+          {
+            "names": [
+              "k8s.gcr.io/pause:3.3"
+            ],
+            "sizeBytes": 685708
+          }
+        ],
+        "nodeInfo": {
+          "architecture": "amd64",
+          "bootID": "f562fa2d-50b1-4970-9c6f-b596bb198207",
+          "containerRuntimeVersion": "containerd://1.4.0",
+          "kernelVersion": "5.10.76-linuxkit",
+          "kubeProxyVersion": "v1.20.0",
+          "kubeletVersion": "v1.20.0",
+          "machineID": "94953d5a997f4c1f8c6d66cff2213e9b",
+          "operatingSystem": "linux",
+          "osImage": "Ubuntu Groovy Gorilla (development branch)",
+          "systemUUID": "53e03893-47d1-4fc7-b3e5-7a734a7b822e"
+        }
+      }
+    }
+  ],
+  "kind": "NodeList",
+  "metadata": {
+    "resourceVersion": "1579"
+  }
+}

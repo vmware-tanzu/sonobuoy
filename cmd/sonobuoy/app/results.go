@@ -32,6 +32,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 	"github.com/vmware-tanzu/sonobuoy/pkg/discovery"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -47,6 +48,10 @@ const (
 	resultModeDump = "dump"
 
 	windowsSeperator = `\`
+
+	//Name of the "fake" plugin used to enable printing the health summary.
+	//This name needs to be reserved to avoid conflicts with a plugin with the same name
+	clusterHealthSummaryPluginName = "sonobuoy"
 )
 
 type resultsInput struct {
@@ -129,11 +134,14 @@ func result(input resultsInput) error {
 		if len(plugins) == 0 {
 			return fmt.Errorf("no plugins specified by either the --plugin flag or tarball metadata")
 		}
+		//Add clusterHealthSummaryPluginName only after we verified there is at least another plugin
+		plugins = append(plugins, clusterHealthSummaryPluginName)
 	}
 
 	var lastErr error
 	for i, plugin := range plugins {
 		input.plugin = plugin
+
 
 		// Load file with a new reader since we can't assume this reader has rewind
 		// capabilities.
@@ -141,6 +149,15 @@ func result(input resultsInput) error {
 		defer cleanup()
 		if err != nil {
 			lastErr = err
+		}
+
+		//bypass if this plugin is called clusterHealthSummaryPluginName
+		if input.plugin == clusterHealthSummaryPluginName {
+			err = printHealthSummary(input, r)
+			if err != nil {
+				lastErr = err
+			}
+			continue
 		}
 
 		err = printSinglePlugin(input, r)
@@ -155,6 +172,52 @@ func result(input resultsInput) error {
 	}
 
 	return lastErr
+}
+
+// printHealthSummary pretends to work like printSinglePlugin
+// but for a "fake" plugin that prints health information
+func printHealthSummary(input resultsInput, r *results.Reader) error {
+	var err error
+
+	//For detailed view we can just dump the contents of the clusterHealthSummaryPluginName file
+	if input.mode == resultModeDetailed {
+		reader, err := r.FileReader(results.ClusterHealthFilePath())
+		if err != nil {
+			return errors.Wrapf(err, "failed to get health summary results reader from file '%s'", results.ClusterHealthFilePath())
+		}
+		_, err = io.Copy(os.Stdout, reader)
+		if err != nil {
+			return errors.Wrapf(err, "failed to copy health summary results from file '%s'", results.ClusterHealthFilePath())
+		}
+		return nil
+	}
+
+	// For summary and dump views, get the item as an object to iterate over.
+	clusterHealthSummary := discovery.ClusterSummary{}
+
+	err = r.WalkFiles(func(path string, info os.FileInfo, err error) error {
+		return results.ExtractFileIntoStruct(results.ClusterHealthFilePath(), path, info, &clusterHealthSummary)
+	})
+	if err != nil {
+		return err
+	}
+
+	var data []byte
+
+	switch input.mode {
+	case resultModeDump:
+		data, err = yaml.Marshal(clusterHealthSummary)
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(data))
+	default:
+		err = printClusterHealthResultsSummary(clusterHealthSummary)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func printSinglePlugin(input resultsInput, r *results.Reader) error {
@@ -248,6 +311,117 @@ func printResultsDetails(treePath []string, o *results.Item, input resultsInput)
 			fmt.Printf("%v ", strings.Join(treePath, "|"))
 			_, err = io.Copy(os.Stdout, filereader)
 			return err
+		}
+	}
+
+	return nil
+}
+
+// sortErrors takes a discovery.LogSummary, which is a map[string]map[string]int
+// which is a map[errorName]map[fileName]errorCount
+// and returns a map[string]i[]string that is a map[errorName] where the value
+// is a list of file names ordered by the errorCount (descending)
+func sortErrors(errorSummary discovery.LogSummary) map[string][]string {
+	result := make(map[string][]string)
+	for errorName, hitCounter := range errorSummary {
+		sortedFileNamesList := make([]string, 0)
+		for fileName := range hitCounter {
+			sortedFileNamesList = append(sortedFileNamesList, fileName)
+		}
+		//Sort in descending order,
+		//And use the values in hitCounter for the sorting
+		isMore := func(i,j int) bool {
+			valueI := hitCounter[sortedFileNamesList[i]]
+			valueJ := hitCounter[sortedFileNamesList[j]]
+			return valueI > valueJ
+		}
+		sort.Slice(sortedFileNamesList, isMore)
+		result[errorName] = sortedFileNamesList
+	}
+	return result
+}
+
+
+// filterAndSortHealthInfoDetails takes a copy of a slice of HealthInfoDetails, 
+// discards the ones that are healthy,
+// then sorts the remaining entries, 
+// and finally sorts them by namespace and name
+func filterAndSortHealthInfoDetails(details []discovery.HealthInfoDetails) ([]discovery.HealthInfoDetails) {
+	result := make([]discovery.HealthInfoDetails, len(details))
+	var idx int
+	for _, detail := range details {
+		if !detail.Healthy {
+			result[idx] = detail 
+			idx++
+		}
+	}
+	result = result[:idx]
+	isLess := func (i,j int) bool {
+		if result[i].Namespace == result[j].Namespace {
+			return result[i].Name < result[j].Name
+		} else {
+			return result[i].Namespace < result[j].Namespace
+		}
+	}
+	sort.Slice(result, isLess)
+	return result
+}
+
+
+// printClusterHealthResultsSummary prints the summary of the "fake" plugin for health summary,
+// tryingf to emulate the format of printResultsSummary
+func printClusterHealthResultsSummary(summary discovery.ClusterSummary) error {
+	fmt.Println("Run Details:")
+	fmt.Printf("API Server version: %s\n", summary.APIVersion)
+
+	fmt.Printf("Node health: %d/%d", summary.NodeHealth.Healthy, summary.NodeHealth.Total)
+	//Print the percentage only if Total is not 0 to avoid division by zero errors
+	if summary.NodeHealth.Total != 0 {
+		fmt.Printf(" (%d%%)", 100 * summary.NodeHealth.Healthy / summary.NodeHealth.Total)
+	}
+	fmt.Println()
+	//Details of the failed pods. Checking the slice length to avoid trusting the Total
+	if len(summary.NodeHealth.Details) > 0 && summary.NodeHealth.Healthy < summary.NodeHealth.Total {
+		fmt.Println("Details for failed nodes:")
+		nodes := filterAndSortHealthInfoDetails(summary.NodeHealth.Details)
+		for _, node := range nodes {
+			fmt.Printf("%s Ready:%s: %s: %s\n", node.Name, node.Ready, node.Reason, node.Message)
+		}
+		fmt.Println()
+	}
+
+	//It might be nice to group pods by namespace.
+	//Also here, use len instead of trusting Total
+	if len(summary.PodHealth.Details) > 0 {
+		fmt.Printf("Pods health: %d/%d", summary.PodHealth.Healthy, summary.PodHealth.Total)
+		//Print the percentage only if Total is not 0 to avoid division by zero errors
+		if summary.PodHealth.Total != 0 {
+			fmt.Printf(" (%d%%)", 100 * summary.PodHealth.Healthy / summary.PodHealth.Total)
+		}
+		fmt.Println()
+		if summary.PodHealth.Healthy < summary.PodHealth.Total {
+			fmt.Println("Details for failed pods:")
+			pods := filterAndSortHealthInfoDetails(summary.PodHealth.Details)
+			//And then print them, sorted by namespace
+			for _, pod := range pods {
+				fmt.Printf("%s/%s Ready:%s: %s: %s\n", pod.Namespace, pod.Name, pod.Ready, pod.Reason, pod.Message)
+			}
+		}
+	}
+
+	if len(summary.ErrorInfo) > 0 {
+		fmt.Println("Errors detected in files:")
+		sortedFileNames := sortErrors(summary.ErrorInfo)
+		for errorType := range summary.ErrorInfo {
+			//Get the first item in the list of sorted file names and get the value for that file name
+			maxValue := summary.ErrorInfo[errorType][sortedFileNames[errorType][0]]
+			//Calculate the width of the string representation of the maxValue
+			maxWidth := len(fmt.Sprintf("%d", maxValue))
+			fmt.Printf("%s:\n", errorType)
+
+			for _, fileName := range sortedFileNames[errorType] {
+				fmt.Printf("%[1]*[2]d %[3]s\n", maxWidth, summary.ErrorInfo[errorType][fileName], fileName)
+			}
 		}
 	}
 
