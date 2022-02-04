@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	kutil "github.com/vmware-tanzu/sonobuoy/pkg/k8s"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -240,7 +241,7 @@ func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate, progres
 }
 
 // CreateWorkerContainerDefintion creates the container definition to run the Sonobuoy worker for a plugin.
-func (b *Base) CreateWorkerContainerDefintion(hostname string, cert *tls.Certificate, command, args []string, progressPort, resultDir string) v1.Container {
+func (b *Base) CreateWorkerContainerDefintion(hostname string, cert *tls.Certificate, command, args []string, progressPort, resultDir string, pluginEnv []v1.EnvVar) v1.Container {
 	container := v1.Container{
 		Name:            "sonobuoy-worker",
 		Image:           b.SonobuoyImage,
@@ -256,6 +257,8 @@ func (b *Base) CreateWorkerContainerDefintion(hostname string, cert *tls.Certifi
 			},
 		},
 	}
+	// Worker gets any env vars from main plugin.
+	container.Env = kutil.MergeEnv(container.Env, pluginEnv, nil)
 	return container
 }
 

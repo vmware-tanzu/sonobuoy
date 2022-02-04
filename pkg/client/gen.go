@@ -30,6 +30,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+	kutil "github.com/vmware-tanzu/sonobuoy/pkg/k8s"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	manifesthelper "github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest/helper"
@@ -383,7 +384,7 @@ func generateAggregatorAndService(w io.Writer, cfg *GenConfig) error {
 	}
 	if len(cfg.PluginEnvOverrides) > 0 && cfg.PluginEnvOverrides[aggregatorEnvOverrideKey] != nil {
 		newEnv, removeVals := processEnvVals(cfg.PluginEnvOverrides[aggregatorEnvOverrideKey])
-		p.Spec.Containers[0].Env = mergeEnv(newEnv, p.Spec.Containers[0].Env, removeVals)
+		p.Spec.Containers[0].Env = kutil.MergeEnv(newEnv, p.Spec.Containers[0].Env, removeVals)
 	}
 	ser := &corev1.Service{
 		Spec: corev1.ServiceSpec{
@@ -615,10 +616,10 @@ func applyEnvOverrides(pluginEnvOverrides map[string]map[string]string, plugins 
 			if p.SonobuoyConfig.PluginName == pluginName {
 				found = true
 				newEnv, removeVals := processEnvVals(envVars)
-				p.Spec.Env = mergeEnv(newEnv, p.Spec.Env, removeVals)
+				p.Spec.Env = kutil.MergeEnv(newEnv, p.Spec.Env, removeVals)
 				if p.PodSpec != nil {
 					for i := range p.PodSpec.Containers {
-						p.PodSpec.Containers[i].Env = mergeEnv(newEnv, p.PodSpec.Containers[i].Env, removeVals)
+						p.PodSpec.Containers[i].Env = kutil.MergeEnv(newEnv, p.PodSpec.Containers[i].Env, removeVals)
 					}
 				}
 			}
@@ -720,33 +721,6 @@ func checkPluginNames(plugins []*manifest.Manifest) error {
 		names[v.SonobuoyConfig.PluginName] = struct{}{}
 	}
 	return nil
-}
-
-// mergeEnv will combine the values from two env var sets with priority being
-// given to values in the first set in case of collision. Afterwards, any env
-// var with a name in the removal set will be removed.
-func mergeEnv(e1, e2 []corev1.EnvVar, removeKeys map[string]struct{}) []corev1.EnvVar {
-	envSet := map[string]corev1.EnvVar{}
-	returnEnv := []corev1.EnvVar{}
-	for _, e := range e1 {
-		envSet[e.Name] = e
-	}
-	for _, e := range e2 {
-		if _, seen := envSet[e.Name]; !seen {
-			envSet[e.Name] = e
-		}
-	}
-	for name, v := range envSet {
-		if _, remove := removeKeys[name]; !remove {
-			returnEnv = append(returnEnv, v)
-		}
-	}
-
-	sort.Slice(returnEnv, func(i, j int) bool {
-		return strings.ToLower(returnEnv[i].Name) < strings.ToLower(returnEnv[j].Name)
-	})
-
-	return returnEnv
 }
 
 func SystemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
