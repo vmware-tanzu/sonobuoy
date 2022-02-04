@@ -42,18 +42,39 @@ const (
 	SonobuoyNSEnvKey              = "SONOBUOY_NS"
 	SonobuoyPluginPodEnvKey       = "SONOBUOY_PLUGIN_POD"
 	SonobuoyWorkerContainerEnvKey = "SONOBUOY_WORKER_CONTAINER"
+
+	// defaultWaitFileConsumptionDelay provides a minimum time window where sidecars may intercept results and remove
+	// the done file before Sonobuoy decides to process it.
+	defaultWaitFileConsumptionDelay = 5 * time.Second
+
+	// SonobuoyDoneFileDelayKey is the env key specifying where this value may be overwritten. Adding this in as a mitigation for problems
+	// caused by adding the delay. I anticipate we will not have a problem though since the default delay is reasonably short.
+	SonobuoyDoneFileDelayKey = "SONOBUOY_DONE_FILE_DELAY"
 )
 
 var (
 	// apiClient is used to check the status of this pod and other containers in it. If it is
 	// nil, those checks will be skipped.
 	apiClient kubernetes.Interface
+
+	// waitFileConsumptionDelay provides a minimum time window where sidecars may intercept results and remove
+	// the done file before Sonobuoy decides to process it.
+	waitFileConsumptionDelay = defaultWaitFileConsumptionDelay
 )
 
 func init() {
 	err := mime.AddExtensionType(".gz", "application/gzip")
 	if err != nil {
 		logrus.Error(err)
+	}
+
+	if v := os.Getenv(SonobuoyDoneFileDelayKey); len(v) > 0 {
+		if d, err := time.ParseDuration(v); err != nil {
+			logrus.Errorf("Failed to parse duration value (%v) %v: %v", SonobuoyDoneFileDelayKey, v, err)
+			logrus.Infof("Using default %v of %v", SonobuoyDoneFileDelayKey, defaultWaitFileConsumptionDelay)
+		} else {
+			waitFileConsumptionDelay = d
+		}
 	}
 }
 
@@ -128,6 +149,12 @@ func GatherResults(waitfile string, url string, client *http.Client, stopc <-cha
 		select {
 		case <-ticker.C:
 			if resultFile, err := ioutil.ReadFile(waitfile); err == nil {
+				logrus.Tracef("Detected done file but sleeping for %v then checking again for file. This allows other containers to intervene if desired.", waitFileConsumptionDelay)
+				time.Sleep(waitFileConsumptionDelay)
+				if _, err := os.Stat(waitfile); err != nil {
+					logrus.Trace("Done file has been removed, potentially by a sidecar for postprocessing reasons. Resuming wait routine.")
+					continue
+				}
 				resultFile = bytes.TrimSpace(resultFile)
 				logrus.WithField("resultFile", string(resultFile)).Info("Detected done file, transmitting result file")
 				return handleWaitFile(string(resultFile), url, client)
