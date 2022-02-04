@@ -143,6 +143,7 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 	cert := &tls.Certificate{Certificate: [][]byte{}}
 	command := []string{"sonobuoy"}
 	args := []string{"worker", "--global"}
+	presetPluginEnv := []v1.EnvVar{{Name: "FOO", Value: "BAR"}, {Name: "FOO2", Value: "BAR2"}}
 
 	b := &Base{
 		Definition: manifest.Manifest{
@@ -155,7 +156,7 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 		SessionID:       "sessionID",
 	}
 
-	wc := b.CreateWorkerContainerDefintion(aggregatorURL, cert, command, args, "", "/tmp/sonobuoy/results")
+	wc := b.CreateWorkerContainerDefintion(aggregatorURL, cert, command, args, "", "/tmp/sonobuoy/results", presetPluginEnv)
 
 	checkFields := func(container v1.Container) error {
 		if container.Name != "sonobuoy-worker" {
@@ -181,6 +182,7 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 				return fmt.Errorf("expected args item %v to be %q, got %q", i, args[i], arg)
 			}
 		}
+
 		return nil
 	}
 
@@ -203,6 +205,8 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 				Value: "",
 			},
 		}
+		expectedEnvVars = append(expectedEnvVars, presetPluginEnv...)
+		
 		for _, e := range expectedEnvVars {
 			if !envContains(container.Env, e) {
 				return fmt.Errorf("expected container environment to contain %q", e)
