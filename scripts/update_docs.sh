@@ -105,7 +105,7 @@ then
       -v "${DIR}":/root \
       debian:stretch-slim \
       /bin/sh -c \
-      "sed -i 's/var Version.*/var Version = "${VERSION}"/' /root/pkg/buildinfo/version.go"
+      "sed -i 's/var Version.*/var Version = \"${VERSION}\"/' /root/pkg/buildinfo/version.go"
 fi
 
 docker run --rm \
