@@ -1,35 +1,33 @@
 builds:
-- binary: sonobuoy
-  env:
-    - CGO_ENABLED=0
-  goos:
-    - windows
-    - darwin
-    - linux
-  goarch:
-    - amd64
-    - arm64
-    - 386
-    - ppc64le
-    - s390x
-  ignore:
-    - goos: darwin
-      goarch: 386
-    - goos: darwin
-      goarch: arm64
-    - goos: darwin
-      goarch: ppc64le
-    - goos: darwin
-      goarch: s390x
-    - goos: windows
-      goarch: arm64
-    - goos: windows
-      goarch: ppc64le
-    - goos: windows
-      goarch: s390x
-  ldflags: -s -w -X github.com/vmware-tanzu/sonobuoy/pkg/buildinfo.Version=v{{.Version}} -X github.com/vmware-tanzu/sonobuoy/pkg/buildinfo.GitSHA={{.FullCommit}}
+  - binary: sonobuoy
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+      - 386
+      - ppc64le
+      - s390x
+    ignore:
+      - goos: darwin
+        goarch: 386
+      - goos: darwin
+        goarch: ppc64le
+      - goos: darwin
+        goarch: s390x
+      - goos: windows
+        goarch: arm64
+      - goos: windows
+        goarch: ppc64le
+      - goos: windows
+        goarch: s390x
+    ldflags: -s -w -X github.com/vmware-tanzu/sonobuoy/pkg/buildinfo.Version=v{{.Version}} -X github.com/vmware-tanzu/sonobuoy/pkg/buildinfo.GitSHA={{.FullCommit}}
 archives:
   - id: tar
     format: tar.gz
     files:
-    - LICENSE
+      - LICENSE
