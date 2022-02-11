@@ -18,6 +18,7 @@ package app
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -57,6 +58,8 @@ func runVersion(versionflags *versionFlags) func(cmd *cobra.Command, args []stri
 		fmt.Printf("MinimumKubeVersion: %s\n", buildinfo.MinimumKubeVersion)
 		fmt.Printf("MaximumKubeVersion: %s\n", buildinfo.MaximumKubeVersion)
 		fmt.Printf("GitSHA: %s\n", buildinfo.GitSHA)
+		fmt.Printf("GoVersion: %s\n", runtime.Version())
+		fmt.Printf("Platform: %s/%s\n", runtime.GOOS, runtime.GOARCH)
 
 		// Get Kubernetes version, this is last so that the regular version information
 		// will be shown even if the API server cannot be contacted and throws an error
