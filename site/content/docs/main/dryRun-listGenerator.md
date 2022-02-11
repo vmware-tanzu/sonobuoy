@@ -62,8 +62,6 @@ on each request.
 gzip *
 ```
 
-
- 
 **DEBUG**
 Server could run out of space for more conformance images (e.g. "no space left on device")
  - Clear docker cache with `docker image prune -a`

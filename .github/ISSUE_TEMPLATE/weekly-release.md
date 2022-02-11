@@ -13,6 +13,7 @@ labels: release
    - Update the `kind-config.yaml` file with the new image version [here](https://github.com/vmware-tanzu/sonobuoy/blob/main/kind-config.yaml).
    - Run quick mode to confirm sonobuoy/conformance test work properly with this k8s version
    - Run `sonobuoy images` and get a list of test images 
+ - [ ] Generally we should also update the data supporting the e2e command (test lists). The steps are outlined [here][https://sonobuoy.io/docs/dryrun-listgenerator/]. Note that it was a more intense process the first time, but now we only need versions for which we dont have test lists for.
 
 ## Docs and versioning
 
@@ -70,6 +71,13 @@ docker run -it sonobuoy/sonobuoy:v0.x.y /sonobuoy version
 The `Sonobuoy Version` in the output should match the release tag above.
  - [ ] Go to the [GitHub release page](https://github.com/vmware-tanzu/sonobuoy/releases) and download the release binaries and make sure the version matches the expected values.
  - [ ] Run a [Kind](https://github.com/kubernetes-sigs/kind) cluster locally and ensure that you can run `sonobuoy run --mode quick`.
+
+Once the release is done, we copy the images over to our Harbor mirror. This is to provide a non-rate-limited point of access. Simply run:
+
+```
+# Ensure you are connected to the VPN when you run this, otherwise you will get an auth error even if login credentials are correct.
+skopeo copy --all "docker://registry.hub.docker.com/sonobuoy/sonobuoy:v0.56.1" "docker://projects.registry.vmware.com/sonobuoy/sonobuoy:v0.56.1"
+```
 
 ## Release notes
 
