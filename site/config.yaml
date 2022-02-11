@@ -32,9 +32,10 @@ params:
   docs_search_index_name: index_name
   docs_search_api_key: api_key
   docs_versioning: true
-  docs_latest: v0.56.0
+  docs_latest: 0.56.1
   docs_versions:
     - main
+    - 0.56.1
     - v0.56.0
     - v0.55.1
     - v0.55.0
