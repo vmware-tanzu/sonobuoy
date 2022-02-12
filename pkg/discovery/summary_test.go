@@ -17,16 +17,12 @@ limitations under the License.
 package discovery
 
 import (
-	"testing"
-        "encoding/json"
 	"bytes"
+	"encoding/json"
 	"flag"
-        "path/filepath"
 	"io/ioutil"
-)
-
-const (
-
+	"path/filepath"
+	"testing"
 )
 
 var update = flag.Bool("update", false, "update the .golden files")
@@ -39,11 +35,11 @@ func TestReadHealthSummary(t *testing.T) {
 
 	goldenFilePath := filepath.Join(tarballRootDir, "summary_test.golden")
 
-	got, err :=  ReadHealthSummary(tarballRootDir)
+	got, err := ReadHealthSummary(tarballRootDir)
 	if err != nil {
 		t.Fatalf("\n\nReadHealthSummary('%s') failed with error %s\n", tarballRootDir, err)
 	}
-	
+
 	gotJson, err := json.Marshal(got)
 	if err != nil {
 		t.Fatalf("\n\nThe value returned from ReadHealthSummary('%s') fails to be marshalled to json: %s\n", tarballRootDir, err)
@@ -56,8 +52,8 @@ func TestReadHealthSummary(t *testing.T) {
 		if err != nil {
 			t.Fatalf("\n\nFailed to read golden file from '%s': %s\n", goldenFilePath, err)
 		}
-		if ! bytes.Equal(gotJson, expectedJson) {
-			t.Fatalf("\n\nExpected %s, got %s\n", expectedJson, gotJson)
+		if !bytes.Equal(gotJson, expectedJson) {
+			t.Fatalf("\n\nExpected %s,\n     got %s\n", expectedJson, gotJson)
 		}
 	}
 }

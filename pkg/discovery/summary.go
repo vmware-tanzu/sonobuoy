@@ -17,99 +17,57 @@ limitations under the License.
 package discovery
 
 import (
+	"encoding/json"
+	"io/fs"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
-	"io/fs"
-        "io/ioutil"
-	v1 "k8s.io/api/core/v1"
-	k8sver "k8s.io/apimachinery/pkg/version"
+
 	"github.com/sirupsen/logrus"
-	"encoding/json"
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
+	v1 "k8s.io/api/core/v1"
 )
 
 type ClusterSummary struct {
 	NodeHealth HealthInfo `json:"node_health" yaml:"node_health"`
-	PodHealth HealthInfo `json:"pod_health" yaml:"pod_health"`
-	APIVersion string `json:"api_version" yaml:"api_version"`
-	ErrorInfo LogSummary `json:"error_summary" yaml:"error_summary"`
+	PodHealth  HealthInfo `json:"pod_health" yaml:"pod_health"`
+	APIVersion string     `json:"api_version" yaml:"api_version"`
+	ErrorInfo  LogSummary `json:"error_summary" yaml:"error_summary"`
 }
 
-
 type HealthInfo struct {
-	Total int `json:"total_nodes" yaml:"total_nodes"`
-	Healthy int `json:"healthy_nodes" yaml:"healthy_nodes"`
+	Total   int                 `json:"total_nodes" yaml:"total_nodes"`
+	Healthy int                 `json:"healthy_nodes" yaml:"healthy_nodes"`
 	Details []HealthInfoDetails `json:"details,omitempty" yaml:"details,omitempty"`
 }
 
 type HealthInfoDetails struct {
-	Name string `json:"name" yaml:"name"`
-	Healthy bool `json:"healthy" yaml:"healthy"`
-	Ready string `json:"ready" yaml:"ready"`
-	Reason string `json:"reason,omitempty" yaml:"reason,omitempty"`
-	Message string `json:"message,omitempty" yaml:"message,omitempty"`
+	Name      string `json:"name" yaml:"name"`
+	Healthy   bool   `json:"healthy" yaml:"healthy"`
+	Ready     string `json:"ready" yaml:"ready"`
+	Reason    string `json:"reason,omitempty" yaml:"reason,omitempty"`
+	Message   string `json:"message,omitempty" yaml:"message,omitempty"`
 	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 }
 
-const (
-	//Filename of the core nodes json output, relative to ClusterResourceLocation
-	CoreNodesFile = "core_v1_nodes.json"
-
-	//Filename of the core pod json output, relative to NSResourceLocation
-	CorePodsFile = "core_v1_pods.json"
-
-	//Filename for the server version
-	ServerVersionFile = "serverversion.json"
-)
-
-// LoadJsonIntoStruct reads a json file into an object.
-// fileName needs to be the name of a file that can be opened
-// error will be returned if opening the file fails,
-// or if decoding its content as Json into the supplied "object" fails
-func LoadJsonIntoStruct(fileName string, object interface{}) (err error) {
-	file, err := os.Open(fileName)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(object)
-	//no need to check for err as we are returning it anyway
-	return err
-}
-
-//Read the server version from the working directory and return it as a string
-func ReadVersion(tarballRootDir string) (string, error) {
-	k8sInfo := k8sver.Info{}
-	fileName := path.Join(tarballRootDir, ServerVersionFile)
-	err := LoadJsonIntoStruct(fileName, &k8sInfo)
-	if err != nil {
-		logrus.Errorf("Failed to read server version: failed to read '%s': %s", fileName, err)
-		return "", err
-	}
-	return k8sInfo.GitVersion, err
-}
-
-//List all the directories in path.Join(tarballRootDir, NSResourceLocation)
-//In each, check if it contains the file CorePodFile, if so, read each as v1.PodList,
-//And loop through _, pod := range podList.Items,
-//and scan _, condition := range pod.Status.Conditions
-//and check if condition.Status == v1.ConditionTrue:
-//for each of these, if they are false, add the condition.Reason and condition.Message to a string
-func ReadPodHealth(tarballRootDir string) (HealthInfo, error) {
+// ReadPodHealth lists all the directories in path.Join(tarballRootDir, NSResourceLocation)
+// In each, check if it contains the file CorePodFile, if so, read each as v1.PodList,
+// And loop through _, pod := range podList.Items,
+// and scan _, condition := range pod.Status.Conditions
+// and check if condition.Status == v1.ConditionTrue:
+// for each of these, if they are false, add the condition.Reason and condition.Message to a string
+func ReadPodHealth(r *results.Reader) (HealthInfo, error) {
 	health := HealthInfo{}
 	health.Details = make([]HealthInfoDetails, 0)
 
-	dirPath := path.Join(tarballRootDir, NSResourceLocation)
-
-	findAndProcessPodCoreFiles := func (filePath string, info fs.FileInfo, err error) error {
+	findAndProcessPodCoreFiles := func(filePath string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if ! info.IsDir() && info.Name() == CorePodsFile {
+		if !info.IsDir() && info.Name() == results.CorePodsFile {
 			podList := &v1.PodList{}
-			err = LoadJsonIntoStruct(filePath, &podList)
+			err := results.ExtractFileIntoStruct(filePath, filePath, info, &podList)
 			if err != nil {
 				logrus.Errorf("Failed to read pod health information from file '%s': %s", filePath, err)
 				logrus.Errorf("File '%s' will be skipped", filePath)
@@ -117,10 +75,9 @@ func ReadPodHealth(tarballRootDir string) (HealthInfo, error) {
 			}
 			health.Total += len(podList.Items)
 
-
 			for _, pod := range podList.Items {
 				podHealth := HealthInfoDetails{}
-				podHealth.Healthy = pod.Status.Phase == v1.PodRunning || pod.Status.Phase == v1.PodSucceeded 
+				podHealth.Healthy = pod.Status.Phase == v1.PodRunning || pod.Status.Phase == v1.PodSucceeded
 				podHealth.Name = pod.ObjectMeta.Name
 				podHealth.Namespace = pod.ObjectMeta.Namespace
 				if !podHealth.Healthy {
@@ -149,12 +106,11 @@ func ReadPodHealth(tarballRootDir string) (HealthInfo, error) {
 		return nil
 	}
 
-	err := filepath.Walk(dirPath, findAndProcessPodCoreFiles)
-	if err != nil {
-		logrus.Errorf("Failed to load pod health from directory '%s': %s", dirPath, err)
+	if err := r.WalkFiles(findAndProcessPodCoreFiles); err != nil {
+		logrus.Errorf("Failed to load pod health: %s", err)
 		return health, err
 	}
-	return health, err
+	return health, nil
 }
 
 //ReadHealthSummary reads the core_v1_nodes.json file from ClusterResourceLocation
@@ -162,12 +118,14 @@ func ReadPodHealth(tarballRootDir string) (HealthInfo, error) {
 //tarballRootDir is the directory that will be used to provide the contents of the tarball
 func ReadHealthSummary(tarballRootDir string) (ClusterSummary, error) {
 	summary := ClusterSummary{}
-	fileName := path.Join(tarballRootDir, ClusterResourceLocation, CoreNodesFile)
 	nodes := &v1.NodeList{}
-	err := LoadJsonIntoStruct(fileName, &nodes)
-
+	r := results.NewReaderFromDir(tarballRootDir)
+	fileName := path.Join(ClusterResourceLocation, results.CoreNodesFile)
+	err := r.WalkFiles(func(path string, info os.FileInfo, err error) error {
+		return results.ExtractFileIntoStruct(fileName, path, info, &nodes)
+	})
 	if err != nil {
-		logrus.Errorf("Failed to read health sumamry: failed to read the node list from '%s': %s", fileName, err)
+		logrus.Errorf("Failed to read health summary: failed to read the node list from '%s': %s", fileName, err)
 		return summary, err
 	}
 	summary.NodeHealth.Total = len(nodes.Items)
@@ -188,13 +146,13 @@ func ReadHealthSummary(tarballRootDir string) (ClusterSummary, error) {
 			}
 		}
 	}
-	summary.APIVersion, _ = ReadVersion(tarballRootDir)
+	summary.APIVersion, _ = r.ReadVersion()
 	//ReadVersion already logged this error, and we can continue with the rest of the information
 
-	summary.PodHealth, _  = ReadPodHealth(tarballRootDir)
+	summary.PodHealth, _ = ReadPodHealth(r)
 	//ReadPodHealth already logged this error, and we can continue with the rest of the information
 
-	summary.ErrorInfo, _ = ReadLogSummaryWithDefaultPatterns(tarballRootDir)
+	summary.ErrorInfo, _ = ReadLogSummaryWithDefaultPatterns(r)
 	//ReadLogSummary already logged this error, and we can continue with the rest of the information
 
 	return summary, nil
@@ -208,7 +166,7 @@ func ReadHealthSummary(tarballRootDir string) (ClusterSummary, error) {
 // results.ClusterHealthFilePath() in tarballRootDir
 // SaveHealthSummary assumes that all the directories including MetaLocation have already been created
 func SaveHealthSummary(tarballRootDir string) error {
-	outputFileName :=  path.Join(tarballRootDir, results.ClusterHealthFilePath())
+	outputFileName := path.Join(tarballRootDir, results.ClusterHealthFilePath())
 	healthSummary, err := ReadHealthSummary(tarballRootDir)
 	if err != nil {
 		logrus.Errorf("Failed to read cluster health information from '%s': %s", tarballRootDir, err)
