@@ -17,44 +17,44 @@ limitations under the License.
 package discovery
 
 import (
-	"os"
-	"io/fs"
-	"regexp"
 	"bufio"
-        "path/filepath"
+	"io/fs"
+	"os"
+	"regexp"
 
 	"github.com/sirupsen/logrus"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 )
 
 const (
 	//String format for the regex to match all pod log files inside the podlog directory
 	//Equivalent to a shell glob podlogs/*/logs/*.txt
 	logFilePatternPodlogsString = `^podlogs/[^/]+/[^/]+/logs/.+\.txt`
-	
-	logPatternNameErrors = "Errors"
-	logPatternFailedString = `[fF]ailed`
-	logPatternErrorString = `[eE]rror`
-	logPatternErrorCodeString = `^E[0-9]+`
-	logPatternLevelErrorString = `level=error`
-	logPatternNameWarnings = "Warnings"
-	logPatternWarningString = `[wW]arn`
-	logPatternWarningCodeString = `^W[0-9]+`
+
+	logPatternNameErrors         = "Errors"
+	logPatternFailedString       = `[fF]ailed`
+	logPatternErrorString        = `[eE]rror`
+	logPatternErrorCodeString    = `^E[0-9]+`
+	logPatternLevelErrorString   = `level=error`
+	logPatternNameWarnings       = "Warnings"
+	logPatternWarningString      = `[wW]arn`
+	logPatternWarningCodeString  = `^W[0-9]+`
 	logPatternLevelWarningString = `level=warn`
 )
 
-// LogPattern is a struct that defines a class of log patterns, 
+// LogPattern is a struct that defines a class of log patterns,
 // a LogPatterns instance will contain one or more file name patterns, stored in filePathPattern
 // and another list of patterns that are meant to be matched against the content of files whose name matches the filePathPattern.
 // both filePathPattern and matchPatterns are one or more compiled regular expressions
-// 
+//
 // A match for a pattern defined in LogPatterns will happen if:
 // a certain file has a path that matches at least one of the regex in filePathPattern
 // and
 // at least one of the lines in the content of this file matches at least one
 // of the regex patterns in matchPattern
 type LogPattern struct {
-	filePathPattern [](*regexp.Regexp)
-	matchPatterns [](*regexp.Regexp)
+	filePathPattern []*regexp.Regexp
+	matchPatterns   []*regexp.Regexp
 }
 
 // LogPatterns maps the name of a set of patterns to its components
@@ -69,10 +69,10 @@ type LogHitCounter map[string]int
 func GetDefaultLogPatterns() LogPatterns {
 	return LogPatterns{
 		logPatternNameErrors: LogPattern{
-			[](*regexp.Regexp){
+			[]*regexp.Regexp{
 				regexp.MustCompilePOSIX(logFilePatternPodlogsString),
 			},
-			[](*regexp.Regexp){
+			[]*regexp.Regexp{
 				regexp.MustCompilePOSIX(logPatternFailedString),
 				regexp.MustCompilePOSIX(logPatternErrorString),
 				regexp.MustCompilePOSIX(logPatternErrorCodeString),
@@ -80,10 +80,10 @@ func GetDefaultLogPatterns() LogPatterns {
 			},
 		},
 		logPatternNameWarnings: LogPattern{
-			[](*regexp.Regexp){
+			[]*regexp.Regexp{
 				regexp.MustCompilePOSIX(logFilePatternPodlogsString),
 			},
-			[](*regexp.Regexp){
+			[]*regexp.Regexp{
 				regexp.MustCompilePOSIX(logPatternWarningString),
 				regexp.MustCompilePOSIX(logPatternWarningCodeString),
 				regexp.MustCompilePOSIX(logPatternLevelWarningString),
@@ -96,7 +96,7 @@ func getPatternNamesForfile(relFilePath string, patterns LogPatterns) []string {
 	result := make([]string, 0)
 
 	for patternName, pattern := range patterns {
-		for _, fileNameRegex := range pattern.filePathPattern  {
+		for _, fileNameRegex := range pattern.filePathPattern {
 			if fileNameRegex.MatchString(relFilePath) {
 				result = append(result, patternName)
 			}
@@ -105,30 +105,24 @@ func getPatternNamesForfile(relFilePath string, patterns LogPatterns) []string {
 	return result
 }
 
-
 // ReadLogSummary will recursively scan the tarballRootDir
-// looking for files with namess matching pre-defined regular expressions
+// looking for files with names matching pre-defined regular expressions
 // and scanning the content of these files for pre-defined error matching regexes
 // and counting the number of hits
 // The return value is a map of results with key the type of condition
 // and the values of the map are the file names and the hit count
 // the patterns parameter is a list of LogPatterns objects that define what to scan for
 // The GetDefaultLogPatterns can be used to obtain such list.
-func ReadLogSummary(tarballRootDir string, patterns LogPatterns) (LogSummary, error) {
-	
+// Errors encountered while scanning the directory are logged but no error will be returned.
+func ReadLogSummary(r *results.Reader, patterns LogPatterns) (LogSummary, error) {
 	logSummary := make(LogSummary)
 
-	findAndScanLogFiles := func (filePath string, info fs.FileInfo, err error) error {
+	findAndScanLogFiles := func(filePath string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if ! info.IsDir() {
-			relFilePath, err := filepath.Rel(tarballRootDir, filePath)
-			if err != nil {
-				logrus.Errorf("findAndScanLogFiles: ignoring file '%s' because getting its relative path to '%s' failed: %s", filePath, tarballRootDir, err)
-				return nil
-			}
-			patternsForFile := getPatternNamesForfile(relFilePath, patterns)
+		if !info.IsDir() {
+			patternsForFile := getPatternNamesForfile(filePath, patterns)
 			//If the patternsForFile list is empty it means this file is not interesting
 			if len(patternsForFile) == 0 {
 				return nil
@@ -150,7 +144,7 @@ func ReadLogSummary(tarballRootDir string, patterns LogPatterns) (LogSummary, er
 							if _, ok := logSummary[patternName]; !ok {
 								logSummary[patternName] = make(LogHitCounter)
 							}
-							logSummary[patternName][relFilePath]++
+							logSummary[patternName][filePath]++
 							//We can stop looping through patterns from this patternName for this line
 							break
 						}
@@ -161,14 +155,14 @@ func ReadLogSummary(tarballRootDir string, patterns LogPatterns) (LogSummary, er
 		}
 		return nil
 	}
-	err := filepath.Walk(tarballRootDir, findAndScanLogFiles)
+	err := r.WalkFiles(findAndScanLogFiles)
 	if err != nil {
-		logrus.Errorf("Failed to scan log files in '%s': %s", tarballRootDir, err)
+		logrus.Errorf("Failed to scan log files: %s", err)
 	}
 	return logSummary, nil
 }
 
 // ReadLogSummaryWithDefaultPatterns is a wrapper to ReadLogSummary + GetDefaultLogPatterns
-func ReadLogSummaryWithDefaultPatterns(tarballRootDir string) (LogSummary, error) {
-	return ReadLogSummary(tarballRootDir, GetDefaultLogPatterns())
+func ReadLogSummaryWithDefaultPatterns(r *results.Reader) (LogSummary, error) {
+	return ReadLogSummary(r, GetDefaultLogPatterns())
 }

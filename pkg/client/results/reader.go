@@ -29,7 +29,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
+	k8sver "k8s.io/apimachinery/pkg/version"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 
@@ -62,11 +64,17 @@ const (
 	defaultServerVersionFile  = "serverversion.json"
 	defaultServerGroupsFile   = "servergroups.json"
 
+	// CoreNodesFile is the filename of the core nodes json output, relative to nonNamespacedResourcesDir
+	CoreNodesFile = "core_v1_nodes.json"
+
+	// CorePodsFile is the filename of the core pod json output, relative to namespacedResourcesDir
+	CorePodsFile = "core_v1_pods.json"
+
 	// InfoFile contains data not that isn't strictly in another location
 	// but still relevent to post-processing or understanding the run in some way.
 	InfoFile = "info.json"
 
-	//Filename of the cluster health, relative to metadataDir
+	// ClusterHealthFile is the filename of the cluster health, relative to metadataDir
 	ClusterHealthFile = "clusterhealth.json"
 )
 
@@ -97,8 +105,34 @@ var (
 // Reader holds a reader and a version. It uses the version to know where to
 // find files within the archive.
 type Reader struct {
+	// Embedded reader assumed to be the *.tar.gz of results. If the tarball has
+	// been extracted already, set the RootDir instead.
 	io.Reader
+
+	// RootDir, if set, instructs the reader to read as if the tarball of results
+	// was extracted to the given root directory.
+	RootDir string
+
 	Version string
+}
+
+// NewReaderFromDir creates a reader that will process the
+// directory `root`. It is assumed this directory contains the
+// extracted results.
+// Note: Assumes 'VersionFifteen' of results, which is current as of this writing.
+// Older versions probably don't even need support at this point.
+func NewReaderFromDir(root string) *Reader {
+	r := &Reader{
+		RootDir: root,
+		Version: VersionFifteen,
+	}
+	ver, err := r.discoverVersion()
+	if err != nil {
+		logrus.Errorf("Failed to read version info from directory, assuming the data is structured according to current formats. Error: %v", err)
+	} else {
+		r.Version = ver
+	}
+	return r
 }
 
 // NewReaderWithVersion creates a results.Reader that interprets a results
@@ -142,9 +176,11 @@ func DiscoverVersion(reader io.Reader) (string, error) {
 	r := &Reader{
 		Reader: reader,
 	}
+	return r.discoverVersion()
+}
 
+func (r *Reader) discoverVersion() (string, error) {
 	conf := &config.Config{}
-
 	err := r.WalkFiles(func(path string, info os.FileInfo, err error) error {
 		return ExtractConfig(path, info, conf)
 	})
@@ -192,10 +228,42 @@ func (t *tarFileInfo) Sys() interface{} {
 	return t.Reader
 }
 
+func cd(path string) (func(), error) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	err = os.Chdir(path)
+	if err != nil {
+		return nil, err
+	}
+	cleanup := func() {
+		if err := os.Chdir(pwd); err != nil {
+			logrus.Errorf("Failed to chdir application pwd, future reads during this command may have errors: %v", err)
+		}
+	}
+	return cleanup, nil
+}
+
 // WalkFiles walks all of the files in the archive. Processing stops at the
 // first error. The error is returned except in the special case of errStopWalk
-// which will stop processing but nil will be returned.
+// which will stop processing but nil will be returned. In the case where the reader
+// is based on a directory (not a tarball) ensure the WalkFuncs realize that the root
+// directory will be part of the path.
 func (r *Reader) WalkFiles(walkfn filepath.WalkFunc) error {
+	if len(r.RootDir) > 0 {
+		cleanup, err := cd(r.RootDir)
+		if err != nil {
+			return err
+		}
+		defer cleanup()
+		err = filepath.Walk(".", walkfn)
+		if err == errStopWalk || err == io.EOF {
+			return nil
+		}
+		return err
+	}
+
 	tr := tar.NewReader(r)
 	var err error
 	var header *tar.Header
@@ -228,12 +296,11 @@ func (r *Reader) WalkFiles(walkfn filepath.WalkFunc) error {
 // ExtractBytes pulls out bytes into a buffer for any path matching file.
 func ExtractBytes(file string, path string, info os.FileInfo, buf *bytes.Buffer) error {
 	if file == path {
-		reader, ok := info.Sys().(io.Reader)
-		if !ok {
-			return errors.New("info.Sys() is not a reader")
-		}
-		_, err := buf.ReadFrom(reader)
+		reader, err := fileInfoToReader(info, path)
 		if err != nil {
+			return err
+		}
+		if _, err := buf.ReadFrom(reader); err != nil {
 			return errors.Wrap(err, "could not read from buffer")
 		}
 	}
@@ -245,9 +312,9 @@ func ExtractBytes(file string, path string, info os.FileInfo, buf *bytes.Buffer)
 // interface passed in (generally a pointer to a struct/slice).
 func ExtractIntoStruct(predicate func(string) bool, path string, info os.FileInfo, object interface{}) error {
 	if predicate(path) {
-		reader, ok := info.Sys().(io.Reader)
-		if !ok {
-			return errors.New("info.Sys() is not a reader")
+		reader, err := fileInfoToReader(info, path)
+		if err != nil {
+			return err
 		}
 		// TODO(chuckha) Perhaps find a more robust way to handle different data formats.
 		if strings.HasSuffix(path, "xml") {
@@ -268,7 +335,8 @@ func ExtractIntoStruct(predicate func(string) bool, path string, info os.FileInf
 }
 
 // ExtractFileIntoStruct is a helper for a common use case of extracting
-// the contents of one file into the object.
+// the contents of one file into the object. The first parameter is the desired
+// file to extract, the second is the path being considered (by a WalkFn).
 func ExtractFileIntoStruct(file, path string, info os.FileInfo, object interface{}) error {
 	return ExtractIntoStruct(func(p string) bool {
 		return file == p
@@ -298,6 +366,19 @@ func (r *Reader) ServerVersionFile() string {
 	default:
 		return defaultServerVersionFile
 	}
+}
+
+func (r *Reader) ReadVersion() (string, error) {
+	k8sInfo := k8sver.Info{}
+	fileName := r.ServerVersionFile()
+	err := r.WalkFiles(func(path string, info os.FileInfo, err error) error {
+		return ExtractFileIntoStruct(fileName, path, info, &k8sInfo)
+	})
+	if err != nil {
+		logrus.Errorf("Failed to read server version: failed to read '%s': %s", fileName, err)
+		return "", err
+	}
+	return k8sInfo.GitVersion, err
 }
 
 // NamespacedResources returns the path to the directory that contains
@@ -382,11 +463,10 @@ func (r *Reader) FileReader(filename string) (io.Reader, error) {
 
 			if path == filename {
 				found = true
-				reader, ok := info.Sys().(io.Reader)
-				if !ok {
-					return errors.New("info.Sys() is not a reader")
+				returnReader, err = fileInfoToReader(info, path)
+				if err != nil {
+					return err
 				}
-				returnReader = reader
 				return errStopWalk
 			}
 
@@ -402,7 +482,7 @@ func (r *Reader) FileReader(filename string) (io.Reader, error) {
 	return returnReader, nil
 }
 
-// Return the full path of the ClusterHealthFile
+// ClusterHealthFilePath returns the full path of the ClusterHealthFile
 func ClusterHealthFilePath() string {
-	return  path.Join(metadataDir, ClusterHealthFile)
+	return path.Join(metadataDir, ClusterHealthFile)
 }

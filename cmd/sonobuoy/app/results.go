@@ -32,7 +32,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 	"github.com/vmware-tanzu/sonobuoy/pkg/discovery"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -100,6 +100,13 @@ func NewCmdResults() *cobra.Command {
 // getReader returns a *results.Reader along with a cleanup function to close the
 // underlying readers. The cleanup function is guaranteed to never be nil.
 func getReader(filepath string) (*results.Reader, func(), error) {
+	fi, err := os.Stat(filepath)
+	if err != nil {
+		return nil, func() {}, err
+	}
+	if fi.IsDir() {
+		return results.NewReaderFromDir(filepath), func() {}, nil
+	}
 	f, err := os.Open(filepath)
 	if err != nil {
 		return nil, func() {}, errors.Wrapf(err, "could not open sonobuoy archive: %v", filepath)
@@ -141,7 +148,6 @@ func result(input resultsInput) error {
 	var lastErr error
 	for i, plugin := range plugins {
 		input.plugin = plugin
-
 
 		// Load file with a new reader since we can't assume this reader has rewind
 		// capabilities.
@@ -330,7 +336,7 @@ func sortErrors(errorSummary discovery.LogSummary) map[string][]string {
 		}
 		//Sort in descending order,
 		//And use the values in hitCounter for the sorting
-		isMore := func(i,j int) bool {
+		isMore := func(i, j int) bool {
 			valueI := hitCounter[sortedFileNamesList[i]]
 			valueJ := hitCounter[sortedFileNamesList[j]]
 			return valueI > valueJ
@@ -341,22 +347,21 @@ func sortErrors(errorSummary discovery.LogSummary) map[string][]string {
 	return result
 }
 
-
-// filterAndSortHealthInfoDetails takes a copy of a slice of HealthInfoDetails, 
+// filterAndSortHealthInfoDetails takes a copy of a slice of HealthInfoDetails,
 // discards the ones that are healthy,
-// then sorts the remaining entries, 
+// then sorts the remaining entries,
 // and finally sorts them by namespace and name
-func filterAndSortHealthInfoDetails(details []discovery.HealthInfoDetails) ([]discovery.HealthInfoDetails) {
+func filterAndSortHealthInfoDetails(details []discovery.HealthInfoDetails) []discovery.HealthInfoDetails {
 	result := make([]discovery.HealthInfoDetails, len(details))
 	var idx int
 	for _, detail := range details {
 		if !detail.Healthy {
-			result[idx] = detail 
+			result[idx] = detail
 			idx++
 		}
 	}
 	result = result[:idx]
-	isLess := func (i,j int) bool {
+	isLess := func(i, j int) bool {
 		if result[i].Namespace == result[j].Namespace {
 			return result[i].Name < result[j].Name
 		} else {
@@ -367,7 +372,6 @@ func filterAndSortHealthInfoDetails(details []discovery.HealthInfoDetails) ([]di
 	return result
 }
 
-
 // printClusterHealthResultsSummary prints the summary of the "fake" plugin for health summary,
 // tryingf to emulate the format of printResultsSummary
 func printClusterHealthResultsSummary(summary discovery.ClusterSummary) error {
@@ -377,7 +381,7 @@ func printClusterHealthResultsSummary(summary discovery.ClusterSummary) error {
 	fmt.Printf("Node health: %d/%d", summary.NodeHealth.Healthy, summary.NodeHealth.Total)
 	//Print the percentage only if Total is not 0 to avoid division by zero errors
 	if summary.NodeHealth.Total != 0 {
-		fmt.Printf(" (%d%%)", 100 * summary.NodeHealth.Healthy / summary.NodeHealth.Total)
+		fmt.Printf(" (%d%%)", 100*summary.NodeHealth.Healthy/summary.NodeHealth.Total)
 	}
 	fmt.Println()
 	//Details of the failed pods. Checking the slice length to avoid trusting the Total
@@ -396,7 +400,7 @@ func printClusterHealthResultsSummary(summary discovery.ClusterSummary) error {
 		fmt.Printf("Pods health: %d/%d", summary.PodHealth.Healthy, summary.PodHealth.Total)
 		//Print the percentage only if Total is not 0 to avoid division by zero errors
 		if summary.PodHealth.Total != 0 {
-			fmt.Printf(" (%d%%)", 100 * summary.PodHealth.Healthy / summary.PodHealth.Total)
+			fmt.Printf(" (%d%%)", 100*summary.PodHealth.Healthy/summary.PodHealth.Total)
 		}
 		fmt.Println()
 		if summary.PodHealth.Healthy < summary.PodHealth.Total {
