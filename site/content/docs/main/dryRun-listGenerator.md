@@ -17,13 +17,21 @@ First I generate a list of the versions:
 rm ./tmpversions.txt
 git tag -l --sort=-creatordate |
   grep -v "alpha\|beta\|rc" |
-  head -n75|xargs -t -I % sh -c \
+  head -n75|sort|xargs -t -I % sh -c \
   'echo % >> ~/go/src/github.com/vmware-tanzu/sonobuoy/tmpversions.txt'
 ```
 
 After trial and error I realized we need to trim that list a bit since
 older versions will not have E2E_DRYRUN at all. Manually removing values from the versions list
 before v1.14.0 (if there are any).
+
+Since we already have some versions data, we only need to find the new ones. To see the new versions:
+```
+ls cmd/sonobuoy/app/e2e/testLists|cut -f 1-3 -d '.' > existingversions.txt
+diff tmpversions.txt existingversions.txt
+```
+
+You should expect to see the v0.0.0 as a difference (a test value) but then modify the tmpVersions.txt to only include the new versions.
 
 Then, using xargs and sonobuoy I generate the plugin for the releases of k8s. I need to modify the default e2e plugin in two ways:
  - make the name unique
