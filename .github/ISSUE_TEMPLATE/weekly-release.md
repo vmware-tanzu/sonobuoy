@@ -13,7 +13,7 @@ labels: release
    - Update the `kind-config.yaml` file with the new image version [here](https://github.com/vmware-tanzu/sonobuoy/blob/main/kind-config.yaml).
    - Run quick mode to confirm sonobuoy/conformance test work properly with this k8s version
    - Run `sonobuoy images` and get a list of test images 
- - [ ] Generally we should also update the data supporting the e2e command (test lists). The steps are outlined [here][https://sonobuoy.io/docs/dryrun-listgenerator/]. Note that it was a more intense process the first time, but now we only need versions for which we dont have test lists for.
+ - [ ] Generally we should also update the data supporting the e2e command (test lists). The steps are outlined [here](https://sonobuoy.io/docs/dryrun-listgenerator/). Note that it was a more intense process the first time, but now we only need versions for which we dont have test lists for.
 
 ## Docs and versioning
 
