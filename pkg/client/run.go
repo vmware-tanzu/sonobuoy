@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes/scheme"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -141,14 +142,18 @@ func (c *SonobuoyClient) WaitForRun(cfg *RunConfig) error {
 	runCondition := func() (bool, error) {
 
 		// Get the Aggregator pod and check if its status is completed or terminated.
-		status, err := c.GetStatus(&StatusConfig{Namespace: ns})
+		status, pod, err := c.GetStatusPod(&StatusConfig{Namespace: ns})
 		switch {
 		case err != nil && seenStatus:
 			printer(fmt.Sprintf("Failed to check status of the aggregator: %v", err))
 			return false, errors.Wrap(err, "failed to get status")
-		case err != nil && !seenStatus:
+		case err != nil && pod == nil && !seenStatus:
 			// Allow more time for the status to reported.
 			printer("Waiting for the aggregator to get tagged with its current status...")
+			return false, nil
+		case err != nil && pod != nil && !seenStatus:
+			// Allow more time for the status to reported.
+			printer(fmt.Sprintf("Waiting for the aggregator status to become %s. Currently the status is %s", corev1.PodRunning, getPodStatus(*pod)))
 			return false, nil
 		case status != nil:
 			seenStatus = true
@@ -301,4 +306,19 @@ func humanReadableStatus(str string) string {
 	default:
 		return fmt.Sprintf("Sonobuoy is in unknown state %q. Please report a bug at github.com/vmware-tanzu/sonobuoy", str)
 	}
+}
+
+
+func getPodStatus(pod corev1.Pod) string {
+	if pod.Status.Phase != corev1.PodRunning && pod.Status.Phase != corev1.PodSucceeded {
+		//Scan all the pod.Status.Conditions
+		//scan pod.Conditions, and find the first where condition.Status != corev1.ConditionTrue
+		for _, condition := range pod.Status.Conditions {
+			if condition.Status != corev1.ConditionTrue {
+				return fmt.Sprintf("%s: %s, %s", condition.Status, condition.Reason, condition.Message)
+			}
+		}
+	}
+	//If the status is running or succeeded, we just print the status, although this function might never be called in this case
+	return string(pod.Status.Phase)
 }
