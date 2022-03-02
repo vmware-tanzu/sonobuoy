@@ -17,7 +17,11 @@ limitations under the License.
 package client
 
 import (
+	"os"
 	"strings"
+	"encoding/json"
+	"reflect"
+	corev1 "k8s.io/api/core/v1"
 	"testing"
 )
 
@@ -66,5 +70,44 @@ func TestRunInvalidConfig(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestPrintPodStatus(t *testing.T) {
+	expected := []string{
+		"kube-system/coredns-74ff55c5b-cpfqs: Pending: PodScheduled: Unschedulable, 0/1 nodes are available: 1 node(s) had taint {node.kubernetes.io/not-ready: }, that the pod didn't tolerate.",
+		"kube-system/coredns-74ff55c5b-vk77h: Pending: PodScheduled: Unschedulable, 0/1 nodes are available: 1 node(s) had taint {node.kubernetes.io/not-ready: }, that the pod didn't tolerate.",
+		"kube-system/etcd-kind-control-plane: Running",
+		"kube-system/kindnet-hknk7: Running",
+		"kube-system/kindnet-qhzxn: Running",
+		"kube-system/kindnet-x9fsq: Running",
+		"kube-system/kube-apiserver-kind-control-plane: Running",
+		"kube-system/kube-controller-manager-kind-control-plane: Running",
+		"kube-system/kube-proxy-8jj5r: Running",
+		"kube-system/kube-proxy-g79v6: Running",
+		"kube-system/kube-proxy-lrtdp: Running",
+		"kube-system/kube-scheduler-kind-control-plane: Running",
+	}
+	got := make([]string, len(expected))
+	fname := "testdata/PrintPodStatus.golden"
+	reader, err := os.Open(fname)
+	if err != nil {
+		t.Errorf("Unable to open test file %s: %s", fname, err)
+	}
+	defer reader.Close()
+
+	podList := &corev1.PodList{}
+	decoder := json.NewDecoder(reader)
+	if err := decoder.Decode(podList); err != nil {
+		t.Errorf("Unable to decode to json the test file %s: %s", fname, err)
+	}
+	if len(podList.Items) != len(expected) {
+		t.Errorf("Expected %d pods, got %d instead", len(expected), len(podList.Items))
+	}
+	for idx, pod := range podList.Items {
+		got[idx] = getPodStatus(pod)
+	}
+	if !reflect.DeepEqual(got, expected) {
+		t.Errorf("Expected %+v, got %+v instead", expected, got)
 	}
 }

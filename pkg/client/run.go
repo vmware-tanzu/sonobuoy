@@ -315,10 +315,10 @@ func getPodStatus(pod corev1.Pod) string {
 		//scan pod.Conditions, and find the first where condition.Status != corev1.ConditionTrue
 		for _, condition := range pod.Status.Conditions {
 			if condition.Status != corev1.ConditionTrue {
-				return fmt.Sprintf("%s: %s, %s", condition.Status, condition.Reason, condition.Message)
+				return fmt.Sprintf("%s/%s: %s: %s: %s, %s", pod.Namespace, pod.Name, pod.Status.Phase, condition.Type, condition.Reason, condition.Message)
 			}
 		}
 	}
 	//If the status is running or succeeded, we just print the status, although this function might never be called in this case
-	return string(pod.Status.Phase)
+	return fmt.Sprintf("%s/%s: %s",pod.Namespace, pod.Name, pod.Status.Phase)
 }
