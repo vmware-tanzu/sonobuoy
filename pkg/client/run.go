@@ -152,7 +152,7 @@ func (c *SonobuoyClient) WaitForRun(cfg *RunConfig) error {
 			printer("Waiting for the aggregator to get tagged with its current status...")
 			return false, nil
 		case err != nil && pod != nil && !seenStatus:
-			// Allow more time for the status to reported.
+			// Allow more time for the status to reported, but also report the status of the aggregator pod
 			printer(fmt.Sprintf("Waiting for the aggregator status to become %s. Currently the status is %s", corev1.PodRunning, getPodStatus(*pod)))
 			return false, nil
 		case status != nil:

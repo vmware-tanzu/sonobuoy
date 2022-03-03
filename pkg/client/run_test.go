@@ -89,7 +89,7 @@ func TestPrintPodStatus(t *testing.T) {
 		"kube-system/kube-scheduler-kind-control-plane: Running",
 	}
 	got := make([]string, len(expected))
-	fname := "testdata/PrintPodStatus.golden"
+	fname := "testdata/PrintPodStatus.json"
 	reader, err := os.Open(fname)
 	if err != nil {
 		t.Errorf("Unable to open test file %s: %s", fname, err)
