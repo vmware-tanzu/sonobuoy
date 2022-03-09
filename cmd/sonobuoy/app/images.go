@@ -53,6 +53,24 @@ var (
 	transformSink = map[string][]func(*manifest.Manifest) error{}
 )
 
+func runListImages(flags imagesFlags) {
+	var client image.Client
+	if flags.dryRun {
+		client = image.DryRunClient{}
+	} else {
+		client = image.NewDockerClient()
+	}
+	version, err := getClusterVersion(flags.k8sVersion, flags.kubeconfig)
+	if err != nil {
+		errlog.LogError(err)
+		os.Exit(1)
+	}
+	if err := listImages(flags.plugins, version, client); err != nil {
+		errlog.LogError(err)
+		os.Exit(1)
+	}
+}
+
 func NewCmdImages() *cobra.Command {
 	var flags imagesFlags
 	// Main command
@@ -60,35 +78,42 @@ func NewCmdImages() *cobra.Command {
 		Use:   "images",
 		Short: "Manage images used in a plugin to facilitate running them in airgapped (or similar) environments. Supported plugins are: 'e2e'",
 		Run: func(cmd *cobra.Command, args []string) {
-			var client image.Client
-			if flags.dryRun {
-				client = image.DryRunClient{}
-			} else {
-				client = image.NewDockerClient()
-			}
-			version, err := getClusterVersion(flags.k8sVersion, flags.kubeconfig)
-			if err != nil {
-				errlog.LogError(err)
-				os.Exit(1)
-			}
-			if err := listImages(flags.plugins, version, client); err != nil {
-				errlog.LogError(err)
-				os.Exit(1)
-			}
+			runListImages(flags)
 		},
 		Args: cobra.ExactArgs(0),
 	}
 
 	AddKubeconfigFlag(&flags.kubeconfig, cmd.Flags())
 	AddPluginListFlag(&flags.plugins, cmd.Flags())
+	AddDryRunFlag(&flags.dryRun, cmd.Flags())
 	AddKubernetesVersionFlag(&flags.k8sVersion, &transformSink, cmd.Flags())
 
+	cmd.AddCommand(listCmd())
 	cmd.AddCommand(pullCmd())
 	cmd.AddCommand(pushCmd())
 	cmd.AddCommand(downloadCmd())
 	cmd.AddCommand(deleteCmd())
 
 	return cmd
+}
+
+func listCmd() *cobra.Command {
+	var flags imagesFlags
+
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List images",
+		Run: func(cmd *cobra.Command, args []string) {
+			runListImages(flags)
+		},
+		Args: cobra.ExactArgs(0),
+	}
+	AddKubeconfigFlag(&flags.kubeconfig, listCmd.Flags())
+	AddPluginListFlag(&flags.plugins, listCmd.Flags())
+	AddDryRunFlag(&flags.dryRun, listCmd.Flags())
+	AddKubernetesVersionFlag(&flags.k8sVersion, &transformSink, listCmd.Flags())
+
+	return listCmd
 }
 
 func pullCmd() *cobra.Command {
