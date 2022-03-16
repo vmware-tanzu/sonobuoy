@@ -310,15 +310,45 @@ func humanReadableStatus(str string) string {
 
 
 func getPodStatus(pod corev1.Pod) string {
+	const ContainersNotReady = "ContainersNotReady"
 	if pod.Status.Phase != corev1.PodRunning && pod.Status.Phase != corev1.PodSucceeded {
 		//Scan all the pod.Status.Conditions
 		//scan pod.Conditions, and find the first where condition.Status != corev1.ConditionTrue
 		for _, condition := range pod.Status.Conditions {
 			if condition.Status != corev1.ConditionTrue {
-				return fmt.Sprintf("%s/%s: %s: %s: %s, %s", pod.Namespace, pod.Name, pod.Status.Phase, condition.Type, condition.Reason, condition.Message)
+				retval := fmt.Sprintf("Status: %s, Reason: %s, %s", pod.Status.Phase, condition.Reason, condition.Message)
+				//If the reason is ContainersNotReady, we can also print information about why the containers are not ready
+				if string(condition.Reason) == ContainersNotReady {
+					retval += "\nDetails of containers that are not ready:\n"
+					for _, containerStatus := range pod.Status.ContainerStatuses {
+						if !containerStatus.Ready {
+							retval += fmt.Sprintf("%s: ", containerStatus.Name)
+							var reason string
+							var message string
+							if containerStatus.State.Waiting != nil {
+								reason = containerStatus.State.Waiting.Reason
+								message = containerStatus.State.Waiting.Message
+								retval += "waiting: "
+							}
+							if containerStatus.State.Terminated != nil {
+								reason = containerStatus.State.Terminated.Reason
+								message = containerStatus.State.Terminated.Message
+								retval += "terminated: "
+							}
+							retval += reason
+							//Add state.MEssage only if it isn't blank
+							if len(strings.TrimSpace(message)) > 0 {
+								retval += ", " + message
+							}
+							retval += "\n"
+						}
+					}
+
+				}
+				return retval
 			}
 		}
 	}
 	//If the status is running or succeeded, we just print the status, although this function might never be called in this case
-	return fmt.Sprintf("%s/%s: %s",pod.Namespace, pod.Name, pod.Status.Phase)
+	return fmt.Sprintf("Status: %s", pod.Status.Phase)
 }
