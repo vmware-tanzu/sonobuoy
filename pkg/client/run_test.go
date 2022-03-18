@@ -17,7 +17,11 @@ limitations under the License.
 package client
 
 import (
+	"os"
 	"strings"
+	"encoding/json"
+	"reflect"
+	corev1 "k8s.io/api/core/v1"
 	"testing"
 )
 
@@ -66,5 +70,37 @@ func TestRunInvalidConfig(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestPrintPodStatus(t *testing.T) {
+	expected := []string{
+		"Status: Pending, Reason: ContainersNotReady, containers with unready status: [kube-sonobuoy]\nDetails of containers that are not ready:\nkube-sonobuoy: waiting: ImagePullBackOff, Back-off pulling image \"schnake/sonobuoy:987\"\n",
+		"Status: Pending, Reason: ContainersNotReady, containers with unready status: [kube-sonobuoy]\nDetails of containers that are not ready:\nkube-sonobuoy: waiting: ContainerCreating\n",
+		"Status: Pending, Reason: Unschedulable, 0/1 nodes are available: 1 node(s) had taint {node.kubernetes.io/not-ready: }, that the pod didn't tolerate.",
+		"Status: Running",
+		"Status: Running",
+	}
+	fname := "testdata/PrintPodStatus.json"
+	reader, err := os.Open(fname)
+	if err != nil {
+		t.Errorf("Unable to open test file %s: %s", fname, err)
+	}
+	defer reader.Close()
+
+	podList := &corev1.PodList{}
+	decoder := json.NewDecoder(reader)
+	if err := decoder.Decode(podList); err != nil {
+		t.Errorf("Unable to decode to json the test file %s: %s", fname, err)
+	}
+	got := make([]string, len(podList.Items))
+	if len(podList.Items) != len(expected) {
+		t.Errorf("Expected %d pods, got %d instead", len(expected), len(podList.Items))
+	}
+	for idx, pod := range podList.Items {
+		got[idx] = getPodStatus(pod)
+	}
+	if !reflect.DeepEqual(got, expected) {
+		t.Errorf("Expected %+v, got %+v instead", expected, got)
 	}
 }

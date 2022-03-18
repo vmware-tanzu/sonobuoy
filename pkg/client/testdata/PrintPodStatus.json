@@ -1,0 +1,1064 @@
+{
+  "apiVersion": "v1",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "creationTimestamp": "2022-03-15T16:19:24Z",
+        "labels": {
+          "component": "sonobuoy",
+          "sonobuoy-component": "aggregator",
+          "tier": "analysis"
+        },
+        "name": "sonobuoy",
+        "namespace": "sonobuoy",
+        "resourceVersion": "247031",
+        "uid": "1d312dcc-21bc-4d08-b663-2d88e49de82d"
+      },
+      "spec": {
+        "containers": [
+          {
+            "args": [
+              "aggregator",
+              "--no-exit",
+              "--level=info",
+              "-v=4",
+              "--alsologtostderr"
+            ],
+            "command": [
+              "/sonobuoy"
+            ],
+            "env": [
+              {
+                "name": "SONOBUOY_ADVERTISE_IP",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "status.podIP"
+                  }
+                }
+              }
+            ],
+            "image": "schnake/sonobuoy:987",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "kube-sonobuoy",
+            "resources": {},
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/etc/sonobuoy",
+                "name": "sonobuoy-config-volume"
+              },
+              {
+                "mountPath": "/plugins.d",
+                "name": "sonobuoy-plugins-volume"
+              },
+              {
+                "mountPath": "/tmp/sonobuoy",
+                "name": "output-volume"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-w9sch",
+                "readOnly": true
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "kind-worker2",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Never",
+        "schedulerName": "default-scheduler",
+        "securityContext": {
+          "fsGroup": 2000,
+          "runAsGroup": 3000,
+          "runAsUser": 1000
+        },
+        "serviceAccount": "sonobuoy-serviceaccount",
+        "serviceAccountName": "sonobuoy-serviceaccount",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+          {
+            "key": "kubernetes.io/e2e-evict-taint-key",
+            "operator": "Exists"
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          }
+        ],
+        "volumes": [
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "name": "sonobuoy-config-cm"
+            },
+            "name": "sonobuoy-config-volume"
+          },
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "name": "sonobuoy-plugins-cm"
+            },
+            "name": "sonobuoy-plugins-volume"
+          },
+          {
+            "emptyDir": {},
+            "name": "output-volume"
+          },
+          {
+            "name": "kube-api-access-w9sch",
+            "projected": {
+              "defaultMode": 420,
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "expirationSeconds": 3607,
+                    "path": "token"
+                  }
+                },
+                {
+                  "configMap": {
+                    "items": [
+                      {
+                        "key": "ca.crt",
+                        "path": "ca.crt"
+                      }
+                    ],
+                    "name": "kube-root-ca.crt"
+                  }
+                },
+                {
+                  "downwardAPI": {
+                    "items": [
+                      {
+                        "fieldRef": {
+                          "apiVersion": "v1",
+                          "fieldPath": "metadata.namespace"
+                        },
+                        "path": "namespace"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T16:19:24Z",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T16:19:24Z",
+            "message": "containers with unready status: [kube-sonobuoy]",
+            "reason": "ContainersNotReady",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T16:19:24Z",
+            "message": "containers with unready status: [kube-sonobuoy]",
+            "reason": "ContainersNotReady",
+            "status": "False",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T16:19:24Z",
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "image": "schnake/sonobuoy:987",
+            "imageID": "",
+            "lastState": {},
+            "name": "kube-sonobuoy",
+            "ready": false,
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "waiting": {
+                "message": "Back-off pulling image \"schnake/sonobuoy:987\"",
+                "reason": "ImagePullBackOff"
+              }
+            }
+          }
+        ],
+        "hostIP": "172.18.0.3",
+        "phase": "Pending",
+        "podIP": "10.244.2.6",
+        "podIPs": [
+          {
+            "ip": "10.244.2.6"
+          }
+        ],
+        "qosClass": "BestEffort",
+        "startTime": "2022-03-15T16:19:24Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "creationTimestamp": "2022-03-15T20:33:07Z",
+        "labels": {
+          "component": "sonobuoy",
+          "sonobuoy-component": "aggregator",
+          "tier": "analysis"
+        },
+        "name": "sonobuoy",
+        "namespace": "sonobuoy",
+        "resourceVersion": "247742",
+        "uid": "1dee1fc0-4558-412d-b263-85714089889f"
+      },
+      "spec": {
+        "containers": [
+          {
+            "args": [
+              "aggregator",
+              "--no-exit",
+              "--level=info",
+              "-v=4",
+              "--alsologtostderr"
+            ],
+            "command": [
+              "/sonobuoy"
+            ],
+            "env": [
+              {
+                "name": "SONOBUOY_ADVERTISE_IP",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "status.podIP"
+                  }
+                }
+              }
+            ],
+            "image": "sonobuoy/sonobuoy:v0.56.2",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "kube-sonobuoy",
+            "resources": {},
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/etc/sonobuoy",
+                "name": "sonobuoy-config-volume"
+              },
+              {
+                "mountPath": "/plugins.d",
+                "name": "sonobuoy-plugins-volume"
+              },
+              {
+                "mountPath": "/tmp/sonobuoy",
+                "name": "output-volume"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-4xbh8",
+                "readOnly": true
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "kind-worker2",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Never",
+        "schedulerName": "default-scheduler",
+        "securityContext": {
+          "fsGroup": 2000,
+          "runAsGroup": 3000,
+          "runAsUser": 1000
+        },
+        "serviceAccount": "sonobuoy-serviceaccount",
+        "serviceAccountName": "sonobuoy-serviceaccount",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+          {
+            "key": "kubernetes.io/e2e-evict-taint-key",
+            "operator": "Exists"
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          }
+        ],
+        "volumes": [
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "name": "sonobuoy-config-cm"
+            },
+            "name": "sonobuoy-config-volume"
+          },
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "name": "sonobuoy-plugins-cm"
+            },
+            "name": "sonobuoy-plugins-volume"
+          },
+          {
+            "emptyDir": {},
+            "name": "output-volume"
+          },
+          {
+            "name": "kube-api-access-4xbh8",
+            "projected": {
+              "defaultMode": 420,
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "expirationSeconds": 3607,
+                    "path": "token"
+                  }
+                },
+                {
+                  "configMap": {
+                    "items": [
+                      {
+                        "key": "ca.crt",
+                        "path": "ca.crt"
+                      }
+                    ],
+                    "name": "kube-root-ca.crt"
+                  }
+                },
+                {
+                  "downwardAPI": {
+                    "items": [
+                      {
+                        "fieldRef": {
+                          "apiVersion": "v1",
+                          "fieldPath": "metadata.namespace"
+                        },
+                        "path": "namespace"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T20:33:07Z",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T20:33:07Z",
+            "message": "containers with unready status: [kube-sonobuoy]",
+            "reason": "ContainersNotReady",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T20:33:07Z",
+            "message": "containers with unready status: [kube-sonobuoy]",
+            "reason": "ContainersNotReady",
+            "status": "False",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T20:33:07Z",
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "image": "sonobuoy/sonobuoy:v0.56.2",
+            "imageID": "",
+            "lastState": {},
+            "name": "kube-sonobuoy",
+            "ready": false,
+            "restartCount": 0,
+            "started": false,
+            "state": {
+              "waiting": {
+                "reason": "ContainerCreating"
+              }
+            }
+          }
+        ],
+        "hostIP": "172.18.0.3",
+        "phase": "Pending",
+        "qosClass": "BestEffort",
+        "startTime": "2022-03-15T20:33:07Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "creationTimestamp": "2022-01-27T14:37:41Z",
+        "generateName": "coredns-74ff55c5b-",
+        "labels": {
+          "k8s-app": "kube-dns",
+          "pod-template-hash": "74ff55c5b"
+        },
+        "name": "coredns-74ff55c5b-cpfqs",
+        "namespace": "kube-system",
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "blockOwnerDeletion": true,
+            "controller": true,
+            "kind": "ReplicaSet",
+            "name": "coredns-74ff55c5b",
+            "uid": "5a535e84-bd6d-4b6d-8cda-7d18f8093023"
+          }
+        ],
+        "resourceVersion": "629",
+        "uid": "d87fb41d-2428-4cce-920b-e4ea876ec955"
+      },
+      "spec": {
+        "containers": [
+          {
+            "args": [
+              "-conf",
+              "/etc/coredns/Corefile"
+            ],
+            "image": "k8s.gcr.io/coredns:1.7.0",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "failureThreshold": 5,
+              "httpGet": {
+                "path": "/health",
+                "port": 8080,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 60,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 5
+            },
+            "name": "coredns",
+            "ports": [
+              {
+                "containerPort": 53,
+                "name": "dns",
+                "protocol": "UDP"
+              },
+              {
+                "containerPort": 53,
+                "name": "dns-tcp",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 9153,
+                "name": "metrics",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "failureThreshold": 3,
+              "httpGet": {
+                "path": "/ready",
+                "port": 8181,
+                "scheme": "HTTP"
+              },
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "resources": {
+              "limits": {
+                "memory": "170Mi"
+              },
+              "requests": {
+                "cpu": "100m",
+                "memory": "70Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "add": [
+                  "NET_BIND_SERVICE"
+                ],
+                "drop": [
+                  "all"
+                ]
+              },
+              "readOnlyRootFilesystem": true
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/etc/coredns",
+                "name": "config-volume",
+                "readOnly": true
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "coredns-token-m5l6d",
+                "readOnly": true
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "Default",
+        "enableServiceLinks": true,
+        "nodeName": "kind-control-plane",
+        "nodeSelector": {
+          "kubernetes.io/os": "linux"
+        },
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 2000000000,
+        "priorityClassName": "system-cluster-critical",
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccount": "coredns",
+        "serviceAccountName": "coredns",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+          {
+            "key": "CriticalAddonsOnly",
+            "operator": "Exists"
+          },
+          {
+            "effect": "NoSchedule",
+            "key": "node-role.kubernetes.io/master"
+          },
+          {
+            "effect": "NoSchedule",
+            "key": "node-role.kubernetes.io/control-plane"
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          }
+        ],
+        "volumes": [
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "items": [
+                {
+                  "key": "Corefile",
+                  "path": "Corefile"
+                }
+              ],
+              "name": "coredns"
+            },
+            "name": "config-volume"
+          },
+          {
+            "name": "coredns-token-m5l6d",
+            "secret": {
+              "defaultMode": 420,
+              "secretName": "coredns-token-m5l6d"
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-02-02T15:00:15Z",
+            "message": "0/1 nodes are available: 1 node(s) had taint {node.kubernetes.io/not-ready: }, that the pod didn't tolerate.",
+            "reason": "Unschedulable",
+            "status": "False",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "containerID": "containerd://1dc31e13a155607ade9d7c204919d05fa8d05058fd734488b4fae2ea027c6c31",
+            "image": "k8s.gcr.io/coredns:1.7.0",
+            "imageID": "sha256:bfe3a36ebd2528b454be6aebece806db5b40407b833e2af9617bf39afaff8c16",
+            "lastState": {},
+            "name": "coredns",
+            "ready": true,
+            "restartCount": 0,
+            "started": true,
+            "state": {
+              "running": {
+                "startedAt": "2022-01-27T14:37:58Z"
+              }
+            }
+          }
+        ],
+        "hostIP": "172.18.0.4",
+        "phase": "Pending",
+        "podIP": "10.244.0.4",
+        "podIPs": [
+          {
+            "ip": "10.244.0.4"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2022-01-27T14:37:57Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "kubeadm.kubernetes.io/etcd.advertise-client-urls": "https://172.18.0.4:2379",
+          "kubernetes.io/config.hash": "71f8cd8f6f5c92a4e5f21c7201d42a8b",
+          "kubernetes.io/config.mirror": "71f8cd8f6f5c92a4e5f21c7201d42a8b",
+          "kubernetes.io/config.seen": "2022-01-27T14:37:33.156791700Z",
+          "kubernetes.io/config.source": "file"
+        },
+        "creationTimestamp": "2022-01-27T14:37:33Z",
+        "labels": {
+          "component": "etcd",
+          "tier": "control-plane"
+        },
+        "name": "etcd-kind-control-plane",
+        "namespace": "kube-system",
+        "ownerReferences": [
+          {
+            "apiVersion": "v1",
+            "controller": true,
+            "kind": "Node",
+            "name": "kind-control-plane",
+            "uid": "f8073940-9978-4744-99d3-1214656011d5"
+          }
+        ],
+        "resourceVersion": "769",
+        "uid": "106263f7-19be-4bba-a8f3-83f573ec38af"
+      },
+      "spec": {
+        "containers": [
+          {
+            "command": [
+              "etcd",
+              "--advertise-client-urls=https://172.18.0.4:2379",
+              "--cert-file=/etc/kubernetes/pki/etcd/server.crt",
+              "--client-cert-auth=true",
+              "--data-dir=/var/lib/etcd",
+              "--initial-advertise-peer-urls=https://172.18.0.4:2380",
+              "--initial-cluster=kind-control-plane=https://172.18.0.4:2380",
+              "--key-file=/etc/kubernetes/pki/etcd/server.key",
+              "--listen-client-urls=https://127.0.0.1:2379,https://172.18.0.4:2379",
+              "--listen-metrics-urls=http://127.0.0.1:2381",
+              "--listen-peer-urls=https://172.18.0.4:2380",
+              "--name=kind-control-plane",
+              "--peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt",
+              "--peer-client-cert-auth=true",
+              "--peer-key-file=/etc/kubernetes/pki/etcd/peer.key",
+              "--peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt",
+              "--snapshot-count=10000",
+              "--trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt"
+            ],
+            "image": "k8s.gcr.io/etcd:3.4.13-0",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "failureThreshold": 8,
+              "httpGet": {
+                "host": "127.0.0.1",
+                "path": "/health",
+                "port": 2381,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 15
+            },
+            "name": "etcd",
+            "resources": {
+              "requests": {
+                "cpu": "100m",
+                "ephemeral-storage": "100Mi",
+                "memory": "100Mi"
+              }
+            },
+            "startupProbe": {
+              "failureThreshold": 24,
+              "httpGet": {
+                "host": "127.0.0.1",
+                "path": "/health",
+                "port": 2381,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 10,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 15
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/etcd",
+                "name": "etcd-data"
+              },
+              {
+                "mountPath": "/etc/kubernetes/pki/etcd",
+                "name": "etcd-certs"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "hostNetwork": true,
+        "nodeName": "kind-control-plane",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 2000001000,
+        "priorityClassName": "system-node-critical",
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+          {
+            "effect": "NoExecute",
+            "operator": "Exists"
+          }
+        ],
+        "volumes": [
+          {
+            "hostPath": {
+              "path": "/etc/kubernetes/pki/etcd",
+              "type": "DirectoryOrCreate"
+            },
+            "name": "etcd-certs"
+          },
+          {
+            "hostPath": {
+              "path": "/var/lib/etcd",
+              "type": "DirectoryOrCreate"
+            },
+            "name": "etcd-data"
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-01-27T14:37:33Z",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-01-27T14:39:02Z",
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-01-27T14:39:02Z",
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-01-27T14:37:33Z",
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "containerID": "containerd://52ceab76249e3b1d3a25d452e37ef18486e11aadb146b9e3eaa316b49ec6e894",
+            "image": "k8s.gcr.io/etcd:3.4.13-0",
+            "imageID": "sha256:0369cf4303ffdb467dc219990960a9baa8512a54b0ad9283eaf55bd6c0adb934",
+            "lastState": {},
+            "name": "etcd",
+            "ready": true,
+            "restartCount": 0,
+            "started": true,
+            "state": {
+              "running": {
+                "startedAt": "2022-01-27T14:37:20Z"
+              }
+            }
+          }
+        ],
+        "hostIP": "172.18.0.4",
+        "phase": "Running",
+        "podIP": "172.18.0.4",
+        "podIPs": [
+          {
+            "ip": "172.18.0.4"
+          }
+        ],
+        "qosClass": "Burstable",
+        "startTime": "2022-01-27T14:37:33Z"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "annotations": {
+          "sonobuoy.hept.io/status": "{\"plugins\":[{\"plugin\":\"e2e\",\"node\":\"global\",\"status\":\"complete\",\"result-status\":\"passed\",\"result-counts\":{\"passed\":1,\"skipped\":7041},\"progress\":{\"name\":\"e2e\",\"node\":\"global\",\"timestamp\":\"2022-03-15T20:33:15.2781926Z\",\"msg\":\"Test Suite completed\",\"total\":1,\"completed\":1}},{\"plugin\":\"systemd-logs\",\"node\":\"kind-control-plane\",\"status\":\"complete\",\"result-status\":\"passed\",\"result-counts\":{\"passed\":1}},{\"plugin\":\"systemd-logs\",\"node\":\"kind-worker\",\"status\":\"complete\",\"result-status\":\"passed\",\"result-counts\":{\"passed\":1}},{\"plugin\":\"systemd-logs\",\"node\":\"kind-worker2\",\"status\":\"complete\",\"result-status\":\"passed\",\"result-counts\":{\"passed\":1}}],\"status\":\"complete\",\"tar-info\":{\"name\":\"202203152033_sonobuoy_1c5b6631-8211-47eb-97ce-d92916237872.tar.gz\",\"created\":\"2022-03-15T20:33:36.6896851Z\",\"sha256\":\"0eaa1b9d58b4ad28e7af5f5131b1a938771a34e0677dda5a0ba4c8bb89feab71\",\"size\":1969744}}"
+        },
+        "creationTimestamp": "2022-03-15T20:33:07Z",
+        "labels": {
+          "component": "sonobuoy",
+          "sonobuoy-component": "aggregator",
+          "tier": "analysis"
+        },
+        "name": "sonobuoy",
+        "namespace": "sonobuoy",
+        "resourceVersion": "247915",
+        "uid": "1dee1fc0-4558-412d-b263-85714089889f"
+      },
+      "spec": {
+        "containers": [
+          {
+            "args": [
+              "aggregator",
+              "--no-exit",
+              "--level=info",
+              "-v=4",
+              "--alsologtostderr"
+            ],
+            "command": [
+              "/sonobuoy"
+            ],
+            "env": [
+              {
+                "name": "SONOBUOY_ADVERTISE_IP",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "status.podIP"
+                  }
+                }
+              }
+            ],
+            "image": "sonobuoy/sonobuoy:v0.56.2",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "kube-sonobuoy",
+            "resources": {},
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/etc/sonobuoy",
+                "name": "sonobuoy-config-volume"
+              },
+              {
+                "mountPath": "/plugins.d",
+                "name": "sonobuoy-plugins-volume"
+              },
+              {
+                "mountPath": "/tmp/sonobuoy",
+                "name": "output-volume"
+              },
+              {
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                "name": "kube-api-access-4xbh8",
+                "readOnly": true
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "enableServiceLinks": true,
+        "nodeName": "kind-worker2",
+        "preemptionPolicy": "PreemptLowerPriority",
+        "priority": 0,
+        "restartPolicy": "Never",
+        "schedulerName": "default-scheduler",
+        "securityContext": {
+          "fsGroup": 2000,
+          "runAsGroup": 3000,
+          "runAsUser": 1000
+        },
+        "serviceAccount": "sonobuoy-serviceaccount",
+        "serviceAccountName": "sonobuoy-serviceaccount",
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [
+          {
+            "key": "kubernetes.io/e2e-evict-taint-key",
+            "operator": "Exists"
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          },
+          {
+            "effect": "NoExecute",
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "tolerationSeconds": 300
+          }
+        ],
+        "volumes": [
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "name": "sonobuoy-config-cm"
+            },
+            "name": "sonobuoy-config-volume"
+          },
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "name": "sonobuoy-plugins-cm"
+            },
+            "name": "sonobuoy-plugins-volume"
+          },
+          {
+            "emptyDir": {},
+            "name": "output-volume"
+          },
+          {
+            "name": "kube-api-access-4xbh8",
+            "projected": {
+              "defaultMode": 420,
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "expirationSeconds": 3607,
+                    "path": "token"
+                  }
+                },
+                {
+                  "configMap": {
+                    "items": [
+                      {
+                        "key": "ca.crt",
+                        "path": "ca.crt"
+                      }
+                    ],
+                    "name": "kube-root-ca.crt"
+                  }
+                },
+                {
+                  "downwardAPI": {
+                    "items": [
+                      {
+                        "fieldRef": {
+                          "apiVersion": "v1",
+                          "fieldPath": "metadata.namespace"
+                        },
+                        "path": "namespace"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T20:33:07Z",
+            "status": "True",
+            "type": "Initialized"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T20:33:08Z",
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T20:33:08Z",
+            "status": "True",
+            "type": "ContainersReady"
+          },
+          {
+            "lastProbeTime": null,
+            "lastTransitionTime": "2022-03-15T20:33:07Z",
+            "status": "True",
+            "type": "PodScheduled"
+          }
+        ],
+        "containerStatuses": [
+          {
+            "containerID": "containerd://14e37f541669890be5d82dbf83fd176ad2a1cbcc72b39036ec24446a8b9096a6",
+            "image": "docker.io/sonobuoy/sonobuoy:v0.56.2",
+            "imageID": "docker.io/sonobuoy/sonobuoy@sha256:67daecddd08493d229ca99e3b44cb1f6b9d6ab298b050c920f26579cdfb4ae51",
+            "lastState": {},
+            "name": "kube-sonobuoy",
+            "ready": true,
+            "restartCount": 0,
+            "started": true,
+            "state": {
+              "running": {
+                "startedAt": "2022-03-15T20:33:07Z"
+              }
+            }
+          }
+        ],
+        "hostIP": "172.18.0.3",
+        "phase": "Running",
+        "podIP": "10.244.2.7",
+        "podIPs": [
+          {
+            "ip": "10.244.2.7"
+          }
+        ],
+        "qosClass": "BestEffort",
+        "startTime": "2022-03-15T20:33:07Z"
+      }
+    }
+  ],
+  "kind": "PodList",
+  "metadata": {
+    "resourceVersion": "1584"
+  }
+}
