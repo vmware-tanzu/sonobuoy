@@ -17,8 +17,6 @@ limitations under the License.
 package image
 
 import (
-	"strings"
-
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,48 +24,10 @@ import (
 // be performed rather than performing them.
 type DryRunClient struct{}
 
-const v1_19_images = `docker.io/library/httpd:2.4.38-alpine
-docker.io/library/httpd:2.4.39-alpine
-gcr.io/kubernetes-e2e-test-images/nautilus:1.0
-docker.io/library/nginx:1.14-alpine
-gcr.io/kubernetes-e2e-test-images/volume/gluster:1.0
-gcr.io/kubernetes-e2e-test-images/cuda-vector-add:2.0
-k8s.gcr.io/build-image/debian-iptables:v12.1.2
-docker.io/gluster/glusterdynamic-provisioner:v1.0
-docker.io/library/nginx:1.15-alpine
-k8s.gcr.io/prometheus-dummy-exporter:v0.1.0
-k8s.gcr.io/prometheus-to-sd:v0.5.0
-gcr.io/kubernetes-e2e-test-images/resource-consumer:1.5
-k8s.gcr.io/sd-dummy-exporter:v0.2.0
-gcr.io/k8s-authenticated-test/agnhost:2.6
-gcr.io/authenticated-image-pulling/alpine:3.7
-gcr.io/kubernetes-e2e-test-images/jessie-dnsutils:1.0
-gcr.io/kubernetes-e2e-test-images/volume/nfs:1.0
-gcr.io/kubernetes-e2e-test-images/volume/rbd:1.0.1
-gcr.io/kubernetes-e2e-test-images/apparmor-loader:1.0
-gcr.io/kubernetes-e2e-test-images/cuda-vector-add:1.0
-gcr.io/kubernetes-e2e-test-images/nonewprivs:1.0
-gcr.io/kubernetes-e2e-test-images/sample-apiserver:1.17
-invalid.com/invalid/alpine:3.1
-gcr.io/kubernetes-e2e-test-images/ipc-utils:1.0
-docker.io/library/perl:5.26
-gcr.io/kubernetes-e2e-test-images/regression-issue-74839-amd64:1.0
-k8s.gcr.io/e2e-test-images/agnhost:2.20
-gcr.io/authenticated-image-pulling/windows-nanoserver:v1
-k8s.gcr.io/etcd:3.4.13-0
-gcr.io/kubernetes-e2e-test-images/echoserver:2.2
-docker.io/library/redis:5.0.5-alpine
-gcr.io/kubernetes-e2e-test-images/metadata-concealment:1.2
-k8s.gcr.io/pause:3.2
-gcr.io/kubernetes-e2e-test-images/nonroot:1.0
-gcr.io/kubernetes-e2e-test-images/volume/iscsi:2.0
-docker.io/library/busybox:1.29
-gcr.io/kubernetes-e2e-test-images/kitten:1.0
-k8s.gcr.io/sig-storage/nfs-provisioner:v2.2.2
-`
-
 func (i DryRunClient) RunImage(image string, entryPoint string, args ...string) ([]string, error) {
-	return strings.Split(v1_19_images, "\n"), nil
+	// Called from collectPluginsImages, retrieve e2e images
+	// Return empty list instead of outdated info
+	return []string{}, nil
 }
 
 // PullImages logs the images that would be pulled.
