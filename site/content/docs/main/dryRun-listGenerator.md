@@ -15,6 +15,7 @@ First I generate a list of the versions:
 ```bash
 # From my kubernetes/kubernetes repo directory
 rm ./tmpversions.txt
+git fetch --all --tags
 git tag -l --sort=-creatordate |
   grep -v "alpha\|beta\|rc" |
   head -n75|sort|xargs -t -I % sh -c \
@@ -38,36 +39,22 @@ Then, using xargs and sonobuoy I generate the plugin for the releases of k8s. I 
  - remove E2E_EXTRA_ARGS since some of the older versions dont have the progress URL flag.
 
 ```bash
-# From this plugins directory
+# From the sonobuoy directory
 rm ./tmpplugins/p*
-cat versions.txt|xargs -t -I % sh -c \
+cat tmpversions.txt|xargs -t -I % sh -c \
   'sonobuoy gen plugin e2e --plugin-env=e2e.E2E_EXTRA_ARGS= --plugin-env=e2e.E2E_DRYRUN=true --kubernetes-version=% | sed "s/plugin-name: e2e/plugin-name: e2e%/" > ./tmpplugins/p%.yaml'
 ```
 
-Now, when I run sonobuoy I can run with each of those plugins:
+Now, when I run sonobuoy I can run with each of those plugins, get the results, and gzip them to save space:
 
 ```bash
 # From the root of this project
 sonobuoy run -p ./tmpplugins --wait
-```
-
-```gotemplate
 sonobuoy retrieve -f output.tar.gz
-```
-
-Now I have the lists of tests, they are just within the results tarball. I can grab those easily
-with Sonobuoy's results command:
-
-```bash
 cat tmpversions.txt | xargs -t -I % sh -c \
   "sonobuoy results output.tar.gz -p e2e% --mode=detailed | jq .name -r | sort > ./cmd/sonobuoy/app/e2e/testLists/%"
-```
-
-Now this is just quite verbose so we can save lots of space by gzip'ing. This will save space in the repo, binary, and
-on each request.
-
-```bash
 gzip *
+# Any older ones archives will just need you to say not to overwrite. TODO(jschnake) script this better to avoid answer 'n' over and over.
 ```
 
 **DEBUG**
