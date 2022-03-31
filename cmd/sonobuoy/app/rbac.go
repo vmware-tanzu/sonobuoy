@@ -19,9 +19,10 @@ package app
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -60,7 +61,7 @@ func (r *RBACMode) Type() string { return "RBACMode" }
 // Set the RBACMode to the given string, or error if it's not a known RBAC mode.
 func (r *RBACMode) Set(str string) error {
 	// Allow lowercase on the command line
-	upcase := strings.Title(str)
+	upcase := cases.Title(language.AmericanEnglish).String(str)
 	mode, ok := rbacModeMap[upcase]
 	if !ok {
 		return fmt.Errorf("unknown RBAC mode %s", str)
