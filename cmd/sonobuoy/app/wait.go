@@ -2,7 +2,9 @@ package app
 
 import (
 	"fmt"
-	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type WaitOutputMode string
@@ -28,7 +30,7 @@ func (w *WaitOutputMode) Type() string { return "string" }
 // Set the WaitOutputMode to the given string, or error if it's not a known WaitOutputMode mode.
 func (w *WaitOutputMode) Set(str string) error {
 	// Allow lowercase on the command line
-	upcase := strings.Title(str)
+	upcase := cases.Title(language.AmericanEnglish).String(str)
 	mode, ok := waitOutputModeMap[upcase]
 	if !ok {
 		return fmt.Errorf("unknown wait output mode %s", str)

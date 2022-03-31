@@ -19,8 +19,9 @@ package app
 import (
 	"fmt"
 	"sort"
-	"strings"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -37,7 +38,7 @@ func (i *ImagePullPolicy) Type() string   { return "ImagePullPolicy" }
 
 func (i *ImagePullPolicy) Set(str string) error {
 	// Allow lowercase pull policies in command line
-	upcase := strings.Title(str)
+	upcase := cases.Title(language.AmericanEnglish).String(str)
 	policy, ok := pullPolicyMap[upcase]
 	if !ok {
 		return fmt.Errorf("unknown pull policy %q", str)
