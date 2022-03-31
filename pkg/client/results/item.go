@@ -110,3 +110,21 @@ func (i *Item) GetSubTreeByName(root string) *Item {
 func IsTimeoutErr(i Item) bool {
 	return strings.Contains(fmt.Sprint(i.Details["error"]), "timeout")
 }
+
+// IsLeaf returns true if the item has no sub-items (children). Typically
+// refers to individual tests whereas non-leaf nodes more commonly refer to
+// suites, nodes, or files rolled up from the individual tests.
+func (i *Item) IsLeaf() bool {
+	return len(i.Items) == 0
+}
+
+// Walk will do a depth-first traversal of the Item tree calling fn on each
+// item. If an error is returned, traversal will stop.
+func (i *Item) Walk(fn func(*Item) error) error {
+	for subIndex := range i.Items {
+		if err := i.Items[subIndex].Walk(fn); err != nil {
+			return err
+		}
+	}
+	return fn(i)
+}
