@@ -171,9 +171,9 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 				},
 			})
 		// Sidecars get mounts too so that they can leverage the feature too.
-		if p.PodSpec != nil && len(p.PodSpec.Containers) > 0 {
+		if p.PodSpec != nil {
 			for i := range p.PodSpec.Containers {
-				p.PodSpec.Containers[i].VolumeMounts = append(p.Spec.VolumeMounts,
+				p.PodSpec.Containers[i].VolumeMounts = append(p.PodSpec.Containers[i].VolumeMounts,
 					corev1.VolumeMount{
 						Name:      fmt.Sprintf("sonobuoy-%v-vol", p.SonobuoyConfig.PluginName),
 						MountPath: sonobuoyDefaultConfigDir,
