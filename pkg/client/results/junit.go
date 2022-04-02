@@ -166,7 +166,7 @@ func JUnitErrored(testCase JUnitTestCase) bool {
 	return testCase.SkipMessage == nil && testCase.Failure == nil && testCase.ErrorMessage != nil
 }
 
-func junitProcessFile(pluginDir, currentFile string) (Item, error) {
+func JunitProcessFile(pluginDir, currentFile string) (Item, error) {
 	relPath, err := filepath.Rel(pluginDir, currentFile)
 	if err != nil {
 		logrus.Errorf("Error making path %q relative to %q: %v", pluginDir, currentFile, err)
