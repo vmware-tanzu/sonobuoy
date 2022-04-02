@@ -57,7 +57,7 @@ type testEvent struct {
 	Output  string
 }
 
-func gojsonProcessFile(pluginDir, currentFile string) (Item, error) {
+func GojsonProcessFile(pluginDir, currentFile string) (Item, error) {
 	relPath, err := filepath.Rel(pluginDir, currentFile)
 	if err != nil {
 		logrus.Errorf("Error making path %q relative to %q: %v", pluginDir, currentFile, err)

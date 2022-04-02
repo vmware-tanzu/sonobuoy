@@ -23,9 +23,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// rawProcessFile will return an Item object with the File value set to the path in question. If the
+// RawProcessFile will return an Item object with the File value set to the path in question. If the
 // file is unable to be stat'd then the status of the Item is StatusFailed (StatusPassed otherwise).
-func rawProcessFile(pluginDir, currentFile string) (Item, error) {
+func RawProcessFile(pluginDir, currentFile string) (Item, error) {
 	relPath, err := filepath.Rel(pluginDir, currentFile)
 	if err != nil {
 		logrus.Errorf("Error making path %q relative to %q: %v", pluginDir, currentFile, err)

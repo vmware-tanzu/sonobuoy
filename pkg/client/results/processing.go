@@ -158,13 +158,13 @@ func PostProcessPlugin(p plugin.Interface, dir string) (Item, []error) {
 	switch p.GetResultFormat() {
 	case ResultFormatE2E, ResultFormatJUnit:
 		logrus.WithField("plugin", p.GetName()).Trace("Using junit post-processor")
-		i, errs = processPluginWithProcessor(p, dir, junitProcessFile, fileOrExtension(p.GetResultFiles(), ".xml"))
+		i, errs = processPluginWithProcessor(p, dir, JunitProcessFile, FileOrExtension(p.GetResultFiles(), ".xml"))
 	case ResultFormatGoJSON:
 		logrus.WithField("plugin", p.GetName()).Trace("Using gojson post-processor")
-		i, errs = processPluginWithProcessor(p, dir, gojsonProcessFile, fileOrExtension(p.GetResultFiles(), ".json"))
+		i, errs = processPluginWithProcessor(p, dir, GojsonProcessFile, FileOrExtension(p.GetResultFiles(), ".json"))
 	case ResultFormatRaw:
 		logrus.WithField("plugin", p.GetName()).Trace("Using raw post-processor")
-		i, errs = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
+		i, errs = processPluginWithProcessor(p, dir, RawProcessFile, FileOrAny(p.GetResultFiles()))
 	case ResultFormatManual:
 		logrus.WithField("plugin", p.GetName()).Trace("Using manual post-processor")
 		// Only process the specified plugin result files or a Sonobuoy results file.
@@ -173,13 +173,13 @@ func PostProcessPlugin(p plugin.Interface, dir string) (Item, []error) {
 		logrus.WithField("plugin", p.GetName()).Trace("Defaulting to raw post-processor")
 		// Default to raw format so that consumers can still expect the aggregate file to exist and
 		// can navigate the output of the plugin more easily.
-		i, errs = processPluginWithProcessor(p, dir, rawProcessFile, fileOrAny(p.GetResultFiles()))
+		i, errs = processPluginWithProcessor(p, dir, RawProcessFile, FileOrAny(p.GetResultFiles()))
 	}
 
 	return i, errs
 }
 
-// processNodesWithProcessor is called to invoke processDir on each node-specific directory contained
+// processNodesWithProcessor is called to invoke ProcessDir on each node-specific directory contained
 // underneath the given dir. The directory is assumed to be either the results directory or errors directory
 // which should have the nodes as subdirectories. It returns an item for each node processed and an error
 // only if it couldn't open the original directory. Any errors while processing a specific node are logged
@@ -203,7 +203,7 @@ func processNodesWithProcessor(p plugin.Interface, baseDir, dir string, processo
 			Name:     nodeName,
 			Metadata: map[string]string{MetadataTypeKey: MetadataTypeNode},
 		}
-		items, err := processDir(p, pdir, filepath.Join(dir, nodeName), processor, selector)
+		items, err := ProcessDir(p, pdir, filepath.Join(dir, nodeName), processor, selector)
 		nodeItem.Items = items
 		if err != nil {
 			logrus.Warningf("Error processing results entries for node %v, plugin %v: %v", nodeDirInfo.Name(), p.GetName(), err)
@@ -237,12 +237,12 @@ func processPluginWithProcessor(p plugin.Interface, baseDir string, processor po
 			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pErrorsDir))
 		}
 	} else {
-		items, err = processDir(p, pdir, pResultsDir, processor, selector)
+		items, err = ProcessDir(p, pdir, pResultsDir, processor, selector)
 		if err != nil {
 			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pResultsDir))
 		}
 
-		errItems, err = processDir(p, pdir, pErrorsDir, errProcessor, errSelector())
+		errItems, err = ProcessDir(p, pdir, pErrorsDir, errProcessor, errSelector())
 		if err != nil && !os.IsNotExist(err) {
 			errs = append(errs, errors.Wrapf(err, "processing plugin %q, directory %q", p.GetName(), pErrorsDir))
 		}
@@ -329,10 +329,10 @@ func errProcessor(pluginDir string, currentFile string) (Item, error) {
 	return resultObj, nil
 }
 
-// processDir will walk the files in a given directory, using the fileSelector function to
+// ProcessDir will walk the files in a given directory, using the fileSelector function to
 // choose which files to process with the postProcessor. The plugin directory is also passed in
 // (e.g. plugins/e2e) in order to make filepaths relative to that directory.
-func processDir(p plugin.Interface, pluginDir, dir string, processor postProcessor, shouldProcessFile fileSelector) ([]Item, error) {
+func ProcessDir(p plugin.Interface, pluginDir, dir string, processor postProcessor, shouldProcessFile fileSelector) ([]Item, error) {
 	results := []Item{}
 
 	err := filepath.Walk(dir, func(curPath string, info os.FileInfo, err error) error {
@@ -375,12 +375,12 @@ func fileOrDefault(files []string, defaultFile string) fileSelector {
 	}
 }
 
-// fileOrExtension returns a function which will return true for files
+// FileOrExtension returns a function which will return true for files
 // which have the exact name of the file given or the given extension (if
 // no file is given). If the filename given is empty, it will be ignored
 // and the extension matching will be used. If "*" is passed as the extension
 // all files will match.
-func fileOrExtension(files []string, ext string) fileSelector {
+func FileOrExtension(files []string, ext string) fileSelector {
 	return func(fPath string, info os.FileInfo) bool {
 		if info == nil || info.IsDir() {
 			return false
@@ -393,10 +393,10 @@ func fileOrExtension(files []string, ext string) fileSelector {
 	}
 }
 
-func fileOrAny(files []string) func(fPath string, info os.FileInfo) bool {
-	return fileOrExtension(files, "*")
+func FileOrAny(files []string) func(fPath string, info os.FileInfo) bool {
+	return FileOrExtension(files, "*")
 }
 
 func errSelector() fileSelector {
-	return fileOrExtension([]string{DefaultErrFile}, "")
+	return FileOrExtension([]string{DefaultErrFile}, "")
 }
