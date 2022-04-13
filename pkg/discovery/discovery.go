@@ -44,7 +44,7 @@ import (
 )
 
 const (
-	pluginDefinitionFilename = "defintion.json"
+	pluginDefinitionFilename = "definition.json"
 
 	// MetaLocation is the place under which snapshot metadata (query times, config) is stored
 	// Also stored in query.go
