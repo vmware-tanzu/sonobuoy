@@ -91,7 +91,16 @@ func NewCmdPlugin() *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(listCmd, showCmd, installCmd, uninstallCmd)
+	descriptionCmd := &cobra.Command{
+		Use:   "describe <plugin filename> <description>",
+		Short: "Add a plugin descrption",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return adddescriptionPlugin(getPluginCacheLocation(), filenameFromArg(args[0], ".yaml"), args[1])
+		},
+	}
+
+	cmd.AddCommand(listCmd, showCmd, installCmd, uninstallCmd, descriptionCmd)
 
 	return cmd
 }
@@ -280,6 +289,20 @@ func uninstallPlugin(installedDir, filename string) error {
 	}
 
 	fmt.Printf("Uninstalled plugin file %v\n", pluginPath)
+	return nil
+}
+
+func adddescriptionPlugin(installedDir, filename string, description string) error {
+	if len(installedDir) == 0 {
+		return errors.New("unable to uninstall plugins; installation directory unavailable")
+	}
+
+	pluginFiles, _ := loadPlugins(installedDir)
+	plugin := pluginFiles[filename]
+
+	plugin.SonobuoyConfig.Description = description
+
+	fmt.Printf("Added description to plugin %v\n", plugin.SonobuoyConfig.PluginName)
 	return nil
 }
 
