@@ -34,8 +34,8 @@ type FakeDockerClient struct {
 	deleteFails bool
 }
 
-func (l FakeDockerClient) Run(image string, entryPoint string, args ...string) ([]string, error) {
-	return l.Run(image, entryPoint, args...)
+func (l FakeDockerClient) Run(image string, entryPoint string, env map[string]string, args ...string) ([]string, error) {
+	return l.Run(image, entryPoint, nil, args...)
 }
 
 func (l FakeDockerClient) PullIfNotPresent(image string, retries int) error {
