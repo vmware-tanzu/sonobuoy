@@ -46,6 +46,7 @@ type imagesFlags struct {
 	customRegistry    string
 	dryRun            bool
 	k8sVersion        image.ConformanceImageVersion
+	pluginEnvs        PluginEnvVars
 }
 
 var (
@@ -65,7 +66,7 @@ func runListImages(flags imagesFlags) {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
-	if err := listImages(flags.plugins, version, client); err != nil {
+	if err := listImages(flags.plugins, flags.pluginEnvs, version, client); err != nil {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
@@ -85,6 +86,7 @@ func NewCmdImages() *cobra.Command {
 
 	AddKubeconfigFlag(&flags.kubeconfig, cmd.Flags())
 	AddPluginListFlag(&flags.plugins, cmd.Flags())
+	AddPluginEnvFlag(&flags.pluginEnvs, cmd.Flags())
 	AddDryRunFlag(&flags.dryRun, cmd.Flags())
 	AddKubernetesVersionFlag(&flags.k8sVersion, &transformSink, cmd.Flags())
 
@@ -134,7 +136,7 @@ func pullCmd() *cobra.Command {
 				errlog.LogError(err)
 				os.Exit(1)
 			}
-			if errs := pullImages(flags.plugins, flags.e2eRegistry, flags.e2eRegistryConfig, version, client); len(errs) > 0 {
+			if errs := pullImages(flags.plugins, flags.pluginEnvs, flags.e2eRegistry, flags.e2eRegistryConfig, version, client); len(errs) > 0 {
 				for _, err := range errs {
 					errlog.LogError(err)
 				}
@@ -176,7 +178,7 @@ func pushCmd() *cobra.Command {
 				errlog.LogError(err)
 				os.Exit(1)
 			}
-			if errs := pushImages(flags.plugins, flags.customRegistry, flags.e2eRegistryConfig, version, client); len(errs) > 0 {
+			if errs := pushImages(flags.plugins, flags.pluginEnvs, flags.customRegistry, flags.e2eRegistryConfig, version, client); len(errs) > 0 {
 				for _, err := range errs {
 					errlog.LogError(err)
 				}
@@ -213,7 +215,7 @@ func downloadCmd() *cobra.Command {
 				errlog.LogError(err)
 				os.Exit(1)
 			}
-			if err := downloadImages(flags.plugins, flags.e2eRegistryConfig, version, client); err != nil {
+			if err := downloadImages(flags.plugins, flags.pluginEnvs, flags.e2eRegistryConfig, version, client); err != nil {
 				errlog.LogError(err)
 				os.Exit(1)
 			}
@@ -243,7 +245,7 @@ func deleteCmd() *cobra.Command {
 				client = image.NewDockerClient()
 			}
 
-			if errs := deleteImages(flags.plugins, flags.kubeconfig, flags.e2eRegistryConfig, flags.k8sVersion.String(), client); len(errs) > 0 {
+			if errs := deleteImages(flags.plugins, flags.pluginEnvs, flags.kubeconfig, flags.e2eRegistryConfig, flags.k8sVersion.String(), client); len(errs) > 0 {
 				for _, err := range errs {
 					errlog.LogError(err)
 				}
@@ -282,8 +284,8 @@ func getClusterVersion(k8sVersion image.ConformanceImageVersion, kubeconfig Kube
 	return version, nil
 }
 
-func listImages(plugins []string, k8sVersion string, client image.Client) error {
-	images, err := collectPluginsImages(plugins, k8sVersion, client)
+func listImages(plugins []string, pluginEnvs PluginEnvVars, k8sVersion string, client image.Client) error {
+	images, err := collectPluginsImages(plugins, pluginEnvs, k8sVersion, client)
 	if err != nil {
 		return errors.Wrap(err, "unable to collect images of plugins")
 	}
@@ -294,8 +296,8 @@ func listImages(plugins []string, k8sVersion string, client image.Client) error 
 	return nil
 }
 
-func pullImages(plugins []string, e2eRegistry, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
-	images, err := collectPluginsImages(plugins, k8sVersion, client)
+func pullImages(plugins []string, pluginEnvs PluginEnvVars, e2eRegistry, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
+	images, err := collectPluginsImages(plugins, pluginEnvs, k8sVersion, client)
 	if err != nil {
 		return []error{err, errors.Errorf("unable to collect images of plugins")}
 	}
@@ -322,8 +324,8 @@ func pullImages(plugins []string, e2eRegistry, e2eRegistryConfig, k8sVersion str
 	return client.PullImages(images, numDockerRetries)
 }
 
-func downloadImages(plugins []string, e2eRegistryConfig, k8sVersion string, client image.Client) error {
-	images, err := collectPluginsImages(plugins, k8sVersion, client)
+func downloadImages(plugins []string, pluginEnvs PluginEnvVars, e2eRegistryConfig, k8sVersion string, client image.Client) error {
+	images, err := collectPluginsImages(plugins, pluginEnvs, k8sVersion, client)
 	if err != nil {
 		return errors.Wrapf(err, "unable to collect images of plugins")
 	}
@@ -345,8 +347,8 @@ func downloadImages(plugins []string, e2eRegistryConfig, k8sVersion string, clie
 	return nil
 }
 
-func pushImages(plugins []string, customRegistry, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
-	images, err := collectPluginsImages(plugins, k8sVersion, client)
+func pushImages(plugins []string, pluginEnvs PluginEnvVars, customRegistry, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
+	images, err := collectPluginsImages(plugins, pluginEnvs, k8sVersion, client)
 	if err != nil {
 		return []error{err, errors.Errorf("unable to collect images of plugins")}
 	}
@@ -357,8 +359,8 @@ func pushImages(plugins []string, customRegistry, e2eRegistryConfig, k8sVersion 
 	return client.PushImages(imagePairs, numDockerRetries)
 }
 
-func deleteImages(plugins []string, kubeconfig Kubeconfig, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
-	images, err := collectPluginsImages(plugins, k8sVersion, client)
+func deleteImages(plugins []string, pluginEnvs PluginEnvVars, kubeconfig Kubeconfig, e2eRegistryConfig, k8sVersion string, client image.Client) []error {
+	images, err := collectPluginsImages(plugins, pluginEnvs, k8sVersion, client)
 	if err != nil {
 		return []error{err, errors.Errorf("unable to collect images of plugins")}
 	}
@@ -448,7 +450,7 @@ func translateRegistry(imageURL string, customRegistry string, customRegistryLis
 	return fmt.Sprintf("%s/%s", registryAndUser, parts[countParts-1])
 }
 
-func collectPluginsImages(plugins []string, k8sVersion string, client image.Client) ([]string, error) {
+func collectPluginsImages(plugins []string, pluginEnvs PluginEnvVars, k8sVersion string, client image.Client) ([]string, error) {
 	images := []string{
 		config.DefaultImage,
 	}
@@ -465,7 +467,7 @@ func collectPluginsImages(plugins []string, k8sVersion string, client image.Clie
 			client.PullImages([]string{conformanceImage}, numDockerRetries)
 
 			// we only need stdout, but this combines stdout and stderr
-			e2eImages, err := client.RunImage(conformanceImage, "e2e.test", "--list-images")
+			e2eImages, err := client.RunImage(conformanceImage, "e2e.test", pluginEnvs[e2ePlugin], "--list-images")
 			if err != nil {
 				return images, errors.Wrap(err, "failed to gather test images from e2e image")
 			}

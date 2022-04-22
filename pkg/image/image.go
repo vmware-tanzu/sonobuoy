@@ -22,5 +22,5 @@ type Client interface {
 	PushImages(images []TagPair, retries int) []error
 	DownloadImages(images []string, version string) (string, error)
 	DeleteImages(images []string, retries int) []error
-	RunImage(image string, entrypoint string, args ...string) ([]string, error)
+	RunImage(image string, entrypoint string, env map[string]string, args ...string) ([]string, error)
 }

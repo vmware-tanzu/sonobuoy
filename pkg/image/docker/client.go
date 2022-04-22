@@ -30,16 +30,21 @@ type Docker interface {
 	Tag(src, dest string, retries int) error
 	Rmi(image string, retries int) error
 	Save(images []string, filename string) error
-	Run(image string, entryPoint string, args ...string) ([]string, error)
+	Run(image string, entryPoint string, env map[string]string, args ...string) ([]string, error)
 }
 
 type LocalDocker struct {
 }
 
-func (l LocalDocker) Run(image string, entryPoint string, args ...string) ([]string, error) {
+func (l LocalDocker) Run(image string, entryPoint string, env map[string]string, args ...string) ([]string, error) {
 	dockerArgs := []string{"run", "--rm"}
 	if len(entryPoint) > 0 {
 		dockerArgs = append(dockerArgs, fmt.Sprintf("--entrypoint=%v", entryPoint))
+	}
+	if len(env) > 0 {
+		for k, v := range env {
+			dockerArgs = append(dockerArgs, fmt.Sprintf("-e=%v=%v", k, v))
+		}
 	}
 	dockerArgs = append(dockerArgs, image)
 	dockerArgs = append(dockerArgs, args...)

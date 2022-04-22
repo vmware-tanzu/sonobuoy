@@ -24,7 +24,7 @@ import (
 // be performed rather than performing them.
 type DryRunClient struct{}
 
-func (i DryRunClient) RunImage(image string, entryPoint string, args ...string) ([]string, error) {
+func (i DryRunClient) RunImage(image string, entryPoint string, env map[string]string, args ...string) ([]string, error) {
 	// Called from collectPluginsImages, retrieve e2e images
 	// Return empty list instead of outdated info
 	return []string{}, nil
