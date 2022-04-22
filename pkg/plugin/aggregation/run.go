@@ -232,12 +232,23 @@ func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
 // RunAndMonitorPlugin will start a plugin then monitor it for errors starting/running.
 // Errors detected will be handled by saving an error result in the aggregator.Results.
 func (a *Aggregator) RunAndMonitorPlugin(ctx context.Context, timeout time.Duration, p plugin.Interface, client kubernetes.Interface, nodes []corev1.Node, address string, cert *tls.Certificate, aggregatorPod *corev1.Pod, progressPort, pluginResultDir string) {
+	var ctxMonitor context.Context
+	var ctxIngest context.Context
+	var cancelMonitor context.CancelFunc
+	var cancelIngest context.CancelFunc
+
 	monitorCh := make(chan *plugin.Result, 1)
 
-	// Give the ingestion routine a tad more time to avoid races where the monitor routine, at timeout, tries
-	// to return results.
-	ctxMonitor, cancelMonitor := context.WithTimeout(ctx, timeout)
-	ctxIngest, cancelIngest := context.WithTimeout(ctx, timeout+timeoutMonitoringOffset)
+	if timeout == 0 {
+		// No timeout
+		ctxMonitor, cancelMonitor = context.WithCancel(ctx)
+		ctxIngest, cancelIngest = context.WithCancel(ctx)
+	} else {
+		// Give the ingestion routine a tad more time to avoid races where the monitor routine, at timeout, tries
+		// to return results.
+		ctxMonitor, cancelMonitor = context.WithTimeout(ctx, timeout)
+		ctxIngest, cancelIngest = context.WithTimeout(ctx, timeout+timeoutMonitoringOffset)
+	}
 
 	if err := p.Run(client, address, cert, aggregatorPod, progressPort, pluginResultDir); err != nil {
 		err := errors.Wrapf(err, "error running plugin %v", p.GetName())
