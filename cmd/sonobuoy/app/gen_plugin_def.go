@@ -130,7 +130,7 @@ func NewCmdGenPluginDef() *cobra.Command {
 	)
 
 	genPluginSet.StringVarP(
-		&genPluginOpts.def.SonobuoyConfig.Description, "description", "d", "",
+		&genPluginOpts.def.SonobuoyConfig.Description, "description", "desc", "",
 		"Description for the plugin",
 	)
 
