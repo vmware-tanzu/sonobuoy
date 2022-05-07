@@ -129,6 +129,11 @@ func NewCmdGenPluginDef() *cobra.Command {
 		`Specifies files to read and add as configMaps. Will be mounted to the plugin at /tmp/sonobuoy/configs/<filename>.`,
 	)
 
+	genPluginSet.StringVarP(
+		&genPluginOpts.def.SonobuoyConfig.Description, "description", "D", "",
+		"Description for the plugin",
+	)
+
 	AddShowDefaultPodSpecFlag(&genPluginOpts.showDefaultPodSpec, genPluginSet)
 
 	cmd.Flags().AddFlagSet(genPluginSet)
