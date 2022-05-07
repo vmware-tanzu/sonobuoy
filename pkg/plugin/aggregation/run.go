@@ -214,17 +214,16 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 
 // Cleanup calls cleanup on all plugins
 func Cleanup(client kubernetes.Interface, plugins []plugin.Interface) {
-	// Cleanup after each plugin unless cleanup is explicitly skipped
 	for _, p := range plugins {
 		if !p.SkipCleanup() {
 			logrus.
 				WithField("plugin", p.GetName()).
-				Tracef("Invoking plugin cleanup")
+				Info("Invoking plugin cleanup")
 			p.Cleanup(client)
 		} else {
 			logrus.
 				WithField("plugin", p.GetName()).
-				Tracef("Skipping plugin cleanup as specified")
+				Info("Skipping plugin cleanup as specified")
 		}
 	}
 }

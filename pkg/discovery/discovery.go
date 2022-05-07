@@ -144,6 +144,11 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		logrus.Errorf("Timeout occurred when running plugins. Inspect logs further for details.")
 	}
 
+	// Run queries.
+	trackErrorsFor("running queries")(
+		QueryCluster(restConf, cfg),
+	)
+
 	logrus.Infof("Log lines after this point will not appear in the downloaded tarball.")
 
 	// 7. Clean up after the plugins
@@ -186,11 +191,6 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 		err = ioutil.WriteFile(filepath.Join(metapath, results.InfoFile), blob, 0644)
 		trackErrorsFor("saving" + results.InfoFile)(err)
 	}
-
-	// Run queries.
-	trackErrorsFor("running queries")(
-		QueryCluster(restConf, cfg),
-	)
 
 	// Add health metadata
 	trackErrorsFor("adding health metadata")(
