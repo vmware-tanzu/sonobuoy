@@ -422,6 +422,7 @@ func checkTarballPluginForErrors(t *testing.T, tarball, plugin string, failCount
 }
 
 func saveToArtifacts(t *testing.T, p string) (newPath string) {
+	p = strings.TrimSpace(p)
 	artifactsDir := os.Getenv("ARTIFACTS_DIR")
 	if artifactsDir == "" {
 		t.Logf("Skipping saving artifact %v since ARTIFACTS_DIR is unset.", p)
@@ -439,7 +440,7 @@ func saveToArtifacts(t *testing.T, p string) (newPath string) {
 	var stdout, stderr bytes.Buffer
 
 	// Shell out to `mv` instead of using os.Rename(); the latter caused a problem due to files being on different devices.
-	cmd := exec.CommandContext(context.Background(), bash, "-c", fmt.Sprintf("mv -r %v %v", origFile, artifactFile))
+	cmd := exec.CommandContext(context.Background(), bash, "-c", fmt.Sprintf("mv %v %v", origFile, artifactFile))
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
