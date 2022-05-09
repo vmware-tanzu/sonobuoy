@@ -29,7 +29,7 @@ before v1.14.0 (if there are any).
 Since we already have some versions data, we only need to find the new ones. To see the new versions:
 ```
 ls cmd/sonobuoy/app/e2e/testLists|cut -f 1-3 -d '.' > existingversions.txt
-diff tmpversions.txt existingversions.txt
+comm -13 existingversions.txt tmpversions.txt 
 ```
 
 You should expect to see the v0.0.0 as a difference (a test value) but then modify the tmpVersions.txt to only include the new versions.
@@ -52,9 +52,16 @@ Now, when I run sonobuoy I can run with each of those plugins, get the results, 
 sonobuoy run -p ./tmpplugins --wait
 sonobuoy retrieve -f output.tar.gz
 cat tmpversions.txt | xargs -t -I % sh -c \
-  "sonobuoy results output.tar.gz -p e2e% --mode=detailed | jq .name -r | sort > ./cmd/sonobuoy/app/e2e/testLists/%"
+  "sonobuoy results output.tar.gz -p e2e% --mode=detailed | jq .name -r | sort > ./cmd/sonobuoy/app/e2e/testLists/%"  
+cd ./cmd/sonobuoy/app/e2e/testLists
 gzip *
-# Any older ones archives will just need you to say not to overwrite. TODO(jschnake) script this better to avoid answer 'n' over and over.
+# Any older ones archives will just need you to say not to overwrite.
+```
+
+Ensure this works by building locally and running with one of the new versions:
+
+```bash
+go install && sonobuoy e2e --version <new version> -i offline
 ```
 
 **DEBUG**
