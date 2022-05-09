@@ -129,6 +129,7 @@ jobs:
           load_test_images_into_cluster
           VERBOSE=true SONOBUOY_CLI=../../build/linux/amd64/sonobuoy integration
       - name: Save artifacts
+        if: ${{ always() }}
         uses: actions/upload-artifact@v2
         with:
           name: sonobuoy-test-archives-${{ github.run_id }}
