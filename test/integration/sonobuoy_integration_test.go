@@ -125,6 +125,7 @@ func mustRunSonobuoyCommandWithContext(ctx context.Context, t *testing.T, ns, ar
 		} else {
 			t.Logf("Checked sonobuoy logs, got: %v", o.String())
 		}
+		t.FailNow()
 	}
 
 	return stdout
