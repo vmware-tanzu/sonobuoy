@@ -284,6 +284,23 @@ func TestRetrieveAndExtractWithPodLogs(t *testing.T) {
 	}
 }
 
+// checkTarballForPluginLogs lists files in the tarball and checks for the e2e logs+worker logs.
+// Using the e2e plugin in quick mode seems to be a better check for this than our test image.
+func checkTarballForE2ELogs(t *testing.T, tarball string) {
+	b, err := runCommandWithContext(context.Background(), t, "tar", "-t -f"+tarball)
+	if err != nil {
+		t.Fatalf("Failed to list tarball contents to check for logs: %v %v", err, b.String())
+	}
+	pluginLogsRE := regexp.MustCompile(`podlogs/.*/e2e\.txt`)
+	workerLogsRE := regexp.MustCompile(`podlogs/.*/sonobuoy-worker\.txt`)
+	if !pluginLogsRE.MatchString(b.String()) {
+		t.Errorf("Failed to find plugin logs for e2e plugin in tarball %v", tarball)
+	}
+	if !workerLogsRE.MatchString(b.String()) {
+		t.Errorf("Failed to find worker logs for e2e plugin in tarball %v", tarball)
+	}
+}
+
 // TestCustomResultsDir tests that resultsDir is respected in plugins (job and ds) and
 // and we are able to still retrieve/read results from the aggregator.
 func TestCustomResultsDir(t *testing.T) {
@@ -324,6 +341,10 @@ func TestQuick(t *testing.T) {
 	tb = saveToArtifacts(t, tb)
 
 	checkTarballPluginForErrors(t, tb, "e2e", 0)
+
+	t.Run("Ensure pod and worker logs gathered", func(t *testing.T) {
+		checkTarballForE2ELogs(t, tb)
+	})
 }
 
 // deleteComplete is the logic that checks that we deleted the namespace and our clusterRole[Bindings]
