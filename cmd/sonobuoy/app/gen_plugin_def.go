@@ -134,6 +134,11 @@ func NewCmdGenPluginDef() *cobra.Command {
 		"Description for the plugin",
 	)
 
+	genPluginSet.StringVarP(
+		&genPluginOpts.def.SonobuoyConfig.SourceURL, "url", "u", "",
+		"URL for the plugin",
+	)
+
 	AddShowDefaultPodSpecFlag(&genPluginOpts.showDefaultPodSpec, genPluginSet)
 
 	cmd.Flags().AddFlagSet(genPluginSet)
