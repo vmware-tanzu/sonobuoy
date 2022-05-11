@@ -107,17 +107,24 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 
 /** Everything below this marker originally was copy/pasta'd from k8s/k8s. The modification are:
   exporting UntarAll, returning the list of files created, and the fix for undrained readers. Also
-  added the filename override as opposed to using a file prefix.  **/
+  added the filename override as opposed to using a file prefix and reconciled the filename/destDir
+  values.  **/
 
 // UntarAll expects a reader that contains tar'd data. It will untar the contents of the reader and write
 // the output into destDir. If filename specified, then files will be named "filename, filename-01, filename-02". It returns a list of all the
 // files it created.
 func UntarAll(reader io.Reader, destDir, filename string) (filenames []string, returnErr error) {
+	// Reconcile variables in case filename is also a path.
+	destDir = filepath.Join(destDir, filepath.Dir(filename))
+	if filename != "" {
+		// filepath.Base("") returns "." which is a directory, not a file base name as expected.
+		filename = filepath.Base(filename)
+	}
+
 	entrySeq, filenameCount := -1, -1
 	filenames = []string{}
 	// Adding compression per `splat` subcommand implementation
 	gzReader, err := gzip.NewReader(reader)
-
 	if err != nil {
 		returnErr = err
 		return
@@ -130,17 +137,15 @@ func UntarAll(reader io.Reader, destDir, filename string) (filenames []string, r
 	// If we fail to read them all then any pipes we are connected to
 	// may hang.
 	defer func() {
-		b, err := ioutil.ReadAll(reader)
-		if err != nil {
-			returnErr = errors.Wrap(err, "failed to drain the tar reader")
+		err := drainReader(reader)
+		switch {
+		case err == nil:
 			return
-		}
-
-		for i := range b {
-			if b[i] != 0 {
-				returnErr = fmt.Errorf("non-zero data %v (byte %v) read after tar EOF", string(b[i]), b[i])
-				return
-			}
+		case returnErr == nil && err != nil:
+			returnErr = err
+		case returnErr != nil && err != nil:
+			logrus.Warnf("Error while draining reader (%v) but there was a previous error that may be the root cause: %v", err, returnErr)
+			return
 		}
 	}()
 
@@ -269,4 +274,18 @@ func tarCmd(path string) []string {
 		"splat",
 		path,
 	}
+}
+
+func drainReader(r io.Reader) error {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return errors.Wrap(err, "failed to drain the tar reader")
+	}
+
+	for i := range b {
+		if b[i] != 0 {
+			return fmt.Errorf("non-zero data %v (byte %v) read after tar EOF", string(b[i]), b[i])
+		}
+	}
+	return nil
 }
