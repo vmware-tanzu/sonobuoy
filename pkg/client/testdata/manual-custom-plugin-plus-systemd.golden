@@ -41,7 +41,6 @@ data:
         value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      imagePullPolicy: IfNotPresent
       name: ""
       volumeMounts:
       - mountPath: /tmp/sonobuoy/results
@@ -92,7 +91,6 @@ data:
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
       image: sonobuoy/systemd-logs:v0.4
-      imagePullPolicy: IfNotPresent
       name: systemd-logs
       securityContext:
         privileged: true

@@ -1,0 +1,12 @@
+sonobuoy-config:
+  driver: Job
+  plugin-name: hello-world
+  result-format: raw
+  source-url: foo.com
+  description: This is a plugin description.
+spec:
+  command:
+  - ./run.sh
+  image: hello:v9
+  name: plugin
+  imagePullPolicy: Always

@@ -135,10 +135,11 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		return strings.ToLower(plugins[i].SonobuoyConfig.PluginName) < strings.ToLower(plugins[j].SonobuoyConfig.PluginName)
 	})
 
-	// Apply our universal transforms; only applies to ImagePullPolicy. Overrides all
-	// plugin values.
+	// Apply our universal transforms; only override defaultImagePullPolicy if desired.
 	for _, p := range plugins {
-		p.Spec.ImagePullPolicy = corev1.PullPolicy(cfg.Config.ImagePullPolicy)
+		if cfg.Config.ForceImagePullPolicy {
+			p.Spec.ImagePullPolicy = corev1.PullPolicy(cfg.Config.ImagePullPolicy)
+		}
 	}
 
 	// Apply transforms. Ensure this is before handling configmaps and applying the k8s_version.

@@ -20,8 +20,9 @@ Flags:
       --e2e-repo-config yaml-filepath            Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.
       --e2e-skip envModifier                     Specify the E2E_SKIP value for the e2e plugin, specifying which tests to skip. Shorthand for --plugin-env=e2e.E2E_SKIP=<string> (default \[Disruptive\]|NoExecuteTaintManager)
   -f, --file -                                   If set, loads the file as if it were the output from sonobuoy gen. Set to - to read from stdin.
+      --force-image-pull-policy                  Force plugins' imagePullPolicy to match the value for the Sonobuoy pod
   -h, --help                                     help for gen
-      --image-pull-policy string                 Set the ImagePullPolicy for the Sonobuoy image and all plugins. Valid options are Always, IfNotPresent, Never. (default "IfNotPresent")
+      --image-pull-policy string                 Set the ImagePullPolicy for the Sonobuoy image and all plugins (if --force-image-pull-policy is set). Valid options are Always, IfNotPresent, Never. (default "IfNotPresent")
       --kube-conformance-image image             Container image override for the e2e plugin. Shorthand for --plugin-image=e2e:<string> (default map[])
       --kubeconfig Kubeconfig                    Path to explicit kubeconfig file.
       --kubernetes-version string                Use default E2E image, but override the version. Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise. 'ignore' will try version resolution but ignore errors. 'latest' will find the latest dev image/version upstream.

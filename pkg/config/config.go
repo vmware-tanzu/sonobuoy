@@ -138,6 +138,7 @@ type Config struct {
 	///////////////////////////////////////////////
 	WorkerImage           string            `json:"WorkerImage" mapstructure:"WorkerImage"`
 	ImagePullPolicy       string            `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
+	ForceImagePullPolicy  bool              `json:"ForceImagePullPolicy,omitempty" mapstructure:"ForceImagePullPolicy"`
 	ImagePullSecrets      string            `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
 	CustomAnnotations     map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
 	AggregatorPermissions string            `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
