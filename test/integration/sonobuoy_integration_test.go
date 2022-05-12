@@ -756,6 +756,14 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "sonobuoy plugin-env supports aggregator",
 			cmdLine:    "gen --plugin-env=sonobuoy.FOO=bar --kubernetes-version=ignore",
 			expectFile: "testdata/gen-plugin-env-sonobuoy.golden",
+		}, {
+			desc:       "sonobuoy respects plugin imagePullPolicy",
+			cmdLine:    "gen --kubernetes-version=ignore -p testdata/plugins/good/setImagePullPolicy.yaml",
+			expectFile: "testdata/gen-imagePullPolicy.golden",
+		}, {
+			desc:       "sonobuoy respects plugin imagePullPolicy unless forced via config",
+			cmdLine:    "gen --kubernetes-version=ignore -p testdata/plugins/good/setImagePullPolicy.yaml --force-image-pull-policy",
+			expectFile: "testdata/gen-imagePullPolicy-forced.golden",
 		},
 	}
 	for _, tc := range testCases {

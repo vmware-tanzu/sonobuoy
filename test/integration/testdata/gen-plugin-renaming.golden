@@ -85,7 +85,6 @@ data:
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
       image: sonobuoy/testimage:v0.1
-      imagePullPolicy: IfNotPresent
       name: plugin
       volumeMounts:
       - mountPath: /tmp/sonobuoy/results
@@ -112,7 +111,6 @@ data:
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
       image: hello:v9
-      imagePullPolicy: IfNotPresent
       name: plugin
       volumeMounts:
       - mountPath: /tmp/sonobuoy/results

@@ -76,6 +76,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddKubeconfigFlag(&cfg.kubecfg, genset)
 	AddRBACModeFlags(&cfg.rbacMode, genset, rbac)
 	AddImagePullPolicyFlag(&cfg.sonobuoyConfig.ImagePullPolicy, genset)
+	AddForceImagePullPolicyFlag(&cfg.sonobuoyConfig.ForceImagePullPolicy, genset)
 	AddTimeoutFlag(&cfg.sonobuoyConfig.Aggregation.TimeoutSeconds, genset)
 	AddShowDefaultPodSpecFlag(&cfg.showDefaultPodSpec, genset)
 	AddAggregatorPermissionsFlag(&cfg.sonobuoyConfig.AggregatorPermissions, genset)

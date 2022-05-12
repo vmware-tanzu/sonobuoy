@@ -10,6 +10,12 @@ Plugin name (in aggregator): hello-world2
 Source URL: 
 Description: 
 ---
+Run as: setImagePullPolicy
+Filename: testdata/plugins/good/setImagePullPolicy.yaml
+Plugin name (in aggregator): hello-world
+Source URL: foo.com
+Description: This is a plugin description.
+---
 Run as: sidecar
 Filename: testdata/plugins/good/sidecar.yaml
 Plugin name (in aggregator): sidecarplugin

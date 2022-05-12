@@ -430,9 +430,12 @@ func TestGenerateManifestGolden(t *testing.T) {
 			},
 			goldenFile: filepath.Join("testdata", "plugin-configmaps.golden"),
 		}, {
-			name: "ImagePullPolicy applied to all plugins",
+			name: "ImagePullPolicy applied to all plugins if forced",
 			inputcm: &client.GenConfig{
-				Config:      staticConfig(),
+				Config: fromConfig(func(c *config.Config) *config.Config {
+					c.ForceImagePullPolicy = true
+					return c
+				}),
 				KubeVersion: "v99+static.testing",
 				StaticPlugins: []*manifest.Manifest{
 					{
@@ -446,7 +449,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			},
 			goldenFile: filepath.Join("testdata", "imagePullPolicy-all-plugins.golden"),
 		}, {
-			name: "ImagePullPolicy applied to all plugins",
+			name: "ImagePullPolicy not applied to all plugins by default",
 			inputcm: &client.GenConfig{
 				Config:      staticConfig(),
 				KubeVersion: "v99+static.testing",
@@ -460,7 +463,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 					},
 				},
 			},
-			goldenFile: filepath.Join("testdata", "imagePullPolicy-all-plugins.golden"),
+			goldenFile: filepath.Join("testdata", "imagePullPolicy-not-all-plugins.golden"),
 		}, {
 			name: "AggregatorPermissions for non-cluster admin",
 			inputcm: &client.GenConfig{
