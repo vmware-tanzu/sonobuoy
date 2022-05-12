@@ -24,7 +24,6 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
-	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	manifesthelper "github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest/helper"
@@ -37,10 +36,8 @@ import (
 )
 
 const (
-	defaultPluginName    = "plugin"
-	defaultPluginDriver  = "Job"
-	defaultMountName     = "results"
-	defaultMountReadOnly = false
+	defaultPluginName   = "plugin"
+	defaultPluginDriver = "Job"
 )
 
 // GenPluginDefConfig are the input options for running
@@ -153,13 +150,6 @@ func defaultManifest() manifest.Manifest {
 	m := manifest.Manifest{}
 	m.Spec.Name = defaultPluginName
 	m.SonobuoyConfig.Driver = defaultPluginDriver
-	m.Spec.VolumeMounts = []v1.VolumeMount{
-		{
-			MountPath: plugin.ResultsDir,
-			Name:      defaultMountName,
-			ReadOnly:  defaultMountReadOnly,
-		},
-	}
 	return m
 }
 
