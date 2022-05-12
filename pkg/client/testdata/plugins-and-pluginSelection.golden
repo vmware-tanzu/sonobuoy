@@ -41,7 +41,6 @@ data:
         value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      imagePullPolicy: IfNotPresent
       name: ""
       volumeMounts:
       - mountPath: /tmp/sonobuoy/results
@@ -64,7 +63,6 @@ data:
         value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      imagePullPolicy: IfNotPresent
       name: ""
       volumeMounts:
       - mountPath: /tmp/sonobuoy/results

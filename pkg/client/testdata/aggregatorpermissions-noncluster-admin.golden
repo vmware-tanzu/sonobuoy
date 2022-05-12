@@ -61,7 +61,6 @@ data:
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
       image: k8s.gcr.io/conformance:v99+static.testing
-      imagePullPolicy: IfNotPresent
       name: e2e
       volumeMounts:
       - mountPath: /tmp/sonobuoy/results
@@ -112,7 +111,6 @@ data:
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
       image: sonobuoy/systemd-logs:v0.4
-      imagePullPolicy: IfNotPresent
       name: systemd-logs
       securityContext:
         privileged: true

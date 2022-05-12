@@ -24,35 +24,11 @@ metadata:
 apiVersion: v1
 data:
   plugin-0.yaml: |-
-    podSpec:
-      containers: []
-      nodeSelector:
-        kubernetes.io/os: linux
-      restartPolicy: Never
-      serviceAccountName: sonobuoy-serviceaccount
-      tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
-        operator: Exists
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: kubernetes.io/e2e-evict-taint-key
-        operator: Exists
     sonobuoy-config:
-      driver: Job
-      plugin-name: e2e
-      result-format: junit
+      driver: ""
+      plugin-name: myplugin1
     spec:
-      command:
-      - /run_e2e.sh
       env:
-      - name: E2E_EXTRA_ARGS
-        value: --progress-report-url=http://localhost:8099/progress
-      - name: E2E_FOCUS
-      - name: E2E_PARALLEL
-      - name: E2E_SKIP
-      - name: E2E_USE_GO_RUNNER
-        value: "true"
       - name: RESULTS_DIR
         value: /tmp/sonobuoy/results
       - name: SONOBUOY
@@ -65,8 +41,31 @@ data:
         value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      image: k8s.gcr.io/conformance:v99+static.testing
-      name: e2e
+      imagePullPolicy: Never
+      name: ""
+      volumeMounts:
+      - mountPath: /tmp/sonobuoy/results
+        name: results
+  plugin-1.yaml: |-
+    sonobuoy-config:
+      driver: ""
+      plugin-name: myplugin2
+    spec:
+      env:
+      - name: RESULTS_DIR
+        value: /tmp/sonobuoy/results
+      - name: SONOBUOY
+        value: "true"
+      - name: SONOBUOY_CONFIG_DIR
+        value: /tmp/sonobuoy/config
+      - name: SONOBUOY_K8S_VERSION
+        value: v99+static.testing
+      - name: SONOBUOY_PROGRESS_PORT
+        value: "8099"
+      - name: SONOBUOY_RESULTS_DIR
+        value: /tmp/sonobuoy/results
+      imagePullPolicy: Always
+      name: ""
       volumeMounts:
       - mountPath: /tmp/sonobuoy/results
         name: results

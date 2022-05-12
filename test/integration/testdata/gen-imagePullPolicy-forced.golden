@@ -11,9 +11,46 @@ metadata:
   name: sonobuoy-serviceaccount
   namespace: sonobuoy
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    component: sonobuoy
+    namespace: sonobuoy
+  name: sonobuoy-serviceaccount-sonobuoy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: sonobuoy-serviceaccount-sonobuoy
+subjects:
+- kind: ServiceAccount
+  name: sonobuoy-serviceaccount
+  namespace: sonobuoy
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    component: sonobuoy
+    namespace: sonobuoy
+  name: sonobuoy-serviceaccount-sonobuoy
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- nonResourceURLs:
+  - /metrics
+  - /logs
+  - /logs/*
+  verbs:
+  - get
+---
 apiVersion: v1
 data:
-  config.json: '{"Description":"DEFAULT","UUID":"","Version":"static-version-for-testing","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:static-version-for-testing","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","AggregatorPermissions":"clusterAdmin","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}'
+  config.json: '{"Description":"DEFAULT","UUID":"","Version":"*STATIC_FOR_TESTING*","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:*STATIC_FOR_TESTING*","ImagePullPolicy":"IfNotPresent","ForceImagePullPolicy":true,"ImagePullSecrets":"","AggregatorPermissions":"clusterAdmin","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}'
 kind: ConfigMap
 metadata:
   labels:
@@ -24,35 +61,16 @@ metadata:
 apiVersion: v1
 data:
   plugin-0.yaml: |-
-    podSpec:
-      containers: []
-      nodeSelector:
-        kubernetes.io/os: linux
-      restartPolicy: Never
-      serviceAccountName: sonobuoy-serviceaccount
-      tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
-        operator: Exists
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: kubernetes.io/e2e-evict-taint-key
-        operator: Exists
     sonobuoy-config:
+      description: This is a plugin description.
       driver: Job
-      plugin-name: e2e
-      result-format: junit
+      plugin-name: hello-world
+      result-format: raw
+      source-url: foo.com
     spec:
       command:
-      - /run_e2e.sh
+      - ./run.sh
       env:
-      - name: E2E_EXTRA_ARGS
-        value: --progress-report-url=http://localhost:8099/progress
-      - name: E2E_FOCUS
-      - name: E2E_PARALLEL
-      - name: E2E_SKIP
-      - name: E2E_USE_GO_RUNNER
-        value: "true"
       - name: RESULTS_DIR
         value: /tmp/sonobuoy/results
       - name: SONOBUOY
@@ -60,13 +78,14 @@ data:
       - name: SONOBUOY_CONFIG_DIR
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
-        value: v99+static.testing
+        value: ignore
       - name: SONOBUOY_PROGRESS_PORT
         value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      image: k8s.gcr.io/conformance:v99+static.testing
-      name: e2e
+      image: hello:v9
+      imagePullPolicy: IfNotPresent
+      name: plugin
       volumeMounts:
       - mountPath: /tmp/sonobuoy/results
         name: results
@@ -101,7 +120,8 @@ spec:
       valueFrom:
         fieldRef:
           fieldPath: status.podIP
-    image: sonobuoy/sonobuoy:static-version-for-testing
+    image: sonobuoy/sonobuoy:*STATIC_FOR_TESTING*
+    imagePullPolicy: IfNotPresent
     name: kube-sonobuoy
     volumeMounts:
     - mountPath: /etc/sonobuoy
@@ -146,3 +166,4 @@ spec:
     sonobuoy-component: aggregator
   type: ClusterIP
 ---
+
