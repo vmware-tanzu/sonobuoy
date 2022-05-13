@@ -143,13 +143,13 @@ func TestPluginGenDef(t *testing.T) {
 			}
 
 			if *update {
-				ioutil.WriteFile(tC.expectFile, manifest, 0666)
+				ioutil.WriteFile(tC.expectFile, []byte(manifest), 0666)
 			} else {
 				fileData, err := ioutil.ReadFile(tC.expectFile)
 				if err != nil {
 					t.Fatalf("Failed to read golden file %v: %v", tC.expectFile, err)
 				}
-				if !bytes.Equal(fileData, manifest) {
+				if !bytes.Equal(fileData, []byte(manifest)) {
 					t.Errorf("Expected manifest to equal goldenfile: %v but instead got:\n\n%v", tC.expectFile, string(manifest))
 				}
 			}

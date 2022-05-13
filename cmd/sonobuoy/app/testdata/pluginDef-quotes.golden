@@ -11,4 +11,3 @@ spec:
     value: '- bar'
   image: img:v1
   name: n - foo
-  resources: {}

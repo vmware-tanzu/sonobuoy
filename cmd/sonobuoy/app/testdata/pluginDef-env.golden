@@ -6,4 +6,3 @@ spec:
   - name: FOO
     value: bar
   name: ""
-  resources: {}
