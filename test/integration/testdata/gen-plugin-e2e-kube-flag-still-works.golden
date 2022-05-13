@@ -46,7 +46,6 @@ spec:
   image: k8s.gcr.io/conformance:v123.456.789
   imagePullPolicy: IfNotPresent
   name: e2e
-  resources: {}
   volumeMounts:
   - mountPath: /tmp/sonobuoy/results
     name: results

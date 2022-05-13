@@ -17,4 +17,3 @@ sonobuoy-config:
   plugin-name: "n"
 spec:
   name: ""
-  resources: {}
