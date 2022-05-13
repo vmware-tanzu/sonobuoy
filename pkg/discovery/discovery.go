@@ -30,9 +30,14 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+	kutil "github.com/vmware-tanzu/sonobuoy/pkg/k8s"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
 	pluginaggregation "github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/daemonset"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/driver/job"
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	"github.com/vmware-tanzu/sonobuoy/pkg/tarball"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
@@ -49,6 +54,9 @@ const (
 	// MetaLocation is the place under which snapshot metadata (query times, config) is stored
 	// Also stored in query.go
 	MetaLocation = "meta"
+
+	sonobuoyResultsDirKey       = "SONOBUOY_RESULTS_DIR"
+	legacySonobuoyResultsDirKey = "RESULTS_DIR"
 )
 
 type RunInfo struct {
@@ -134,6 +142,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	}
 
 	// 4. Run the plugin aggregator. Save this error for clear logging later.
+	avoidResultsDirIssue(cfg.LoadedPlugins, cfg.ResultsDir)
 	runErr := pluginaggregation.Run(kubeClient, cfg.LoadedPlugins, cfg.Aggregation, cfg.ProgressUpdatesPort, cfg.ResultsDir, cfg.Namespace, outpath)
 	trackErrorsFor("running plugins")(runErr)
 
@@ -222,6 +231,34 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	logrus.Infof("Results available at %v", tb)
 
 	return errCount
+}
+
+// avoidResultsDirIssue prevents issue #1688; a mismatch between the
+// resultsDir specified in the config and what is on the plugins. If that happens
+// the worker and plugin fail to communicate and the plugin hangs.
+func avoidResultsDirIssue(plugins []plugin.Interface, dir string) {
+	if os.Getenv("SONOBUOY_DISABLE_RECONCILIATION") == "true" {
+		logrus.Debugln("Skipping transforms to avoid issues with legacy RESULTS_DIR since SONOBUOY_DISABLE_RECONCILIATION=true was set on the aggregator pod.")
+		return
+	}
+
+	logrus.Debugln("Applying transforms to avoid issues with legacy RESULTS_DIR. To skip this transformation, set SONOBUOY_DISABLE_RECONCILIATION=true on the aggregator pod.")
+	dirEnvVars := []corev1.EnvVar{
+		{Name: sonobuoyResultsDirKey, Value: dir},
+		{Name: legacySonobuoyResultsDirKey, Value: dir},
+	}
+	for _, p := range plugins {
+		if j, ok := p.(*job.Plugin); ok {
+			AutoAttachResultsDir([]*manifest.Manifest{&j.Definition}, dir)
+			j.Definition.Spec.Env = kutil.MergeEnv(dirEnvVars, j.Definition.Spec.Env, nil)
+			continue
+		}
+		if ds, ok := p.(*daemonset.Plugin); ok {
+			AutoAttachResultsDir([]*manifest.Manifest{&ds.Definition}, dir)
+			ds.Definition.Spec.Env = kutil.MergeEnv(dirEnvVars, ds.Definition.Spec.Env, nil)
+			continue
+		}
+	}
 }
 
 func statusCounts(item *results.Item, startingCounts map[string]int) {
@@ -360,4 +397,37 @@ func setPodStatusAnnotation(client kubernetes.Interface, namespace string, statu
 
 	_, err = client.CoreV1().Pods(namespace).Patch(context.TODO(), podName, types.MergePatchType, patchBytes, metav1.PatchOptions{})
 	return err
+}
+
+// AutoAttachResultsDir will either add the volumemount for the results dir or modify the existing
+// one to have the right path set.
+func AutoAttachResultsDir(plugins []*manifest.Manifest, resultsDir string) {
+	for pluginIndex := range plugins {
+		containers := []*corev1.Container{&plugins[pluginIndex].Spec.Container}
+		if plugins[pluginIndex].PodSpec != nil {
+			for containerIndex := range plugins[pluginIndex].PodSpec.Containers {
+				containers = append(containers, &plugins[pluginIndex].PodSpec.Containers[containerIndex])
+			}
+		}
+		addOrUpdateResultsMount(resultsDir, containers...)
+	}
+}
+
+func addOrUpdateResultsMount(resultsDir string, containers ...*corev1.Container) {
+	for ci := range containers {
+		foundOnPlugin := false
+		for vmi, vm := range containers[ci].VolumeMounts {
+			if vm.Name == "results" {
+				containers[ci].VolumeMounts[vmi].MountPath = resultsDir
+				foundOnPlugin = true
+				break
+			}
+		}
+		if !foundOnPlugin {
+			containers[ci].VolumeMounts = append(containers[ci].VolumeMounts, corev1.VolumeMount{
+				Name:      "results",
+				MountPath: resultsDir,
+			})
+		}
+	}
 }
