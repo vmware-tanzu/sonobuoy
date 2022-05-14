@@ -21,7 +21,7 @@ package buildinfo
 
 // Version is the current version of Sonobuoy, set by the go linker's -X flag at build time.
 // Ensure that this is bumped manually as well so that Sonobuoy, as a library, also has the right version.
-var Version = "v0.56.5"
+var Version = "v0.56.6"
 
 // GitSHA is the actual commit that is being built, set by the go linker's -X flag at build time.
 var GitSHA string
