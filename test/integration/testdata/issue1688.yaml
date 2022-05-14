@@ -1,0 +1,180 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: REPLACE_NS
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-serviceaccount
+  namespace: REPLACE_NS
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    component: sonobuoy
+    namespace: REPLACE_NS
+  name: sonobuoy-serviceaccount-REPLACE_NS
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: sonobuoy-serviceaccount-REPLACE_NS
+subjects:
+- kind: ServiceAccount
+  name: sonobuoy-serviceaccount
+  namespace: REPLACE_NS
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    component: sonobuoy
+    namespace: REPLACE_NS
+  name: sonobuoy-serviceaccount-REPLACE_NS
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- nonResourceURLs:
+  - '/metrics'
+  - '/logs'
+  - '/logs/*'
+  verbs:
+  - 'get'
+---
+apiVersion: v1
+data:
+  config.json: |
+    {"Description":"DEFAULT","UUID":"","Version":"v0.54.0","ResultsDir":"/tmp/sonobuoy","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null,"LimitSize":"","LimitTime":""}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"REPLACE_NS","WorkerImage":"REPLACE_IMAGE","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}
+kind: ConfigMap
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-config-cm
+  namespace: REPLACE_NS
+---
+apiVersion: v1
+data:
+  plugin-0.yaml: |
+    podSpec:
+      containers: []
+      nodeSelector:
+        kubernetes.io/os: linux
+      restartPolicy: Never
+      serviceAccountName: sonobuoy-serviceaccount
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: kubernetes.io/e2e-evict-taint-key
+        operator: Exists
+    sonobuoy-config:
+      driver: Job
+      plugin-name: e2ecustom
+      result-format: junit
+    spec:
+      command:
+      - /run_e2e.sh
+      env:
+      - name: E2E_EXTRA_ARGS
+        value: --progress-report-url=http://localhost:8099/progress
+      - name: E2E_FOCUS
+        value: Pods should be submitted and removed
+      - name: E2E_PARALLEL
+        value: "false"
+      - name: E2E_USE_GO_RUNNER
+        value: "true"
+      - name: SONOBUOY
+        value: "true"
+      - name: SONOBUOY_CONFIG_DIR
+        value: /tmp/sonobuoy/config
+      - name: SONOBUOY_K8S_VERSION
+        value: v1.21.1
+      - name: SONOBUOY_RESULTS_DIR
+        value: /tmp/sonobuoy/results
+      image: k8s.gcr.io/conformance:v1.21.1
+      imagePullPolicy: IfNotPresent
+      name: e2e
+      resources: {}
+      volumeMounts:
+      - mountPath: /tmp/results
+        name: results
+kind: ConfigMap
+metadata:
+  labels:
+    component: sonobuoy
+  name: sonobuoy-plugins-cm
+  namespace: REPLACE_NS
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    component: sonobuoy
+    sonobuoy-component: aggregator
+    tier: analysis
+  name: sonobuoy
+  namespace: REPLACE_NS
+spec:
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 3000
+    fsGroup: 2000
+  containers:
+  - env:
+    - name: SONOBUOY_ADVERTISE_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.podIP
+    image: REPLACE_IMAGE
+    imagePullPolicy: IfNotPresent
+    name: kube-sonobuoy
+    command: ["/sonobuoy"]
+    args: ["aggregator", "--no-exit", "--level=info", "-v=4", "--alsologtostderr"]
+    volumeMounts:
+    - mountPath: /etc/sonobuoy
+      name: sonobuoy-config-volume
+    - mountPath: /plugins.d
+      name: sonobuoy-plugins-volume
+    - mountPath: /tmp/sonobuoy
+      name: output-volume
+  restartPolicy: Never
+  serviceAccountName: sonobuoy-serviceaccount
+  tolerations:
+  - key: "kubernetes.io/e2e-evict-taint-key"
+    operator: "Exists"
+  volumes:
+  - configMap:
+      name: sonobuoy-config-cm
+    name: sonobuoy-config-volume
+  - configMap:
+      name: sonobuoy-plugins-cm
+    name: sonobuoy-plugins-volume
+  - emptyDir: {}
+    name: output-volume
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    component: sonobuoy
+    sonobuoy-component: aggregator
+  name: sonobuoy-aggregator
+  namespace: REPLACE_NS
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    sonobuoy-component: aggregator
+  type: ClusterIP
