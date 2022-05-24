@@ -109,12 +109,13 @@ func TestPodFailing(t *testing.T) {
 		}, {
 			desc:          "ImagePullBackOff is considered a failure if elapsed time greater than wait window",
 			expectFailing: true,
-			expectMsg:     "Failed to pull image for container error-container within 5m0s. Container is in state ImagePullBackOff",
+			expectMsg:     "Failed to pull image random-image for container error-container within 5m0s. Container is in state ImagePullBackOff",
 			pod: fromGoodPod(func(p *corev1.Pod) *corev1.Pod {
 				p.Status.StartTime = &metav1.Time{Time: time.Now().Add(-maxWaitForImageTime)}
 				p.Status.ContainerStatuses = []corev1.ContainerStatus{
 					{
-						Name: "error-container",
+						Name:  "error-container",
+						Image: "random-image",
 						State: corev1.ContainerState{
 							Waiting: &corev1.ContainerStateWaiting{
 								Reason: "ImagePullBackOff",
@@ -126,12 +127,13 @@ func TestPodFailing(t *testing.T) {
 		}, {
 			desc:          "ErrImagePull is considered a failure if elapsed time greater than wait window",
 			expectFailing: true,
-			expectMsg:     "Failed to pull image for container error-container within 5m0s. Container is in state ErrImagePull",
+			expectMsg:     "Failed to pull image random-image for container error-container within 5m0s. Container is in state ErrImagePull",
 			pod: fromGoodPod(func(p *corev1.Pod) *corev1.Pod {
 				p.Status.StartTime = &metav1.Time{Time: time.Now().Add(-maxWaitForImageTime)}
 				p.Status.ContainerStatuses = []corev1.ContainerStatus{
 					{
-						Name: "error-container",
+						Name:  "error-container",
+						Image: "random-image",
 						State: corev1.ContainerState{
 							Waiting: &corev1.ContainerStateWaiting{
 								Reason: "ErrImagePull",
