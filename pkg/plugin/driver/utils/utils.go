@@ -70,7 +70,7 @@ func IsPodFailing(pod *v1.Pod) (bool, string) {
 		if waiting := cstatus.State.Waiting; waiting != nil && pod.Status.StartTime != nil {
 			elapsedPodTime := time.Since(pod.Status.StartTime.Time)
 			if elapsedPodTime > maxWaitForImageTime && (waiting.Reason == "ImagePullBackOff" || waiting.Reason == "ErrImagePull") {
-				errstr := fmt.Sprintf("Failed to pull image for container %v within %v. Container is in state %v", cstatus.Name, maxWaitForImageTime, waiting.Reason)
+				errstr := fmt.Sprintf("Failed to pull image %v for container %v within %v. Container is in state %v", cstatus.Image, cstatus.Name, maxWaitForImageTime, waiting.Reason)
 				return true, errstr
 			}
 		}
