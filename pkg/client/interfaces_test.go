@@ -18,6 +18,8 @@ package client
 
 import (
 	"testing"
+
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 )
 
 // ConfigValidator allows the command configurations to be validated.
@@ -32,6 +34,106 @@ func TestConfigValidation(t *testing.T) {
 		valid         bool
 		expectedError string
 	}{
+		{
+			desc: "gen config with valid yaml value is valid",
+			config: &GenConfig{
+				StaticPlugins: []*manifest.Manifest{
+					{
+						SonobuoyConfig: manifest.SonobuoyConfig{
+							PluginName: "test",
+						},
+						ConfigMap: map[string]string{
+							"test.yaml": "test: \"valid\"",
+						},
+					},
+				},
+			},
+			valid: true,
+		},
+		{
+			desc: "gen config with valid yml value is valid",
+			config: &GenConfig{
+				StaticPlugins: []*manifest.Manifest{
+					{
+						SonobuoyConfig: manifest.SonobuoyConfig{
+							PluginName: "test",
+						},
+						ConfigMap: map[string]string{
+							"test.yml": "test: \"valid\"",
+						},
+					},
+				},
+			},
+			valid: true,
+		},
+		{
+			desc: "gen config with invalid yaml value is not valid",
+			config: &GenConfig{
+				StaticPlugins: []*manifest.Manifest{
+					{
+						SonobuoyConfig: manifest.SonobuoyConfig{
+							PluginName: "test",
+						},
+						ConfigMap: map[string]string{
+							"test.yaml": "test: \"in\"valid\"",
+						},
+					},
+				},
+			},
+			valid:         false,
+			expectedError: "failed to parse value of key test.yaml in ConfigMap for plugin test: error converting YAML to JSON: yaml: did not find expected key",
+		},
+		{
+			desc: "gen config with invalid yml value is not valid",
+			config: &GenConfig{
+				StaticPlugins: []*manifest.Manifest{
+					{
+						SonobuoyConfig: manifest.SonobuoyConfig{
+							PluginName: "test",
+						},
+						ConfigMap: map[string]string{
+							"test.yml": "test: \"in\"valid\"",
+						},
+					},
+				},
+			},
+			valid:         false,
+			expectedError: "failed to parse value of key test.yml in ConfigMap for plugin test: error converting YAML to JSON: yaml: did not find expected key",
+		},
+		{
+			desc: "gen config with valid yaml value and invalid yaml value is not valid",
+			config: &GenConfig{
+				StaticPlugins: []*manifest.Manifest{
+					{
+						SonobuoyConfig: manifest.SonobuoyConfig{
+							PluginName: "test",
+						},
+						ConfigMap: map[string]string{
+							"test.yaml":  "test: \"valid\"",
+							"test2.yaml": "test: \"in\"valid\"",
+						},
+					},
+				},
+			},
+			valid:         false,
+			expectedError: "failed to parse value of key test2.yaml in ConfigMap for plugin test: error converting YAML to JSON: yaml: did not find expected key",
+		},
+		{
+			desc: "gen config with invalid yaml value for non-yaml key is valid",
+			config: &GenConfig{
+				StaticPlugins: []*manifest.Manifest{
+					{
+						SonobuoyConfig: manifest.SonobuoyConfig{
+							PluginName: "test",
+						},
+						ConfigMap: map[string]string{
+							"test.txt": "test: \"in\"valid\"",
+						},
+					},
+				},
+			},
+			valid: true,
+		},
 		{
 			desc:          "log config with no namespace is not valid",
 			config:        &LogConfig{},

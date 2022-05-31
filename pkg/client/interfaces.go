@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -106,6 +107,15 @@ func (gc *GenConfig) Validate() error {
 	for _, m := range gc.StaticPlugins {
 		if !nameRegexp.MatchString(m.SonobuoyConfig.PluginName) {
 			return fmt.Errorf("invalid plugin name %q; name must only include lowercase alphanumeric values '.' or '-'. This is due to Kubernetes requiring various values to follow RFC 1123 for valid subdomain names", m.SonobuoyConfig.PluginName)
+		}
+
+		for key, value := range m.ConfigMap {
+			if strings.HasSuffix(key, ".yml") || strings.HasSuffix(key, ".yaml") {
+				var i interface{}
+				if err := yaml.Unmarshal([]byte(value), &i); err != nil {
+					return fmt.Errorf("failed to parse value of key %v in ConfigMap for plugin %v: %v", key, m.SonobuoyConfig.PluginName, err)
+				}
+			}
 		}
 	}
 	return nil
