@@ -28,11 +28,19 @@ case $opt in
 esac
 done
 
+# Using local build for this portion rather than docer to avoid having to use a go build image, long build with go modules, etc.
+# Refresh CLI docs to ensure the docs are up to date when copied for the next version.
+echo "Refreshing CLI docs in main docs..."
+source "${DIR}/scripts/build_funcs.sh"; update_cli_docs
+echo "Done. Beginning to generate docs for specified version..."
+
 if [ -z "${VERSION}" ]
 then
-  echo "-v requires argument to proceed"
+  echo "-v requires argument to proceed making docs for the given version"
   exit 1
 fi
+
+
 
 read -r -d '' CONFIG_VERSION_BLOCK << EOM
   docs_latest: v.*
