@@ -19,6 +19,7 @@ package app
 import (
 	"flag"
 	"fmt"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
@@ -27,6 +28,10 @@ import (
 	"github.com/spf13/pflag"
 	"k8s.io/klog"
 )
+
+// once used just to initKlogs one time; the `gen cli` command will hit that path a second time
+// and cause a panic otherwise.
+var once sync.Once
 
 func NewSonobuoyCommand() *cobra.Command {
 	cmds := &cobra.Command{
@@ -49,7 +54,7 @@ func NewSonobuoyCommand() *cobra.Command {
 	gen.AddCommand(genPlugin)
 	gen.AddCommand(NewCmdGenConfig())
 	gen.AddCommand(NewCmdGenImageRepoConfig())
-
+	gen.AddCommand(NewCmdGenCLIDocs())
 	cmds.AddCommand(gen)
 
 	cmds.AddCommand(NewCmdLogs())
@@ -134,7 +139,11 @@ func prerunChecks(cmd *cobra.Command, args []string) error {
 // more verbose and dont directly speak to the sonobuoy flags themselves.
 // Still usable if truly necessary.
 func initKlog(cmd *cobra.Command) {
-	klog.InitFlags(nil)
+	initKlogsOnce := func() {
+		klog.InitFlags(nil)
+	}
+	once.Do(initKlogsOnce)
+
 	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
 	for _, f := range []string{

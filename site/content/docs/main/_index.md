@@ -52,6 +52,10 @@ more about the new release cycles in [our blog][decoupling-sonobuoy-k8s].
 
    Move the extracted `sonobuoy` executable to somewhere on your `PATH`.
 
+## CLI Documentation
+
+The full documentation for the CLI can be found [here][clidocs].
+
 ## Getting Started
 
 To launch conformance tests (ensuring [CNCF][cncf] conformance) and wait until they are finished run:
@@ -264,3 +268,5 @@ See [the list of releases][releases] to find out about feature changes.
 [strategy]: strategy
 
 [aggregator-permissions]: aggregator-permissions
+
+[clidocs]: cli/sonobuoy

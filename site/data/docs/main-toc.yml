@@ -5,6 +5,8 @@ toc:
         url: /index.html
       - page: Checking Results
         url: /results
+      - page: CLI Documentation
+        url: /cli/sonobuoy
   - title: Plugins
     subfolderitems:
       - page: Overview
