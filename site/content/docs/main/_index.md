@@ -199,7 +199,7 @@ details [here][issue1388]. The simplest way to avoid this is to update your vers
 
 ## Strategy Document
 
-See our current [strategy document][strategy] for context on what our highest priority use cases and work items
+See our current [strategy document][strategy] and [roadmap][roadmap] for context on what our highest priority use cases and work items
 will be. Feel free to make comments on Github or start conversations in Slack.
 
 ## Contributing
@@ -270,3 +270,6 @@ See [the list of releases][releases] to find out about feature changes.
 [aggregator-permissions]: aggregator-permissions
 
 [clidocs]: cli/sonobuoy
+
+[roadmap]: https://github.com/vmware-tanzu/sonobuoy/wiki/Roadmap
+
