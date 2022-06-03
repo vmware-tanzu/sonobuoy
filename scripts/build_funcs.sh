@@ -221,12 +221,13 @@ push_images() {
         docker push "$REGISTRY/$TARGET:$arch-$IMAGE_BRANCH"
         docker push "$REGISTRY/$TARGET:$arch-$IMAGE_VERSION"
     done
-    
+
     export REGISTRY_AUTH_FILE=$(pwd)/auth.json
-    skopeo login --username $DOCKERHUB_USER --password $DOCKERHUB_TOKEN registry.hub.docker.com/$DOCKERHUB_USER
+    skopeo login --username $DOCKERHUB_USER --password $DOCKERHUB_TOKEN registry.hub.docker.com/$REGISTRY
+
     for VERSION in "${WINVERSIONS[@]}"; do
-        skopeo copy docker-archive://$(pwd)/build/windows/$WIN_ARCH/$VERSION/sonobuoy-img-win-$WIN_ARCH-$VERSION-$GITHUB_RUN_ID.tar "docker://registry.hub.docker.com/$REGISTRY/$TARGET:win-$WIN_ARCH-$VERSION-$IMAGE_BRANCH"
-        skopeo copy docker-archive://$(pwd)/build/windows/$WIN_ARCH/$VERSION/sonobuoy-img-win-$WIN_ARCH-$VERSION-$GITHUB_RUN_ID.tar "docker://registry.hub.docker.com/$REGISTRY/$TARGET:win-$WIN_ARCH-$VERSION-$IMAGE_VERSION"
+        skopeo --debug copy docker-archive://$(pwd)/build/windows/$WIN_ARCH/$VERSION/sonobuoy-img-win-$WIN_ARCH-$VERSION-$GITHUB_RUN_ID.tar "docker://registry.hub.docker.com/$REGISTRY/$TARGET:win-$WIN_ARCH-$VERSION-$IMAGE_BRANCH"
+        skopeo --debug copy docker-archive://$(pwd)/build/windows/$WIN_ARCH/$VERSION/sonobuoy-img-win-$WIN_ARCH-$VERSION-$GITHUB_RUN_ID.tar "docker://registry.hub.docker.com/$REGISTRY/$TARGET:win-$WIN_ARCH-$VERSION-$IMAGE_VERSION"
     done
 }
 
