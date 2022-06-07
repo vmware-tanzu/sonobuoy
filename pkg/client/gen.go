@@ -746,6 +746,7 @@ func SystemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 	// systemd-logs only makes sense on linux.
 	// TODO(jschnake): Instead of systemd-logs, make an os-agnostic log gathering plugin.
 	m.PodSpec.PodSpec.NodeSelector = map[string]string{"kubernetes.io/os": "linux"}
+
 	return m
 }
 

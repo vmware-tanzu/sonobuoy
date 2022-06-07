@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+	"github.com/vmware-tanzu/sonobuoy/pkg/features"
 )
 
 type deleteFlags struct {
@@ -49,7 +50,7 @@ func NewCmdDelete() *cobra.Command {
 	AddRBACModeFlags(&f.rbacMode, cmd.Flags(), DetectRBACMode)
 	AddDeleteAllFlag(&f.deleteAll, cmd.Flags())
 	AddDeleteWaitFlag(&f.wait, cmd.Flags())
-	if featureEnabled(FeatureWaitOutputProgressByDefault) {
+	if features.Enabled(features.WaitOutputProgressByDefault) {
 		AddWaitOutputFlag(&f.waitOutput, cmd.Flags(), ProgressOutputMode)
 	} else {
 		AddWaitOutputFlag(&f.waitOutput, cmd.Flags(), SilentOutputMode)

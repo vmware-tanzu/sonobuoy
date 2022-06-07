@@ -25,6 +25,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/config"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
+	"github.com/vmware-tanzu/sonobuoy/pkg/features"
 	imagepkg "github.com/vmware-tanzu/sonobuoy/pkg/image"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 
@@ -104,7 +105,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 
 	AddSkipPreflightFlag(&cfg.skipPreflight, genset)
 	AddRunWaitFlag(&cfg.wait, genset)
-	if featureEnabled(FeatureWaitOutputProgressByDefault) {
+	if features.Enabled(features.WaitOutputProgressByDefault) {
 		AddWaitOutputFlag(&cfg.waitOutput, genset, ProgressOutputMode)
 	} else {
 		AddWaitOutputFlag(&cfg.waitOutput, genset, SilentOutputMode)
