@@ -1,4 +1,4 @@
-package app
+package features
 
 import (
 	"testing"
@@ -27,7 +27,7 @@ func Test_FeatureEnabled(t *testing.T) {
 			want:   true,
 			allEnv: "false", featureEnv: "true", defaultVal: false,
 		}, {
-			name:   "FeaturesAll true overrides default",
+			name:   "All true overrides default",
 			want:   true,
 			allEnv: "true", featureEnv: "", defaultVal: false,
 		}, {
@@ -42,8 +42,8 @@ func Test_FeatureEnabled(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := featureEnabledCore(feature, tt.allEnv, tt.featureEnv, map[string]bool{feature: tt.defaultVal}); got != tt.want {
-				t.Errorf("featureEnabled() = %v, want %v", got, tt.want)
+			if got := enabledCore(feature, tt.allEnv, tt.featureEnv, map[string]bool{feature: tt.defaultVal}); got != tt.want {
+				t.Errorf("Enabled() = %v, want %v", got, tt.want)
 			}
 		})
 	}

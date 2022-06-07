@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vmware-tanzu/sonobuoy/pkg/features"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 
 	"github.com/pkg/errors"
@@ -248,7 +249,7 @@ func (p *pluginList) GetInstallDir() string {
 		return p.InstallDir
 	}
 
-	if !featureEnabled(FeaturePluginInstallation) {
+	if !features.Enabled(features.PluginInstallation) {
 		p.InstallDir = ""
 	} else {
 		p.InstallDir = getPluginCacheLocation()

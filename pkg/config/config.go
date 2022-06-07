@@ -61,6 +61,9 @@ const (
 	// DefaultSystemdLogsImage is the URL for the docker image used by the systemd-logs plugin
 	DefaultSystemdLogsImage = "sonobuoy/systemd-logs:v0.4"
 
+	// DefaultSystemdLogsImageNameAndTag is the name/tag for systemd-logs plugin without the registry.
+	DefaultSystemdLogsImageNameAndTag = "systemd-logs:v0.4"
+
 	// DefaultSecurityContextMode is a shorthand for common security context values. Default is nonroot which sets
 	// runAsUser, runAsGroup, and fsGroup. 'none' skips setting those it entirely since Windows does not support them.
 	DefaultSecurityContextMode = "nonroot"
@@ -301,11 +304,13 @@ func New() *Config {
 		"~/sonobuoy/plugins.d",
 	}
 
-	cfg.WorkerImage = DefaultImage
-	devRepo := os.Getenv("SONOBUOY_DEV_REPO")
-	if len(devRepo) > 0 {
+	switch devRepo := os.Getenv("SONOBUOY_DEV_REPO"); {
+	case len(devRepo) > 0:
 		cfg.WorkerImage = fmt.Sprintf("%v/sonobuoy:%v", devRepo, buildinfo.Version)
+	default:
+		cfg.WorkerImage = DefaultImage
 	}
+
 	cfg.ImagePullPolicy = DefaultSonobuoyPullPolicy
 
 	cfg.ProgressUpdatesPort = DefaultProgressUpdatesPort
