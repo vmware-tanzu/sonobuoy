@@ -47,6 +47,9 @@ const (
 	// resultModeDump will just copy the post-processed yaml file to stdout.
 	resultModeDump = "dump"
 
+	//resultModeReadable will copy the post-processed yaml file to stdout and replace \n and \t with new lines and tabs respectively.
+	resultModeReadable = "readable"
+
 	windowsSeperator = `\`
 
 	//Name of the "fake" plugin used to enable printing the health summary.
@@ -83,7 +86,7 @@ func NewCmdResults() *cobra.Command {
 	)
 	cmd.Flags().StringVarP(
 		&data.mode, "mode", "m", resultModeReport,
-		`Modifies the format of the output. Valid options are report, detailed, or dump.`,
+		`Modifies the format of the output. Valid options are report, detailed, readable, or dump.`,
 	)
 	cmd.Flags().StringVarP(
 		&data.node, "node", "n", "",
@@ -217,6 +220,15 @@ func printHealthSummary(input resultsInput, r *results.Reader) error {
 			return err
 		}
 		fmt.Println(string(data))
+	case resultModeReadable:
+		data, err = yaml.Marshal(clusterHealthSummary)
+		if err != nil {
+			return err
+		}
+		str := string(data)
+		str = strings.ReplaceAll(str, `\n`, "\n")
+		str = strings.ReplaceAll(str, `\t`, "	")
+		fmt.Println(str)
 	default:
 		err = printClusterHealthResultsSummary(clusterHealthSummary)
 		if err != nil {
@@ -234,6 +246,17 @@ func printSinglePlugin(input resultsInput, r *results.Reader) error {
 			return errors.Wrapf(err, "failed to get results reader for plugin %v", input.plugin)
 		}
 		_, err = io.Copy(os.Stdout, fReader)
+		return err
+	} else if input.mode == resultModeReadable {
+		fReader, err := r.PluginResultsReader(input.plugin)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get results reader for plugin %v", input.plugin)
+		}
+		data, err := io.ReadAll(fReader)
+		str := string(data)
+		str = strings.ReplaceAll(str, `\n`, "\n")
+		str = strings.ReplaceAll(str, `\t`, "	")
+		fmt.Println(str)
 		return err
 	}
 
