@@ -16,9 +16,97 @@ limitations under the License.
 package app
 
 import (
+	"bytes"
+	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 )
+
+func TestHumanReadableWriter(t *testing.T) {
+	tcs := []struct {
+		desc     string
+		input    string
+		contains []string
+		expected bool
+	}{
+		{
+			desc:     "String with \\n does not contain `\\n`",
+			input:    "\nHello world",
+			contains: []string{`\n`},
+			expected: false,
+		},
+		{
+			desc:     "String with \\t does not contain `\\t`",
+			input:    "\tHello world",
+			contains: []string{`\t`},
+			expected: false,
+		},
+		{
+			desc:     "String with \\t and \n does not contain `\\n`",
+			input:    "\tHello\nworld",
+			contains: []string{`\n`},
+			expected: false,
+		},
+		{
+			desc:     "String with \\t and \\n does not contain `\\t`",
+			input:    "\tHello\nworld",
+			contains: []string{`\t`},
+			expected: false,
+		},
+		{
+			desc:     "String with \\t and \\n does not contain `\\n` or `\\t`",
+			input:    "\tHello\nworld",
+			contains: []string{`\n`, `\t`},
+			expected: false,
+		},
+		{
+			desc:     `String with \n contains "\n"`,
+			input:    "\nHello world",
+			contains: []string{"\n"},
+			expected: true,
+		},
+		{
+			desc:     `String with \t contains "\t"`,
+			input:    "\tHello world",
+			contains: []string{"\t"},
+			expected: true,
+		},
+		{
+			desc:     `String with \t and \n contains "\n"`,
+			input:    "\tHello\nworld",
+			contains: []string{"\n"},
+			expected: true,
+		},
+		{
+			desc:     `String with \t and \n contains "\t"`,
+			input:    "\tHello\nworld",
+			contains: []string{"\t"},
+			expected: true,
+		},
+		{
+			desc:     `String with \t and \n contains "\n" and "\t"`,
+			input:    "\tHello\nworld",
+			contains: []string{"\n", "\t"},
+			expected: true,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			buffer := bytes.Buffer{}
+			writer := humanReadableWriter{&buffer}
+			fmt.Fprintf(&writer, tc.input)
+			for _, contains := range tc.contains {
+				out := strings.Contains(buffer.String(), contains)
+				if out != tc.expected {
+					// replace this message
+					//		t.Errorf("Expected %v but got %v", tc.expected, out)
+				}
+			}
+		})
+	}
+}
 
 func TestGetFileFromMeta(t *testing.T) {
 	tcs := []struct {
