@@ -165,7 +165,7 @@ func AddSecurityContextMode(mode *string, flags *pflag.FlagSet) {
 func AddAggregatorPermissionsFlag(mode *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		mode, aggregatorPermissionsFlag, "clusterAdmin",
-		"Type of aggregator permission to use in the cluster. Allowable values are [namespaced, clusterAdmin]",
+		"Type of aggregator permission to use in the cluster. Allowable values are [namespaceAdmin, clusterRead, clusterAdmin]",
 	)
 }
 
