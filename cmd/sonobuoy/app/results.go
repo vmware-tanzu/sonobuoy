@@ -17,6 +17,7 @@ limitations under the License.
 package app
 
 import (
+	"bytes"
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
@@ -46,6 +47,9 @@ const (
 
 	// resultModeDump will just copy the post-processed yaml file to stdout.
 	resultModeDump = "dump"
+
+	//resultModeReadable will copy the post-processed yaml file to stdout and replace \n and \t with new lines and tabs respectively.
+	resultModeReadable = "readable"
 
 	windowsSeperator = `\`
 
@@ -83,7 +87,7 @@ func NewCmdResults() *cobra.Command {
 	)
 	cmd.Flags().StringVarP(
 		&data.mode, "mode", "m", resultModeReport,
-		`Modifies the format of the output. Valid options are report, detailed, or dump.`,
+		`Modifies the format of the output. Valid options are report, detailed, readable, or dump.`,
 	)
 	cmd.Flags().StringVarP(
 		&data.node, "node", "n", "",
@@ -217,6 +221,15 @@ func printHealthSummary(input resultsInput, r *results.Reader) error {
 			return err
 		}
 		fmt.Println(string(data))
+	case resultModeReadable:
+		data, err = yaml.Marshal(clusterHealthSummary)
+		if err != nil {
+			return err
+		}
+		str := string(data)
+		str = strings.ReplaceAll(str, `\n`, "\n")
+		str = strings.ReplaceAll(str, `\t`, "	")
+		fmt.Println(str)
 	default:
 		err = printClusterHealthResultsSummary(clusterHealthSummary)
 		if err != nil {
@@ -224,6 +237,17 @@ func printHealthSummary(input resultsInput, r *results.Reader) error {
 		}
 	}
 	return nil
+}
+
+type humanReadableWriter struct {
+	w io.Writer
+}
+
+func (hw *humanReadableWriter) Write(b []byte) (int, error) {
+	newb := bytes.Replace(b, []byte(`\n`), []byte("\n"), -1)
+	newb = bytes.Replace(newb, []byte(`\t`), []byte("\t"), -1)
+	_, err := hw.w.Write(newb)
+	return len(b), err
 }
 
 func printSinglePlugin(input resultsInput, r *results.Reader) error {
@@ -234,6 +258,17 @@ func printSinglePlugin(input resultsInput, r *results.Reader) error {
 			return errors.Wrapf(err, "failed to get results reader for plugin %v", input.plugin)
 		}
 		_, err = io.Copy(os.Stdout, fReader)
+		return err
+	} else if input.mode == resultModeReadable {
+		fReader, err := r.PluginResultsReader(input.plugin)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get results reader for plugin %v", input.plugin)
+		}
+		writer := &humanReadableWriter{os.Stdout}
+		_, err = io.Copy(writer, fReader)
+		if err != nil {
+			return errors.Wrapf(err, "failed to copy data for plugin %v", input.plugin)
+		}
 		return err
 	}
 
