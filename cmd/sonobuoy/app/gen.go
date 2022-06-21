@@ -1,6 +1,8 @@
 /*
 Copyright 2018 Heptio Inc.
 
+© 2022 Nokia
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -81,6 +83,8 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddTimeoutFlag(&cfg.sonobuoyConfig.Aggregation.TimeoutSeconds, genset)
 	AddShowDefaultPodSpecFlag(&cfg.showDefaultPodSpec, genset)
 	AddAggregatorPermissionsFlag(&cfg.sonobuoyConfig.AggregatorPermissions, genset)
+	AddServiceAccountNameFlag(&cfg.sonobuoyConfig.ServiceAccountName, genset)
+	AddExistingServiceAccountFlag(&cfg.sonobuoyConfig.ExistingServiceAccount, genset)
 
 	AddNamespaceFlag(&cfg.sonobuoyConfig.Namespace, genset)
 	AddDNSNamespaceFlag(&cfg.dnsNamespace, genset)

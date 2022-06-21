@@ -1,6 +1,8 @@
 /*
 Copyright 2018 Heptio Inc.
 
+© 2022 Nokia
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -72,6 +74,9 @@ const (
 	AggregatorPermissionsClusterRead    = "clusterRead"
 	AggregatorPermissionsNamespaceAdmin = "namespaceAdmin"
 	DefaultAggregatorPermissions        = AggregatorPermissionsClusterAdmin
+
+	// DefaultServiceAccountName is the default Service Account name that should be used if no customization is provided
+	DefaultServiceAccountName = "sonobuoy-serviceaccount"
 )
 
 var (
@@ -139,12 +144,14 @@ type Config struct {
 	///////////////////////////////////////////////
 	// Sonobuoy configuration
 	///////////////////////////////////////////////
-	WorkerImage           string            `json:"WorkerImage" mapstructure:"WorkerImage"`
-	ImagePullPolicy       string            `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
-	ForceImagePullPolicy  bool              `json:"ForceImagePullPolicy,omitempty" mapstructure:"ForceImagePullPolicy"`
-	ImagePullSecrets      string            `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
-	CustomAnnotations     map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
-	AggregatorPermissions string            `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
+	WorkerImage            string            `json:"WorkerImage" mapstructure:"WorkerImage"`
+	ImagePullPolicy        string            `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
+	ForceImagePullPolicy   bool              `json:"ForceImagePullPolicy,omitempty" mapstructure:"ForceImagePullPolicy"`
+	ImagePullSecrets       string            `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
+	CustomAnnotations      map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
+	AggregatorPermissions  string            `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
+	ServiceAccountName     string            `json:"ServiceAccountName" mapstructure:"ServiceAccountName"`
+	ExistingServiceAccount bool              `json:"ExistingServiceAccount,omitempty" mapstructure:"ExistingServiceAccount,omitempty"`
 
 	// ProgressUpdatesPort is the port on which the Sonobuoy worker will listen for status updates from its plugin.
 	ProgressUpdatesPort string `json:"ProgressUpdatesPort,omitempty" mapstructure:"ProgressUpdatesPort"`
@@ -318,6 +325,10 @@ func New() *Config {
 	cfg.SecurityContextMode = DefaultSecurityContextMode
 
 	cfg.AggregatorPermissions = DefaultAggregatorPermissions
+
+	cfg.ServiceAccountName = DefaultServiceAccountName
+
+	cfg.ExistingServiceAccount = false
 
 	return &cfg
 }

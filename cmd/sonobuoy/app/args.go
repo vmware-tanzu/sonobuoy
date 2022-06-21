@@ -1,6 +1,8 @@
 /*
 Copyright 2018 Heptio Inc.
 
+© 2022 Nokia
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -34,26 +36,28 @@ import (
 )
 
 const (
-	namespaceFlag             = "namespace"
-	sonobuoyImageFlag         = "sonobuoy-image"
-	imagePullPolicyFlag       = "image-pull-policy"
-	forceImagePullPolicyFlag  = "force-image-pull-policy"
-	pluginFlag                = "plugin"
-	timeoutFlag               = "timeout"
-	waitOutputFlag            = "wait-output"
-	customRegistryFlag        = "custom-registry"
-	kubeconfig                = "kubeconfig"
-	kubecontext               = "context"
-	e2eFocusFlag              = "e2e-focus"
-	e2eSkipFlag               = "e2e-skip"
-	e2eParallelFlag           = "e2e-parallel"
-	e2eRegistryConfigFlag     = "e2e-repo-config"
-	e2eRegistryFlag           = "e2e-repo"
-	pluginImageFlag           = "plugin-image"
-	filenameFlag              = "filename"
-	retrievePathFlag          = "retrieve-path"
-	securityContextModeFlag   = "security-context-mode"
-	aggregatorPermissionsFlag = "aggregator-permissions"
+	namespaceFlag              = "namespace"
+	sonobuoyImageFlag          = "sonobuoy-image"
+	imagePullPolicyFlag        = "image-pull-policy"
+	forceImagePullPolicyFlag   = "force-image-pull-policy"
+	pluginFlag                 = "plugin"
+	timeoutFlag                = "timeout"
+	waitOutputFlag             = "wait-output"
+	customRegistryFlag         = "custom-registry"
+	kubeconfig                 = "kubeconfig"
+	kubecontext                = "context"
+	e2eFocusFlag               = "e2e-focus"
+	e2eSkipFlag                = "e2e-skip"
+	e2eParallelFlag            = "e2e-parallel"
+	e2eRegistryConfigFlag      = "e2e-repo-config"
+	e2eRegistryFlag            = "e2e-repo"
+	pluginImageFlag            = "plugin-image"
+	filenameFlag               = "filename"
+	retrievePathFlag           = "retrieve-path"
+	securityContextModeFlag    = "security-context-mode"
+	aggregatorPermissionsFlag  = "aggregator-permissions"
+	serviceAccountNameFlag     = "service-account-name"
+	existingServiceAccountFlag = "existing-service-account"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
@@ -166,6 +170,21 @@ func AddAggregatorPermissionsFlag(mode *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		mode, aggregatorPermissionsFlag, "clusterAdmin",
 		"Type of aggregator permission to use in the cluster. Allowable values are [namespaceAdmin, clusterRead, clusterAdmin]",
+	)
+}
+
+// AddExistingServiceAccountFlag adds a boolean flag which disables service account creation.
+func AddExistingServiceAccountFlag(flag *bool, flags *pflag.FlagSet) {
+	flags.BoolVar(
+		flag, existingServiceAccountFlag, false,
+		"If true, use an existing service account, else attempt to create one.",
+	)
+}
+
+func AddServiceAccountNameFlag(name *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		name, serviceAccountNameFlag, "sonobuoy-serviceaccount",
+		"Name of the service account to be used by sonobuoy.",
 	)
 }
 
