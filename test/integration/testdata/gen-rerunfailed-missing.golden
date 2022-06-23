@@ -19,6 +19,7 @@ Flags:
       --e2e-repo envModifier                     Specify a registry to use as the default for pulling Kubernetes test images. Same as providing --e2e-repo-config but specifying the same repo repeatedly.
       --e2e-repo-config yaml-filepath            Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.
       --e2e-skip envModifier                     Specify the E2E_SKIP value for the e2e plugin, specifying which tests to skip. Shorthand for --plugin-env=e2e.E2E_SKIP=<string> (default \[Disruptive\]|NoExecuteTaintManager)
+      --existing-service-account                 If true, use an existing service account, else attempt to create one.
   -f, --file -                                   If set, loads the file as if it were the output from sonobuoy gen. Set to - to read from stdin.
       --force-image-pull-policy                  Force plugins' imagePullPolicy to match the value for the Sonobuoy pod
   -h, --help                                     help for gen
@@ -34,6 +35,7 @@ Flags:
       --rbac RBACMode                            Whether to enable RBAC on Sonobuoy. Valid modes are Enable, Disable, and Detect (query the server to see whether to enable RBAC). (default Enable)
       --rerun-failed tar.gz file                 Read the given tarball and set the E2E_FOCUS to target all the failed tests
       --security-context-mode string             Type of security context to use for the aggregator pod. Allowable values are [none, nonroot] (default "nonroot")
+      --service-account-name string              Name of the service account to be used by sonobuoy. (default "sonobuoy-serviceaccount")
       --show-default-podspec                     If true, include the default pod spec used for plugins in the output.
       --skip-preflight                           If true, skip all checks before starting the sonobuoy run.
       --sonobuoy-image string                    Container image override for the sonobuoy worker and aggregator. (default "sonobuoy/sonobuoy:*STATIC_FOR_TESTING*")
