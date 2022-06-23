@@ -35,6 +35,7 @@ PPC64LE_IMAGE=gcr.io/distroless/static:nonroot-ppc64le
 S390X_IMAGE=gcr.io/distroless/static:nonroot-s390x
 WIN_AMD64_BASEIMAGE=mcr.microsoft.com/windows/nanoserver
 TEST_IMAGE=testimage:v0.1
+LINT_IMAGE=golangci/golangci-lint:v1.45
 KIND_CLUSTER=kind
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )"
@@ -83,8 +84,8 @@ local_integration(){
 }
 
 lint() {
-    docker run --rm -v "$(pwd)":$BUILDMNT -w $BUILDMNT $BUILD_IMAGE /bin/sh -c \
-    "golint -set_exit_status ${VERBOSE:+-v} -timeout 60s $GOTARGET/cmd/... $GOTARGET/pkg/..."
+  docker run --rm -v "$(pwd)":$BUILDMNT -w $BUILDMNT $LINT_IMAGE /bin/sh -c \
+    "golangci-lint run --out-format=github-actions --timeout=2m0s -v"
 }
 
 vet() {
