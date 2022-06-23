@@ -364,9 +364,11 @@ load_test_images_into_cluster(){
 # tests so this will also build sonobuoy locally. A kind cluster won't be necessary.
 update_local() {
     set -x
-    # Download linux kubectl and move into default path for tests
-    curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.23.0/bin/linux/amd64/kubectl
-    chmod +x ./kubectl
+    if [ -f "./kubectl" ]; then
+      # Download linux kubectl and move into default path for tests
+      curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.23.0/bin/linux/amd64/kubectl
+      chmod +x ./kubectl
+    fi
 
     # Redirect output so we can avoid clutter where go is telling us where -update
     # is not defined. Just printing out the packages at the end.

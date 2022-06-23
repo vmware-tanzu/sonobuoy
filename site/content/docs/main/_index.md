@@ -52,10 +52,6 @@ more about the new release cycles in [our blog][decoupling-sonobuoy-k8s].
 
    Move the extracted `sonobuoy` executable to somewhere on your `PATH`.
 
-## CLI Documentation
-
-The full documentation for the CLI can be found [here][clidocs].
-
 ## Getting Started
 
 To launch conformance tests (ensuring [CNCF][cncf] conformance) and wait until they are finished run:
@@ -207,6 +203,24 @@ will be. Feel free to make comments on Github or start conversations in Slack.
 Thanks for taking the time to join our community and start contributing! We welcome pull requests. Feel free to dig
 through the [issues][issue] and jump in.
 
+The most common build/test functions are called via the Makefile:
+
+```
+// Build the binary
+$ make build
+
+// Run local unit tests
+$ make test
+```
+
+If you make changes which change output, you may fail tests which utilize the golden file testing pattern (e.g. correct data is stored in external files), update them by running:
+```
+$ make golden
+```
+
+In most cases, running integration tests is more simply done in CI when you open a pull request.
+You can dig into scripts/build_funcs.sh and our .github/workflows/ci-test.yaml for exact details of existing test flows.
+
 ### Before you start
 
 * Please familiarize yourself with the [Code of Conduct][coc] before contributing.
@@ -269,7 +283,4 @@ See [the list of releases][releases] to find out about feature changes.
 
 [aggregator-permissions]: aggregator-permissions
 
-[clidocs]: cli/sonobuoy
-
 [roadmap]: https://github.com/vmware-tanzu/sonobuoy/wiki/Roadmap
-
