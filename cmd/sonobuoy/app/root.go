@@ -75,6 +75,8 @@ func NewSonobuoyCommand() *cobra.Command {
 
 	cmds.AddCommand(NewCmdPlugin())
 
+	cmds.AddCommand(NewCmdGet())
+
 	initKlog(cmds)
 	cmds.PersistentFlags().Var(&errlog.LogLevel, "level", "Log level. One of {panic, fatal, error, warn, info, debug, trace}")
 
