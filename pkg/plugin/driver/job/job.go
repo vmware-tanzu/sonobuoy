@@ -71,7 +71,11 @@ func NewPlugin(dfn manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy,
 // a Job only launches one pod, only one result type is expected.
 func (p *Plugin) ExpectedResults(nodes []v1.Node) []plugin.ExpectedResult {
 	return []plugin.ExpectedResult{
-		{ResultType: p.GetName(), NodeName: plugin.GlobalResult},
+		{
+			ResultType: p.GetName(),
+			NodeName:   plugin.GlobalResult,
+			Order:      p.Definition.SonobuoyConfig.Order,
+		},
 	}
 }
 

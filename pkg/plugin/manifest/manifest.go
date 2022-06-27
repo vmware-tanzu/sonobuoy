@@ -50,6 +50,7 @@ type SonobuoyConfig struct {
 	// to the plugin source would be kept.
 	SourceURL string `json:"source-url,omitempty"`
 
+	Order int `json:"order,omitempty"`
 	objectKind
 }
 
@@ -62,6 +63,7 @@ func (s *SonobuoyConfig) DeepCopy() *SonobuoyConfig {
 		ResultFiles:  s.ResultFiles,
 		SkipCleanup:  s.SkipCleanup,
 		objectKind:   objectKind{s.objectKind.gvk},
+		Order:        s.Order,
 	}
 }
 

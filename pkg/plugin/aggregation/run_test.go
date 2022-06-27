@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -182,6 +183,164 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 	}
 }
 
+func (cp *MockRunPlugin) Run(_ kubernetes.Interface, _ string, _ *tls.Certificate, _ *corev1.Pod, _, _ string) error {
+	return nil
+}
+
+func (cp *MockRunPlugin) Cleanup(_ kubernetes.Interface) {
+	cp.cleanedUp = true
+}
+
+func (cp *MockRunPlugin) Monitor(_ context.Context, _ kubernetes.Interface, _ []corev1.Node, _ chan<- *plugin.Result) {
+	return
+}
+
+func (cp *MockRunPlugin) ExpectedResults(_ []corev1.Node) []plugin.ExpectedResult {
+	return []plugin.ExpectedResult{}
+}
+
+func (cp *MockRunPlugin) FillTemplate(_ string, _ *tls.Certificate) ([]byte, error) {
+	return []byte{}, nil
+}
+
+func (cp *MockRunPlugin) GetName() string {
+	return cp.name
+}
+
+func (cp *MockRunPlugin) SkipCleanup() bool {
+	return cp.skipCleanup
+}
+
+func (cp *MockRunPlugin) GetResultFormat() string {
+	return ""
+}
+
+func (cp *MockRunPlugin) GetResultFiles() []string {
+	return []string{}
+}
+
+func (cp *MockRunPlugin) GetDescription() string {
+	return "A mock plugin used for testing purposes"
+}
+
+func (cp *MockRunPlugin) GetSourceURL() string {
+	return ""
+}
+
+func (cp *MockRunPlugin) GetOrder() int {
+	return cp.order
+}
+
+type MockRunPlugin struct {
+	skipCleanup bool
+	cleanedUp   bool
+	order       int
+	name        string
+}
+
+func TestGetOrderedPlugins(t *testing.T) {
+	testCases := []struct {
+		desc     string
+		input    []plugin.Interface
+		expected [][]plugin.Interface
+	}{
+		{
+			desc: "Ensure lists of plugin.Interface are ordered by plugin order",
+			input: []plugin.Interface{
+				&MockRunPlugin{
+					order: 1,
+				},
+				&MockRunPlugin{
+					order: 0,
+				},
+				&MockRunPlugin{
+					order: 1,
+				},
+				&MockRunPlugin{
+					order: 1,
+				},
+				&MockRunPlugin{
+					order: 2,
+				},
+			},
+			expected: [][]plugin.Interface{
+				{
+					&MockRunPlugin{
+						order: 0,
+					},
+				},
+				{
+					&MockRunPlugin{
+						order: 1,
+					},
+					&MockRunPlugin{
+						order: 1,
+					},
+					&MockRunPlugin{
+						order: 1,
+					},
+				},
+				{
+					&MockRunPlugin{
+						order: 2,
+					},
+				},
+			},
+		},
+		{
+			desc: "Ensure lists of plugin.Interface are sorted by plugin name",
+			input: []plugin.Interface{
+				&MockRunPlugin{
+					order: 0,
+					name:  "Test plugin",
+				},
+				&MockRunPlugin{
+					order: 0,
+					name:  "Another ordering test plugin",
+				},
+				&MockRunPlugin{
+					order: 0,
+					name:  "Ordering test plugin",
+				},
+			},
+			expected: [][]plugin.Interface{
+				{
+					&MockRunPlugin{
+						order: 0,
+						name:  "Another ordering test plugin",
+					},
+					&MockRunPlugin{
+						order: 0,
+						name:  "Ordering test plugin",
+					},
+					&MockRunPlugin{
+						order: 0,
+						name:  "Test plugin",
+					},
+				},
+			},
+		},
+		{
+			desc:     "Ensure empty slice of plugin.Interface returns correct result",
+			input:    []plugin.Interface{},
+			expected: [][]plugin.Interface{},
+		},
+		{
+			desc:     "Ensure null input returns correct result",
+			input:    nil,
+			expected: [][]plugin.Interface{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if !reflect.DeepEqual(getOrderedPlugins(tc.input), tc.expected) {
+				t.Errorf("Expected output: %v", tc.expected)
+			}
+		})
+	}
+}
+
 func getTestCert() (*tls.Certificate, error) {
 	privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -201,58 +360,9 @@ func getTestCert() (*tls.Certificate, error) {
 	}, nil
 }
 
-type MockCleanupPlugin struct {
-	skipCleanup bool
-	cleanedUp   bool
-}
-
-func (cp *MockCleanupPlugin) Run(_ kubernetes.Interface, _ string, _ *tls.Certificate, _ *corev1.Pod, _, _ string) error {
-	return nil
-}
-
-func (cp *MockCleanupPlugin) Cleanup(_ kubernetes.Interface) {
-	cp.cleanedUp = true
-}
-
-func (cp *MockCleanupPlugin) Monitor(_ context.Context, _ kubernetes.Interface, _ []corev1.Node, _ chan<- *plugin.Result) {
-	return
-}
-
-func (cp *MockCleanupPlugin) ExpectedResults(_ []corev1.Node) []plugin.ExpectedResult {
-	return []plugin.ExpectedResult{}
-}
-
-func (cp *MockCleanupPlugin) FillTemplate(_ string, _ *tls.Certificate) ([]byte, error) {
-	return []byte{}, nil
-}
-
-func (cp *MockCleanupPlugin) GetName() string {
-	return "mock-cleanup-plugin"
-}
-
-func (cp *MockCleanupPlugin) SkipCleanup() bool {
-	return cp.skipCleanup
-}
-
-func (cp *MockCleanupPlugin) GetResultFormat() string {
-	return ""
-}
-
-func (cp *MockCleanupPlugin) GetResultFiles() []string {
-	return []string{}
-}
-
-func (cp *MockCleanupPlugin) GetDescription() string {
-	return "A mock plugin used for testing purposes"
-}
-
-func (cp *MockCleanupPlugin) GetSourceURL() string {
-	return ""
-}
-
 func TestCleanup(t *testing.T) {
-	createPlugin := func(skipCleanup bool) *MockCleanupPlugin {
-		return &MockCleanupPlugin{
+	createPlugin := func(skipCleanup bool) *MockRunPlugin {
+		return &MockRunPlugin{
 			skipCleanup: skipCleanup,
 			cleanedUp:   false,
 		}
@@ -260,17 +370,17 @@ func TestCleanup(t *testing.T) {
 
 	testCases := []struct {
 		desc                    string
-		plugins                 []*MockCleanupPlugin
+		plugins                 []*MockRunPlugin
 		expectedCleanedUpValues []bool
 	}{
 		{
 			desc:                    "plugins without skip cleanup are all cleaned up",
-			plugins:                 []*MockCleanupPlugin{createPlugin(false), createPlugin(false)},
+			plugins:                 []*MockRunPlugin{createPlugin(false), createPlugin(false)},
 			expectedCleanedUpValues: []bool{true, true},
 		},
 		{
 			desc:                    "plugins with skip cleanup are not cleaned up",
-			plugins:                 []*MockCleanupPlugin{createPlugin(true), createPlugin(false), createPlugin(true)},
+			plugins:                 []*MockRunPlugin{createPlugin(true), createPlugin(false), createPlugin(true)},
 			expectedCleanedUpValues: []bool{false, true, false},
 		},
 	}

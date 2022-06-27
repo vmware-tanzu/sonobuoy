@@ -19,11 +19,12 @@ package plugin
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"path"
 	"time"
-	"fmt"
 
+	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -75,6 +76,18 @@ type Interface interface {
 
 	// GetSourceURL returns the URL where the plugin came from and where updates to it will be located.
 	GetSourceURL() string
+
+	// GetOrder returns the order in which the plugin is run. Plugins will wait until all other plugins with lower order are done before being launched.
+	GetOrder() int
+}
+
+// Definition defines a plugin's features, method of launch, and other
+// metadata about it.
+type Definition struct {
+	Name         string
+	ResultType   string
+	Spec         manifest.Container
+	ExtraVolumes []manifest.Volume
 }
 
 // ExpectedResult is an expected result that a plugin will submit.  This is so
@@ -82,6 +95,7 @@ type Interface interface {
 type ExpectedResult struct {
 	NodeName   string
 	ResultType string
+	Order      int
 }
 
 // Result represents a result we got from a dispatched plugin, returned to the
@@ -270,11 +284,11 @@ func (s ProgressUpdate) Key() string {
 // The string can then be used for printing updates.
 // The format of the output is the following:
 // Passed:S, Failed: F, Remaining: R
-// Where S, F and R are numbers, 
+// Where S, F and R are numbers,
 // Corresponding to S = ProgressUpdate.Completed, F = len(ProgressUpdate.Failures),
 // and ProgressUpdate.Total - S - F respectively
 // and the ", Remaining: R" part is printed only if R is not negative
-// 
+//
 func (s *ProgressUpdate) FormatPluginProgress() (output string) {
 	//Minumum size of each field, in characters
 	minSize := 3
