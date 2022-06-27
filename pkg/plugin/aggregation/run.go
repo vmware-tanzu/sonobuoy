@@ -23,6 +23,8 @@ import (
 	"net"
 	"net/http"
 	"path/filepath"
+	"sort"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -190,9 +192,27 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 		return errors.Wrapf(err, "couldn't get aggregator pod")
 	}
 
-	for _, p := range plugins {
-		logrus.WithField("plugin", p.GetName()).Info("Running plugin")
-		go aggr.RunAndMonitorPlugin(context.Background(), time.Duration(cfg.TimeoutSeconds)*time.Second, p, client, nodes.Items, cfg.AdvertiseAddress, certs[p.GetName()], aggregatorPod, progressPort, pluginResultsDir)
+	orderedPlugins := getOrderedPlugins(plugins)
+
+	logrus.Info("Received plugin launch order:")
+	for _, pluginGroup := range orderedPlugins {
+		for _, plugin := range pluginGroup {
+			logrus.Infof("%v: %v", plugin.GetName(), plugin.GetOrder())
+		}
+	}
+
+	for _, pluginGroup := range orderedPlugins {
+		var waitGroup sync.WaitGroup
+		waitGroup.Add(len(pluginGroup))
+		for _, plug := range pluginGroup {
+			logrus.WithField("plugin", plug.GetName()).Info("Running plugin")
+			go func(plugin plugin.Interface) {
+				logrus.Infof("Launching plugin %v with order %v", plugin.GetName(), plugin.GetOrder())
+				aggr.RunAndMonitorPlugin(context.Background(), time.Duration(cfg.TimeoutSeconds)*time.Second, plugin, client, nodes.Items, cfg.AdvertiseAddress, certs[plugin.GetName()], aggregatorPod, progressPort, pluginResultsDir)
+				waitGroup.Done()
+			}(plug)
+		}
+		waitGroup.Wait()
 	}
 
 	// 6. Wait for aggr to show that all results are accounted for
@@ -210,6 +230,30 @@ func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.Agg
 			return nil
 		}
 	}
+}
+
+func getOrderedPlugins(plugins []plugin.Interface) [][]plugin.Interface {
+	pluginGroups := map[int][]plugin.Interface{}
+	for _, p := range plugins {
+		pluginGroups[p.GetOrder()] = append(pluginGroups[p.GetOrder()], p)
+	}
+
+	orderedPlugins := [][]plugin.Interface{}
+	for _, pluginGroup := range pluginGroups {
+		orderedPlugins = append(orderedPlugins, pluginGroup)
+	}
+
+	sort.Slice(orderedPlugins, func(i, j int) bool {
+		return orderedPlugins[i][0].GetOrder() < orderedPlugins[j][0].GetOrder()
+	})
+
+	for _, plugins := range orderedPlugins {
+		sort.Slice(plugins, func(i, j int) bool {
+			return plugins[i].GetName() < plugins[j].GetName()
+		})
+	}
+
+	return orderedPlugins
 }
 
 // Cleanup calls cleanup on all plugins

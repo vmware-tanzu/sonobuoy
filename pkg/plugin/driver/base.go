@@ -53,6 +53,11 @@ func (b *Base) GetName() string {
 	return b.Definition.SonobuoyConfig.PluginName
 }
 
+// GetOrder returns the order of this Job plugin.
+func (b *Base) GetOrder() int {
+	return b.Definition.SonobuoyConfig.Order
+}
+
 // GetSecretName gets a name for a secret based on the plugin name and session ID.
 func (b *Base) GetSecretName() string {
 	return fmt.Sprintf("sonobuoy-plugin-%s-%s", b.GetName(), b.GetSessionID())
