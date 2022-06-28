@@ -1,13 +1,13 @@
 {
 "name": "job-manual-02",
-"status": "custom status: 1, different custom status: 1",
+"status": "passed",
 "meta": {
 "type": "summary"
 },
 "items": [
 {
 "name": "manual-results-1.yaml",
-"status": "different custom status",
+"status": "passed",
 "meta": {
 "file": "results/global/manual-results-1.yaml",
 "type": "file"
@@ -15,7 +15,7 @@
 "items": [
 {
 "name": "a test file",
-"status": "status 1",
+"status": "passed",
 "meta": {
 "file": "results/global/junit_01.xml",
 "type": "file"
@@ -23,7 +23,7 @@
 "items": [
 {
 "name": "Manual suite name",
-"status": "status 2",
+"status": "passed",
 "items": [
 {
 "name": "Manual test name",
@@ -37,7 +37,7 @@
 },
 {
 "name": "manual-results-2.yaml",
-"status": "custom status",
+"status": "passed",
 "meta": {
 "file": "results/global/manual-results-2.yaml",
 "type": "file"
@@ -45,7 +45,7 @@
 "items": [
 {
 "name": "Another test file",
-"status": "status 1",
+"status": "passed",
 "meta": {
 "file": "results/global/junit_02.xml",
 "type": "file"
@@ -53,7 +53,7 @@
 "items": [
 {
 "name": "Manual suite name",
-"status": "status 2",
+"status": "passed",
 "items": [
 {
 "name": "Manual test name",

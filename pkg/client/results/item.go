@@ -38,6 +38,9 @@ const (
 	// if another can not be determined.
 	StatusUnknown = "unknown"
 
+	// StatusEmpty is just the empty string; we equate this to StatusUnknown.
+	StatusEmpty = ""
+
 	// StatusTimeout is the key used when the plugin does not report results within the
 	// timeout period. It will be treated as a failure (e.g. its parent will be marked
 	// as a failure).

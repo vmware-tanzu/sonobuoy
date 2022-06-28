@@ -1,20 +1,20 @@
 {
 "name": "ds-manual-02",
-"status": "status-from-manual-results-1: 2, status-from-manual-results-2: 2",
+"status": "status 2: 4",
 "meta": {
 "type": "summary"
 },
 "items": [
 {
 "name": "node1",
-"status": "status-from-manual-results-1: 1, status-from-manual-results-2: 1",
+"status": "status 2: 2",
 "meta": {
 "type": "node"
 },
 "items": [
 {
 "name": "manual-results-1.yaml",
-"status": "status-from-manual-results-1",
+"status": "status 2: 1",
 "meta": {
 "file": "results/node1/manual-results-1.yaml",
 "type": "file"
@@ -22,7 +22,7 @@
 "items": [
 {
 "name": "a test file",
-"status": "status 1",
+"status": "status 2: 1",
 "meta": {
 "file": "results/global/junit_01.xml",
 "type": "file"
@@ -38,7 +38,7 @@
 },
 {
 "name": "manual-results-2.yaml",
-"status": "status-from-manual-results-2",
+"status": "status 2: 1",
 "meta": {
 "file": "results/node1/manual-results-2.yaml",
 "type": "file"
@@ -46,7 +46,7 @@
 "items": [
 {
 "name": "a test file",
-"status": "status 1",
+"status": "status 2: 1",
 "meta": {
 "file": "results/global/junit_01.xml",
 "type": "file"
@@ -64,14 +64,14 @@
 },
 {
 "name": "node2",
-"status": "status-from-manual-results-1: 1, status-from-manual-results-2: 1",
+"status": "status 2: 2",
 "meta": {
 "type": "node"
 },
 "items": [
 {
 "name": "manual-results-1.yaml",
-"status": "status-from-manual-results-1",
+"status": "status 2: 1",
 "meta": {
 "file": "results/node2/manual-results-1.yaml",
 "type": "file"
@@ -79,7 +79,7 @@
 "items": [
 {
 "name": "a test file",
-"status": "status 1",
+"status": "status 2: 1",
 "meta": {
 "file": "results/global/junit_01.xml",
 "type": "file"
@@ -95,7 +95,7 @@
 },
 {
 "name": "manual-results-2.yaml",
-"status": "status-from-manual-results-2",
+"status": "status 2: 1",
 "meta": {
 "file": "results/node2/manual-results-2.yaml",
 "type": "file"
@@ -103,7 +103,7 @@
 "items": [
 {
 "name": "a test file",
-"status": "status 1",
+"status": "status 2: 1",
 "meta": {
 "file": "results/global/junit_01.xml",
 "type": "file"

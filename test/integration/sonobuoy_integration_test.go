@@ -567,7 +567,7 @@ func TestManualResultsJob(t *testing.T) {
 	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, ns, resultsArgs)
 	var resultItem results.Item
 	yaml.Unmarshal(resultsYaml.Bytes(), &resultItem)
-	expectedStatus := "manual-results-1: 1, manual-results-2: 1"
+	expectedStatus := "custom-status: 1, failed: 1, passed: 2"
 	if resultItem.Status != expectedStatus {
 		t.Errorf("Expected plugin to have status: %v, got %v", expectedStatus, resultItem.Status)
 	}
@@ -597,7 +597,7 @@ func TestManualResultsDaemonSet(t *testing.T) {
 	// The number of nodes can be determined by the length of the items array in the resultItem as there is an
 	// entry for every node where the plugin ran.
 	numNodes := len(resultItem.Items)
-	expectedStatus := fmt.Sprintf("manual-results-1: %v, manual-results-2: %v", numNodes, numNodes)
+	expectedStatus := fmt.Sprintf("custom-status: %v, failed: %v, passed: %v", numNodes, numNodes, numNodes*2)
 	if resultItem.Status != expectedStatus {
 		t.Errorf("Expected plugin to have status: %v, got %v", expectedStatus, resultItem.Status)
 	}

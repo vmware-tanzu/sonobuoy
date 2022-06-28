@@ -268,15 +268,41 @@ func TestAggregateStatus(t *testing.T) {
 			expectedItems: []Item{{Status: StatusUnknown}},
 			expected:      StatusUnknown,
 		}, {
-			desc:          "Misc other values pass",
+			desc:          "Misc other values get returned as-is",
 			input:         []Item{{Status: "foobar"}},
 			expectedItems: []Item{{Status: "foobar"}},
-			expected:      StatusPassed,
+			expected:      "foobar: 1",
+		}, {
+			desc:          "Misc other values get returned as counts",
+			input:         []Item{{Status: "foo"}, {Status: "foo"}, {Status: "bar"}},
+			expectedItems: []Item{{Status: "foo"}, {Status: "foo"}, {Status: "bar"}},
+			expected:      "bar: 1, foo: 2",
+		}, {
+			desc:          "Mix of normal and custom values OK",
+			input:         []Item{{Status: "foo"}, {Status: "passed"}, {Status: "passed"}},
+			expectedItems: []Item{{Status: "foo"}, {Status: "passed"}, {Status: "passed"}},
+			expected:      "foo: 1, passed: 2",
+		}, {
+			desc: "DS with mix of normal and custom values",
+			input: []Item{
+				{Items: []Item{{Status: "foo"}, {Status: "passed"}}},
+				{Items: []Item{{Status: "passed"}, {Status: "failed"}}},
+			},
+			expectedItems: []Item{
+				{Status: "foo: 1, passed: 1", Items: []Item{{Status: "foo"}, {Status: "passed"}}},
+				{Status: "failed: 1, passed: 1", Items: []Item{{Status: "passed"}, {Status: "failed"}}},
+			},
+			expected: "failed: 1, foo: 1, passed: 2",
 		}, {
 			desc:          "Timeout bubbles up as failure",
 			input:         []Item{{Status: "timeout"}},
 			expectedItems: []Item{{Status: "timeout"}},
 			expected:      StatusFailed,
+		}, {
+			desc:          "Counts can bee aggregated along with other values",
+			input:         []Item{{Status: "foobar: 1"}, {Status: "foobar: 2"}, {Status: "baz: 2"}, {Status: "other"}},
+			expectedItems: []Item{{Status: "foobar: 1"}, {Status: "foobar: 2"}, {Status: "baz: 2"}, {Status: "other"}},
+			expected:      "baz: 2, foobar: 3, other: 1",
 		}, {
 			desc: "Single failure in group causes failure",
 			input: []Item{
@@ -566,93 +592,13 @@ func TestAggregateStatus(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			out := AggregateStatus(tc.input...)
+			out := AggregateStatus(hasCustomValues(tc.input...), tc.input...)
 			if out != tc.expected {
 				t.Errorf("Expected %v but got %v", tc.expected, out)
 			}
 
 			if diff := pretty.Compare(tc.expectedItems, tc.input); diff != "" {
 				t.Errorf("\n\n%s\n", diff)
-			}
-		})
-	}
-}
-
-func TestManualResultsAggregation(t *testing.T) {
-	testCases := []struct {
-		desc   string
-		expect string
-		items  []Item
-	}{
-		{
-
-			desc:   "No items unknown",
-			expect: "unknown",
-			items:  []Item{},
-		}, {
-			desc:   "Nil items unknown",
-			expect: "unknown",
-			items:  nil,
-		}, {
-			desc:   "Subitems not traversed",
-			expect: "bar",
-			items: []Item{
-				{
-					Name:   "Parent suite",
-					Status: "bar",
-					Items: []Item{
-						{
-							Name:   "nested suite 1",
-							Status: StatusFailed,
-							Items: []Item{
-								{Name: "foo", Status: StatusFailed},
-							},
-						},
-						{
-							Name:   "nested suite 2",
-							Status: StatusFailed,
-							Items: []Item{
-								{Name: "foo", Status: StatusFailed},
-							},
-						},
-					},
-				},
-			},
-		}, {
-			desc:   "Multiple items turned to human readable count",
-			expect: "bar: 1, foo: 1",
-			items: []Item{
-				{
-					Name:   "results-file-1.yaml",
-					Status: "bar",
-				}, {
-					Name:   "results-file-2.yaml",
-					Status: "foo",
-				},
-			},
-		}, {
-			desc:   "Multiple duplicate statuses grouped",
-			expect: "bar: 1, foo: 2",
-			items: []Item{
-				{
-					Name:   "results-file-1.yaml",
-					Status: "bar",
-				}, {
-					Name:   "results-file-2.yaml",
-					Status: "foo",
-				}, {
-					Name:   "results-file-3.yaml",
-					Status: "foo",
-				},
-			},
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			out := manualResultsAggregation(tc.items...)
-			t.Log(out)
-			if out != tc.expect {
-				t.Errorf("Expected %v but got %v", tc.expect, out)
 			}
 		})
 	}
@@ -711,6 +657,154 @@ func TestFileOrDefault(t *testing.T) {
 				if result != tc.expectedResults[i] {
 					t.Errorf("expected selector for %v to return %v, got %v", f, tc.expectedResults[i], result)
 				}
+			}
+		})
+	}
+}
+
+func TestAggregateAllResultsAndErrors(t *testing.T) {
+	testCases := []struct {
+		desc            string
+		name            string
+		items, errItems []Item
+		expect          Item
+	}{
+		{
+			desc:  "Even manual results now roll up basic pass fail values",
+			name:  "plugin",
+			items: []Item{{Status: StatusPassed}, {Status: StatusFailed}},
+			expect: Item{
+				Name:     "plugin",
+				Status:   "failed",
+				Metadata: map[string]string{"type": "summary"},
+				Items: []Item{
+					{Name: "", Status: "passed"},
+					{Name: "", Status: "failed"},
+				},
+			},
+		}, {
+			desc:     "Err items incorporated appropriately",
+			name:     "plugin",
+			items:    []Item{{Status: StatusPassed}},
+			errItems: []Item{{Status: StatusFailed}},
+			expect: Item{
+				Name:     "plugin",
+				Status:   "failed",
+				Metadata: map[string]string{"type": "summary"},
+				Items: []Item{
+					{Name: "", Status: "passed"},
+					{Name: "", Status: "failed"},
+				},
+			},
+		}, {
+			// Though the logic of the function doesnt explicitly depend on daemonsets I wanted
+			// to ensure we have a test case showing those work as expected.
+			desc: "Daemonset where one node reports no results but no errors either",
+			name: "plugin",
+			items: []Item{
+				{
+					Name:     "node-1",
+					Status:   "unknown",
+					Metadata: map[string]string{"type": "node"},
+				}, {
+					Name:     "node-2",
+					Status:   "should be replaced by aggregation",
+					Metadata: map[string]string{"type": "node"},
+					Items: []Item{
+						{Name: "", Status: "passed"},
+					},
+				},
+			},
+			expect: Item{
+				Name:     "plugin",
+				Status:   "unknown",
+				Metadata: map[string]string{"type": "summary"},
+				Items: []Item{
+					{
+						Name:     "node-1",
+						Status:   "unknown",
+						Metadata: map[string]string{"type": "node"},
+					}, {
+						Name:     "node-2",
+						Status:   "passed",
+						Metadata: map[string]string{"type": "node"},
+						Items: []Item{
+							{Name: "", Status: "passed"},
+						},
+					},
+				},
+			},
+		}, {
+			// Though the logic of the function doesnt explicitly depend on daemonsets I wanted
+			// to ensure we have a test case showing those work as expected.
+			desc: "Daemonset with custom values rolls up well and prevent issue 1750",
+			name: "plugin",
+			items: []Item{
+				{
+					Name:     "node-1",
+					Status:   "unknown",
+					Metadata: map[string]string{"type": "node"},
+				}, {
+					Name:     "node-2",
+					Status:   "should be replaced by aggregation",
+					Metadata: map[string]string{"type": "node"},
+					Items: []Item{
+						{Name: "", Status: "custom"},
+					},
+				},
+			},
+			expect: Item{
+				Name:     "plugin",
+				Status:   "custom: 1, unknown: 1",
+				Metadata: map[string]string{"type": "summary"},
+				Items: []Item{
+					{
+						Name:     "node-1",
+						Status:   "unknown",
+						Metadata: map[string]string{"type": "node"},
+					}, {
+						Name:     "node-2",
+						Status:   "custom: 1",
+						Metadata: map[string]string{"type": "node"},
+						Items: []Item{
+							{Name: "", Status: "custom"},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			output := aggregateAllResultsAndErrors(tc.name, tc.items, tc.errItems)
+			if diff := pretty.Compare(tc.expect, output); diff != "" {
+				t.Errorf("Expected %#v but got diff %s\n", tc.expect, diff)
+			}
+		})
+	}
+}
+
+func TestParseCustomStatus(t *testing.T) {
+	testCases := []struct {
+		desc   string
+		input  string
+		expect map[string]int
+	}{
+		{
+			desc:   "Single values",
+			input:  "passed",
+			expect: map[string]int{"passed": 1},
+		}, {
+			desc:   "k-v maps",
+			input:  "a: 1, b: 2, c: 3",
+			expect: map[string]int{"a": 1, "b": 2, "c": 3},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			output := parseCustomStatus(tc.input)
+			if diff := pretty.Compare(tc.expect, output); diff != "" {
+				t.Errorf("Expected %#v but got diff %s\n", tc.expect, diff)
 			}
 		})
 	}
