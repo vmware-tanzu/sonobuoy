@@ -1,13 +1,13 @@
 {
 "name": "job-manual-04",
-"status": "status-from-default-sonobuoy-results",
+"status": "passed",
 "meta": {
 "type": "summary"
 },
 "items": [
 {
 "name": "sonobuoy_results.yaml",
-"status": "status-from-default-sonobuoy-results",
+"status": "passed",
 "meta": {
 "file": "results/global/sonobuoy_results.yaml",
 "type": "file"
@@ -15,7 +15,7 @@
 "items": [
 {
 "name": "a test file",
-"status": "status 1",
+"status": "passed",
 "meta": {
 "file": "results/global/junit_01.xml",
 "type": "file"
@@ -23,7 +23,7 @@
 "items": [
 {
 "name": "Manual suite name",
-"status": "status 2",
+"status": "passed",
 "items": [
 {
 "name": "Manual test name",

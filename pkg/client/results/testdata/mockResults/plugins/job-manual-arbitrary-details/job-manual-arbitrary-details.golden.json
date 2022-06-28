@@ -1,13 +1,13 @@
 {
 "name": "job-manual-arbitrary-details",
-"status": "status-from-manual-results",
+"status": "status 1: 1",
 "meta": {
 "type": "summary"
 },
 "items": [
 {
 "name": "manual-results-arbitrary-details.yaml",
-"status": "status-from-manual-results",
+"status": "status 1: 1",
 "meta": {
 "file": "results/global/manual-results-arbitrary-details.yaml",
 "type": "file"

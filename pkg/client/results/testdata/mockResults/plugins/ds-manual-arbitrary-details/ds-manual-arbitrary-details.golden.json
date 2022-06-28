@@ -1,20 +1,20 @@
 {
 "name": "ds-manual-arbitrary-details",
-"status": "status-from-manual-results",
+"status": "status 1: 2",
 "meta": {
 "type": "summary"
 },
 "items": [
 {
 "name": "node1",
-"status": "status-from-manual-results",
+"status": "status 1: 1",
 "meta": {
 "type": "node"
 },
 "items": [
 {
 "name": "manual-results-arbitrary-details.yaml",
-"status": "status-from-manual-results",
+"status": "status 1: 1",
 "meta": {
 "file": "results/node1/manual-results-arbitrary-details.yaml",
 "type": "file"
@@ -42,14 +42,14 @@
 },
 {
 "name": "node2",
-"status": "status-from-manual-results",
+"status": "status 1: 1",
 "meta": {
 "type": "node"
 },
 "items": [
 {
 "name": "manual-results-arbitrary-details.yaml",
-"status": "status-from-manual-results",
+"status": "status 1: 1",
 "meta": {
 "file": "results/node2/manual-results-arbitrary-details.yaml",
 "type": "file"

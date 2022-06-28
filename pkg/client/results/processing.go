@@ -24,6 +24,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
@@ -52,16 +53,40 @@ type postProcessor func(string, string) (Item, error)
 // file only or all files with a given suffix (for instance).
 type fileSelector func(string, os.FileInfo) bool
 
-// manualResultsAggregation is custom logic just for aggregating results for the top level summary
-// when the plugin is providing the YAML results manually. This is required in (at least) some cases
-// such as daemonsets when each plugin-node will have a result that needs bubbled up to a single,
-// summary Item. This is so that in large clusters you don't have a single plugin have results that
-// scale linearly with the number of nodes and may become unreasonable to show the user.
-//
-// If there is only one top level item, its status is returned. Otherwise a human readable string
-// is produced to show the counts of various values. E.g. "passed: 3, failed: 2, custom msg: 1".
-// Avoiding complete aggregation to avoid forcing a narrow set of use-cases from dominating.
-func manualResultsAggregation(items ...Item) string {
+// hasCustomValues returns true if there is a leaf node with a custom status value.
+func hasCustomValues(items ...Item) bool {
+	for i := range items {
+		if hasCustomValues(items[i].Items...) {
+			return true
+		}
+
+		// Don't consider non-leaf nodes, since those will be overwritten when rolled up.
+		if len(items[i].Items) > 0 {
+			continue
+		}
+
+		switch items[i].Status {
+		case StatusSkipped, StatusPassed, StatusFailed, StatusTimeout, StatusUnknown, StatusEmpty:
+			continue
+		default:
+
+			return true
+		}
+	}
+
+	return false
+}
+
+// AggregateStatus defines the aggregation rules for status according to the following rules:
+// If only pass/fail/unknown values are found, we apply very basic rules:
+//     - failure + * = failure
+//     - unknown + [pass|unknown] = unknown
+//     - empty list = unknown
+// If we find other values (e.g. from manual results typically) then we just combine/count them:
+//     - foo + bar = 'foo: 1, bar:1'
+// useCustom is specified rather than looking for custom values because different branches of the
+// result tree may have/not have those values. So instead, we should look down the tree initially to decide.
+func AggregateStatus(useCustom bool, items ...Item) string {
 	// Avoid the situation where we get 0 results (because the plugin partially failed to run)
 	// but we report it as passed.
 	if len(items) == 0 {
@@ -71,48 +96,11 @@ func manualResultsAggregation(items ...Item) string {
 	results := map[string]int{}
 	var keys []string
 
-	for i := range items {
-		s := items[i].Status
-		if s == "" {
-			s = StatusUnknown
-		}
-
-		if _, exists := results[s]; !exists {
-			keys = append(keys, s)
-		}
-		results[s]++
-	}
-
-	if len(keys) == 1 {
-		return keys[0]
-	}
-
-	// Sort to keep ensure result ordering is consistent.
-	sort.Strings(keys)
-
-	var parts []string
-	for _, k := range keys {
-		parts = append(parts, fmt.Sprintf("%v: %v", k, results[k]))
-	}
-
-	return strings.Join(parts, ", ")
-}
-
-// AggregateStatus defines the aggregation rules for status. Failures bubble
-// up and otherwise the status is assumed to pass as long as there are >=1 result.
-// If 0 items are aggregated, StatusUnknown is returned.
-func AggregateStatus(items ...Item) string {
-	// Avoid the situation where we get 0 results (because the plugin partially failed to run)
-	// but we report it as passed.
-	if len(items) == 0 {
-		return StatusUnknown
-	}
-
 	failedFound, unknownFound := false, false
 	for i := range items {
 		// Branches should just aggregate their leaves and return the result.
 		if len(items[i].Items) > 0 {
-			items[i].Status = AggregateStatus(items[i].Items...)
+			items[i].Status = AggregateStatus(useCustom, items[i].Items...)
 		}
 
 		// Empty status should be updated to unknown.
@@ -120,16 +108,35 @@ func AggregateStatus(items ...Item) string {
 			items[i].Status = StatusUnknown
 		}
 
+		s := items[i].Status
 		switch {
-		case IsFailureStatus(items[i].Status):
+		case IsFailureStatus(s):
 			failedFound = true
-		case items[i].Status == StatusUnknown:
+		case s == StatusUnknown:
 			unknownFound = true
-		default:
+		}
+
+		existingCounts := parseCustomStatus(s)
+		for k, v := range existingCounts {
+			if _, exists := results[k]; !exists {
+				keys = append(keys, k)
+			}
+			results[k] += v
 		}
 	}
 
-	// Only return once all processing is completed; otherwise other leaves don't get resolved.
+	if useCustom {
+		// Sort to keep ensure result ordering is consistent.
+		sort.Strings(keys)
+
+		var parts []string
+		for _, k := range keys {
+			parts = append(parts, fmt.Sprintf("%v: %v", k, results[k]))
+		}
+
+		return strings.Join(parts, ", ")
+	}
+
 	if failedFound {
 		return StatusFailed
 	} else if unknownFound {
@@ -138,6 +145,25 @@ func AggregateStatus(items ...Item) string {
 
 	// Only pass if no failures found.
 	return StatusPassed
+}
+
+func parseCustomStatus(s string) map[string]int {
+	results := map[string]int{}
+	resultsAndCounts := strings.Split(s, ", ")
+	for _, v := range resultsAndCounts {
+		parts := strings.Split(v, ": ")
+		if len(parts) == 1 {
+			results[parts[0]] += 1
+		} else {
+			count, err := strconv.Atoi(parts[1])
+			if err != nil {
+				logrus.Warningf("Error parsing custom status; expected a 'status: count: %v", err)
+				continue
+			}
+			results[parts[0]] += count
+		}
+	}
+	return results
 }
 
 // IsFailureStatus returns true if the status is any one of the failure modes (e.g.
@@ -248,36 +274,21 @@ func processPluginWithProcessor(p plugin.Interface, baseDir string, processor po
 		}
 	}
 
+	results := aggregateAllResultsAndErrors(p.GetName(), items, errItems)
+	return results, errs
+}
+
+func aggregateAllResultsAndErrors(name string, items, errItems []Item) Item {
 	results := Item{
-		Name:     p.GetName(),
+		Name:     name,
 		Metadata: map[string]string{MetadataTypeKey: MetadataTypeSummary},
 	}
 
 	results.Items = append(results.Items, items...)
 	results.Items = append(results.Items, errItems...)
+	results.Status = AggregateStatus(hasCustomValues(results.Items...), results.Items...)
 
-	if p.GetResultFormat() == ResultFormatManual {
-		// The user provided most of the data which we don't want to interfere with; we just want to get the
-		// status value for the summary object we wrap their results with.
-
-		// If the plugin is a DaemonSet plugin, we want to consider all result files from all nodes.
-		// Iterate over every node, gather each result file and aggregate the status over all those items.
-		// Also produce an aggregate status for each node using each node's result files.
-		if isDS {
-			var itemsForStatus []Item
-			for i, item := range results.Items {
-				itemsForStatus = append(itemsForStatus, item.Items...)
-				results.Items[i].Status = manualResultsAggregation(item.Items...)
-			}
-			results.Status = manualResultsAggregation(itemsForStatus...)
-		} else {
-			results.Status = manualResultsAggregation(results.Items...)
-		}
-	} else {
-		results.Status = AggregateStatus(results.Items...)
-	}
-
-	return results, errs
+	return results
 }
 
 // errProcessor takes two strings: the plugin directory and the filepath in question, and parse it to create an Item.
@@ -345,6 +356,7 @@ func ProcessDir(p plugin.Interface, pluginDir, dir string, processor postProcess
 		}
 		return nil
 	})
+
 	return results, err
 }
 
