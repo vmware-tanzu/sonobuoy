@@ -277,4 +277,4 @@ See [the list of releases][releases] to find out about feature changes.
 
 [aggregator-permissions]: https://sonobuoy.io/docs/aggregator-permissions
 
-[roadmap]: https://github.com/vmware-tanzu/sonobuoy/wiki/Roadmap
+[roadmap]: https://github.com/vmware-tanzu/sonobuoy/wiki

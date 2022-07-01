@@ -271,5 +271,5 @@ See [the list of releases][releases] to find out about feature changes.
 
 [clidocs]: cli/sonobuoy
 
-[roadmap]: https://github.com/vmware-tanzu/sonobuoy/wiki/Roadmap
+[roadmap]: https://github.com/vmware-tanzu/sonobuoy/wiki
 
