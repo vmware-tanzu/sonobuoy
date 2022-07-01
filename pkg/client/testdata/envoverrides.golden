@@ -68,7 +68,7 @@ data:
         value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      image: k8s.gcr.io/conformance:v99+static.testing
+      image: registry.k8s.io/conformance:v99+static.testing
       name: e2e
       volumeMounts:
       - mountPath: /tmp/sonobuoy/results

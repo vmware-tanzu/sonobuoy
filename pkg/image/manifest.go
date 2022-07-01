@@ -19,29 +19,29 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	version "github.com/hashicorp/go-version"
-	yaml "gopkg.in/yaml.v2"
+	"github.com/hashicorp/go-version"
+	"gopkg.in/yaml.v2"
 )
 
 const (
-	buildImageRegistry      = "k8s.gcr.io/build-image"
+	buildImageRegistry      = "registry.k8s.io/build-image"
 	dockerGluster           = "docker.io/gluster"
 	dockerLibraryRegistry   = "docker.io/library"
 	e2eRegistry             = "gcr.io/kubernetes-e2e-test-images"
 	e2eVolumeRegistry       = "gcr.io/kubernetes-e2e-test-images/volume"
 	etcdRegistry            = "quay.io/coreos"
 	gcAuthenticatedRegistry = "gcr.io/authenticated-image-pulling"
-	gcRegistry              = "k8s.gcr.io"
-	gcEtcdRegistry          = "k8s.gcr.io"
+	gcRegistry              = "registry.k8s.io"
+	gcEtcdRegistry          = "registry.k8s.io"
 	gcrReleaseRegistry      = "gcr.io/gke-release"
 	googleContainerRegistry = "gcr.io/google-containers"
 	invalidRegistry         = "invalid.com/invalid"
 	privateRegistry         = "gcr.io/k8s-authenticated-test"
-	promoterE2eRegistry     = "k8s.gcr.io/e2e-test-images"
+	promoterE2eRegistry     = "registry.k8s.io/e2e-test-images"
 	quayIncubator           = "quay.io/kubernetes_incubator"
 	quayK8sCSI              = "quay.io/k8scsi"
 	sampleRegistry          = "gcr.io/google-samples"
-	sigStorageRegistry      = "k8s.gcr.io/sig-storage"
+	sigStorageRegistry      = "registry.k8s.io/sig-storage"
 )
 
 // RegistryList holds public and private image registries

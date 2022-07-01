@@ -34,7 +34,7 @@ const (
 
 	// UpstreamKubeConformanceImageURL is the URL of the docker image to run for
 	// the kube conformance tests which is maintained by upstream Kubernetes.
-	UpstreamKubeConformanceImageURL = "k8s.gcr.io/conformance"
+	UpstreamKubeConformanceImageURL = "registry.k8s.io/conformance"
 	// DefaultAggregationServerBindPort is the default port for the aggregation server to bind to.
 	DefaultAggregationServerBindPort = 8080
 	// DefaultAggregationServerBindAddress is the default address for the aggregation server to bind to.

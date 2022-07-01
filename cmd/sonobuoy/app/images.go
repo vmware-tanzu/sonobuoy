@@ -418,9 +418,9 @@ func translateRegistry(imageURL string, customRegistry string, customRegistryLis
 		registryAndUser = customRegistryList.E2eRegistry
 	case "gcr.io/kubernetes-e2e-test-images/volume":
 		registryAndUser = customRegistryList.E2eVolumeRegistry
-	case "k8s.gcr.io":
+	case "k8s.gcr.io", "registry.k8s.io":
 		registryAndUser = customRegistryList.GcRegistry
-	case "k8s.gcr.io/sig-storage":
+	case "k8s.gcr.io/sig-storage", "registry.k8s.io/sig-storage":
 		registryAndUser = customRegistryList.SigStorageRegistry
 	case "gcr.io/k8s-authenticated-test":
 		registryAndUser = customRegistryList.PrivateRegistry
