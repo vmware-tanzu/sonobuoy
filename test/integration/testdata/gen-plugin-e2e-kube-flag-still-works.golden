@@ -43,7 +43,7 @@ spec:
     value: "8099"
   - name: SONOBUOY_RESULTS_DIR
     value: /tmp/sonobuoy/results
-  image: k8s.gcr.io/conformance:v123.456.789
+  image: registry.k8s.io/conformance:v123.456.789
   imagePullPolicy: IfNotPresent
   name: e2e
   volumeMounts:

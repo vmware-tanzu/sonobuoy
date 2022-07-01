@@ -56,11 +56,11 @@ func TestConvertImagesToPairs(t *testing.T) {
 	defer os.Remove(configFileName)
 
 	images := []string{
-		"k8s.gcr.io/etcd:3.4.13-0",
+		"registry.k8s.io/etcd:3.4.13-0",
 	}
 	expectedTagPairs := []image.TagPair{
 		{
-			Src: "k8s.gcr.io/etcd:3.4.13-0",
+			Src: "registry.k8s.io/etcd:3.4.13-0",
 			Dst: "test-fake-registry.corp/fake-user/etcd:3.4.13-0",
 		},
 	}
