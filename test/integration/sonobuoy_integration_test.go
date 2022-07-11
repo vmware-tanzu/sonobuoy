@@ -787,11 +787,11 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			cmdLine:    "gen -p testdata/hello-world.yaml@goodbye -p testImage/yaml/job-junit-passing-singlefile.yaml@customname --kubernetes-version=ignore",
 			expectFile: "testdata/gen-plugin-renaming.golden",
 		}, {
-			desc:       "warning given if mode/focus/skip set together ",
+			desc:       "errors given if mode/focus/skip set together ",
 			cmdLine:    "gen --mode=certified-conformance --e2e-focus=foo --kubernetes-version=ignore",
 			expectFile: "testdata/gen-mode-and-focus.golden",
 		}, {
-			desc:       "warning given if rerun-failed set withother mode/focus/skip flags",
+			desc:       "errors given if rerun-failed set withother mode/focus/skip flags",
 			cmdLine:    "gen --rerun-failed testdata/results-4-e2e-failures.tar.gz --mode=certified-conformance --kubernetes-version=ignore",
 			expectFile: "testdata/gen-mode-and-rerun.golden",
 		}, {

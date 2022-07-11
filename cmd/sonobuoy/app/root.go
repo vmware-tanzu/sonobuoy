@@ -17,6 +17,7 @@ limitations under the License.
 package app
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"sync"
@@ -115,23 +116,23 @@ func prerunChecks(cmd *cobra.Command, args []string) error {
 	// Difficult to do checks like this within the flag themselves (since they dont know
 	// about each other). Splitting up checks into varous 'ifs' for ease of reading/writing even if not most succinct.
 	if flagsSet["mode"] && (flagsSet["e2e-focus"] || flagsSet["e2e-skip"]) {
-		logrus.Warnf("mode flag and e2e-focus/skip flags both provided and may cause unintended behavior")
+		return errors.New("mode flag and e2e-focus/skip flags both provided and may cause unintended behavior")
 	}
 
 	if flagsSet["rerun-failed"] && (flagsSet["e2e-focus"] || flagsSet["e2e-skip"]) {
-		logrus.Warnf("rerun-failed flag and e2e-focus/skip flags both provided and may cause unintended behavior")
+		return errors.New("rerun-failed flag and e2e-focus/skip flags both provided and may cause unintended behavior")
 	}
 
 	if flagsSet["rerun-failed"] && flagsSet["mode"] {
-		logrus.Warnf("rerun-failed flag and mode flags both provided and may cause unintended behavior")
+		return errors.New("rerun-failed flag and mode flags both provided and may cause unintended behavior")
 	}
 
 	if flagsSet["kube-conformance-image"] && (flagsSet["kubernetes-version"] || flagsSet["kube-conformance-image-version"]) {
-		logrus.Warnf("kube-conformance-image flag and kubernetes-version/kube-conformance-image-version flags both set and may collide")
+		logrus.Warn("kube-conformance-image flag and kubernetes-version/kube-conformance-image-version flags both set and may cause unintended behavior")
 	}
 
 	if flagsSet[e2eRegistryConfigFlag] && flagsSet[e2eRegistryFlag] {
-		logrus.Warnf("%v and %v flags are both set and may collide", e2eRegistryConfigFlag, e2eRegistryFlag)
+		return fmt.Errorf("%v and %v flags are both set and may collide", e2eRegistryConfigFlag, e2eRegistryFlag)
 	}
 
 	return nil

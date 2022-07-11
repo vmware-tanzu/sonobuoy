@@ -1,245 +1,54 @@
-time="STATIC_TIME_FOR_TESTING" level=warning msg="rerun-failed flag and mode flags both provided and may cause unintended behavior"
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: sonobuoy
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    component: sonobuoy
-  name: sonobuoy-serviceaccount
-  namespace: sonobuoy
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    component: sonobuoy
-    namespace: sonobuoy
-  name: sonobuoy-serviceaccount-sonobuoy
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: sonobuoy-serviceaccount-sonobuoy
-subjects:
-- kind: ServiceAccount
-  name: sonobuoy-serviceaccount
-  namespace: sonobuoy
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    component: sonobuoy
-    namespace: sonobuoy
-  name: sonobuoy-serviceaccount-sonobuoy
-rules:
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - '*'
-- nonResourceURLs:
-  - /metrics
-  - /logs
-  - /logs/*
-  verbs:
-  - get
----
-apiVersion: v1
-data:
-  config.json: '{"Description":"DEFAULT","UUID":"","Version":"*STATIC_FOR_TESTING*","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:*STATIC_FOR_TESTING*","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","AggregatorPermissions":"clusterAdmin","ServiceAccountName":"sonobuoy-serviceaccount","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}'
-kind: ConfigMap
-metadata:
-  labels:
-    component: sonobuoy
-  name: sonobuoy-config-cm
-  namespace: sonobuoy
----
-apiVersion: v1
-data:
-  plugin-0.yaml: |-
-    podSpec:
-      containers: []
-      nodeSelector:
-        kubernetes.io/os: linux
-      restartPolicy: Never
-      serviceAccountName: sonobuoy-serviceaccount
-      tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
-        operator: Exists
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: kubernetes.io/e2e-evict-taint-key
-        operator: Exists
-    sonobuoy-config:
-      driver: Job
-      plugin-name: e2e
-      result-format: junit
-    spec:
-      command:
-      - /run_e2e.sh
-      env:
-      - name: E2E_EXTRA_ARGS
-        value: --progress-report-url=http://localhost:8099/progress
-      - name: E2E_FOCUS
-        value: \[Conformance\]
-      - name: E2E_PARALLEL
-        value: "false"
-      - name: E2E_USE_GO_RUNNER
-        value: "true"
-      - name: RESULTS_DIR
-        value: /tmp/sonobuoy/results
-      - name: SONOBUOY
-        value: "true"
-      - name: SONOBUOY_CONFIG_DIR
-        value: /tmp/sonobuoy/config
-      - name: SONOBUOY_K8S_VERSION
-        value: ignore
-      - name: SONOBUOY_PROGRESS_PORT
-        value: "8099"
-      - name: SONOBUOY_RESULTS_DIR
-        value: /tmp/sonobuoy/results
-      image: registry.k8s.io/conformance:ignore
-      imagePullPolicy: IfNotPresent
-      name: e2e
-      volumeMounts:
-      - mountPath: /tmp/sonobuoy/results
-        name: results
-  plugin-1.yaml: |-
-    podSpec:
-      containers: []
-      dnsPolicy: ClusterFirstWithHostNet
-      hostIPC: true
-      hostNetwork: true
-      hostPID: true
-      nodeSelector:
-        kubernetes.io/os: linux
-      serviceAccountName: sonobuoy-serviceaccount
-      tolerations:
-      - operator: Exists
-      volumes:
-      - hostPath:
-          path: /
-        name: root
-    sonobuoy-config:
-      driver: DaemonSet
-      plugin-name: systemd-logs
-      result-format: raw
-    spec:
-      command:
-      - /bin/sh
-      - -c
-      - /get_systemd_logs.sh; while true; do echo "Plugin is complete. Sleeping indefinitely
-        to avoid container exit and automatic restarts from Kubernetes"; sleep 3600; done
-      env:
-      - name: CHROOT_DIR
-        value: /node
-      - name: NODE_NAME
-        valueFrom:
-          fieldRef:
-            fieldPath: spec.nodeName
-      - name: RESULTS_DIR
-        value: /tmp/sonobuoy/results
-      - name: SONOBUOY
-        value: "true"
-      - name: SONOBUOY_CONFIG_DIR
-        value: /tmp/sonobuoy/config
-      - name: SONOBUOY_K8S_VERSION
-        value: ignore
-      - name: SONOBUOY_PROGRESS_PORT
-        value: "8099"
-      - name: SONOBUOY_RESULTS_DIR
-        value: /tmp/sonobuoy/results
-      image: sonobuoy/systemd-logs:v0.4
-      imagePullPolicy: IfNotPresent
-      name: systemd-logs
-      securityContext:
-        privileged: true
-      volumeMounts:
-      - mountPath: /node
-        name: root
-      - mountPath: /tmp/sonobuoy/results
-        name: results
-kind: ConfigMap
-metadata:
-  labels:
-    component: sonobuoy
-  name: sonobuoy-plugins-cm
-  namespace: sonobuoy
----
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    component: sonobuoy
-    sonobuoy-component: aggregator
-    tier: analysis
-  name: sonobuoy
-  namespace: sonobuoy
-spec:
-  containers:
-  - args:
-    - aggregator
-    - --no-exit
-    - --level=info
-    - -v=4
-    - --alsologtostderr
-    command:
-    - /sonobuoy
-    env:
-    - name: SONOBUOY_ADVERTISE_IP
-      valueFrom:
-        fieldRef:
-          fieldPath: status.podIP
-    image: sonobuoy/sonobuoy:*STATIC_FOR_TESTING*
-    imagePullPolicy: IfNotPresent
-    name: kube-sonobuoy
-    volumeMounts:
-    - mountPath: /etc/sonobuoy
-      name: sonobuoy-config-volume
-    - mountPath: /plugins.d
-      name: sonobuoy-plugins-volume
-    - mountPath: /tmp/sonobuoy
-      name: output-volume
-  restartPolicy: Never
-  securityContext:
-    fsGroup: 2000
-    runAsGroup: 3000
-    runAsUser: 1000
-  serviceAccountName: sonobuoy-serviceaccount
-  tolerations:
-  - key: kubernetes.io/e2e-evict-taint-key
-    operator: Exists
-  volumes:
-  - configMap:
-      name: sonobuoy-config-cm
-    name: sonobuoy-config-volume
-  - configMap:
-      name: sonobuoy-plugins-cm
-    name: sonobuoy-plugins-volume
-  - emptyDir: {}
-    name: output-volume
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    component: sonobuoy
-    sonobuoy-component: aggregator
-  name: sonobuoy-aggregator
-  namespace: sonobuoy
-spec:
-  ports:
-  - port: 8080
-    protocol: TCP
-    targetPort: 8080
-  selector:
-    sonobuoy-component: aggregator
-  type: ClusterIP
----
+Error: rerun-failed flag and mode flags both provided and may cause unintended behavior
+Usage:
+  sonobuoy gen [flags]
+  sonobuoy gen [command]
 
+Available Commands:
+  config               Generates a Sonobuoy config for input to sonobuoy gen or run.
+  default-image-config Generates the default image registry config for the e2e plugin
+  plugin               Generates the manifest Sonobuoy uses to define a plugin
+
+Flags:
+      --aggregator-node-selector nodeSelectors   Node selectors to add to the aggregator. Values can be given multiple times and are in the form key:value (default map[])
+      --aggregator-permissions string            Type of aggregator permission to use in the cluster. Allowable values are [namespaceAdmin, clusterRead, clusterAdmin] (default "clusterAdmin")
+      --config Sonobuoy config                   Path to a sonobuoy configuration JSON file.
+      --context string                           Context in the kubeconfig to use.
+      --dns-namespace string                     The namespace to check for DNS pods during preflight checks. (default "kube-system")
+      --dns-pod-labels strings                   The label selectors to use for locating DNS pods during preflight checks. Can be specified multiple times or as a comma-separated list. (default [k8s-app=kube-dns,k8s-app=coredns])
+      --e2e-focus envModifier                    Specify the E2E_FOCUS value for the e2e plugin, specifying which tests to run. Shorthand for --plugin-env=e2e.E2E_FOCUS=<string> (default \[Conformance\])
+      --e2e-repo envModifier                     Specify a registry to use as the default for pulling Kubernetes test images. Same as providing --e2e-repo-config but specifying the same repo repeatedly.
+      --e2e-repo-config yaml-filepath            Specify a yaml file acting as KUBE_TEST_REPO_LIST, overriding registries for test images.
+      --e2e-skip envModifier                     Specify the E2E_SKIP value for the e2e plugin, specifying which tests to skip. Shorthand for --plugin-env=e2e.E2E_SKIP=<string>
+      --existing-service-account                 If true, use an existing service account, else attempt to create one.
+  -f, --file -                                   If set, loads the file as if it were the output from sonobuoy gen. Set to - to read from stdin.
+      --force-image-pull-policy                  Force plugins' imagePullPolicy to match the value for the Sonobuoy pod
+  -h, --help                                     help for gen
+      --image-pull-policy string                 Set the ImagePullPolicy for the Sonobuoy image and all plugins (if --force-image-pull-policy is set). Valid options are Always, IfNotPresent, Never. (default "IfNotPresent")
+      --kube-conformance-image image             Container image override for the e2e plugin. Shorthand for --plugin-image=e2e:<string> (default map[])
+      --kubeconfig Kubeconfig                    Path to explicit kubeconfig file.
+      --kubernetes-version string                Use default E2E image, but override the version. Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise. 'ignore' will try version resolution but ignore errors. 'latest' will find the latest dev image/version upstream. (default "")
+  -m, --mode Mode                                What mode to run the e2e plugin in. Valid modes are [certified-conformance conformance-lite non-disruptive-conformance quick]. (default non-disruptive-conformance)
+  -n, --namespace string                         The namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously. (default "sonobuoy")
+  -p, --plugin pluginList                        Which plugins to run. Can either point to a URL, local file/directory, or be one of the known plugins (e2e or systemd-logs). Can be specified multiple times to run multiple plugins.
+      --plugin-env pluginenvvar                  Set env vars on plugins. Values can be given multiple times and are in the form plugin.env=value (default map[])
+      --plugin-image plugin:image                Override a plugins image from what is in its definition (e.g. myPlugin:testimage) (default map[])
+      --rbac RBACMode                            Whether to enable RBAC on Sonobuoy. Valid modes are Enable, Disable, and Detect (query the server to see whether to enable RBAC). (default Enable)
+      --rerun-failed tar.gz file                 Read the given tarball and set the E2E_FOCUS to target all the failed tests (default )
+      --security-context-mode string             Type of security context to use for the aggregator pod. Allowable values are [none, nonroot] (default "nonroot")
+      --service-account-name string              Name of the service account to be used by sonobuoy. (default "sonobuoy-serviceaccount")
+      --show-default-podspec                     If true, include the default pod spec used for plugins in the output.
+      --skip-preflight                           If true, skip all checks before starting the sonobuoy run.
+      --sonobuoy-image string                    Container image override for the sonobuoy worker and aggregator. (default "sonobuoy/sonobuoy:*STATIC_FOR_TESTING*")
+      --ssh-key yamlFile                         Path to the private key enabling SSH to cluster nodes. May be required by some tests from the e2e plugin.
+      --ssh-user envModifier                     SSH user for ssh-key. Required if running e2e plugin with certain tests that require SSH access to nodes.
+      --systemd-logs-image image                 Container image override for the systemd-logs plugin. Shorthand for --plugin-image=systemd-logs:<string> (default map[])
+      --timeout int                              How long (in seconds) Sonobuoy aggregator will wait for plugins to complete before exiting. 0 indicates no timeout. (default 21600)
+      --wait int[=1440]                          How long (in minutes) for the CLI to wait for sonobuoy run to be completed or fail, where 0 indicates do not wait. If specified, the default wait time is 1 day.
+      --wait-output string                       Specify the type of output Sonobuoy should produce when --wait is used. Valid modes are silent, spinner, or progress (default "Progress")
+
+Global Flags:
+      --level level   Log level. One of {panic, fatal, error, warn, info, debug, trace} (default info)
+
+Use "sonobuoy gen [command] --help" for more information about a command.
+
+time="STATIC_TIME_FOR_TESTING" level=error msg="rerun-failed flag and mode flags both provided and may cause unintended behavior"

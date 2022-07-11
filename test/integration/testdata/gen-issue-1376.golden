@@ -1,4 +1,4 @@
-time="STATIC_TIME_FOR_TESTING" level=warning msg="kube-conformance-image flag and kubernetes-version/kube-conformance-image-version flags both set and may collide"
+time="STATIC_TIME_FOR_TESTING" level=warning msg="kube-conformance-image flag and kubernetes-version/kube-conformance-image-version flags both set and may cause unintended behavior"
 apiVersion: v1
 kind: Namespace
 metadata:
