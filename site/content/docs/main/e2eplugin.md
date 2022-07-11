@@ -21,9 +21,12 @@ sonobuoy run \
 
 > Note: These flags are just special cases of the more general flag `--plugin-env`. For instance, you could set the env vars by using the flag `--plugin-env e2e.E2E_SKIP=<value>`
 
-# Built-In Configurations
+# Built-In Modes
 
-There are a few commonly run configurations which Sonobuoy hard-codes for convenience:
+There are a few commonly run configurations which Sonobuoy hard-codes for convenience.
+Keep in mind that since these modes are shorthand for focus/skip values, you should not provide flags for both (mode and focus/skip):
+
+> Note: You can see a list of these by running `sonobuoy modes`
 
 * non-disruptive-conformance
 
@@ -41,9 +44,31 @@ This mode runs all of the `Conformance` tests and is the mode used when applying
 
 > NOTE: The length of time it takes to run conformance can vary based on the size of your cluster---the timeout can be adjusted in the Server.timeoutseconds field of the Sonobuoy `config.json` or on the CLI via the `--timeout` flag.
 
-## Dry Run
+## Dry Run and the E2E Command
 
-When specifying your own focus/skip values, it may be useful to set the run to operate in dry run mode:
+When specifying your own focus/skip values, it may be useful to figure out which tests will be run before actually spending the time/resources to run them.
+
+Sonobuoy has gathered the list of tests for different Kubernetes versions and allows you to quickly check the result of focus/skip values:
+
+```gotemplate
+sonobuoy e2e --focus foo --skip bar
+```
+
+It can be particularly useful to see which "tags" (groups of tests) are being run and how many tests.
+The "e2e" command provides different output modes to facilitate that:
+
+```gotemplate
+// Lists all tests by name. Precise but may be lots of data.
+sonobuoy e2e --focus foo --skip bar
+
+// Lists all the test tags (e.g. [sig-storage] or [Feature: Foo])
+sonobuoy e2e --focus foo --skip bar --mode=tags
+
+// Lists all the test tags and how many tests had it (e.g. [sig-storage]: 13 or [Feature: Foo]: 2)
+sonobuoy e2e --focus foo --skip bar --mode=tagCounts
+```
+
+Instead of the "e2e" command, you can also run the tests in dry run mode:
 
 ```
 sonobuoy run \
