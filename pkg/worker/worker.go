@@ -148,17 +148,30 @@ func GatherResults(waitfile string, url string, client *http.Client, stopc <-cha
 	for {
 		select {
 		case <-ticker.C:
-			if resultFile, err := ioutil.ReadFile(waitfile); err == nil {
-				logrus.Tracef("Detected done file but sleeping for %v then checking again for file. This allows other containers to intervene if desired.", waitFileConsumptionDelay)
-				time.Sleep(waitFileConsumptionDelay)
-				if _, err := os.Stat(waitfile); err != nil {
-					logrus.Trace("Done file has been removed, potentially by a sidecar for postprocessing reasons. Resuming wait routine.")
-					continue
+			if _, err := os.Stat(waitfile); err != nil {
+				if !os.IsNotExist(err) {
+					logrus.Tracef("Attempted to read donefile but got error: %v", err.Error())
 				}
-				resultFile = bytes.TrimSpace(resultFile)
-				logrus.WithField("resultFile", string(resultFile)).Info("Detected done file, transmitting result file")
-				return handleWaitFile(string(resultFile), url, client)
+				continue
 			}
+
+			logrus.Tracef("Detected done file but sleeping for %v then checking again for file. This allows other containers to intervene if desired.", waitFileConsumptionDelay)
+			time.Sleep(waitFileConsumptionDelay)
+			if _, err := os.Stat(waitfile); err != nil {
+				logrus.Trace("Done file has been removed, potentially by a sidecar for postprocessing reasons. Resuming wait routine.")
+				continue
+			}
+
+			// Don't read the contents until this point in case another container edits the value.
+			resultFile, err := ioutil.ReadFile(waitfile)
+			if err != nil {
+				logrus.Tracef("Done file was present but reading it resulted in an error: %v", err.Error())
+				continue
+			}
+
+			resultFile = bytes.TrimSpace(resultFile)
+			logrus.WithField("resultFile", string(resultFile)).Info("Detected done file, transmitting result file")
+			return handleWaitFile(string(resultFile), url, client)
 		case <-stopc:
 			logrus.Info("Did not receive plugin results in time. Shutting down worker.")
 			return nil
