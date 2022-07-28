@@ -49,6 +49,10 @@ func main() {
 		"no-done", false,
 		"Use this if you want the plugin to exit without writing the done file to the worker.",
 	)
+	rootCmd.PersistentFlags().String(
+		"done", "",
+		"Set this if you want to explicitly write something into the done file; by using the empty value you let the command choose the appropriate value.",
+	)
 	rootCmd.AddCommand(cmdSingleFile)
 	rootCmd.AddCommand(cmdTarFile)
 	rootCmd.Execute()

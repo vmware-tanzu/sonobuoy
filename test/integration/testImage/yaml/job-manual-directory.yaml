@@ -1,0 +1,15 @@
+sonobuoy-config:
+  driver: Job
+  plugin-name: job-manual-directory
+  result-format: manual
+spec:
+  args:
+  - single-file
+  - --done=/tmp/sonobuoy/results
+  - /resources/manual-results-1.yaml
+  - /resources/manual-results-2.yaml
+  command:
+  - /testImage
+  image: sonobuoy/testimage:v0.1
+  name: plugin
+

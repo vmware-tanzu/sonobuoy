@@ -227,7 +227,20 @@ func allOtherContainersCompleted(myNS, myPod, myContainer string) bool {
 
 func handleWaitFile(resultFile, url string, client *http.Client) error {
 	var outfile *os.File
-	var err error
+
+	fileInfo, err := os.Stat(resultFile)
+	if err != nil {
+		return errors.Wrapf(err, "failed to stat result file %v", resultFile)
+	}
+
+	if fileInfo.IsDir() {
+		tarlocation := filepath.Join(resultFile, "results.tar.gz")
+		logrus.Tracef("Results to return to aggregator are a directory. Archiving and compressing %v into new result file %v", resultFile, tarlocation)
+		if err := tarball.DirToTarball(resultFile, tarlocation, true); err != nil {
+			return errors.Wrapf(err, "attempted to send a directory as results but the tar process failed")
+		}
+		resultFile = tarlocation
+	}
 
 	// Set content type
 	extension := filepath.Ext(resultFile)

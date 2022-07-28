@@ -50,3 +50,13 @@ sonobuoy gen plugin \
 --arg="/tmp/sonobuoy/config/junit-via-configmap.xml" \
 --configmap="../resources/junit-via-configmap.xml" \
 --format="junit" > job-junit-singlefile-configmap.yaml
+
+sonobuoy gen plugin \
+--name=job-manual-directory \
+--image=sonobuoy/testimage:v0.1 \
+--cmd="/testImage" \
+--arg="single-file" \
+--arg="--done=/tmp/sonobuoy/results" \
+--arg="/resources/manual-results-1.yaml" \
+--arg="/resources/manual-results-2.yaml" \
+--format="manual" > job-manual-directory.yaml
