@@ -392,7 +392,7 @@ func fileOrDefault(files []string, defaultFile string) fileSelector {
 // no file is given). If the filename given is empty, it will be ignored
 // and the extension matching will be used. If "*" is passed as the extension
 // all files will match.
-func FileOrExtension(files []string, ext string) fileSelector {
+func FileOrExtension(files []string, exts ...string) fileSelector {
 	return func(fPath string, info os.FileInfo) bool {
 		if info == nil || info.IsDir() {
 			return false
@@ -401,7 +401,12 @@ func FileOrExtension(files []string, ext string) fileSelector {
 		if len(files) > 0 {
 			return sliceContains(files, filepath.Base(fPath))
 		}
-		return ext == "*" || strings.HasSuffix(fPath, ext)
+		for _, ext := range exts {
+			if ext == "*" || strings.HasSuffix(fPath, ext) {
+				return true
+			}
+		}
+		return false
 	}
 }
 
