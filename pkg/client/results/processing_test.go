@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -35,10 +34,10 @@ import (
 
 var update = flag.Bool("update", false, "update golden files")
 
-// TestPostProcessPlugin runs a series of checks against basic combinations
+// TestPostProcessPluginGolden runs a series of checks against basic combinations
 // of options: (job|daemonset)+(raw|junit)+(specify a specific file or not)
 // and confirms the resulting Item is accurate.
-func TestPostProcessPlugin(t *testing.T) {
+func TestPostProcessPluginGolden(t *testing.T) {
 	getPlugin := func(key, pluginDriver, format string, outputFiles []string) plugin.Interface {
 		switch pluginDriver {
 		case "job":
@@ -163,7 +162,7 @@ func TestPostProcessPlugin(t *testing.T) {
 			key:    "job-junit-falsepositive",
 			plugin: getPlugin("job-junit-falsepositive", "job", "junit", []string{}),
 		}, {
-			desc:   "Job Manual results with no files specified and no default sonobuoy_results, all ignored",
+			desc:   "Job Manual results with no files specified and no default sonobuoy_results, processes yaml",
 			key:    "job-manual-01",
 			plugin: getPlugin("job-manual-01", "job", "manual", []string{}),
 		}, {
@@ -175,11 +174,11 @@ func TestPostProcessPlugin(t *testing.T) {
 			key:    "job-manual-03",
 			plugin: getPlugin("job-manual-03", "job", "manual", []string{"manual-results.yaml"}),
 		}, {
-			desc:   "Job Manual results with no file specified and default sonobuoy_results, default file processed",
+			desc:   "Job Manual results with no file specified and default sonobuoy_results, all yaml processed",
 			key:    "job-manual-04",
 			plugin: getPlugin("job-manual-04", "job", "manual", []string{}),
 		}, {
-			desc:   "DS Manual results with no file specified and no default sonobuoy_results, all ignored",
+			desc:   "DS Manual results with no file specified and no default sonobuoy_results, all yaml processed",
 			key:    "ds-manual-01",
 			plugin: getPlugin("ds-manual-01", "daemonset", "manual", []string{}),
 		}, {
@@ -191,7 +190,7 @@ func TestPostProcessPlugin(t *testing.T) {
 			key:    "ds-manual-03",
 			plugin: getPlugin("ds-manual-03", "daemonset", "manual", []string{"manual-results.yaml"}),
 		}, {
-			desc:   "DS Manual results with no file specified and default sonobuoy_results, default file processed",
+			desc:   "DS Manual results with no file specified and default sonobuoy_results, all yaml processed",
 			key:    "ds-manual-04",
 			plugin: getPlugin("ds-manual-04", "daemonset", "manual", []string{}),
 		}, {
@@ -599,64 +598,6 @@ func TestAggregateStatus(t *testing.T) {
 
 			if diff := pretty.Compare(tc.expectedItems, tc.input); diff != "" {
 				t.Errorf("\n\n%s\n", diff)
-			}
-		})
-	}
-}
-
-func TestFileOrDefault(t *testing.T) {
-	filesOnDisk := []string{
-		"testdata/mockResults/fileOrDefault/not-a-result-file.yaml",
-		"testdata/mockResults/fileOrDefault/result-file-1.yaml",
-		"testdata/mockResults/fileOrDefault/result-file-2.yaml",
-		"testdata/mockResults/fileOrDefault/sonobuoy_results.yaml",
-	}
-
-	testCases := []struct {
-		desc              string
-		pluginResultFiles []string
-		defaultFile       string
-		filesOnDisk       []string
-		expectedResults   []bool
-	}{
-		{
-			desc:            "Directory file on disk is not selected",
-			filesOnDisk:     []string{"testdata/mockResults/fileOrDefault"},
-			expectedResults: []bool{false},
-		},
-		{
-			desc:            "No plugin files and no default file result in no files being selected",
-			filesOnDisk:     filesOnDisk,
-			expectedResults: []bool{false, false, false, false},
-		},
-		{
-			desc:            "No plugin files and default file result in default file being selected",
-			filesOnDisk:     filesOnDisk,
-			defaultFile:     "sonobuoy_results.yaml",
-			expectedResults: []bool{false, false, false, true},
-		},
-		{
-			desc:              "Plugin files and default file result in only plugin files being selected",
-			filesOnDisk:       filesOnDisk,
-			pluginResultFiles: []string{"result-file-1.yaml", "result-file-2.yaml"},
-			defaultFile:       "sonobuoy_results.yaml",
-			expectedResults:   []bool{false, true, true, false},
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			selector := fileOrDefault(tc.pluginResultFiles, tc.defaultFile)
-			// Simulate walk of results directory
-			for i, f := range tc.filesOnDisk {
-				fileInfo, err := os.Stat(f)
-				if err != nil {
-					t.Error(err)
-					continue
-				}
-				result := selector(f, fileInfo)
-				if result != tc.expectedResults[i] {
-					t.Errorf("expected selector for %v to return %v, got %v", f, tc.expectedResults[i], result)
-				}
 			}
 		})
 	}

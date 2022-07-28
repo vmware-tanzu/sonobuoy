@@ -194,7 +194,7 @@ func PostProcessPlugin(p plugin.Interface, dir string) (Item, []error) {
 	case ResultFormatManual:
 		logrus.WithField("plugin", p.GetName()).Trace("Using manual post-processor")
 		// Only process the specified plugin result files or a Sonobuoy results file.
-		i, errs = processPluginWithProcessor(p, dir, manualProcessFile, fileOrDefault(p.GetResultFiles(), PostProcessedResultsFile))
+		i, errs = processPluginWithProcessor(p, dir, manualProcessFile, FileOrExtension(p.GetResultFiles(), ".yaml", ".yml"))
 	default:
 		logrus.WithField("plugin", p.GetName()).Trace("Defaulting to raw post-processor")
 		// Default to raw format so that consumers can still expect the aggregate file to exist and
@@ -367,24 +367,6 @@ func sliceContains(set []string, val string) bool {
 		}
 	}
 	return false
-}
-
-// fileOrDefault returns a function which will return true for a filename that matches
-// the name of any file in the given list of files.
-// If no files are provided to search against, then the returned function will return
-// true for a filename that matches the given default filename.
-func fileOrDefault(files []string, defaultFile string) fileSelector {
-	return func(fPath string, info os.FileInfo) bool {
-		if info == nil || info.IsDir() {
-			return false
-		}
-
-		filename := filepath.Base(fPath)
-		if len(files) > 0 {
-			return sliceContains(files, filename)
-		}
-		return filename == defaultFile
-	}
 }
 
 // FileOrExtension returns a function which will return true for files

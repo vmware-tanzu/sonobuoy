@@ -1,23 +1,75 @@
 {
 "name": "ds-manual-01",
-"status": "unknown",
+"status": "status 2: 2",
 "meta": {
 "type": "summary"
 },
 "items": [
 {
 "name": "node1",
-"status": "unknown",
+"status": "status 2: 1",
 "meta": {
 "type": "node"
+},
+"items": [
+{
+"name": "manual-results.yaml",
+"status": "status 2: 1",
+"meta": {
+"file": "results/node1/manual-results.yaml",
+"type": "file"
+},
+"items": [
+{
+"name": "a test file",
+"status": "status 2: 1",
+"meta": {
+"file": "results/global/junit_01.xml",
+"type": "file"
+},
+"items": [
+{
+"name": "Manual suite name",
+"status": "status 2"
 }
+]
+}
+]
+}
+]
 },
 {
 "name": "node2",
-"status": "unknown",
+"status": "status 2: 1",
 "meta": {
 "type": "node"
+},
+"items": [
+{
+"name": "manual-results.yaml",
+"status": "status 2: 1",
+"meta": {
+"file": "results/node2/manual-results.yaml",
+"type": "file"
+},
+"items": [
+{
+"name": "a test file",
+"status": "status 2: 1",
+"meta": {
+"file": "results/global/junit_01.xml",
+"type": "file"
+},
+"items": [
+{
+"name": "Manual suite name",
+"status": "status 2"
 }
+]
+}
+]
+}
+]
 }
 ]
 }

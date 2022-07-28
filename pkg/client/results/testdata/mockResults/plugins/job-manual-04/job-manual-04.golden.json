@@ -6,6 +6,36 @@
 },
 "items": [
 {
+"name": "manual-results.yaml",
+"status": "passed",
+"meta": {
+"file": "results/global/manual-results.yaml",
+"type": "file"
+},
+"items": [
+{
+"name": "a test file",
+"status": "passed",
+"meta": {
+"file": "results/global/junit_01.xml",
+"type": "file"
+},
+"items": [
+{
+"name": "Manual suite name",
+"status": "passed",
+"items": [
+{
+"name": "Manual test name",
+"status": "passed"
+}
+]
+}
+]
+}
+]
+},
+{
 "name": "sonobuoy_results.yaml",
 "status": "passed",
 "meta": {
