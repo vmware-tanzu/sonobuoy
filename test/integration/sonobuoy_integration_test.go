@@ -224,6 +224,35 @@ func TestNoDoneFile(t *testing.T) {
 	tb = saveToArtifacts(t, tb)
 }
 
+// TestDoneFileDirectory runs a plugin which reports the done file as the results directory itself and not the
+// files or a tarball to ensure that processing works and all results are considered.
+func TestDoneFileDirectory(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
+	defer cancel()
+
+	ns, cleanup := getNamespace(t)
+	defer cleanup(false)
+
+	args := fmt.Sprintf("run --image-pull-policy IfNotPresent --wait -p testImage/yaml/job-manual-directory.yaml -n %v", ns)
+	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
+	tarballPath := mustDownloadTarball(ctx, t, ns)
+	tarballPath = saveToArtifacts(t, tarballPath)
+
+	// Retrieve the sonobuoy results file from the tarball
+	resultsArgs := fmt.Sprintf("results %v --plugin %v --mode dump", tarballPath, "job-manual-directory")
+	resultsYaml := mustRunSonobuoyCommandWithContext(ctx, t, ns, resultsArgs)
+	var resultItem results.Item
+	if err := yaml.Unmarshal(resultsYaml.Bytes(), &resultItem); err != nil {
+		t.Fatalf("Unable to parse yaml data: %v", err)
+	}
+
+	expectedStatus := "custom-status: 1, failed: 1, passed: 2"
+	if resultItem.Status != expectedStatus {
+		t.Errorf("Expected plugin to have status: %v, got %v", expectedStatus, resultItem.Status)
+	}
+}
+
 // TestRetrieveAndExtractWithPodLogs tests that we are able to extract the files
 // from the tarball via the retrieve command. It also ensures that we dont
 // regress on #1415, that plugin pod logs should be gathered.

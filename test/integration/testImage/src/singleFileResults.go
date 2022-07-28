@@ -29,7 +29,7 @@ import (
 var cmdSingleFile = &cobra.Command{
 	Use:   "single-file",
 	Short: "Returns a single file as results.",
-	Long:  "Writes all the given files to the results directory but only writes the done file (if applicable) for the last one.",
+	Long:  "Writes all the given files to the results directory but only writes the done file (if applicable) for the first one.",
 	Args:  cobra.MinimumNArgs(1),
 	RunE:  reportSingleFile,
 }
@@ -51,6 +51,11 @@ func reportSingleFile(cmd *cobra.Command, args []string) error {
 		fmt.Println("no-done is set, exiting without writing done file")
 		return nil
 	}
+
+	if doneContents := cmd.Flags().Lookup("done").Value.String(); len(doneContents) > 0 {
+		resultsFile = doneContents
+	}
+
 	err := ioutil.WriteFile(doneFile, []byte(resultsFile), os.FileMode(0666))
 	return errors.Wrap(err, "failed to write to done file")
 }
