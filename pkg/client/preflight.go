@@ -37,10 +37,10 @@ var (
 	minimumKubeVersion = version.Must(version.NewVersion(buildinfo.MinimumKubeVersion))
 	maximumKubeVersion = version.Must(version.NewVersion(buildinfo.MaximumKubeVersion))
 
-	preflightChecks = []func(kubernetes.Interface, *PreflightConfig) error{
-		preflightDNSCheck,
-		preflightVersionCheck,
-		preflightExistingNamespace,
+	validPreflightChecks = map[string]func(kubernetes.Interface, *PreflightConfig) error{
+		"dnscheck":          preflightDNSCheck,
+		"versioncheck":      preflightVersionCheck,
+		"existingnamespace": preflightExistingNamespace,
 	}
 )
 
@@ -60,6 +60,29 @@ func (c *SonobuoyClient) PreflightChecks(cfg *PreflightConfig) []error {
 	client, err := c.Client()
 	if err != nil {
 		return []error{err}
+	}
+
+	preflightChecks := make(map[string]func(kubernetes.Interface, *PreflightConfig) error)
+	for key, value := range validPreflightChecks {
+		preflightChecks[key] = value
+	}
+
+	var preflightChecksSkip []string
+	for _, name := range cfg.PreflightChecksSkip {
+		name = strings.ToLower(name)
+		if name == "false" {
+			preflightChecksSkip = []string{}
+			break
+		}
+		preflightChecksSkip = append(preflightChecksSkip, name)
+	}
+
+	for _, name := range preflightChecksSkip {
+		if _, ok := validPreflightChecks[name]; ok {
+			delete(preflightChecks, name)
+		} else {
+			return []error{fmt.Errorf("invalid preflight check %s", name)}
+		}
 	}
 
 	errors := []error{}
