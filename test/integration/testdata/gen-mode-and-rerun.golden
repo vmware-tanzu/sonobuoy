@@ -37,7 +37,7 @@ Flags:
       --security-context-mode string             Type of security context to use for the aggregator pod. Allowable values are [none, nonroot] (default "nonroot")
       --service-account-name string              Name of the service account to be used by sonobuoy. (default "sonobuoy-serviceaccount")
       --show-default-podspec                     If true, include the default pod spec used for plugins in the output.
-      --skip-preflight                           If true, skip all checks before starting the sonobuoy run.
+      --skip-preflight strings[=true]            Skips the specified preflight checks. Valid values are [dnscheck, versioncheck, existingnamespace] or true to skip all of the checks.
       --sonobuoy-image string                    Container image override for the sonobuoy worker and aggregator. (default "sonobuoy/sonobuoy:*STATIC_FOR_TESTING*")
       --ssh-key yamlFile                         Path to the private key enabling SSH to cluster nodes. May be required by some tests from the e2e plugin.
       --ssh-user envModifier                     SSH user for ssh-key. Required if running e2e plugin with certain tests that require SSH access to nodes.

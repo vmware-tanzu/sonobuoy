@@ -50,7 +50,7 @@ type genFlags struct {
 
 	// These values are mainly for `run` but we want `gen` to support all the same
 	// flags so you can just swap out gen/run.
-	skipPreflight bool
+	skipPreflight []string
 	wait          int
 	waitOutput    WaitOutputMode
 	genFile       string

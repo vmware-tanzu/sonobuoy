@@ -18,10 +18,11 @@ package app
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"os"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
@@ -82,11 +83,12 @@ func submitSonobuoyRun(f *genFlags) func(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 
-		if !f.skipPreflight {
+		if !contains(f.skipPreflight, "true") && !contains(f.skipPreflight, "*") {
 			pcfg := &client.PreflightConfig{
-				Namespace:    f.sonobuoyConfig.Namespace,
-				DNSNamespace: f.dnsNamespace,
-				DNSPodLabels: f.dnsPodLabels,
+				Namespace:           f.sonobuoyConfig.Namespace,
+				DNSNamespace:        f.dnsNamespace,
+				DNSPodLabels:        f.dnsPodLabels,
+				PreflightChecksSkip: f.skipPreflight,
 			}
 			if errs := sbc.PreflightChecks(pcfg); len(errs) > 0 {
 				errlog.LogError(errors.New("Preflight checks failed"))

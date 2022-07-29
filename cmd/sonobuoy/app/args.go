@@ -301,11 +301,12 @@ func AddRBACModeFlags(mode *RBACMode, flags *pflag.FlagSet, defaultMode RBACMode
 }
 
 // AddSkipPreflightFlag adds a boolean flag to skip preflight checks.
-func AddSkipPreflightFlag(flag *bool, flags *pflag.FlagSet) {
-	flags.BoolVar(
-		flag, "skip-preflight", false,
-		"If true, skip all checks before starting the sonobuoy run.",
+func AddSkipPreflightFlag(flag *[]string, flags *pflag.FlagSet) {
+	flags.StringSliceVar(
+		flag, "skip-preflight", []string{},
+		"Skips the specified preflight checks. Valid values are [dnscheck, versioncheck, existingnamespace] or true to skip all of the checks.",
 	)
+	flags.Lookup("skip-preflight").NoOptDefVal = "true"
 }
 
 // AddDeleteAllFlag adds a boolean flag for deleting everything (including E2E tests).
