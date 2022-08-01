@@ -1,0 +1,10 @@
+sonobuoy-config:
+  driver: Job
+  plugin-name: gathere2e
+  result-format: raw
+spec:
+  command:
+  - ./run.sh
+  image: sonobuoy/gathere2e:v0.0.1
+  name: plugin
+
