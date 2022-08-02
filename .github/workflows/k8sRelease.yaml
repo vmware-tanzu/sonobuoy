@@ -1,0 +1,23 @@
+name: K8s Release Check
+on:
+  schedule:
+  # Every day
+  - cron: '0 0 * * *'
+
+jobs:
+  k8s_release:
+    name: K8s Release Check
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check for release
+      id: release-check
+      run: |
+        echo ::set-output name=wasRelease::$(curl -s https://api.github.com/repos/kubernetes/kubernetes/releases/latest | jq -r '.published_at|fromdateiso8601 > now-86400')
+    - name: Create issue
+      if: steps.release-check.outputs.wasRelease == "true"
+      uses: imjohnbo/issue-bot@v3
+      with:
+        labels: "kind/required"
+        title: "Notice of K8s Release"
+        body: |-
+          A Kubernetes release was detected as having occurred in the last 24h. The ./scripts/gather_e2e_data.sh script should be run and Sonobuoy tested against the new release.
