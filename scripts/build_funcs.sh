@@ -364,7 +364,7 @@ load_test_images_into_cluster(){
 # tests so this will also build sonobuoy locally. A kind cluster won't be necessary.
 update_local() {
     set -x
-    if [ -f "./kubectl" ]; then
+    if [ ! -f "./kubectl" ]; then
       # Download linux kubectl and move into default path for tests
       curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.23.0/bin/linux/amd64/kubectl
       chmod +x ./kubectl
