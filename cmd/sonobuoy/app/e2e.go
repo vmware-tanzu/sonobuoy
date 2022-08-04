@@ -49,6 +49,19 @@ type e2eFlags struct {
 	mode string
 }
 
+// testListStubError is the type of error returned when we try and read tests from a file/url
+// but it references another version. Rather than handle it in the reader method, we bubble this
+// error up so that we have more context on the initial user request.
+type testListStubError struct {
+	ReferenceVersion string
+	AddTests         []string
+	RemoveTests      []string
+}
+
+func (e *testListStubError) Error() string {
+	return fmt.Sprintf("test list stub: attempted to load tests but the list references version %v", e.ReferenceVersion)
+}
+
 func NewCmdE2E() *cobra.Command {
 	f := e2eFlags{}
 	cmd := &cobra.Command{
@@ -184,15 +197,43 @@ func filterTests(list []string, focus, skip *regexp.Regexp) []string {
 }
 
 func getTests(input, baseURL, version string) ([]string, error) {
+	var tests []string
+	var err error
+
 	switch input {
 	case e2eInputOnline:
-		return getTestsOnline(baseURL, version)
+		tests, err = getTestsOnline(baseURL, version)
 	case e2eInputOffline:
-		return getTestsOffline(version)
+		tests, err = getTestsOffline(version)
 	case e2eInputStdin:
-		return getTestsStdin()
+		tests, err = getTestsStdin()
+	default:
+		err = fmt.Errorf("unknown input option set: %q, expected one of [%v, %v, %v]", input, e2eInputOnline, e2eInputOffline, e2eInputStdin)
 	}
-	return nil, fmt.Errorf("unknown input option set: %q, expected one of [%v, %v, %v]", input, e2eInputOnline, e2eInputOffline, e2eInputStdin)
+	var stubErr *testListStubError
+	if errors.As(err, &stubErr) {
+		logrus.Tracef("Attempted to load tests for version %v but it referenced version %v. Loading that version with other options the same.", version, stubErr.ReferenceVersion)
+
+		// Recurse with all the same options. Return on errors (they'll be non-testListStubError).
+		tests, err = getTests(input, baseURL, stubErr.ReferenceVersion)
+		if err != nil {
+			return nil, err
+		}
+		tests = mergeResults(tests, stubErr.AddTests, stubErr.RemoveTests)
+	}
+	return tests, err
+}
+
+func mergeResults(tests, addTests, removeTests []string) []string {
+	result := append(tests, addTests...)
+	sort.Strings(result)
+	for _, removeVal := range removeTests {
+		i := sort.SearchStrings(result, removeVal)
+		if result[i] == removeVal {
+			result = append(result[:i], result[i+1:]...)
+		}
+	}
+	return result
 }
 
 func getTestsStdin() ([]string, error) {
@@ -216,8 +257,27 @@ func getTestsOffline(version string) ([]string, error) {
 }
 
 func testsFromReader(r io.Reader) ([]string, error) {
-	tests := []string{}
 	scanner := bufio.NewScanner(r)
+
+	// Scan once to check if reader starts with the prefix.
+	scanner.Scan()
+	if strings.HasPrefix(scanner.Text(), "#") {
+		version := strings.TrimPrefix(scanner.Text(), "#")
+		err := &testListStubError{ReferenceVersion: version}
+
+		for scanner.Scan() {
+			switch {
+			case strings.HasPrefix(scanner.Text(), "+"):
+				err.AddTests = append(err.RemoveTests, strings.TrimPrefix(scanner.Text(), "+"))
+			case strings.HasPrefix(scanner.Text(), "-"):
+				err.RemoveTests = append(err.RemoveTests, strings.TrimPrefix(scanner.Text(), "-"))
+			}
+		}
+		return nil, err
+	}
+
+	// Normal file handling, no prefixes to handle.
+	tests := []string{scanner.Text()}
 	for scanner.Scan() {
 		tests = append(tests, scanner.Text())
 	}
