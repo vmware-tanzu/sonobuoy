@@ -2,12 +2,16 @@ package app
 
 import (
 	"bytes"
+	"compress/gzip"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/kylelemons/godebug/pretty"
+	"github.com/sirupsen/logrus"
 )
 
 func TestFilterTests(t *testing.T) {
@@ -124,6 +128,70 @@ func TestTagCountsFromList(t *testing.T) {
 			output := tagCountsFromList(tc.input)
 			if diff := pretty.Compare(output, tc.expect); diff != "" {
 				t.Fatalf("\n\n%s\n", diff)
+			}
+		})
+	}
+}
+
+func TestGetTestsRedirects(t *testing.T) {
+	testCases := []struct {
+		desc       string
+		getVersion string
+		expect     []string
+	}{
+		{
+			desc:       "Can get static data",
+			getVersion: "v1",
+			expect:     []string{"v1 data line 1", "v1 data line 2"},
+		}, {
+			desc:       "Can get redirected data",
+			getVersion: "v0",
+			expect:     []string{"v1 data line 1", "v1 data line 2"},
+		}, {
+			desc:       "Can get modified redirected data",
+			getVersion: "v2",
+			expect:     []string{"v1 data line 2", "v2 data line 1"},
+		}, {
+			desc:       "Can handle multiple redirects with modifications and it remains sorted",
+			getVersion: "v3",
+			expect:     []string{"_v3 data line 1", "v1 data line 2", "v2 data line 1"},
+		},
+	}
+
+	logrus.SetLevel(logrus.TraceLevel)
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/v0.gz", func(w http.ResponseWriter, req *http.Request) {
+		gw := gzip.NewWriter(w)
+		gw.Write([]byte("#v1\n"))
+		gw.Close()
+	})
+	mux.HandleFunc("/v1.gz", func(w http.ResponseWriter, req *http.Request) {
+		gw := gzip.NewWriter(w)
+		gw.Write([]byte("v1 data line 1\nv1 data line 2"))
+		gw.Close()
+	})
+	mux.HandleFunc("/v2.gz", func(w http.ResponseWriter, req *http.Request) {
+		gw := gzip.NewWriter(w)
+		gw.Write([]byte("#v1\n+v2 data line 1\n-v1 data line 1"))
+		gw.Close()
+	})
+	mux.HandleFunc("/v3.gz", func(w http.ResponseWriter, req *http.Request) {
+		gw := gzip.NewWriter(w)
+		gw.Write([]byte("#v2\n+_v3 data line 1"))
+		gw.Close()
+	})
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			output, err := getTests(e2eInputOnline, ts.URL, tc.getVersion)
+			if err != nil {
+				t.Fatalf("Unexpected error %v", err)
+			}
+			if diff := pretty.Compare(tc.expect, output); diff != "" {
+				t.Fatalf("Expected %v but got diff:\n\n%s\n", tc.expect, diff)
 			}
 		})
 	}
