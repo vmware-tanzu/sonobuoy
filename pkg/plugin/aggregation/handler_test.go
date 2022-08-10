@@ -42,8 +42,6 @@ func TestStart(t *testing.T) {
 	tmpdir, err := ioutil.TempDir("", "sonobuoy_server_test")
 	if err != nil {
 		t.Fatal("Could not create temp directory")
-		t.FailNow()
-		return
 	}
 	defer os.RemoveAll(tmpdir)
 
@@ -61,11 +59,9 @@ func TestStart(t *testing.T) {
 	response := doRequest(t, srv.Client(), "PUT", srv.URL+"/not/found", expectedJSON)
 	if response.StatusCode != 404 {
 		t.Fatalf("Expected a 404 response, got %v", response.StatusCode)
-		t.Fail()
 	}
 	if len(checkins) > 0 {
 		t.Fatalf("Request to a wrong URL should not have resulted in a node check-in")
-		t.Fail()
 	}
 
 	URL, err := NodeResultURL(srv.URL, "testnode", "systemd_logs")
@@ -77,23 +73,19 @@ func TestStart(t *testing.T) {
 	response = doRequest(t, srv.Client(), "POST", URL, expectedJSON)
 	if response.StatusCode != 405 {
 		t.Fatalf("Expected a 405 response, got %v", response.StatusCode)
-		t.Fail()
 	}
 	if len(checkins) > 0 {
 		t.Fatalf("Request with wrong HTTP method should not have resulted in a node check-in")
-		t.Fail()
 	}
 
 	// Happy path
 	response = doRequest(t, srv.Client(), "PUT", URL, expectedJSON)
 	if response.StatusCode != 200 {
 		t.Fatalf("Client got non-200 status from server: %v", response.StatusCode)
-		t.Fail()
 	}
 
 	if _, ok := checkins[expectedResult]; !ok {
 		t.Fatalf("Valid request for %v did not get recorded", expectedResult)
-		t.Fail()
 	}
 
 	URL, err = GlobalResultURL(srv.URL, "gztest")
@@ -133,13 +125,11 @@ func doRequestWithHeaders(t *testing.T, client *http.Client, method, reqURL stri
 	req.Header = headers
 	if err != nil {
 		t.Fatalf("error constructing request: %v", err)
-		t.Fail()
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("error performing request: %v", err)
-		t.Fail()
 	}
 	return resp
 }
