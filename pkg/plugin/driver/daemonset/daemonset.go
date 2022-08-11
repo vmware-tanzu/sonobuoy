@@ -64,8 +64,10 @@ var _ plugin.Interface = &Plugin{}
 func NewPlugin(dfn manifest.Manifest, namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets string, customAnnotations map[string]string) *Plugin {
 	return &Plugin{
 		driver.Base{
-			Definition:        dfn,
-			SessionID:         utils.GetSessionID(),
+			Core: driver.Core{
+				Definition: dfn,
+				SessionID:  utils.GetSessionID(),
+			},
 			Namespace:         namespace,
 			SonobuoyImage:     sonobuoyImage,
 			ImagePullPolicy:   imagePullPolicy,

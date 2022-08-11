@@ -31,10 +31,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Base is the struct that stores state for plugin drivers and contains helper methods.
+type Core struct {
+	Definition manifest.Manifest
+	SessionID  string
+}
+
+// Base is the struct that stores state for cluster-based plugin drivers and contains helper methods.
 type Base struct {
-	Definition        manifest.Manifest
-	SessionID         string
+	Core
 	Namespace         string
 	SonobuoyImage     string
 	CleanedUp         bool
@@ -44,53 +48,53 @@ type Base struct {
 }
 
 // GetSessionID returns the session id associated with the plugin.
-func (b *Base) GetSessionID() string {
-	return b.SessionID
+func (c *Core) GetSessionID() string {
+	return c.SessionID
 }
 
 // GetName returns the name of this Job plugin.
-func (b *Base) GetName() string {
-	return b.Definition.SonobuoyConfig.PluginName
+func (c *Core) GetName() string {
+	return c.Definition.SonobuoyConfig.PluginName
 }
 
 // GetOrder returns the order of this Job plugin.
-func (b *Base) GetOrder() int {
-	return b.Definition.SonobuoyConfig.Order
+func (c *Core) GetOrder() int {
+	return c.Definition.SonobuoyConfig.Order
+}
+
+// GetDriver returns the Driver for this plugin.
+func (c *Core) GetDriver() string {
+	return c.Definition.SonobuoyConfig.Driver
+}
+
+// SkipCleanup returns whether cleanup for this plugin should be skipped or not.
+func (c *Core) SkipCleanup() bool {
+	return c.Definition.SonobuoyConfig.SkipCleanup
+}
+
+// GetResultFormat returns the ResultFormat of this plugin.
+func (c *Core) GetResultFormat() string {
+	return c.Definition.SonobuoyConfig.ResultFormat
+}
+
+// GetResultFiles returns the files to be post-processed for this plugin.
+func (c *Core) GetResultFiles() []string {
+	return c.Definition.SonobuoyConfig.ResultFiles
+}
+
+// GetSourceURL returns the sourceURL of the plugin.
+func (c *Core) GetSourceURL() string {
+	return c.Definition.SonobuoyConfig.SourceURL
+}
+
+// GetDescription returns the human-readable plugin description.
+func (c *Core) GetDescription() string {
+	return c.Definition.SonobuoyConfig.Description
 }
 
 // GetSecretName gets a name for a secret based on the plugin name and session ID.
 func (b *Base) GetSecretName() string {
 	return fmt.Sprintf("sonobuoy-plugin-%s-%s", b.GetName(), b.GetSessionID())
-}
-
-// GetDriver returns the Driver for this plugin.
-func (b *Base) GetDriver() string {
-	return b.Definition.SonobuoyConfig.Driver
-}
-
-// SkipCleanup returns whether cleanup for this plugin should be skipped or not.
-func (b *Base) SkipCleanup() bool {
-	return b.Definition.SonobuoyConfig.SkipCleanup
-}
-
-// GetResultFormat returns the ResultFormat of this plugin.
-func (b *Base) GetResultFormat() string {
-	return b.Definition.SonobuoyConfig.ResultFormat
-}
-
-// GetResultFiles returns the files to be post-processed for this plugin.
-func (b *Base) GetResultFiles() []string {
-	return b.Definition.SonobuoyConfig.ResultFiles
-}
-
-// GetSourceURL returns the sourceURL of the plugin.
-func (b *Base) GetSourceURL() string {
-	return b.Definition.SonobuoyConfig.SourceURL
-}
-
-// GetDescription returns the human-readable plugin description.
-func (b *Base) GetDescription() string {
-	return b.Definition.SonobuoyConfig.Description
 }
 
 // MakeTLSSecret makes a Kubernetes secret object for the given TLS certificate.

@@ -69,11 +69,17 @@ func (s *SonobuoyConfig) DeepCopy() *SonobuoyConfig {
 
 // Manifest is the high-level manifest for a plugin
 type Manifest struct {
-	SonobuoyConfig SonobuoyConfig    `json:"sonobuoy-config"`
-	Spec           Container         `json:"spec"`
-	ExtraVolumes   []Volume          `json:"extra-volumes,omitempty"`
-	PodSpec        *PodSpec          `json:"podSpec,omitempty"`
-	ConfigMap      map[string]string `json:"config-map,omitempty"`
+	SonobuoyConfig SonobuoyConfig `json:"sonobuoy-config"`
+
+	// These fields are for in-cluster plugins.
+	Spec         Container         `json:"spec"`
+	ExtraVolumes []Volume          `json:"extra-volumes,omitempty"`
+	PodSpec      *PodSpec          `json:"podSpec,omitempty"`
+	ConfigMap    map[string]string `json:"config-map,omitempty"`
+
+	// These fields are for local plugins.
+	ScriptFile string `json:"script-file"`
+	ArgsFile   string `json:"args-file"`
 
 	objectKind
 }
