@@ -14,7 +14,7 @@ jobs:
       run: |
         echo ::set-output name=wasRelease::$(curl -s https://api.github.com/repos/kubernetes/kubernetes/releases/latest | jq -r '.published_at|fromdateiso8601 > now-86400')
     - name: Create issue
-      if: steps.release-check.outputs.wasRelease == "true"
+      if: steps.release-check.outputs.wasRelease == 'true'
       uses: imjohnbo/issue-bot@v3
       with:
         labels: "kind/required"
