@@ -2,7 +2,7 @@
 name: Weekly release
 about: Ensure weekly release gets done and follows documentation
 title: 'Weekly release'
-labels: release
+labels: kind/required
 
 ---
 

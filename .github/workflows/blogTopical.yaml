@@ -13,7 +13,7 @@ jobs:
     - name: New Blog Issue
       uses: imjohnbo/issue-bot@v3
       with:
-        labels: "documentation"
+        labels: "area/documentation"
         title: "Sonobuoy Blog"
         body: |-
           - [ ] Select author: _Name_
