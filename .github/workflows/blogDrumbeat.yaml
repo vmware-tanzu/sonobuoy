@@ -13,7 +13,7 @@ jobs:
     - name: New drumbeat blog issue
       uses: imjohnbo/issue-bot@v3
       with:
-        labels: "documentation"
+        labels: "area/documentation"
         title: "Sonobuoy Blog: Drumbeat"
         body: |-
           - [ ] Select author: _Name_
