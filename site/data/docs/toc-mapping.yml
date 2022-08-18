@@ -5,6 +5,7 @@
 # Below is a commented out example of what this may look like:
 
 main: main-toc
+v0.56.10: v0-56-10toc
 v0.56.9: v0-56-9toc
 v0.56.8: v0-56-8toc
 v0.56.7: v0-56-7toc
