@@ -26,6 +26,7 @@ type pluginDriver string
 var driverMap = map[string]pluginDriver{
 	string("job"):       pluginDriver("Job"),
 	string("daemonset"): pluginDriver("DaemonSet"),
+	string("local"):     pluginDriver("Local"),
 }
 
 func (d *pluginDriver) String() string { return string(*d) }

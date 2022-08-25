@@ -177,6 +177,15 @@ func (rc *RunConfig) Validate() error {
 	return nil
 }
 
+func (rc *RunConfig) IsLocal() bool {
+	for _, p := range rc.StaticPlugins {
+		if strings.ToLower(p.SonobuoyConfig.Driver) == "local" {
+			return true
+		}
+	}
+	return false
+}
+
 // DeleteConfig are the input options for cleaning up a Sonobuoy run.
 type DeleteConfig struct {
 	Namespace  string

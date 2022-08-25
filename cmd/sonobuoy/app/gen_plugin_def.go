@@ -141,7 +141,6 @@ func NewCmdGenPluginDef() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(genPluginSet)
 	cmd.MarkFlagRequired("name")
-	cmd.MarkFlagRequired("image")
 	return cmd
 }
 
@@ -173,6 +172,9 @@ func genPluginDefWrapper(cfg *GenPluginDefConfig) func(cmd *cobra.Command, args 
 func genPluginDef(cfg *GenPluginDefConfig) (string, error) {
 	// Copy the validated value to the actual field.
 	cfg.def.SonobuoyConfig.Driver = cfg.driver.String()
+	if cfg.driver.String() != "Local" && cfg.def.Spec.Image == "" {
+		return "", errors.New("you must provide an image unless the plugin has the driver 'Local'")
+	}
 
 	// Add env vars to the container spec.
 	cfg.def.Spec.Env = []v1.EnvVar{}
