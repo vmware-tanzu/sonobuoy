@@ -9,6 +9,7 @@ Examples:
  - After a Kubernetes cluster is restored, the backup admin spends time running manual tests to confirm the cluster is functional.
  - A support engineer manually checks different areas of functionality to diagnose an Kubernetes cluster issue while on a Zoom call with a customer.
  - To install developer tooling, for example a cloud native runtime like Knative, a Kubernetes expert from the platform team is needed to validate that the user has the required installation privileges.
+ - A Kubernetes distribution vendor needs to validate their software is installed properly on a new cloud or hardware so they can provide support.
 
 Worse, these steps may be skipped, leading to wasted time, technical debt, or even risk of operational failure:
 
@@ -16,6 +17,7 @@ Worse, these steps may be skipped, leading to wasted time, technical debt, or ev
  - The backup admin doesn’t check the restored cluster and only realizes later through user-reported bugs that the container registry didn’t correctly re-attach to its S3 image store.
  - The support engineer tries reading logs to diagnose the problem, but because of the complexity of the issue, the logs lead in the wrong direction.
  - The platform operator installing the developer tooling (Cloud Native Runtime) doesn’t know how to check if the Kuberentes cluster has a load balancer, so they either spend significant extra time researching how to check this or skip the step, but then encounter myriad problems later when the tooling doesn’t install correctly.
+ - A Kubernetes distribution vendor only performs manual smoke tests on a new cloud or hardware. Later, strange issues that are unique to the new cloud or hardware arise that could have been caught earlier.
 
 ## Who would benefit from solving this problem?
  - Users of these automated test suites reduce risk to the business, since alternatives are to use less reliable manual testing or skipping such testing altogether. Users also potentially save time, and thus money, that would have been spent in manual testing.
