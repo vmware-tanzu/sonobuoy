@@ -22,8 +22,6 @@ import (
 )
 
 const (
-	defaultBaseURL = "https://raw.githubusercontent.com/vmware-tanzu/sonobuoy/main/cmd/sonobuoy/app/e2e/testLists"
-
 	e2ePrintModeTagsOnly     = "tags"
 	e2ePrintModeTagsAndCount = "tagCounts"
 	e2ePrintModeTests        = "tests"
@@ -32,6 +30,9 @@ const (
 	e2eInputOffline = "offline"
 	e2eInputStdin   = "-"
 )
+
+//var defaultBaseURL = "https://raw.githubusercontent.com/vmware-tanzu/sonobuoy/main/cmd/sonobuoy/app/e2e/testLists"
+var defaultBaseURL = "https://raw.githubusercontent.com/vmware-tanzu/sonobuoy/main/cmd/sonobuoy/app/e2e/customTestLists"
 
 //go:embed e2e/testLists/*
 var e2eTestListFS embed.FS
@@ -101,6 +102,13 @@ func NewCmdE2E() *cobra.Command {
 	cmd.Flags().StringVarP(&f.skip, "skip", "s", "", "Do not return tests which match this regular expression")
 	cmd.Flags().StringVarP(&f.input, "input", "i", "online", "Determines the source of the test lists. Can be [online, offline, -]. If '-' is set, tests will be read from stdin.")
 
+	testListURL := os.Getenv("DEFAULT_BASE_URL")
+	if testListURL != "" {
+		fmt.Println("DEFAULT_BASE_URL env set. Using DEFAULT_BASE_URL path to read testLists")
+		defaultBaseURL = testListURL
+	}
+	fmt.Printf("defaultBaseURL: %+v\n", defaultBaseURL)
+	
 	// Hidden flag to override base URL if we have issues. Prevents older releases from being broken due to changing URL value.
 	cmd.Flags().StringVar(&f.baseURL, "url", defaultBaseURL, "The base URL in github to find the test lists for each version.")
 	cmd.Flags().MarkHidden("url")
@@ -115,6 +123,7 @@ func NewCmdE2E() *cobra.Command {
 }
 
 func e2eSonobuoyRun(e *e2eFlags) error {
+	fmt.Printf("In e2eSonobuoyRun function. e2eFlags: %+v", e)
 	testList, err := getTests(e.input, e.baseURL, e.resolvedVersion)
 	if err != nil {
 		return err
@@ -197,6 +206,7 @@ func filterTests(list []string, focus, skip *regexp.Regexp) []string {
 }
 
 func getTests(input, baseURL, version string) ([]string, error) {
+	fmt.Printf("In getTests function. input: %+v, baseURL: %+v, version:%+v", input, baseURL, version)
 	var tests []string
 	var err error
 
