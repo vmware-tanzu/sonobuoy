@@ -116,7 +116,6 @@ func NewCmdE2E() *cobra.Command {
 }
 
 func e2eSonobuoyRun(e *e2eFlags) error {
-	fmt.Printf("In e2eSonobuoyRun function. e2eFlags: %+v", e)
 	testList, err := getTests(e.input, e.baseURL, e.resolvedVersion)
 	if err != nil {
 		return err
@@ -199,7 +198,6 @@ func filterTests(list []string, focus, skip *regexp.Regexp) []string {
 }
 
 func getTests(input, baseURL, version string) ([]string, error) {
-	fmt.Printf("In getTests function. input: %+v, baseURL: %+v, version:%+v", input, baseURL, version)
 	var tests []string
 	var err error
 
