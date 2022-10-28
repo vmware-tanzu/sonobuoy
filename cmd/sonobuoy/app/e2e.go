@@ -22,6 +22,9 @@ import (
 )
 
 const (
+	//defaultBaseURL           = "https://raw.githubusercontent.com/vmware-tanzu/sonobuoy/main/cmd/sonobuoy/app/e2e/testLists"
+	defaultBaseURL = "https://raw.githubusercontent.com/segmentio/sonobuoy/BGLRINFRA-1016-custom-basic-tests/cmd/sonobuoy/app/e2e/customTestLists"
+
 	e2ePrintModeTagsOnly     = "tags"
 	e2ePrintModeTagsAndCount = "tagCounts"
 	e2ePrintModeTests        = "tests"
@@ -30,9 +33,6 @@ const (
 	e2eInputOffline = "offline"
 	e2eInputStdin   = "-"
 )
-
-//var defaultBaseURL = "https://raw.githubusercontent.com/vmware-tanzu/sonobuoy/main/cmd/sonobuoy/app/e2e/testLists"
-var defaultBaseURL = "https://raw.githubusercontent.com/vmware-tanzu/sonobuoy/main/cmd/sonobuoy/app/e2e/customTestLists"
 
 //go:embed e2e/testLists/*
 var e2eTestListFS embed.FS
@@ -102,13 +102,6 @@ func NewCmdE2E() *cobra.Command {
 	cmd.Flags().StringVarP(&f.skip, "skip", "s", "", "Do not return tests which match this regular expression")
 	cmd.Flags().StringVarP(&f.input, "input", "i", "online", "Determines the source of the test lists. Can be [online, offline, -]. If '-' is set, tests will be read from stdin.")
 
-	testListURL := os.Getenv("DEFAULT_BASE_URL")
-	if testListURL != "" {
-		fmt.Println("DEFAULT_BASE_URL env set. Using DEFAULT_BASE_URL path to read testLists")
-		defaultBaseURL = testListURL
-	}
-	fmt.Printf("defaultBaseURL: %+v\n", defaultBaseURL)
-	
 	// Hidden flag to override base URL if we have issues. Prevents older releases from being broken due to changing URL value.
 	cmd.Flags().StringVar(&f.baseURL, "url", defaultBaseURL, "The base URL in github to find the test lists for each version.")
 	cmd.Flags().MarkHidden("url")
