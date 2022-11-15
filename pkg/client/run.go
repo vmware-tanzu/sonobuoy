@@ -31,13 +31,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/aggregation"
 	"golang.org/x/term"
+	corev1 "k8s.io/api/core/v1"
 	kubeerror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes/scheme"
-	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -307,7 +307,6 @@ func humanReadableStatus(str string) string {
 		return fmt.Sprintf("Sonobuoy is in unknown state %q. Please report a bug at github.com/vmware-tanzu/sonobuoy", str)
 	}
 }
-
 
 func getPodStatus(pod corev1.Pod) string {
 	const ContainersNotReady = "ContainersNotReady"
