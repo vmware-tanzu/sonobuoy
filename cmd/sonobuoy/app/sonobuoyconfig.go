@@ -18,7 +18,7 @@ package app
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -48,7 +48,7 @@ func (c *SonobuoyConfig) Set(str string) error {
 		return errors.New("if a custom config file is set, it must be set before other flags that modify configuration fields")
 	}
 
-	bytes, err := ioutil.ReadFile(str)
+	bytes, err := os.ReadFile(str)
 	if err != nil {
 		return errors.Wrap(err, "couldn't open config file")
 	}

@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"net/http"
 	"os"
@@ -163,7 +162,7 @@ func GatherResults(waitfile string, url string, client *http.Client, stopc <-cha
 			}
 
 			// Don't read the contents until this point in case another container edits the value.
-			resultFile, err := ioutil.ReadFile(waitfile)
+			resultFile, err := os.ReadFile(waitfile)
 			if err != nil {
 				logrus.Tracef("Done file was present but reading it resulted in an error: %v", err.Error())
 				continue

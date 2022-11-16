@@ -18,7 +18,6 @@ package worker
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -52,8 +51,8 @@ func TestRun(t *testing.T) {
 			}
 
 			withTempDir(t, func(tmpdir string) {
-				ioutil.WriteFile(filepath.Join(tmpdir, "systemd_logs"), []byte("{}"), 0755)
-				ioutil.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs")), 0755)
+				os.WriteFile(filepath.Join(tmpdir, "systemd_logs"), []byte("{}"), 0755)
+				os.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs")), 0755)
 				err := GatherResults(filepath.Join(tmpdir, "done"), URL, srv.Client(), nil)
 				if err != nil {
 					t.Fatalf("Got error running agent: %v", err)
@@ -79,8 +78,8 @@ func TestRunGlobal(t *testing.T) {
 		}
 
 		withTempDir(t, func(tmpdir string) {
-			ioutil.WriteFile(filepath.Join(tmpdir, "systemd_logs.json"), []byte("{}"), 0755)
-			ioutil.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs.json")), 0755)
+			os.WriteFile(filepath.Join(tmpdir, "systemd_logs.json"), []byte("{}"), 0755)
+			os.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs.json")), 0755)
 			err := GatherResults(filepath.Join(tmpdir, "done"), url, srv.Client(), nil)
 			if err != nil {
 				t.Fatalf("Got error running agent: %v", err)
@@ -104,8 +103,8 @@ func TestRunGlobal_noExtension(t *testing.T) {
 			t.Fatalf("unexpected error getting global result url %v", err)
 		}
 		withTempDir(t, func(tmpdir string) {
-			ioutil.WriteFile(filepath.Join(tmpdir, "systemd_logs"), []byte("{}"), 0755)
-			ioutil.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs")), 0755)
+			os.WriteFile(filepath.Join(tmpdir, "systemd_logs"), []byte("{}"), 0755)
+			os.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs")), 0755)
 			err := GatherResults(filepath.Join(tmpdir, "done"), url, srv.Client(), nil)
 			if err != nil {
 				t.Fatalf("Got error running agent: %v", err)
@@ -166,7 +165,7 @@ func TestRelayProgress(t *testing.T) {
 				if tc.serverStatus != 0 {
 					w.WriteHeader(tc.serverStatus)
 				}
-				b, err := ioutil.ReadAll(r.Body)
+				b, err := io.ReadAll(r.Body)
 				if err != nil {
 					t.Fatalf("Failed to ready body: %v", err)
 				}
@@ -199,7 +198,7 @@ func ensureExists(t *testing.T, checkPath string) {
 
 func withTempDir(t *testing.T, callback func(tmpdir string)) {
 	// Create a temporary directory for results gathering
-	tmpdir, err := ioutil.TempDir("", "sonobuoy_test")
+	tmpdir, err := os.MkdirTemp("", "sonobuoy_test")
 	defer os.RemoveAll(tmpdir)
 	if err != nil {
 		t.Fatalf("Could not create temporary directory %v: %v", tmpdir, err)

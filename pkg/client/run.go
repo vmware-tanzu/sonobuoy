@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -228,9 +227,9 @@ func loadManifestFromFile(f string) ([]byte, error) {
 			return nil, fmt.Errorf("nothing on stdin to read")
 		}
 
-		return ioutil.ReadAll(os.Stdin)
+		return io.ReadAll(os.Stdin)
 	} else {
-		return ioutil.ReadFile(f)
+		return os.ReadFile(f)
 	}
 }
 

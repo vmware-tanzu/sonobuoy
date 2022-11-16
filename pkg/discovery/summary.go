@@ -19,7 +19,6 @@ package discovery
 import (
 	"encoding/json"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -179,7 +178,7 @@ func SaveHealthSummary(tarballRootDir string) error {
 		logrus.Errorf("File '%s' will not be included in '%s'.", outputFileName, tarballRootDir)
 		return err
 	}
-	err = ioutil.WriteFile(outputFileName, data, os.FileMode(0644))
+	err = os.WriteFile(outputFileName, data, os.FileMode(0644))
 	if err != nil {
 		logrus.Errorf("Failed to write health information to file '%s': %s", outputFileName, err)
 		return err

@@ -18,7 +18,7 @@ package app
 import (
 	"bytes"
 	"flag"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
@@ -143,9 +143,9 @@ func TestPluginGenDef(t *testing.T) {
 			}
 
 			if *update {
-				ioutil.WriteFile(tC.expectFile, []byte(manifest), 0666)
+				os.WriteFile(tC.expectFile, []byte(manifest), 0666)
 			} else {
-				fileData, err := ioutil.ReadFile(tC.expectFile)
+				fileData, err := os.ReadFile(tC.expectFile)
 				if err != nil {
 					t.Fatalf("Failed to read golden file %v: %v", tC.expectFile, err)
 				}

@@ -19,7 +19,7 @@ package image
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -122,7 +122,7 @@ func GetLatestDevVersion(url string) (string, error) {
 		return "", errors.New("no body present when querying latest dev version")
 	}
 	defer r.Body.Close()
-	b, err := ioutil.ReadAll(r.Body)
+	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		return "", errors.Wrap(err, "error reading body of latest dev version")
 	}

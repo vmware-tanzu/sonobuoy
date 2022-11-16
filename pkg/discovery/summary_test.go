@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -46,9 +46,9 @@ func TestReadHealthSummary(t *testing.T) {
 	}
 
 	if *update {
-		ioutil.WriteFile(goldenFilePath, gotJson, 0666)
+		os.WriteFile(goldenFilePath, gotJson, 0666)
 	} else {
-		expectedJson, err := ioutil.ReadFile(goldenFilePath)
+		expectedJson, err := os.ReadFile(goldenFilePath)
 		if err != nil {
 			t.Fatalf("\n\nFailed to read golden file from '%s': %s\n", goldenFilePath, err)
 		}

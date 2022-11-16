@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -39,7 +38,7 @@ func TestJUnitProcessReader(t *testing.T) {
 	}
 	itemFromFile := func(t *testing.T, path string) Item {
 		i := Item{}
-		b, err := ioutil.ReadFile(path)
+		b, err := os.ReadFile(path)
 		if err != nil {
 			t.Fatalf("Failed to read test file %v: %v", path, err)
 		}
@@ -95,7 +94,7 @@ func TestJUnitProcessReader(t *testing.T) {
 					t.Fatalf("Failed to marshal expected Item for debug: %v", err)
 				}
 				t.Logf("Updating goldenfile %v", tc.expectItemFromFile)
-				ioutil.WriteFile(tc.expectItemFromFile, b, 0666)
+				os.WriteFile(tc.expectItemFromFile, b, 0666)
 				return
 			}
 

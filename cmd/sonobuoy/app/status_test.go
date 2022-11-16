@@ -19,7 +19,7 @@ package app
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin"
@@ -89,9 +89,9 @@ func TestPrintStatus(t *testing.T) {
 			}
 
 			if *update {
-				ioutil.WriteFile(tc.expectFile, b.Bytes(), 0666)
+				os.WriteFile(tc.expectFile, b.Bytes(), 0666)
 			} else {
-				fileData, err := ioutil.ReadFile(tc.expectFile)
+				fileData, err := os.ReadFile(tc.expectFile)
 				if err != nil {
 					t.Fatalf("Failed to read golden file %v: %v", tc.expectFile, err)
 				}

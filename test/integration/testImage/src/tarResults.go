@@ -21,7 +21,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -40,7 +39,7 @@ var cmdTarFile = &cobra.Command{
 
 func reportTarFile(cmd *cobra.Command, args []string) error {
 	tmpDir := os.TempDir()
-	outPath, err := ioutil.TempDir(tmpDir, "sonobuoy-integration")
+	outPath, err := os.MkdirTemp(tmpDir, "sonobuoy-integration")
 	if err != nil {
 		return errors.Wrapf(err, "failed to create outPath dir %v", outPath)
 	}
@@ -71,7 +70,7 @@ func reportTarFile(cmd *cobra.Command, args []string) error {
 	}
 
 	// Report location to Sonobuoy.
-	err = ioutil.WriteFile(doneFile, []byte(tb), os.FileMode(0666))
+	err = os.WriteFile(doneFile, []byte(tb), os.FileMode(0666))
 	return errors.Wrap(err, "failed to write to done file")
 }
 

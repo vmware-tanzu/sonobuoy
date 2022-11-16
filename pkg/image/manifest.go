@@ -17,7 +17,7 @@ package image
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/hashicorp/go-version"
 	"gopkg.in/yaml.v2"
@@ -102,7 +102,7 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 	// Load in a config file
 	if repoConfig != "" {
 
-		fileContent, err := ioutil.ReadFile(repoConfig)
+		fileContent, err := os.ReadFile(repoConfig)
 		if err != nil {
 			return nil, fmt.Errorf("Error reading '%v' file contents: %v", repoConfig, err)
 		}

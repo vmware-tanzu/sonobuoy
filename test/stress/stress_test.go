@@ -22,7 +22,6 @@ package stress
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -41,7 +40,7 @@ var bindAddr = ":8080"
 
 func TestStress(t *testing.T) {
 	// Create temp dir for results
-	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
+	dir, err := os.MkdirTemp("", "sonobuoy_server_test")
 	if err != nil {
 		t.Fatal("Could not create temp directory")
 	}

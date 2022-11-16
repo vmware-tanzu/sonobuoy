@@ -18,7 +18,7 @@ package image
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -31,7 +31,7 @@ import (
 )
 
 func TestSetConformanceImageVersion(t *testing.T) {
-	logrus.SetOutput(ioutil.Discard)
+	logrus.SetOutput(io.Discard)
 
 	tests := []struct {
 		name    string

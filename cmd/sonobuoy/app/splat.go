@@ -19,7 +19,7 @@ package app
 import (
 	"archive/tar"
 	"compress/gzip"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -96,7 +96,7 @@ func addFileToTarball(tarWriter *tar.Writer, filename string) error {
 		return err
 	}
 
-	fileContent, err := ioutil.ReadAll(file)
+	fileContent, err := io.ReadAll(file)
 	if err != nil {
 		return err
 	}
