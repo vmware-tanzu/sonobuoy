@@ -18,7 +18,6 @@ package loader
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -89,7 +88,7 @@ func LoadAllPlugins(namespace, sonobuoyImage, imagePullPolicy, imagePullSecrets 
 }
 
 func findPlugins(dir string) ([]string, error) {
-	candidates, err := ioutil.ReadDir(dir)
+	candidates, err := os.ReadDir(dir)
 	if err != nil {
 		return []string{}, errors.Wrapf(err, "couldn't search path %v", dir)
 	}
@@ -121,7 +120,7 @@ func LoadDefinitionFromFile(file string) (*manifest.Manifest, error) {
 }
 
 func readDefinitionFromFile(file string) ([]byte, error) {
-	bytes, err := ioutil.ReadFile(file)
+	bytes, err := os.ReadFile(file)
 	return bytes, errors.Wrapf(err, "couldn't open plugin definition %v", file)
 }
 

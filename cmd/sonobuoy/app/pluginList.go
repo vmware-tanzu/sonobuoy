@@ -19,7 +19,6 @@ package app
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -169,7 +168,7 @@ func (p *pluginList) loadPluginsFromFilesystem(str, renameAs string) error {
 // into the directory. A plugin must have the '.yaml' extension to be considered.
 // It returns the first error encountered and stops processing.
 func (p *pluginList) loadPluginsDir(dirpath string) error {
-	files, err := ioutil.ReadDir(dirpath)
+	files, err := os.ReadDir(dirpath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to read directory %q", dirpath)
 	}
@@ -213,7 +212,7 @@ func (p *pluginList) loadSinglePluginFromFile(filepath, renameAs string) error {
 // loadSinglePlugin reads the data from the reader and loads the plugin.
 func (p *pluginList) loadSinglePlugin(r io.ReadCloser, renameAs string) error {
 	defer r.Close()
-	b, err := ioutil.ReadAll(r)
+	b, err := io.ReadAll(r)
 	if err != nil {
 		return errors.Wrap(err, "failed to read data for plugin")
 	}

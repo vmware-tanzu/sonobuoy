@@ -18,7 +18,7 @@ package manifest
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 
@@ -111,7 +111,7 @@ func TestUnmarshallWithExtraVolumes(t *testing.T) {
 		},
 	}
 
-	manifest, err := ioutil.ReadFile("testdata/extravolumes.yaml")
+	manifest, err := os.ReadFile("testdata/extravolumes.yaml")
 	if err != nil {
 		t.Fatalf("couldn't load file: %v", err)
 	}

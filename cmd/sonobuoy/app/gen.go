@@ -20,7 +20,6 @@ package app
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -213,7 +212,7 @@ func NewCmdGen() *cobra.Command {
 func genManifest(genflags *genFlags) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		if len(genflags.genFile) > 0 {
-			b, err := ioutil.ReadFile(genflags.genFile)
+			b, err := os.ReadFile(genflags.genFile)
 			if err != nil {
 				errlog.LogError(err)
 				os.Exit(1)

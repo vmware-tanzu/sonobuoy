@@ -21,7 +21,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -277,7 +276,7 @@ func tarCmd(path string) []string {
 }
 
 func drainReader(r io.Reader) error {
-	b, err := ioutil.ReadAll(r)
+	b, err := io.ReadAll(r)
 	if err != nil {
 		return errors.Wrap(err, "failed to drain the tar reader")
 	}

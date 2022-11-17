@@ -19,7 +19,6 @@ package worker
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -150,7 +149,7 @@ func (t *testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func TestDoRequestLogsMessagesAndRetries(t *testing.T) {
 	testHook := &testhook.Hook{}
 	logrus.AddHook(testHook)
-	logrus.SetOutput(ioutil.Discard)
+	logrus.SetOutput(io.Discard)
 
 	callback := func() (io.Reader, string, string, error) {
 		return strings.NewReader("testReader"), "fakefilename", "testString", nil

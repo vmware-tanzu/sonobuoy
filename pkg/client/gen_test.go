@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -499,9 +499,9 @@ func TestGenerateManifestGolden(t *testing.T) {
 			}
 
 			if *update {
-				ioutil.WriteFile(tc.goldenFile, manifest, 0666)
+				os.WriteFile(tc.goldenFile, manifest, 0666)
 			} else {
-				fileData, err := ioutil.ReadFile(tc.goldenFile)
+				fileData, err := os.ReadFile(tc.goldenFile)
 				if err != nil {
 					t.Fatalf("Failed to read golden file %v: %v", tc.goldenFile, err)
 				}

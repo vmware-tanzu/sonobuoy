@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -545,7 +544,7 @@ func (q *QueryRecorder) DumpQueryData(filepath string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(filepath, data, 0755)
+	return os.WriteFile(filepath, data, 0755)
 }
 
 const (
@@ -612,7 +611,7 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 			}
 
 			outfile := path.Join(outdir, container.Name) + ".txt"
-			if err = ioutil.WriteFile(outfile, body, 0644); err != nil {
+			if err = os.WriteFile(outfile, body, 0644); err != nil {
 				return errors.WithStack(err)
 			}
 		}
@@ -726,5 +725,5 @@ func SerializeObj(obj interface{}, outpath string, file string) error {
 		return errors.WithStack(err)
 	}
 
-	return errors.WithStack(ioutil.WriteFile(filepath.Join(outpath, file), b, 0644))
+	return errors.WithStack(os.WriteFile(filepath.Join(outpath, file), b, 0644))
 }

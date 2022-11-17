@@ -19,7 +19,6 @@ package results
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -213,7 +212,7 @@ func PostProcessPlugin(p plugin.Interface, dir string) (Item, []error) {
 func processNodesWithProcessor(p plugin.Interface, baseDir, dir string, processor postProcessor, selector fileSelector) ([]Item, error) {
 	pdir := path.Join(baseDir, PluginsDir, p.GetName())
 
-	nodeDirs, err := ioutil.ReadDir(dir)
+	nodeDirs, err := os.ReadDir(dir)
 	if err != nil && !os.IsNotExist(err) {
 		return []Item{}, err
 	}

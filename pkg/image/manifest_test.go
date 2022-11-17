@@ -17,7 +17,7 @@ limitations under the License.
 package image
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -93,7 +93,7 @@ func createTestRegistryConfig(customRegistry, version string) (string, error) {
 	registries.GcRegistry = customRegistry
 	registries.SampleRegistry = customRegistry
 
-	tmpfile, err := ioutil.TempFile("", "config.*.yaml")
+	tmpfile, err := os.CreateTemp("", "config.*.yaml")
 	if err != nil {
 		return "", err
 	}

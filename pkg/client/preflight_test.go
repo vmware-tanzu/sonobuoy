@@ -19,7 +19,7 @@ package client
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"strings"
 	"testing"
 
@@ -36,7 +36,7 @@ import (
 func TestVersionCheck(t *testing.T) {
 	testHook := &testhook.Hook{}
 	logrus.AddHook(testHook)
-	logrus.SetOutput(ioutil.Discard)
+	logrus.SetOutput(io.Discard)
 
 	serverAtVersion := func(major, minor, git string) *fakeServerVersionInterface {
 		return &fakeServerVersionInterface{
