@@ -98,10 +98,10 @@ data:
       - name: SONOBUOY_CONFIG_DIR
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
-        value: v1.21.1
+        value: v1.25.3
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      image: k8s.gcr.io/conformance:v1.21.1
+      image: k8s.gcr.io/conformance:v1.25.3
       imagePullPolicy: IfNotPresent
       name: e2e
       resources: {}
