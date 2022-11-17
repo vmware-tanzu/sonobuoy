@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Run Shellcheck
-        uses: azohra/shell-linter@v0.4.0
+        uses: azohra/shell-linter@v0.6.0
         with:
           severity: "error"
   go-mod-tidy:
