@@ -1,6 +1,6 @@
 module github.com/vmware-tanzu/sonobuoy/test/integration/testImage/src
 
-go 1.14
+go 1.19
 
 require (
 	github.com/pkg/errors v0.8.1
