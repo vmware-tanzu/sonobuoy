@@ -32,7 +32,7 @@ jobs:
           source ./scripts/build.sh
           save_images_to_tar
       - name: Save artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sonobuoy-build-linux-${{ github.run_id }}
           path: |
@@ -61,7 +61,7 @@ jobs:
           build_binary_GOOS_GOARCH windows amd64
           windows_containers
       - name: Save artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sonobuoy-build-windows-${{ github.run_id }}
           path: |
@@ -80,7 +80,7 @@ jobs:
     needs: [build-linux, unit-test-linux]
     steps:
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: sonobuoy-build-linux-${{ github.run_id }}
           path: build
@@ -108,7 +108,7 @@ jobs:
           clean
           setup_kind_cluster
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: sonobuoy-build-linux-${{ github.run_id }}
           path: build
@@ -130,7 +130,7 @@ jobs:
           VERBOSE=true SONOBUOY_CLI=../../build/linux/amd64/sonobuoy integration
       - name: Save artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sonobuoy-test-archives-${{ github.run_id }}
           path: |
@@ -142,12 +142,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: sonobuoy-build-linux-${{ github.run_id }}
           path: build
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: sonobuoy-build-windows-${{ github.run_id }}
           path: build
@@ -180,7 +180,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.19
       - name: Run GoReleaser
