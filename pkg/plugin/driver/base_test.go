@@ -206,7 +206,7 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 			},
 		}
 		expectedEnvVars = append(expectedEnvVars, presetPluginEnv...)
-		
+
 		for _, e := range expectedEnvVars {
 			if !envContains(container.Env, e) {
 				return fmt.Errorf("expected container environment to contain %q", e)

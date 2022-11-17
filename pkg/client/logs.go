@@ -175,7 +175,9 @@ func getPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh chan
 }
 
 // watchPodsToStreamLogs creates a watch for the desired pods and, as it gets events for new pods will add them onto the pod channel.
-//  If a plugin name has been provided, retrieve the pods with only the plugin label matching that plugin name. If no pods are found,
+//
+//	If a plugin name has been provided, retrieve the pods with only the plugin label matching that plugin name. If no pods are found,
+//
 // or no plugin has been specified, retrieve all pods within the namespace. It will return an error if unable to create the watcher
 // but will continue to add pods to the channel in a separate go routine.
 func watchPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh chan *v1.Pod) error {
