@@ -21,7 +21,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -124,7 +123,7 @@ func TestDecodeTarball(t *testing.T) {
 
 	for _, archive := range archives {
 		t.Run(archive.name, func(t *testing.T) {
-			dir, err := ioutil.TempDir("", "tarball-test")
+			dir, err := os.MkdirTemp("", "tarball-test")
 			if err != nil {
 				t.Fatalf("Unexpected error %v", err)
 			}
@@ -135,7 +134,7 @@ func TestDecodeTarball(t *testing.T) {
 				t.Fatalf("Unexpected error %v", err)
 			}
 
-			contents, err := ioutil.ReadFile(filepath.Join(dir, dirName, fileName))
+			contents, err := os.ReadFile(filepath.Join(dir, dirName, fileName))
 			if err != nil {
 				t.Fatalf("Unexpected error %v", err)
 			}
@@ -143,7 +142,7 @@ func TestDecodeTarball(t *testing.T) {
 			if !reflect.DeepEqual(contents, testData) {
 				t.Errorf("Expected %s, got %s", testData, contents)
 			}
-			contents, err = ioutil.ReadFile(filepath.Join(dir, dirName, symLinkName))
+			contents, err = os.ReadFile(filepath.Join(dir, dirName, symLinkName))
 			if err != nil {
 				t.Fatalf("Unexpected error %v", err)
 			}

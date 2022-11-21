@@ -19,7 +19,6 @@ package results
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -79,11 +78,13 @@ func hasCustomValues(items ...Item) bool {
 
 // AggregateStatus defines the aggregation rules for status according to the following rules:
 // If only pass/fail/unknown values are found, we apply very basic rules:
-//     - failure + * = failure
-//     - unknown + [pass|unknown] = unknown
-//     - empty list = unknown
+//   - failure + * = failure
+//   - unknown + [pass|unknown] = unknown
+//   - empty list = unknown
+//
 // If we find other values (e.g. from manual results typically) then we just combine/count them:
-//     - foo + bar = 'foo: 1, bar:1'
+//   - foo + bar = 'foo: 1, bar:1'
+//
 // useCustom is specified rather than looking for custom values because different branches of the
 // result tree may have/not have those values. So instead, we should look down the tree initially to decide.
 func AggregateStatus(useCustom bool, items ...Item) string {
@@ -213,7 +214,7 @@ func PostProcessPlugin(p plugin.Interface, dir string) (Item, []error) {
 func processNodesWithProcessor(p plugin.Interface, baseDir, dir string, processor postProcessor, selector fileSelector) ([]Item, error) {
 	pdir := path.Join(baseDir, PluginsDir, p.GetName())
 
-	nodeDirs, err := ioutil.ReadDir(dir)
+	nodeDirs, err := os.ReadDir(dir)
 	if err != nil && !os.IsNotExist(err) {
 		return []Item{}, err
 	}

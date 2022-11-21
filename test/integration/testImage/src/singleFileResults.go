@@ -18,7 +18,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -56,6 +55,6 @@ func reportSingleFile(cmd *cobra.Command, args []string) error {
 		resultsFile = doneContents
 	}
 
-	err := ioutil.WriteFile(doneFile, []byte(resultsFile), os.FileMode(0666))
+	err := os.WriteFile(doneFile, []byte(resultsFile), os.FileMode(0666))
 	return errors.Wrap(err, "failed to write to done file")
 }

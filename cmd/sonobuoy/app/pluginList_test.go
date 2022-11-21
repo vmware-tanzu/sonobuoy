@@ -17,9 +17,9 @@ package app
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/plugin/manifest"
@@ -30,7 +30,7 @@ import (
 func TestSetPluginList(t *testing.T) {
 	serveFile := func(filepath string) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			b, err := ioutil.ReadFile(filepath)
+			b, err := os.ReadFile(filepath)
 			if err != nil {
 				t.Fatal(err)
 			}

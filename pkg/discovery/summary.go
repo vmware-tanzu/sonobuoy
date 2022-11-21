@@ -19,7 +19,6 @@ package discovery
 import (
 	"encoding/json"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -113,9 +112,9 @@ func ReadPodHealth(r *results.Reader) (HealthInfo, error) {
 	return health, nil
 }
 
-//ReadHealthSummary reads the core_v1_nodes.json file from ClusterResourceLocation
-//and returns a summary of the health fo the cluster, ready to be saved
-//tarballRootDir is the directory that will be used to provide the contents of the tarball
+// ReadHealthSummary reads the core_v1_nodes.json file from ClusterResourceLocation
+// and returns a summary of the health fo the cluster, ready to be saved
+// tarballRootDir is the directory that will be used to provide the contents of the tarball
 func ReadHealthSummary(tarballRootDir string) (ClusterSummary, error) {
 	summary := ClusterSummary{}
 	nodes := &v1.NodeList{}
@@ -179,7 +178,7 @@ func SaveHealthSummary(tarballRootDir string) error {
 		logrus.Errorf("File '%s' will not be included in '%s'.", outputFileName, tarballRootDir)
 		return err
 	}
-	err = ioutil.WriteFile(outputFileName, data, os.FileMode(0644))
+	err = os.WriteFile(outputFileName, data, os.FileMode(0644))
 	if err != nil {
 		logrus.Errorf("Failed to write health information to file '%s': %s", outputFileName, err)
 		return err

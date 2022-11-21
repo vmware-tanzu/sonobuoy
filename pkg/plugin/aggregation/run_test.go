@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"reflect"
@@ -124,7 +123,7 @@ func TestRunAndMonitorPlugin(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tmpDir, err := ioutil.TempDir("", "sonobuoy-test")
+			tmpDir, err := os.MkdirTemp("", "sonobuoy-test")
 			if err != nil {
 				t.Fatalf("Failed to make temp directory: %v", err)
 			}

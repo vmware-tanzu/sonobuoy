@@ -17,11 +17,11 @@ limitations under the License.
 package client
 
 import (
-	"os"
-	"strings"
 	"encoding/json"
-	"reflect"
 	corev1 "k8s.io/api/core/v1"
+	"os"
+	"reflect"
+	"strings"
 	"testing"
 )
 

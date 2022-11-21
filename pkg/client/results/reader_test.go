@@ -21,7 +21,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -47,7 +46,7 @@ func (v *version) String() string {
 
 func MustGetReader(path string, t *testing.T) *results.Reader {
 	t.Helper()
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("Failed to read tarball data: %v", err)
 	}
@@ -345,7 +344,7 @@ func TestExtractBytes(t *testing.T) {
 
 func ExampleNewReaderFromBytes() {
 	path := "testdata/results-0.8.tar.gz"
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}

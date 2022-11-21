@@ -4,7 +4,7 @@ jobs:
   unit-test-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Run unit tests
         env:
           VERBOSE: true
@@ -13,9 +13,9 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 5
       - name: Show history for debug help
@@ -32,7 +32,7 @@ jobs:
           source ./scripts/build.sh
           save_images_to_tar
       - name: Save artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sonobuoy-build-linux-${{ github.run_id }}
           path: |
@@ -42,12 +42,12 @@ jobs:
     needs: [integration-test-on-kind]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       - name: Inspect builder
         run: |
           echo "Name:      ${{ steps.buildx.outputs.name }}"
@@ -61,7 +61,7 @@ jobs:
           build_binary_GOOS_GOARCH windows amd64
           windows_containers
       - name: Save artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sonobuoy-build-windows-${{ github.run_id }}
           path: |
@@ -69,7 +69,7 @@ jobs:
   stress-test-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Run stress tests
         env:
           VERBOSE: true
@@ -80,7 +80,7 @@ jobs:
     needs: [build-linux, unit-test-linux]
     steps:
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: sonobuoy-build-linux-${{ github.run_id }}
           path: build
@@ -96,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-linux, unit-test-linux]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 5
       - name: Show history for debug help
@@ -108,7 +108,7 @@ jobs:
           clean
           setup_kind_cluster
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: sonobuoy-build-linux-${{ github.run_id }}
           path: build
@@ -130,7 +130,7 @@ jobs:
           VERBOSE=true SONOBUOY_CLI=../../build/linux/amd64/sonobuoy integration
       - name: Save artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sonobuoy-test-archives-${{ github.run_id }}
           path: |
@@ -140,14 +140,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-linux, build-windows, unit-test-linux, integration-test-on-kind, stress-test-linux]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: sonobuoy-build-linux-${{ github.run_id }}
           path: build
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: sonobuoy-build-windows-${{ github.run_id }}
           path: build
@@ -159,7 +159,7 @@ jobs:
           docker load -i build/linux/s390x/sonobuoy-img-linux-s390x-${{ github.run_id }}.tar
           docker image ls
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -176,15 +176,15 @@ jobs:
     needs: [push-images]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.18
+          go-version: 1.19
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v3
         with:
           version: latest
           args: release --rm-dist

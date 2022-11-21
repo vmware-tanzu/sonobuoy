@@ -24,7 +24,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"sort"
 	"strings"
 
@@ -314,7 +314,7 @@ func generateSecret(w io.Writer, cfg *GenConfig) error {
 		return nil
 	}
 
-	sshKeyData, err := ioutil.ReadFile(cfg.SSHKeyPath)
+	sshKeyData, err := os.ReadFile(cfg.SSHKeyPath)
 	if err != nil {
 		return errors.Wrapf(err, "unable to read SSH key file: %v", cfg.SSHKeyPath)
 	}

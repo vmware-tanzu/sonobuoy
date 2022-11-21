@@ -19,7 +19,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 
@@ -56,7 +56,7 @@ func LoadConfig(pathsToTry ...string) (*Config, error) {
 	defer jsonFile.Close()
 	logrus.Tracef("Loading config from file: %v", fpath)
 
-	b, err := ioutil.ReadAll(jsonFile)
+	b, err := io.ReadAll(jsonFile)
 	if err != nil {
 		return nil, errors.Wrapf(err, "read config file %q", fpath)
 	}

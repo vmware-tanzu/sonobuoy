@@ -19,7 +19,6 @@ package aggregation
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"reflect"
@@ -39,7 +38,7 @@ func TestStart(t *testing.T) {
 	expectedResult := "systemd_logs/results/testnode"
 	expectedJSON := []byte(`{"some": "json"}`)
 
-	tmpdir, err := ioutil.TempDir("", "sonobuoy_server_test")
+	tmpdir, err := os.MkdirTemp("", "sonobuoy_server_test")
 	if err != nil {
 		t.Fatal("Could not create temp directory")
 	}

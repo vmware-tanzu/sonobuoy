@@ -18,7 +18,7 @@ package ca
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
@@ -131,7 +131,7 @@ func TestServer(t *testing.T) {
 		t.Fatalf("expected client error to be null, got %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("couldn't read body: %v", err)
 	}

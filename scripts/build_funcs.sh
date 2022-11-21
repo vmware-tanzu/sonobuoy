@@ -28,14 +28,14 @@ IMAGE_BRANCH=$(git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF_LONG=$(git rev-parse --verify HEAD)
 
 BUILDMNT=/go/src/$GOTARGET
-BUILD_IMAGE=golang:1.18
+BUILD_IMAGE=golang:1.19
 AMD_IMAGE=gcr.io/distroless/static:nonroot
 ARM_IMAGE=gcr.io/distroless/static:nonroot-arm64
 PPC64LE_IMAGE=gcr.io/distroless/static:nonroot-ppc64le
 S390X_IMAGE=gcr.io/distroless/static:nonroot-s390x
 WIN_AMD64_BASEIMAGE=mcr.microsoft.com/windows/nanoserver
 TEST_IMAGE=testimage:v0.1
-LINT_IMAGE=golangci/golangci-lint:v1.45
+LINT_IMAGE=golangci/golangci-lint:v1.50
 KIND_CLUSTER=kind
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )"
@@ -56,7 +56,7 @@ stress() {
 
 integration() {
   # Download linux kubectl and move into default path for tests
-  curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.23.0/bin/linux/amd64/kubectl
+  curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.25.3/bin/linux/amd64/kubectl
   chmod +x ./kubectl
 
     docker run --rm \
@@ -78,7 +78,7 @@ local_integration(){
   build_binary_GOOS_GOARCH linux amd64
   cp ./build/linux/amd64/sonobuoy ./sonobuoy
   # Download linux kubectl and move into default path for tests
-  curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.23.0/bin/linux/amd64/kubectl
+  curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.25.3/bin/linux/amd64/kubectl
   chmod +x ./kubectl
   integration
 }
@@ -366,7 +366,7 @@ update_local() {
     set -x
     if [ ! -f "./kubectl" ]; then
       # Download linux kubectl and move into default path for tests
-      curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.23.0/bin/linux/amd64/kubectl
+      curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.25.3/bin/linux/amd64/kubectl
       chmod +x ./kubectl
     fi
 

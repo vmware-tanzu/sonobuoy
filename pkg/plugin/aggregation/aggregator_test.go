@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -52,12 +51,12 @@ func TestAggregation(t *testing.T) {
 
 		resp := doRequest(t, srv.Client(), "PUT", URL, []byte("foo"))
 		if resp.StatusCode != 200 {
-			body, _ := ioutil.ReadAll(resp.Body)
+			body, _ := io.ReadAll(resp.Body)
 			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
 		}
 
 		if result, ok := agg.Results["systemd_logs/node1"]; ok {
-			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path(), defaultFilename))
+			bytes, err := os.ReadFile(path.Join(agg.OutputDir, result.Path(), defaultFilename))
 			if string(bytes) != "foo" {
 				t.Errorf("results for node1 incorrect (got %v): %v", string(bytes), err)
 			}
@@ -79,12 +78,12 @@ func TestAggregation_noExtension(t *testing.T) {
 		}
 		resp := doRequest(t, srv.Client(), "PUT", URL, []byte("foo"))
 		if resp.StatusCode != 200 {
-			body, _ := ioutil.ReadAll(resp.Body)
+			body, _ := io.ReadAll(resp.Body)
 			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
 		}
 
 		if result, ok := agg.Results["systemd_logs/node1"]; ok {
-			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path(), defaultFilename))
+			bytes, err := os.ReadFile(path.Join(agg.OutputDir, result.Path(), defaultFilename))
 			if string(bytes) != "foo" {
 				t.Errorf("results for node1 incorrect (got %v): %v", string(bytes), err)
 			}
@@ -113,12 +112,12 @@ func TestAggregation_tarfile(t *testing.T) {
 
 		resp := doRequestWithHeaders(t, srv.Client(), "PUT", URL, tarBytes, headers)
 		if resp.StatusCode != 200 {
-			body, _ := ioutil.ReadAll(resp.Body)
+			body, _ := io.ReadAll(resp.Body)
 			t.Errorf("Got (%v) response from server: %v", resp.StatusCode, string(body))
 		}
 
 		if result, ok := agg.Results["e2e/global"]; ok {
-			realBytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path(), "inside_tar.txt"))
+			realBytes, err := os.ReadFile(path.Join(agg.OutputDir, result.Path(), "inside_tar.txt"))
 			if err != nil || bytes.Compare(realBytes, fileBytes) != 0 {
 				t.Logf("results e2e tests incorrect (got %v, expected %v): %v", string(realBytes), string(fileBytes), err)
 				output, _ := exec.Command("ls", "-lR", agg.OutputDir).CombinedOutput()
@@ -188,7 +187,7 @@ func TestAggregation_duplicates(t *testing.T) {
 func TestAggregation_duplicatesWithErrors(t *testing.T) {
 	// Setup aggregator with expected results and preload the test data/info
 	// that we want to transmit/compare against.
-	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
+	dir, err := os.MkdirTemp("", "sonobuoy_server_test")
 	if err != nil {
 		t.Fatalf("Could not create temp directory: %v", err)
 	}
@@ -252,7 +251,7 @@ func TestAggregation_duplicatesWithErrors(t *testing.T) {
 func TestAggregation_RetryWindow(t *testing.T) {
 	// Setup aggregator with expected results and preload the test data/info
 	// that we want to transmit/compare against.
-	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
+	dir, err := os.MkdirTemp("", "sonobuoy_server_test")
 	if err != nil {
 		t.Fatalf("Could not create temp directory: %v", err)
 	}
@@ -342,7 +341,7 @@ func TestAggregation_errors(t *testing.T) {
 		agg.Wait(make(chan bool))
 
 		if result, ok := agg.Results["e2e/global"]; ok {
-			bytes, err := ioutil.ReadFile(path.Join(agg.OutputDir, result.Path(), "error.json"))
+			bytes, err := os.ReadFile(path.Join(agg.OutputDir, result.Path(), "error.json"))
 			if err != nil || string(bytes) != `{"error":"foo"}` {
 				t.Errorf("results for e2e plugin incorrect (got %v): %v", string(bytes), err)
 			}
@@ -484,7 +483,7 @@ func TestProcessProgressUpdates(t *testing.T) {
 }
 
 func withAggregator(t *testing.T, expected []plugin.ExpectedResult, callback func(*Aggregator, *authtest.Server)) {
-	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
+	dir, err := os.MkdirTemp("", "sonobuoy_server_test")
 	if err != nil {
 		t.Fatal("Could not create temp directory")
 		return
@@ -504,7 +503,7 @@ func withAggregator(t *testing.T, expected []plugin.ExpectedResult, callback fun
 // Create a gzipped tar file with the given filename (and contents) inside it,
 // return the raw bytes for that tar file.
 func makeTarWithContents(t *testing.T, filename string, fileContents []byte) (tarbytes []byte) {
-	dir, err := ioutil.TempDir("", "sonobuoy_server_test")
+	dir, err := os.MkdirTemp("", "sonobuoy_server_test")
 	if err != nil {
 		t.Fatalf("Could not create temp directory: %v", err)
 		return
@@ -521,7 +520,7 @@ func makeTarWithContents(t *testing.T, filename string, fileContents []byte) (ta
 	filepath := path.Join(tardir, filename)
 	tarfile := path.Join(dir, "results.tar.gz")
 
-	err = ioutil.WriteFile(filepath, fileContents, 0644)
+	err = os.WriteFile(filepath, fileContents, 0644)
 	if err != nil {
 		t.Fatalf("Could not write to temp file %v: %v", filepath, err)
 		return
@@ -533,7 +532,7 @@ func makeTarWithContents(t *testing.T, filename string, fileContents []byte) (ta
 		return
 	}
 
-	tarbytes, err = ioutil.ReadFile(tarfile)
+	tarbytes, err = os.ReadFile(tarfile)
 	if err != nil {
 		t.Fatalf("Could not read created tar file %v: %v", tarfile, err)
 		return

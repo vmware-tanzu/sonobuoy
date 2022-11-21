@@ -63,14 +63,14 @@ func (t *timeoutErr) Error() string { return t.e.Error() }
 //
 // Basic workflow:
 //
-// 1. Create the aggregator object (`aggr`) to keep track of results
-// 2. Launch the HTTP server with the aggr's HandleHTTPResult function as the
-//    callback
-// 3. Run all the aggregation plugins, monitoring each one in a goroutine,
-//    configuring them to send failure results through a shared channel
-// 4. Hook the shared monitoring channel up to aggr's IngestResults() function
-// 5. Block until aggr shows all results accounted for (results come in through
-//    the HTTP callback), stopping the HTTP server on completion
+//  1. Create the aggregator object (`aggr`) to keep track of results
+//  2. Launch the HTTP server with the aggr's HandleHTTPResult function as the
+//     callback
+//  3. Run all the aggregation plugins, monitoring each one in a goroutine,
+//     configuring them to send failure results through a shared channel
+//  4. Hook the shared monitoring channel up to aggr's IngestResults() function
+//  5. Block until aggr shows all results accounted for (results come in through
+//     the HTTP callback), stopping the HTTP server on completion
 func Run(client kubernetes.Interface, plugins []plugin.Interface, cfg plugin.AggregationConfig, progressPort, pluginResultsDir, namespace, outdir string) error {
 	// Construct a list of things we'll need to dispatch
 	if len(plugins) == 0 {

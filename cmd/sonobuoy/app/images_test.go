@@ -16,7 +16,6 @@ limitations under the License.
 package app
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -35,7 +34,7 @@ sigStorageRegistry: test-fake-registry.corp/fake-user
 `
 
 func sampleE2eRegistryConfig() (string, error) {
-	configFile, err := ioutil.TempFile("", "e2eRegistryConfig.yaml")
+	configFile, err := os.CreateTemp("", "e2eRegistryConfig.yaml")
 	if err != nil {
 		return "", err
 	}

@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -128,7 +127,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// 3. Dump the config.json we used to run our test
 	if blob, err := json.Marshal(cfg); err == nil {
 		logrus.Trace("Recording the marshalled Sonobuoy config")
-		if err = ioutil.WriteFile(filepath.Join(metapath, "config.json"), blob, 0644); err != nil {
+		if err = os.WriteFile(filepath.Join(metapath, "config.json"), blob, 0644); err != nil {
 			errlog.LogError(errors.Wrap(err, "could not write config.json file"))
 			return errCount + 1
 		}
@@ -197,7 +196,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	blob, err := json.Marshal(runInfo)
 	trackErrorsFor("marshalling run info")(err)
 	if err == nil {
-		err = ioutil.WriteFile(filepath.Join(metapath, results.InfoFile), blob, 0644)
+		err = os.WriteFile(filepath.Join(metapath, results.InfoFile), blob, 0644)
 		trackErrorsFor("saving" + results.InfoFile)(err)
 	}
 
@@ -309,7 +308,7 @@ func dumpPlugin(p plugin.Interface, outputDir string) error {
 		return errors.Wrapf(err, "encoding plugin %v definition to yaml", p.GetName())
 	}
 
-	err = ioutil.WriteFile(
+	err = os.WriteFile(
 		filepath.Join(outputDir, results.PluginsDir, p.GetName(), pluginDefinitionFilename),
 		b,
 		os.FileMode(0644),

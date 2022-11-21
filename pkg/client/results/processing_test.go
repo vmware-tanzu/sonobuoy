@@ -19,7 +19,7 @@ package results
 import (
 	"encoding/json"
 	"flag"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -218,11 +218,11 @@ func TestPostProcessPluginGolden(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Failed to marshal item: %v", err)
 				}
-				ioutil.WriteFile(expectResults(tc.key), itemBytes, 0666)
+				os.WriteFile(expectResults(tc.key), itemBytes, 0666)
 			} else {
 				// Read in golden file and unmarshal. Easier to debug differences in the items than
 				// comparing the bytes directly.
-				fileData, err := ioutil.ReadFile(expectResults(tc.key))
+				fileData, err := os.ReadFile(expectResults(tc.key))
 				if err != nil {
 					t.Fatalf("Failed to read golden file %v: %v", expectResults(tc.key), err)
 				}

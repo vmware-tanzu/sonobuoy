@@ -8,7 +8,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -176,7 +175,7 @@ func TestUseNamespaceFromManifest(t *testing.T) {
 	genStdout := mustRunSonobuoyCommandWithContext(ctx, t, ns, genArgs)
 
 	// Write the contents of gen to a temp file
-	tmpfile, err := ioutil.TempFile("", "gen.*.yaml")
+	tmpfile, err := os.CreateTemp("", "gen.*.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -268,7 +267,7 @@ func TestRetrieveAndExtractWithPodLogs(t *testing.T) {
 	mustRunSonobuoyCommandWithContext(ctx, t, ns, args)
 
 	// Create tmpdir and extract contents into it
-	tmpdir, err := ioutil.TempDir("", "TestRetrieveAndExtract")
+	tmpdir, err := os.MkdirTemp("", "TestRetrieveAndExtract")
 	if err != nil {
 		t.Fatal("Failed to create tmp dir")
 	}
@@ -394,12 +393,12 @@ func TestQuickLegacyFix(t *testing.T) {
 	defer cleanup(true)
 
 	// Get and modify data so it targets the right sonobuoy image and namespace.
-	runData, err := ioutil.ReadFile("./testdata/issue1688.yaml")
+	runData, err := os.ReadFile("./testdata/issue1688.yaml")
 	if err != nil {
 		t.Fatalf("Failed to read run data file: %v", err)
 	}
 
-	tmpfile, err := ioutil.TempFile("", "")
+	tmpfile, err := os.CreateTemp("", "")
 	if err != nil {
 		t.Fatalf("Failed to create necessary tmpfile: %v", err)
 	}
@@ -684,7 +683,7 @@ func TestMain(m *testing.M) {
 	fmt.Printf("Using kubectl CLI at %q\n", kubectl)
 
 	// Creating so we get a clean location for HOME; important due to the plugin cache logic.
-	testHome, err = ioutil.TempDir("", "sonobuoy_int_test_home_*")
+	testHome, err = os.MkdirTemp("", "sonobuoy_int_test_home_*")
 	if err != nil {
 		fmt.Printf("Failed to create tmp dir home: %v", err)
 		os.Exit(1)
@@ -998,7 +997,7 @@ func TestPluginComplexCmds_LocalGolden(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tmpDir, err := ioutil.TempDir("", "sonobuoy_plugin_test_*")
+			tmpDir, err := os.MkdirTemp("", "sonobuoy_plugin_test_*")
 			if err != nil {
 				t.Fatal("Failed to create tmp dir")
 			}
@@ -1031,7 +1030,7 @@ func TestPluginLoading_LocalGolden(t *testing.T) {
 	installedPluginFile := "./testdata/plugin-loading-installed.golden"
 	localPluginFile := "./testdata/plugin-loading-local.golden"
 
-	tmpDir, err := ioutil.TempDir("", "sonobuoy_plugin_test_*")
+	tmpDir, err := os.MkdirTemp("", "sonobuoy_plugin_test_*")
 	if err != nil {
 		t.Fatalf("Failed to create tmp dir home: %v", err)
 	}
@@ -1055,13 +1054,13 @@ func TestPluginLoading_LocalGolden(t *testing.T) {
 	}
 
 	// Copy file to pwd
-	input, err := ioutil.ReadFile("./testdata/plugins/good/hello-world.yaml")
+	input, err := os.ReadFile("./testdata/plugins/good/hello-world.yaml")
 	if err != nil {
 		t.Fatalf("Failed to read plugin to test pwd loading")
 	}
 
 	// Create difference between local/installed plugin so we can differentiate them.
-	err = ioutil.WriteFile("hello-world.yaml", bytes.Replace(input, []byte("foo.com"), []byte("localfile.com"), -1), 0644)
+	err = os.WriteFile("hello-world.yaml", bytes.Replace(input, []byte("foo.com"), []byte("localfile.com"), -1), 0644)
 	if err != nil {
 		t.Fatalf("Failed to copy hello-world to pwd: %v", err)
 	}
@@ -1106,7 +1105,7 @@ func checkFileMatchesOrUpdate(t *testing.T, output, expectFile, maskDir string) 
 			t.Fatalf("Failed to update goldenfile: %v", err)
 		}
 	} else {
-		fileData, err := ioutil.ReadFile(expectFile)
+		fileData, err := os.ReadFile(expectFile)
 		if err != nil {
 			t.Fatalf("Failed to read golden file %v: %v", expectFile, err)
 		}
