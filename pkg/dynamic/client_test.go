@@ -94,6 +94,13 @@ func (t *testResourceInterface) Watch(ctx context.Context, opts metav1.ListOptio
 func (t *testResourceInterface) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
+func (t *testResourceInterface) Apply(ctx context.Context, name string, obj *unstructured.Unstructured, options metav1.ApplyOptions, subresources ...string) (*unstructured.Unstructured, error) {
+	return nil, nil
+}
+
+func (t *testResourceInterface) ApplyStatus(ctx context.Context, name string, obj *unstructured.Unstructured, options metav1.ApplyOptions) (*unstructured.Unstructured, error) {
+	return nil, nil
+}
 
 func TestCreateObject(t *testing.T) {
 	testcases := []struct {

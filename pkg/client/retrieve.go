@@ -19,6 +19,7 @@ package client
 import (
 	"archive/tar"
 	"compress/gzip"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -92,7 +93,7 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 	go func(writer *io.PipeWriter, ec chan error) {
 		defer writer.Close()
 		defer close(ec)
-		err = executor.Stream(remotecommand.StreamOptions{
+		err = executor.StreamWithContext(context.Background(), remotecommand.StreamOptions{
 			Stdout: writer,
 			Tty:    false,
 		})
