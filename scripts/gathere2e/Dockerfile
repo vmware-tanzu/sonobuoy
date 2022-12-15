@@ -1,7 +1,7 @@
 FROM debian:stable-slim
 RUN apt-get update && \
     apt-get -y install wget curl git jq && \
-    wget -O /bin/sonobuoy.tar.gz https://github.com/vmware-tanzu/sonobuoy/releases/download/v0.56.11/sonobuoy_0.56.11_linux_amd64.tar.gz && \
+    wget -O /bin/sonobuoy.tar.gz https://github.com/vmware-tanzu/sonobuoy/releases/download/v0.56.13/sonobuoy_0.56.13_linux_amd64.tar.gz && \
     tar -C /bin -xzf /bin/sonobuoy.tar.gz && \
     chmod 755 /bin/sonobuoy
 
