@@ -43,6 +43,10 @@ more about the new release cycles in [our blog][decoupling-sonobuoy-k8s].
 
 ## Installation
 
+The following methods exist for installing Sonobuoy:
+
+### Install binary
+
 1. Download the [latest release][releases] for your client platform.
 2. Extract the tarball:
 
@@ -51,6 +55,14 @@ more about the new release cycles in [our blog][decoupling-sonobuoy-k8s].
    ```
 
    Move the extracted `sonobuoy` executable to somewhere on your `PATH`.
+
+### Install with Hombrew (MacOS)
+
+1. Run the command:
+  
+   ```
+   brew install sonobuoy
+   ```
 
 ## Getting Started
 
