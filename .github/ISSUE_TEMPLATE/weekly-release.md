@@ -11,9 +11,17 @@ labels: kind/required
  - Is there a Kubernetes release since the last Sonobuoy release? If so, apply the following steps:
  - [ ] Ensure the upstream conformance script is working appropriately:
    - Update the `kind-config.yaml` file with the new image version [here](https://github.com/vmware-tanzu/sonobuoy/blob/main/kind-config.yaml).
+   - Note: currently pinned to 1.23.x line due to incompatibility
+    - Until fixed, use latest 1.23.x image found [here](https://hub.docker.com/r/kindest/node/tags) 
    - Run quick mode to confirm sonobuoy/conformance test work properly with this k8s version
    - Run `sonobuoy images` and get a list of test images 
- - [ ] Update the data supporting the e2e command (test lists). The steps are outlined [here](https://sonobuoy.io/docs/dryrun-listgenerator/). You can do this apart from the release process as well.
+ - [ ] Update the data supporting the e2e command (test lists). You can do this apart from the release process as well.
+
+```
+cd scripts
+./gather_e2e_data.sh
+```
+ - [ ] Remove `/scripts/tmpoutput` folder
 
 ## Docs and versioning
 
@@ -34,7 +42,7 @@ version of the docs. The `-b` flag also bumps the version in the code to match.
 
 - [ ] Create PR
   - Commit previous changes and open a new PR
-  - Ensure your commits signed
+  - Ensure your commits are signed (`--signoff`)
   - Follow workflow progress in GithubActions. Once all checks passes, merge
 
 - [ ] Tag release

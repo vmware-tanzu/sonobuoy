@@ -56,7 +56,7 @@ stress() {
 
 integration() {
   # Download linux kubectl and move into default path for tests
-  curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.25.3/bin/linux/amd64/kubectl
+  curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.26.1/bin/linux/amd64/kubectl
   chmod +x ./kubectl
 
     docker run --rm \
@@ -78,7 +78,7 @@ local_integration(){
   build_binary_GOOS_GOARCH linux amd64
   cp ./build/linux/amd64/sonobuoy ./sonobuoy
   # Download linux kubectl and move into default path for tests
-  curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.25.3/bin/linux/amd64/kubectl
+  curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.26.1/bin/linux/amd64/kubectl
   chmod +x ./kubectl
   integration
 }
@@ -366,7 +366,7 @@ update_local() {
     set -x
     if [ ! -f "./kubectl" ]; then
       # Download linux kubectl and move into default path for tests
-      curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.25.3/bin/linux/amd64/kubectl
+      curl --output ./kubectl https://storage.googleapis.com/kubernetes-release/release/v1.26.1/bin/linux/amd64/kubectl
       chmod +x ./kubectl
     fi
 
