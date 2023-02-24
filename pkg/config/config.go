@@ -155,6 +155,7 @@ type Config struct {
 	AggregatorPermissions    string            `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
 	ServiceAccountName       string            `json:"ServiceAccountName" mapstructure:"ServiceAccountName"`
 	ExistingServiceAccount   bool              `json:"ExistingServiceAccount,omitempty" mapstructure:"ExistingServiceAccount,omitempty"`
+	E2EDockerConfigFile      string            `json:"E2EDockerConfigFile,omitempty" mapstructure:"E2EDockerConfigFile,omitempty"`
 	NamespacePSAEnforceLevel string            `json:"NamespacePSAEnforceLevel,omitempty" mapstructure:"NamespacePSAEnforceLevel,omitempty"`
 
 	// ProgressUpdatesPort is the port on which the Sonobuoy worker will listen for status updates from its plugin.
