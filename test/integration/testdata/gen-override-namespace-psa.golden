@@ -1,9 +1,8 @@
-time="STATIC_TIME_FOR_TESTING" level=warning msg="kube-conformance-image flag and kubernetes-version/kube-conformance-image-version flags both set and may cause unintended behavior"
 apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/enforce: baseline
   name: sonobuoy
 ---
 apiVersion: v1
@@ -53,7 +52,7 @@ rules:
 ---
 apiVersion: v1
 data:
-  config.json: '{"Description":"DEFAULT","UUID":"","Version":"*STATIC_FOR_TESTING*","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:*STATIC_FOR_TESTING*","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","AggregatorPermissions":"clusterAdmin","ServiceAccountName":"sonobuoy-serviceaccount","NamespacePSAEnforceLevel":"privileged","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}'
+  config.json: '{"Description":"DEFAULT","UUID":"","Version":"*STATIC_FOR_TESTING*","ResultsDir":"/tmp/sonobuoy/results","Resources":null,"Filters":{"Namespaces":".*","LabelSelector":""},"Limits":{"PodLogs":{"Namespaces":"kube-system","SonobuoyNamespace":true,"FieldSelectors":[],"LabelSelector":"","Previous":false,"SinceSeconds":null,"SinceTime":null,"Timestamps":false,"TailLines":null,"LimitBytes":null}},"QPS":30,"Burst":50,"Server":{"bindaddress":"0.0.0.0","bindport":8080,"advertiseaddress":"","timeoutseconds":21600},"Plugins":null,"PluginSearchPath":["./plugins.d","/etc/sonobuoy/plugins.d","~/sonobuoy/plugins.d"],"Namespace":"sonobuoy","WorkerImage":"sonobuoy/sonobuoy:*STATIC_FOR_TESTING*","ImagePullPolicy":"IfNotPresent","ImagePullSecrets":"","AggregatorPermissions":"clusterAdmin","ServiceAccountName":"sonobuoy-serviceaccount","NamespacePSAEnforceLevel":"baseline","ProgressUpdatesPort":"8099","SecurityContextMode":"nonroot"}'
 kind: ConfigMap
 metadata:
   labels:
@@ -103,12 +102,12 @@ data:
       - name: SONOBUOY_CONFIG_DIR
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
-        value: v9.8.7
+        value: ignore
       - name: SONOBUOY_PROGRESS_PORT
         value: "8099"
       - name: SONOBUOY_RESULTS_DIR
         value: /tmp/sonobuoy/results
-      image: registry.k8s.io/conformance:v9.8.7
+      image: registry.k8s.io/conformance:ignore
       imagePullPolicy: IfNotPresent
       name: e2e
       volumeMounts:
@@ -154,7 +153,7 @@ data:
       - name: SONOBUOY_CONFIG_DIR
         value: /tmp/sonobuoy/config
       - name: SONOBUOY_K8S_VERSION
-        value: v9.8.7
+        value: ignore
       - name: SONOBUOY_PROGRESS_PORT
         value: "8099"
       - name: SONOBUOY_RESULTS_DIR

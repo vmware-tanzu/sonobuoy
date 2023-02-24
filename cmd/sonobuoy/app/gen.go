@@ -84,6 +84,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 	AddAggregatorPermissionsFlag(&cfg.sonobuoyConfig.AggregatorPermissions, genset)
 	AddServiceAccountNameFlag(&cfg.sonobuoyConfig.ServiceAccountName, genset)
 	AddExistingServiceAccountFlag(&cfg.sonobuoyConfig.ExistingServiceAccount, genset)
+	AddNamespacePSAEnforceLevelFlag(&cfg.sonobuoyConfig.NamespacePSAEnforceLevel, genset)
 
 	AddNamespaceFlag(&cfg.sonobuoyConfig.Namespace, genset)
 	AddDNSNamespaceFlag(&cfg.dnsNamespace, genset)

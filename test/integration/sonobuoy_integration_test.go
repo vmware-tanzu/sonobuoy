@@ -846,6 +846,10 @@ func TestExactOutput_LocalGolden(t *testing.T) {
 			desc:       "sonobuoy respects plugin imagePullPolicy unless forced via config",
 			cmdLine:    "gen --kubernetes-version=ignore -p testdata/plugins/good/setImagePullPolicy.yaml --force-image-pull-policy",
 			expectFile: "testdata/gen-imagePullPolicy-forced.golden",
+		}, {
+			desc:       "sonobuoy overrides default namespace PSA level when provided flag",
+			cmdLine:    "gen --kubernetes-version=ignore --namespace-psa-enforce-level=baseline",
+			expectFile: "testdata/gen-override-namespace-psa.golden",
 		},
 	}
 	for _, tc := range testCases {
