@@ -621,8 +621,11 @@ func generateNS(w io.Writer, cfg GenConfig) error {
 		return nil
 	}
 
+	labels := make(map[string]string)
+	labels["pod-security.kubernetes.io/enforce"] = cfg.Config.NamespacePSAEnforceLevel
 	ns := &corev1.Namespace{}
 	ns.Name = cfg.Config.Namespace
+	ns.Labels = labels
 	ns.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Namespace"})
 	return appendAsYAML(w, ns)
 }

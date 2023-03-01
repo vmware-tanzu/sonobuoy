@@ -29,6 +29,7 @@ Flags:
       --kubernetes-version string                Use default E2E image, but override the version. Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise. 'ignore' will try version resolution but ignore errors. 'latest' will find the latest dev image/version upstream. (default "")
   -m, --mode Mode                                What mode to run the e2e plugin in. Valid modes are [certified-conformance conformance-lite non-disruptive-conformance quick]. (default non-disruptive-conformance)
   -n, --namespace string                         The namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously. (default "sonobuoy")
+      --namespace-psa-enforce-level string       The PSA enforce level for the namespace. (default "privileged")
   -p, --plugin pluginList                        Which plugins to run. Can either point to a URL, local file/directory, or be one of the known plugins (e2e or systemd-logs). Can be specified multiple times to run multiple plugins.
       --plugin-env pluginenvvar                  Set env vars on plugins. Values can be given multiple times and are in the form plugin.env=value (default map[])
       --plugin-image plugin:image                Override a plugins image from what is in its definition (e.g. myPlugin:testimage) (default map[])
