@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -40,6 +41,8 @@ type retrieveFlags struct {
 	outputLocation string
 	filename       string
 	aggregatorPath string
+	retryLimit     int
+	retryInterval  int
 }
 
 func NewCmdRetrieve() *cobra.Command {
@@ -57,6 +60,14 @@ func NewCmdRetrieve() *cobra.Command {
 	AddFilenameFlag(&rcvFlags.filename, cmd.Flags())
 	AddRetrievePathFlag(&rcvFlags.aggregatorPath, cmd.Flags())
 
+	cmd.Flags().IntVarP(
+		&rcvFlags.retryLimit, "retry-limit", "l", 1,
+		`Limit to of retries to gather the results.`,
+	)
+	cmd.Flags().IntVarP(
+		&rcvFlags.retryInterval, "retry-interval", "i", 2,
+		`Interval between retries.`,
+	)
 	return cmd
 }
 
@@ -74,24 +85,47 @@ func retrieveResultsCmd(opts *retrieveFlags) func(cmd *cobra.Command, args []str
 		}
 
 		// Get a reader that contains the tar output of the results directory.
-		reader, ec, err := sbc.RetrieveResults(&client.RetrieveConfig{
-			Namespace: opts.namespace,
-			Path:      opts.aggregatorPath,
-		})
-		if err != nil {
-			errlog.LogError(err)
-			os.Exit(1)
+		retries := 1
+		success := false
+		exitCode := 1
+		for retries <= int(opts.retryLimit) {
+			exitCode, err = retrieveResultsWithRetry(opts, sbc)
+			if err == nil {
+				success = true
+				exitCode = 0
+				break
+			}
+			fmt.Fprintln(os.Stderr, err)
+			if (retries + 1) < opts.retryLimit {
+				fmt.Fprintln(os.Stdin, "Retrying retrieval %d more times", opts.retryLimit)
+			}
+			time.Sleep(time.Second * time.Duration(opts.retryInterval))
+			retries++
 		}
-
-		err = retrieveResults(*opts, reader, ec)
-		if _, ok := err.(exec.CodeExitError); ok {
-			fmt.Fprintln(os.Stderr, "Results not ready yet. Check `sonobuoy status` for status.")
-			os.Exit(1)
-		} else if err != nil {
-			fmt.Fprintf(os.Stderr, "error retrieving results: %v\n", err)
-			os.Exit(2)
+		if !success {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(exitCode)
 		}
 	}
+}
+
+func retrieveResultsWithRetry(opts *retrieveFlags, sbc *client.SonobuoyClient) (int, error) {
+	reader, ec, err := sbc.RetrieveResults(&client.RetrieveConfig{
+		Namespace: opts.namespace,
+		Path:      opts.aggregatorPath,
+	})
+	if err != nil {
+		return 1, err
+	}
+
+	err = retrieveResults(*opts, reader, ec)
+	if _, ok := err.(exec.CodeExitError); ok {
+		return 1, errors.Wrap(err, "Results not ready yet. Check `sonobuoy status` for status.")
+	} else if err != nil {
+		return 2, errors.Wrap(err, fmt.Sprintf("error retrieving results: %v\n", err))
+	}
+
+	return 0, nil
 }
 
 func retrieveResults(opts retrieveFlags, r io.Reader, ec <-chan error) error {
