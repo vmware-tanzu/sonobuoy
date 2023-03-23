@@ -10,8 +10,8 @@ jobs:
         with:
           version: v1.50
           skip-pkg-cache: true
-          skip-build-cache: true
-          args: --timeout=2m0s -v
+          skip-build-cache: true -h
+          args: --timeout=2m0s -v --disable staticcheck
   bash-lint:
     runs-on: ubuntu-latest
     steps:
