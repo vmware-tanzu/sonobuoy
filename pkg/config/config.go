@@ -77,6 +77,9 @@ const (
 
 	// DefaultServiceAccountName is the default Service Account name that should be used if no customization is provided
 	DefaultServiceAccountName = "sonobuoy-serviceaccount"
+
+	// DefaultNamespacePSAEnforceLevel is the default Pod Security Admission level to label the Sonobouy namespace for enforcing mode
+	DefaultNamespacePSAEnforceLevel = "privileged"
 )
 
 var (
@@ -144,14 +147,15 @@ type Config struct {
 	///////////////////////////////////////////////
 	// Sonobuoy configuration
 	///////////////////////////////////////////////
-	WorkerImage            string            `json:"WorkerImage" mapstructure:"WorkerImage"`
-	ImagePullPolicy        string            `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
-	ForceImagePullPolicy   bool              `json:"ForceImagePullPolicy,omitempty" mapstructure:"ForceImagePullPolicy"`
-	ImagePullSecrets       string            `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
-	CustomAnnotations      map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
-	AggregatorPermissions  string            `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
-	ServiceAccountName     string            `json:"ServiceAccountName" mapstructure:"ServiceAccountName"`
-	ExistingServiceAccount bool              `json:"ExistingServiceAccount,omitempty" mapstructure:"ExistingServiceAccount,omitempty"`
+	WorkerImage              string            `json:"WorkerImage" mapstructure:"WorkerImage"`
+	ImagePullPolicy          string            `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
+	ForceImagePullPolicy     bool              `json:"ForceImagePullPolicy,omitempty" mapstructure:"ForceImagePullPolicy"`
+	ImagePullSecrets         string            `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
+	CustomAnnotations        map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
+	AggregatorPermissions    string            `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
+	ServiceAccountName       string            `json:"ServiceAccountName" mapstructure:"ServiceAccountName"`
+	ExistingServiceAccount   bool              `json:"ExistingServiceAccount,omitempty" mapstructure:"ExistingServiceAccount,omitempty"`
+	NamespacePSAEnforceLevel string            `json:"NamespacePSAEnforceLevel,omitempty" mapstructure:"NamespacePSAEnforceLevel,omitempty"`
 
 	// ProgressUpdatesPort is the port on which the Sonobuoy worker will listen for status updates from its plugin.
 	ProgressUpdatesPort string `json:"ProgressUpdatesPort,omitempty" mapstructure:"ProgressUpdatesPort"`
@@ -329,6 +333,8 @@ func New() *Config {
 	cfg.ServiceAccountName = DefaultServiceAccountName
 
 	cfg.ExistingServiceAccount = false
+
+	cfg.NamespacePSAEnforceLevel = DefaultNamespacePSAEnforceLevel
 
 	return &cfg
 }
