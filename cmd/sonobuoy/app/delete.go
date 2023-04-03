@@ -34,6 +34,7 @@ type deleteFlags struct {
 	wait       int
 	kubeconfig Kubeconfig
 	waitOutput WaitOutputMode
+	dryRun     bool
 }
 
 func NewCmdDelete() *cobra.Command {
@@ -49,6 +50,7 @@ func NewCmdDelete() *cobra.Command {
 	AddNamespaceFlag(&f.namespace, cmd.Flags())
 	AddRBACModeFlags(&f.rbacMode, cmd.Flags(), DetectRBACMode)
 	AddDeleteAllFlag(&f.deleteAll, cmd.Flags())
+	AddDryRunFlag(&f.dryRun, cmd.Flags())
 	AddDeleteWaitFlag(&f.wait, cmd.Flags())
 	if features.Enabled(features.WaitOutputProgressByDefault) {
 		AddWaitOutputFlag(&f.waitOutput, cmd.Flags(), ProgressOutputMode)
@@ -84,6 +86,7 @@ func deleteSonobuoyRun(f *deleteFlags) func(cmd *cobra.Command, args []string) {
 			DeleteAll:  f.deleteAll,
 			Wait:       time.Duration(f.wait) * time.Minute,
 			WaitOutput: f.waitOutput.String(),
+			DryRun:     f.dryRun,
 		}
 
 		if err := sbc.Delete(deleteCfg); err != nil {
