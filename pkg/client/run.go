@@ -18,6 +18,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -138,7 +139,7 @@ func (c *SonobuoyClient) WaitForRun(cfg *RunConfig) error {
 			lastMsg = s
 		}
 	}
-	runCondition := func() (bool, error) {
+	runCondition := func(ctx context.Context) (bool, error) {
 
 		// Get the Aggregator pod and check if its status is completed or terminated.
 		status, pod, err := c.GetStatusPod(&StatusConfig{Namespace: ns})
@@ -186,7 +187,7 @@ func (c *SonobuoyClient) WaitForRun(cfg *RunConfig) error {
 		// handled by conditionFunc since it has to be part of the polling.
 		// Could use channels but that will lead to future issues.
 	}
-	err := wait.Poll(pollInterval, cfg.Wait, runCondition)
+	err := wait.PollUntilContextTimeout(context.TODO(), pollInterval, cfg.Wait, false, runCondition)
 	if err != nil {
 		return errors.Wrap(err, "waiting for run to finish")
 	}
