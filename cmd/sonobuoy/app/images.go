@@ -55,12 +55,7 @@ var (
 )
 
 func runListImages(flags imagesFlags) {
-	var client image.Client
-	if flags.dryRun {
-		client = image.DryRunClient{}
-	} else {
-		client = image.NewDockerClient()
-	}
+	client := image.NewDockerClient()
 	version, err := getClusterVersion(flags.k8sVersion, flags.kubeconfig)
 	if err != nil {
 		errlog.LogError(err)
@@ -70,6 +65,23 @@ func runListImages(flags imagesFlags) {
 		errlog.LogError(err)
 		os.Exit(1)
 	}
+}
+
+func runInspectImages(flags imagesFlags) {
+	client := image.NewDockerClient()
+	version, err := getClusterVersion(flags.k8sVersion, flags.kubeconfig)
+	if err != nil {
+		errlog.LogError(err)
+		os.Exit(1)
+	}
+
+	if errs := inspectImages(flags.plugins, flags.pluginEnvs, version, client); err != nil {
+		for _, err := range errs {
+			errlog.LogError(err)
+		}
+		os.Exit(1)
+	}
+	logrus.Info("configured images available")
 }
 
 func NewCmdImages() *cobra.Command {
@@ -95,8 +107,29 @@ func NewCmdImages() *cobra.Command {
 	cmd.AddCommand(pushCmd())
 	cmd.AddCommand(downloadCmd())
 	cmd.AddCommand(deleteCmd())
+	cmd.AddCommand(inspectCmd())
 
 	return cmd
+}
+
+func inspectCmd() *cobra.Command {
+	var flags imagesFlags
+
+	inspectCmd := &cobra.Command{
+		Use:   "inspect",
+		Short: "Inspect images",
+		Long:  "Inspect if image is available in the registry",
+		Run: func(cmd *cobra.Command, args []string) {
+			runInspectImages(flags)
+		},
+		Args: cobra.ExactArgs(0),
+	}
+	AddKubeconfigFlag(&flags.kubeconfig, inspectCmd.Flags())
+	AddPluginListFlag(&flags.plugins, inspectCmd.Flags())
+	AddDryRunFlag(&flags.dryRun, inspectCmd.Flags())
+	AddKubernetesVersionFlag(&flags.k8sVersion, &transformSink, inspectCmd.Flags())
+
+	return inspectCmd
 }
 
 func listCmd() *cobra.Command {
@@ -294,6 +327,15 @@ func listImages(plugins []string, pluginEnvs PluginEnvVars, k8sVersion string, c
 		fmt.Println(img)
 	}
 	return nil
+}
+
+func inspectImages(plugins []string, pluginEnvs PluginEnvVars, k8sVersion string, client image.Client) []error {
+	images, err := collectPluginsImages(plugins, pluginEnvs, k8sVersion, client)
+	if err != nil {
+		return []error{err, errors.Errorf("unable to collect images of plugins")}
+	}
+	sort.Strings(images)
+	return client.InspectImages(images)
 }
 
 func pullImages(plugins []string, pluginEnvs PluginEnvVars, e2eRegistry, e2eRegistryConfig, k8sVersion string, client image.Client) []error {

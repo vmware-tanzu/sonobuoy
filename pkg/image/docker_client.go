@@ -18,6 +18,9 @@ package image
 
 import (
 	"fmt"
+	"log"
+	"strings"
+	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/vmware-tanzu/sonobuoy/pkg/image/docker"
@@ -85,7 +88,14 @@ func (i DockerClient) PushImages(images []TagPair, retries int) []error {
 // resulting file name.
 func (i DockerClient) DownloadImages(images []string, version string) (string, error) {
 	fileName := getTarFileName(version)
-
+	for k, image := range images {
+		if strings.HasPrefix(image, "invalid") {
+			images[k] = images[len(images)-1]
+			images[len(images)-1] = ""
+			images = images[:len(images)-1]
+		}
+	}
+	log.Println(images)
 	err := i.dockerClient.Save(images, fileName)
 	if err != nil {
 		return "", errors.Wrap(err, "couldn't save images to tar")
@@ -93,6 +103,26 @@ func (i DockerClient) DownloadImages(images []string, version string) (string, e
 
 	return fileName, nil
 }
+
+// InspectImages.
+func (i DockerClient) InspectImages(images []string) []error {
+	errs := []error{}
+	var wg sync.WaitGroup
+	wg.Add(len(images))
+	for _, image := range images {
+		go func(image string) {
+			err := i.dockerClient.Inspect(image, 3)
+			if err != nil {
+				errs = append(errs, errors.Wrapf(err, "couldn't delete image: %v", image))
+			}
+			wg.Done()
+		}(image)
+	}
+	wg.Wait()
+	return errs
+}
+
+// mediaType application/vnd.docker.distribution.manifest.list.v2+json  application/vnd.docker.distribution.manifest.v2+json
 
 // DeleteImages deletes the given list of images from the local machine.
 // It will retry for the provided number of retries on failure.
