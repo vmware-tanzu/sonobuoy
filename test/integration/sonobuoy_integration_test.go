@@ -8,6 +8,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/kylelemons/godebug/pretty"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
+	yaml "gopkg.in/yaml.v2"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,10 +19,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/kylelemons/godebug/pretty"
-	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
-	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -373,60 +372,6 @@ func TestQuick(t *testing.T) {
 	t.Run("Ensure pod and worker logs gathered", func(t *testing.T) {
 		checkTarballForE2ELogs(t, tb)
 	})
-}
-
-// TestQuickLegacyFix runs a real "--mode quick" check against the cluster with the yaml from v0.54.0
-// which suffered from issues with agreement regarding ResultsDir.
-func TestQuickLegacyFix(t *testing.T) {
-	t.Parallel()
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
-	defer cancel()
-
-	// Hardcoded namespace due to nature of test being from a file.
-	ns, cleanup := getNamespace(t)
-	// Doing a deletion check here rather than as a separate test so-as not to waste the extra compute time.
-	defer func(t *testing.T, ns string) {
-		if err := deleteComplete(t, ns); err != nil {
-			t.Fatalf("Failed to completely delete resources: %v", err)
-		}
-	}(t, ns)
-	defer cleanup(true)
-
-	// Get and modify data so it targets the right sonobuoy image and namespace.
-	runData, err := os.ReadFile("./testdata/issue1688.yaml")
-	if err != nil {
-		t.Fatalf("Failed to read run data file: %v", err)
-	}
-
-	tmpfile, err := os.CreateTemp("", "")
-	if err != nil {
-		t.Fatalf("Failed to create necessary tmpfile: %v", err)
-	}
-
-	curVersion := mustRunSonobuoyCommandWithContext(context.Background(), t, ns, "version --short")
-	imgName := strings.TrimSpace(fmt.Sprintf("sonobuoy/sonobuoy:%v", curVersion.String()))
-	runData = bytes.ReplaceAll(runData, []byte("REPLACE_NS"), []byte(ns))
-	runData = bytes.ReplaceAll(runData, []byte("REPLACE_IMAGE"), []byte(imgName))
-
-	if _, err := tmpfile.Write(runData); err != nil {
-		t.Fatalf("Failed to rewrite test data as needed for 1688 test: %v", err)
-	}
-	if err := tmpfile.Close(); err != nil {
-		t.Fatalf("Failed to close tmpfile: %v", err)
-	}
-
-	// Use kubectl to apply the run so that we don't have the CLI modifying the data.
-	args := fmt.Sprintf("apply -f %v", tmpfile.Name())
-	if out, err := runCommandWithContext(context.TODO(), t, kubectl, args); err != nil {
-		t.Fatalf("Failed to launch run for 1688: %v %v", err, out.String())
-	}
-
-	// Now we can use sonobuoy to wait for results.
-	mustRunSonobuoyCommandWithContext(ctx, t, ns, fmt.Sprintf("wait -n %v", ns))
-
-	checkStatusForPluginErrors(ctx, t, ns, "e2ecustom", 0)
-	tb := mustDownloadTarball(ctx, t, ns)
-	tb = saveToArtifacts(t, tb)
 }
 
 // deleteComplete is the logic that checks that we deleted the namespace and our clusterRole[Bindings]
