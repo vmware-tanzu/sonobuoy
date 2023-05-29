@@ -184,6 +184,7 @@ type DeleteConfig struct {
 	DeleteAll  bool
 	Wait       time.Duration
 	WaitOutput string
+	DryRun     bool
 }
 
 // Validate checks the config to determine if it is valid.

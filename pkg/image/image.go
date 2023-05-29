@@ -23,4 +23,5 @@ type Client interface {
 	DownloadImages(images []string, version string) (string, error)
 	DeleteImages(images []string, retries int) []error
 	RunImage(image string, entrypoint string, env map[string]string, args ...string) ([]string, error)
+	InspectImages(images []string) []error
 }

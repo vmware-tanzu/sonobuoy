@@ -17,13 +17,19 @@ limitations under the License.
 package docker
 
 import (
+	"bytes"
+	"encoding/json"
+	"time"
+
 	"fmt"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/sonobuoy/pkg/image/exec"
 )
 
 type Docker interface {
+	Inspect(image string, retries int) error
 	PullIfNotPresent(image string, retries int) error
 	Pull(image string, retries int) error
 	Push(image string, retries int) error
@@ -34,6 +40,30 @@ type Docker interface {
 }
 
 type LocalDocker struct {
+}
+
+type inspectResponse struct {
+	SchemaVersion int    `json:"schemaVersion"`
+	MediaType     string `json:"mediaType"`
+	Config        struct {
+		MediaType string `json:"mediaType"`
+		Size      int    `json:"size"`
+		Digest    string `json:"digest"`
+	} `json:"config"`
+	Layers []struct {
+		MediaType string `json:"mediaType"`
+		Size      int    `json:"size"`
+		Digest    string `json:"digest"`
+	} `json:"layers"`
+	Manifests []struct {
+		MediaType string `json:"mediaType"`
+		Size      int    `json:"size"`
+		Digest    string `json:"digest"`
+		Platform  struct {
+			Architecture string `json:"architecture"`
+			Os           string `json:"os"`
+		} `json:"platform,omitempty"`
+	} `json:"manifests"`
 }
 
 func (l LocalDocker) Run(image string, entryPoint string, env map[string]string, args ...string) ([]string, error) {
@@ -50,6 +80,43 @@ func (l LocalDocker) Run(image string, entryPoint string, env map[string]string,
 	dockerArgs = append(dockerArgs, args...)
 	cmd := exec.Command("docker", dockerArgs...)
 	return exec.CombinedOutputLines(cmd)
+}
+
+// Inspect
+func (l LocalDocker) Inspect(image string, retries int) error {
+	i := inspectResponse{}
+	cmd := exec.Command("docker", "buildx", "imagetools", "inspect", "--raw", image)
+	var buff bytes.Buffer
+	cmd.SetStdout(&buff)
+	cmd.SetStderr(&buff)
+
+	err := cmd.Run()
+	if err != nil {
+		return errors.Wrap(err, "failed to run Docker command")
+	}
+	if err := json.Unmarshal(buff.Bytes(), &i); err != nil {
+		for i := 1; i <= retries; i++ {
+			log.Debug(buff.String())
+			log.Debugf("Image inspection: %s retrying attempt: %v", image, i)
+			buff.Reset()
+			err := cmd.Run()
+			if err != nil {
+				log.Debug(err)
+				time.Sleep(1 * time.Second)
+			}
+		}
+		return errors.Wrapf(err, "Image: %s not found in registry", image)
+	}
+
+	if i.Config.Digest != "" {
+		log.Debugf("Image: %s found in registry @%s", image, i.Config.Digest)
+	}
+
+	if len(i.Manifests) > 0 {
+		log.Debugf("Image: %s found in registry @%s", image, i.Manifests[0].Digest)
+	}
+	defer buff.Reset()
+	return nil
 }
 
 // PullIfNotPresent will pull an image if it is not present locally

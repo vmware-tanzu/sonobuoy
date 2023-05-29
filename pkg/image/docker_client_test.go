@@ -26,12 +26,13 @@ import (
 var imgs = []string{"test1/foo.io/sonobuoy:x.y"}
 
 type FakeDockerClient struct {
-	imageExists bool
-	pushFails   bool
-	pullFails   bool
-	tagFails    bool
-	saveFails   bool
-	deleteFails bool
+	imageExists  bool
+	pushFails    bool
+	pullFails    bool
+	tagFails     bool
+	saveFails    bool
+	deleteFails  bool
+	inspectFails bool
 }
 
 func (l FakeDockerClient) Run(image string, entryPoint string, env map[string]string, args ...string) ([]string, error) {
@@ -48,6 +49,13 @@ func (l FakeDockerClient) PullIfNotPresent(image string, retries int) error {
 func (l FakeDockerClient) Pull(image string, retries int) error {
 	if l.pullFails {
 		return errors.New("pull failed")
+	}
+	return nil
+}
+
+func (l FakeDockerClient) Inspect(image string, retries int) error {
+	if l.inspectFails {
+		return errors.New("inspect failed")
 	}
 	return nil
 }
