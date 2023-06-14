@@ -54,7 +54,7 @@ func DecodeTarball(reader io.Reader, baseDir string) error {
 			if err := os.MkdirAll(filepath.Join(baseDir, name), os.FileMode(header.Mode)); err != nil {
 				return errors.Wrap(err, "error decoding tarball for result (mkdir)")
 			}
-		case tar.TypeReg, tar.TypeRegA:
+		case tar.TypeReg:
 			filePath := filepath.Join(baseDir, name)
 			// Directory should come first, but some tarballes are malformed
 			if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {

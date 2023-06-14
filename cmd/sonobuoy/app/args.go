@@ -36,28 +36,29 @@ import (
 )
 
 const (
-	namespaceFlag              = "namespace"
-	sonobuoyImageFlag          = "sonobuoy-image"
-	imagePullPolicyFlag        = "image-pull-policy"
-	forceImagePullPolicyFlag   = "force-image-pull-policy"
-	pluginFlag                 = "plugin"
-	timeoutFlag                = "timeout"
-	waitOutputFlag             = "wait-output"
-	customRegistryFlag         = "custom-registry"
-	kubeconfig                 = "kubeconfig"
-	kubecontext                = "context"
-	e2eFocusFlag               = "e2e-focus"
-	e2eSkipFlag                = "e2e-skip"
-	e2eParallelFlag            = "e2e-parallel"
-	e2eRegistryConfigFlag      = "e2e-repo-config"
-	e2eRegistryFlag            = "e2e-repo"
-	pluginImageFlag            = "plugin-image"
-	filenameFlag               = "filename"
-	retrievePathFlag           = "retrieve-path"
-	securityContextModeFlag    = "security-context-mode"
-	aggregatorPermissionsFlag  = "aggregator-permissions"
-	serviceAccountNameFlag     = "service-account-name"
-	existingServiceAccountFlag = "existing-service-account"
+	namespaceFlag                = "namespace"
+	sonobuoyImageFlag            = "sonobuoy-image"
+	imagePullPolicyFlag          = "image-pull-policy"
+	forceImagePullPolicyFlag     = "force-image-pull-policy"
+	pluginFlag                   = "plugin"
+	timeoutFlag                  = "timeout"
+	waitOutputFlag               = "wait-output"
+	customRegistryFlag           = "custom-registry"
+	kubeconfig                   = "kubeconfig"
+	kubecontext                  = "context"
+	e2eFocusFlag                 = "e2e-focus"
+	e2eSkipFlag                  = "e2e-skip"
+	e2eParallelFlag              = "e2e-parallel"
+	e2eRegistryConfigFlag        = "e2e-repo-config"
+	e2eRegistryFlag              = "e2e-repo"
+	pluginImageFlag              = "plugin-image"
+	filenameFlag                 = "filename"
+	retrievePathFlag             = "retrieve-path"
+	securityContextModeFlag      = "security-context-mode"
+	aggregatorPermissionsFlag    = "aggregator-permissions"
+	serviceAccountNameFlag       = "service-account-name"
+	existingServiceAccountFlag   = "existing-service-account"
+	namespacePSAEnforceLevelFlag = "namespace-psa-enforce-level"
 )
 
 // AddNamespaceFlag initialises a namespace flag.
@@ -467,6 +468,14 @@ func AddRetrievePathFlag(str *string, flags *pflag.FlagSet) {
 	flags.StringVar(
 		str, retrievePathFlag, config.AggregatorResultsPath,
 		"Specify the path to retrieve from the aggregator pod.",
+	)
+}
+
+// AddNamespacePSAEnforceLevelFlag adds a flag for labelling the namespace
+func AddNamespacePSAEnforceLevelFlag(str *string, flags *pflag.FlagSet) {
+	flags.StringVar(
+		str, namespacePSAEnforceLevelFlag, config.DefaultNamespacePSAEnforceLevel,
+		"The PSA enforce level for the namespace.",
 	)
 }
 

@@ -30,6 +30,10 @@ func (i DryRunClient) RunImage(image string, entryPoint string, env map[string]s
 	return []string{}, nil
 }
 
+func (i DryRunClient) InspectImages([]string) []error {
+	return []error{}
+}
+
 // PullImages logs the images that would be pulled.
 func (i DryRunClient) PullImages(images []string, retries int) []error {
 	for _, image := range images {

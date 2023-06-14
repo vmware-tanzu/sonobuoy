@@ -35,7 +35,7 @@ PPC64LE_IMAGE=gcr.io/distroless/static:nonroot-ppc64le
 S390X_IMAGE=gcr.io/distroless/static:nonroot-s390x
 WIN_AMD64_BASEIMAGE=mcr.microsoft.com/windows/nanoserver
 TEST_IMAGE=testimage:v0.1
-LINT_IMAGE=golangci/golangci-lint:v1.50
+LINT_IMAGE=golangci/golangci-lint:v1.52.2
 KIND_CLUSTER=kind
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )"
@@ -85,7 +85,7 @@ local_integration(){
 
 lint() {
   docker run --rm -v "$(pwd)":$BUILDMNT -w $BUILDMNT $LINT_IMAGE /bin/sh -c \
-    "golangci-lint run --out-format=github-actions --timeout=2m0s -v"
+    "golangci-lint run --out-format=github-actions --timeout=5m0s -v"
 }
 
 vet() {
@@ -194,7 +194,7 @@ build_binary_GOOS_GOARCH() {
     # Avoid quoting nightmare by not running in /bin/sh
     docker run --rm -v "$(pwd)":"$BUILDMNT" -w "$BUILDMNT" \
         -e CGO_ENABLED=0 -e GOOS="$1" -e GOARCH="$2" "$BUILD_IMAGE" \
-        go build -o build/"$1"/"$2"/"$BINARY" "${args[@]}" "$GOTARGET"
+        go build -buildvcs=false -o build/"$1"/"$2"/"$BINARY" "${args[@]}" "$GOTARGET"
 }
 
 # Builds all linux and windows binaries.
@@ -211,7 +211,7 @@ build_binaries() {
 native() {
     LDFLAGS="-s -w -X $GOTARGET/pkg/buildinfo.Version=$GIT_VERSION -X $GOTARGET/pkg/buildinfo.GitSHA=$GIT_REF_LONG"
     args=(-ldflags "${LDFLAGS}" "$GOTARGET")
-    CGO_ENABLED=0 GOOS="$HOST_GOOS" GOARCH="$HOST_GOARCH" go build -o sonobuoy "${args[@]}"
+    CGO_ENABLED=0 GOOS="$HOST_GOOS" GOARCH="$HOST_GOARCH" go build -buildvcs=false -o sonobuoy "${args[@]}"
     mkdir -p ./build/$HOST_GOOS/$HOST_GOARCH
     cp ./sonobuoy ./build/$HOST_GOOS/$HOST_GOARCH/sonobuoy
 }
