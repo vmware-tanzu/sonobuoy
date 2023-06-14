@@ -85,7 +85,7 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 
 	if cfg.Wait > time.Duration(0) {
 		lastProgress := ""
-		allConditions := func() (bool, error) {
+		allConditions := func(ctx context.Context) (bool, error) {
 			for _, condition := range conditions {
 				progress, done, err := condition()
 				if cfg.WaitOutput == progressMode {
@@ -111,7 +111,7 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 			s.Start()
 			defer s.Stop()
 		}
-		if err := wait.Poll(pollFreq, cfg.Wait, allConditions); err != nil {
+		if err := wait.PollUntilContextTimeout(context.TODO(), pollFreq, cfg.Wait, false, allConditions); err != nil {
 			return errors.Wrap(err, "waiting for delete conditions to be met")
 		}
 	}
