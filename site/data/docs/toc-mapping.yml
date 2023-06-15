@@ -5,7 +5,11 @@
 # Below is a commented out example of what this may look like:
 
 main: main-toc
+<<<<<<< HEAD
 v0.56.16: v0-56-16toc
+=======
+v0.56.17: v0-56-17toc
+>>>>>>> 2846f353 (Add docs for v0.56.17)
 v0.56.15: v0-56-15toc
 v0.56.14: v0-56-14toc
 v0.56.13: v0-56-13toc
