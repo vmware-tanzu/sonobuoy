@@ -154,11 +154,11 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 	}
 
 	if _, err := kubeclient.CoreV1().Secrets(p.Namespace).Create(context.TODO(), secret, metav1.CreateOptions{}); err != nil {
-		return errors.Wrapf(err, "couldn't create TLS secret for job plugin %v", p.GetName())
+		return errors.Wrapf(err, "couldn't create TLS secret for job plugin %v, secret name is %s", p.GetName(), secret.Namespace+"/"+secret.Name)
 	}
 
 	if _, err := kubeclient.CoreV1().Pods(p.Namespace).Create(context.TODO(), &job, metav1.CreateOptions{}); err != nil {
-		return errors.Wrapf(err, "could not create Job resource for Job plugin %v", p.GetName())
+		return errors.Wrapf(err, "could not create Job resource for Job plugin %v, pod name is %s", p.GetName(), job.Namespace+"/"+job.Name)
 	}
 
 	return nil
