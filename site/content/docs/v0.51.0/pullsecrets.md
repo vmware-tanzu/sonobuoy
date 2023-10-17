@@ -27,7 +27,7 @@ As an example of how to create the secret you can follow the instructions [here]
 Then use copy most of its YAML via:
 
 ```
-kubectl get secret <secret name> -o yaml > secret.json
+kubectl get secret <secret name> -o yaml > secret.yaml
 ```
 
 Manually edit the file and remove/adjust the metadata as appropriate. The namespace should be adjusted to your desired Sonobuoy namespace (default: heptio-sonobuoy) and the following fields can be removed:
