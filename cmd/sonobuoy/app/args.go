@@ -50,6 +50,7 @@ const (
 	e2eSkipFlag                  = "e2e-skip"
 	e2eParallelFlag              = "e2e-parallel"
 	e2eRegistryConfigFlag        = "e2e-repo-config"
+	e2eDockerConfigFileFlag      = "e2e-docker-config-file"
 	e2eRegistryFlag              = "e2e-repo"
 	pluginImageFlag              = "plugin-image"
 	filenameFlag                 = "filename"
@@ -224,7 +225,7 @@ func AddSonobuoyConfigFlag(cfg *SonobuoyConfig, flags *pflag.FlagSet) {
 // AddLegacyE2EFlags is a way to add flags which target the e2e plugin specifically
 // by leveraging the existing flags. They typically wrap other fields (like the env var
 // overrides) and modify those.
-func AddLegacyE2EFlags(env *PluginEnvVars, pluginTransforms *map[string][]func(*manifest.Manifest) error, fs *pflag.FlagSet) {
+func AddLegacyE2EFlags(cfg *SonobuoyConfig, env *PluginEnvVars, pluginTransforms *map[string][]func(*manifest.Manifest) error, fs *pflag.FlagSet) {
 	m := &Mode{
 		env:  env,
 		name: "",
@@ -288,6 +289,15 @@ func AddLegacyE2EFlags(env *PluginEnvVars, pluginTransforms *map[string][]func(*
 	fs.Var(
 		&envVarModierFlag{plugin: e2ePlugin, field: "KUBE_TEST_REPO", PluginEnvVars: *env}, e2eRegistryFlag,
 		"Specify a registry to use as the default for pulling Kubernetes test images. Same as providing --e2e-repo-config but specifying the same repo repeatedly.",
+	)
+
+	fs.Var(
+		&e2eDockerConfigFlag{
+			plugin:     e2ePlugin,
+			config:     cfg,
+			transforms: *pluginTransforms,
+		}, e2eDockerConfigFileFlag,
+		"A docker credentials configuration file used which contains authorization token that can be used to pull images from certain private registries provided by the users",
 	)
 }
 
@@ -563,14 +573,50 @@ func (f *e2eRepoFlag) Set(str string) error {
 	}
 
 	f.transforms[f.plugin] = append(f.transforms[f.plugin], func(m *manifest.Manifest) error {
-		m.ConfigMap = map[string]string{
-			name: string(fData),
+		if m.ConfigMap == nil {
+			m.ConfigMap = map[string]string{}
 		}
+		m.ConfigMap[name] = string(fData)
+
 		m.Spec.Env = append(m.Spec.Env, corev1.EnvVar{
 			Name:  "KUBE_TEST_REPO_LIST",
 			Value: fmt.Sprintf("/tmp/sonobuoy/config/%v", name),
 		})
 		return nil
+	})
+	return nil
+}
+
+type e2eDockerConfigFlag struct {
+	plugin   string
+	filename string
+	config   *SonobuoyConfig
+
+	transforms map[string][]func(*manifest.Manifest) error
+	// Value to put in the configmap as the filename. Defaults to filename.
+	filenameOverride string
+}
+
+func (f *e2eDockerConfigFlag) String() string { return f.filename }
+func (f *e2eDockerConfigFlag) Type() string   { return "json-filepath" }
+func (f *e2eDockerConfigFlag) Set(str string) error {
+	f.config.E2EDockerConfigFile = str
+	name := filepath.Base(str)
+	if len(f.filenameOverride) > 0 {
+		name = f.filenameOverride
+	}
+	fData, err := os.ReadFile(str)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read file %q", str)
+	}
+
+	f.transforms[e2ePlugin] = append(f.transforms[e2ePlugin], func(m *manifest.Manifest) error {
+		if m.ConfigMap == nil {
+			m.ConfigMap = map[string]string{}
+		}
+		m.ConfigMap[name] = string(fData)
+		return nil
+
 	})
 	return nil
 }
