@@ -18,10 +18,11 @@ package image
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"

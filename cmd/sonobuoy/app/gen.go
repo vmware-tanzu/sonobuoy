@@ -21,6 +21,8 @@ package app
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/vmware-tanzu/sonobuoy/pkg/client"
@@ -94,7 +96,7 @@ func GenFlagSet(cfg *genFlags, rbac RBACMode) *pflag.FlagSet {
 
 	AddPluginSetFlag(&cfg.plugins, genset)
 	AddPluginEnvFlag(&cfg.pluginEnvs, genset)
-	AddLegacyE2EFlags(&cfg.pluginEnvs, &cfg.pluginTransforms, genset)
+	AddLegacyE2EFlags(&cfg.sonobuoyConfig, &cfg.pluginEnvs, &cfg.pluginTransforms, genset)
 
 	AddNodeSelectorsFlag(&cfg.nodeSelectors, genset)
 
@@ -165,6 +167,15 @@ func (g *genFlags) Config() (*client.GenConfig, error) {
 		k8sVersion = g.k8sVersion.String()
 	}
 
+	if g.sonobuoyConfig.E2EDockerConfigFile != "" {
+		if err := verifyKubernetesVersion(k8sVersion); err != nil {
+			return nil, err
+		}
+		if g.sonobuoyConfig.ImagePullSecrets == "" {
+			g.sonobuoyConfig.ImagePullSecrets = "auth-repo-cred"
+		}
+	}
+
 	return &client.GenConfig{
 		Config:             &g.sonobuoyConfig.Config,
 		EnableRBAC:         rbacEnabled,
@@ -207,6 +218,7 @@ func NewCmdGen() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 	}
 	GenCommand.Flags().AddFlagSet(GenFlagSet(&genflags, EnabledRBACMode))
+
 	return GenCommand
 }
 
@@ -260,4 +272,26 @@ func getClient(kubeconfig *Kubeconfig) (*kubernetes.Clientset, error) {
 	}
 
 	return client, kubeError
+}
+
+func verifyKubernetesVersion(k8sVersion string) error {
+	parts := versionMatchRE.FindStringSubmatch(k8sVersion)
+	if parts == nil {
+		return fmt.Errorf("could not parse %q as version", k8sVersion)
+	}
+	numbers, _ := parts[1], parts[2]
+
+	versionInfo := strings.Split(numbers, ".")
+	minorVersion := versionInfo[1]
+
+	minorVersionInt, err := strconv.ParseInt(minorVersion, 10, 0)
+	if err != nil {
+		return err
+	}
+
+	if minorVersionInt < 27 {
+		err = fmt.Errorf("e2e-docker-config-file is only supported for Kubernetes 1.27 or later")
+	}
+
+	return err
 }
