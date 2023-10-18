@@ -204,7 +204,11 @@ func watchPodsToStreamLogs(client kubernetes.Interface, cfg *LogConfig, podCh ch
 
 	go func() {
 		for {
-			v := <-ch
+			v, ok := <-ch
+			if !ok {
+				break
+			}
+
 			if v.Type == watch.Added && v.Object != nil {
 				switch t := v.Object.(type) {
 				case *v1.Pod:
