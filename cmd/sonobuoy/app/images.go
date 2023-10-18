@@ -451,7 +451,6 @@ func translateRegistry(imageURL string, customRegistry string, customRegistryLis
 	if len(customRegistry) > 0 {
 		return fmt.Sprintf("%s/%s", customRegistry, parts[countParts-1])
 	}
-
 	// For now, if not given a customRegistry, assume they gave the customRegistryList as non-nil.
 	switch registryAndUser {
 	case "gcr.io/e2e-test-images":
