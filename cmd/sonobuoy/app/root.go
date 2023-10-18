@@ -20,6 +20,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"regexp"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -33,6 +34,10 @@ import (
 // once used just to initKlogs one time; the `gen cli` command will hit that path a second time
 // and cause a panic otherwise.
 var once sync.Once
+
+// versionMatchRE splits a version string into numeric and "extra" parts
+// source: https://github.com/kubernetes/kubernetes/blob/af1bf4306709020ed2002618e099b3d0acf3c7b5/staging/src/k8s.io/apimachinery/pkg/util/version/version.go#L37
+var versionMatchRE = regexp.MustCompile(`^\s*v?([0-9]+(?:\.[0-9]+)*)(.*)*$`)
 
 func NewSonobuoyCommand() *cobra.Command {
 	cmds := &cobra.Command{
@@ -106,8 +111,10 @@ func prerunChecks(cmd *cobra.Command, args []string) error {
 	// Getting a list of all flags provided by the user.
 	flagsSet := map[string]bool{}
 	flagsDebug := []string{}
+	flagArgs := map[string]string{}
 	cmd.Flags().Visit(func(f *pflag.Flag) {
 		flagsSet[f.Name] = true
+		flagArgs[f.Name] = f.Value.String()
 		flagsDebug = append(flagsDebug, fmt.Sprintf("%v=%v", f.Name, f.Value.String()))
 	})
 
@@ -133,6 +140,13 @@ func prerunChecks(cmd *cobra.Command, args []string) error {
 
 	if flagsSet[e2eRegistryConfigFlag] && flagsSet[e2eRegistryFlag] {
 		return fmt.Errorf("%v and %v flags are both set and may collide", e2eRegistryConfigFlag, e2eRegistryFlag)
+	}
+
+	if flagsSet[e2eDockerConfigFileFlag] && flagsSet["kubernetes-version"] {
+		k8sVersion := flagArgs["kubernetes-version"]
+		if err := verifyKubernetesVersion(k8sVersion); err != nil {
+			return err
+		}
 	}
 
 	return nil
