@@ -118,7 +118,7 @@ fi
 
 docker run --rm \
   -v "${DIR}":/root \
-  debian:stretch-slim \
+  debian:bookworm-slim \
   /bin/sh -c \
   "rm -rf /root/site/content/docs/${VERSION} && \
   cp -r /root/site/content/docs/main /root/site/content/docs/${VERSION} && \
