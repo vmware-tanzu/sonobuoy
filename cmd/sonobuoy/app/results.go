@@ -523,7 +523,9 @@ func walkForSummary(result *results.Item, statusCounts map[string]int, failList 
 	statusCounts[result.Status]++
 
 	if result.Status == results.StatusFailed || result.Status == results.StatusTimeout {
-		failList = append(failList, result.Name)
+		// Ginkgo prefixes [It] to the test results name in the junit.xml (ginkgo/#1277)
+		// The -focus flag does not match test names with [It] flag, we must manually strip it
+		failList = append(failList, strings.TrimPrefix(result.Name, "[It]"))
 	}
 
 	return statusCounts, failList
