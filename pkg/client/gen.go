@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -51,7 +52,8 @@ const (
 
 	aggregatorEnvOverrideKey = `sonobuoy`
 
-	envVarKeyExtraArgs = "E2E_EXTRA_ARGS"
+	envVarKeyExtraArgs         = "E2E_EXTRA_ARGS"
+	defaultImagePullSecretName = "auth-repo-cred"
 
 	// sonobuoyKey is just a true/false env to indicate that the container was launched/tagged by Sonobuoy.
 	sonobuoyKey                 = "SONOBUOY"
@@ -164,6 +166,7 @@ func (*SonobuoyClient) GenerateManifestAndPlugins(cfg *GenConfig) ([]byte, []*ma
 		if len(p.ConfigMap) == 0 {
 			continue
 		}
+
 		configs[p.SonobuoyConfig.PluginName] = p.ConfigMap
 		p.ExtraVolumes = append(p.ExtraVolumes,
 			manifest.Volume{
@@ -218,6 +221,11 @@ func generateYAMLComponents(w io.Writer, cfg *GenConfig, plugins []*manifest.Man
 	if err := generateServiceAcct(w, cfg); err != nil {
 		return err
 	}
+	if cfg.Config.E2EDockerConfigFile != "" {
+		if err := generateRegistrySecret(w, cfg); err != nil {
+			return err
+		}
+	}
 	if err := generateRBAC(w, cfg); err != nil {
 		return err
 	}
@@ -227,6 +235,7 @@ func generateYAMLComponents(w io.Writer, cfg *GenConfig, plugins []*manifest.Man
 	if err := generateSecret(w, cfg); err != nil {
 		return err
 	}
+
 	if err := generatePluginConfigmap(w, cfg, plugins); err != nil {
 		return err
 	}
@@ -261,7 +270,9 @@ func generateAdditionalConfigmaps(w io.Writer, cfg *GenConfig, configs map[strin
 		sort.Strings(filenames)
 		for _, filename := range filenames {
 			cm.Data[filename] = configs[pluginName][filename]
+
 		}
+
 		if err := appendAsYAML(w, cm); err != nil {
 			return err
 		}
@@ -282,6 +293,7 @@ func generatePluginConfigmap(w io.Writer, cfg *GenConfig, plugins []*manifest.Ma
 		}
 		cm.Data[fmt.Sprintf("plugin-%v.yaml", i)] = strings.TrimSpace(string(b))
 	}
+
 	return appendAsYAML(w, cm)
 }
 
@@ -307,6 +319,24 @@ func appendAsYAML(w io.Writer, o kuberuntime.Object) error {
 	}
 	_, err := w.Write([]byte("---\n"))
 	return err
+}
+
+func generateRegistrySecret(w io.Writer, cfg *GenConfig) error {
+	contents, err := os.ReadFile(cfg.Config.E2EDockerConfigFile)
+	if err != nil {
+		return fmt.Errorf("error reading docker config file: %v", err)
+	}
+	s := &corev1.Secret{
+		Type: corev1.SecretTypeDockerConfigJson,
+		Data: map[string][]byte{corev1.DockerConfigJsonKey: contents},
+	}
+	s.Name = cfg.Config.ImagePullSecrets
+	s.Namespace = cfg.Config.Namespace
+
+	s.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Secret"})
+
+	return appendAsYAML(w, s)
+
 }
 
 func generateSecret(w io.Writer, cfg *GenConfig) error {
@@ -790,14 +820,14 @@ func E2EManifest(cfg *GenConfig) *manifest.Manifest {
 	}
 	m.PodSpec.PodSpec.NodeSelector = map[string]string{"kubernetes.io/os": "linux"}
 
-	m.Spec.Env = updateExtraArgs(m.Spec.Env, cfg.Config.ProgressUpdatesPort)
+	m.Spec.Env = updateExtraArgs(m.Spec.Env, cfg.Config.ProgressUpdatesPort, cfg.Config.E2EDockerConfigFile)
 
 	return m
 }
 
 // updateExtraArgs adds the flag expected by the e2e plugin for the progress report URL.
 // If no port is given, the default "8099" is used.
-func updateExtraArgs(envs []corev1.EnvVar, port string) []corev1.EnvVar {
+func updateExtraArgs(envs []corev1.EnvVar, port, e2eDockerConfigFile string) []corev1.EnvVar {
 	for _, env := range envs {
 		// If set by user, just leave as-is.
 		if env.Name == envVarKeyExtraArgs {
@@ -808,6 +838,11 @@ func updateExtraArgs(envs []corev1.EnvVar, port string) []corev1.EnvVar {
 		port = config.DefaultProgressUpdatesPort
 	}
 	val := fmt.Sprintf("--progress-report-url=http://localhost:%v/progress", port)
+	if e2eDockerConfigFile != "" {
+		credFile := filepath.Base(e2eDockerConfigFile)
+		registryCredLocation := fmt.Sprintf("%s/%s", sonobuoyDefaultConfigDir, credFile)
+		val += fmt.Sprintf(" --e2e-docker-config-file=%s", registryCredLocation)
+	}
 	envs = append(envs, corev1.EnvVar{Name: envVarKeyExtraArgs, Value: val})
 	return envs
 }

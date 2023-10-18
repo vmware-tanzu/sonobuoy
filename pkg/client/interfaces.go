@@ -110,7 +110,7 @@ func (gc *GenConfig) Validate() error {
 		}
 
 		for key, value := range m.ConfigMap {
-			if strings.HasSuffix(key, ".yml") || strings.HasSuffix(key, ".yaml") {
+			if strings.HasSuffix(key, ".yml") || strings.HasSuffix(key, ".yaml") || strings.HasSuffix(key, ".json") {
 				var i interface{}
 				if err := yaml.Unmarshal([]byte(value), &i); err != nil {
 					return fmt.Errorf("failed to parse value of key %v in ConfigMap for plugin %v: %v", key, m.SonobuoyConfig.PluginName, err)
