@@ -107,7 +107,7 @@ build_container_dockerfile_arch() {
 buildx_container_windows_version(){
     mkdir -p "build/windows/$WIN_ARCH/$VERSION"
     docker buildx build --pull \
-        --output=type=tar,dest=build/windows/$WIN_ARCH/$VERSION/sonobuoy-img-win-$WIN_ARCH-$VERSION-$GITHUB_RUN_ID.tar \
+        --output=type=docker,dest=build/windows/$WIN_ARCH/$VERSION/sonobuoy-img-win-$WIN_ARCH-$VERSION-$GITHUB_RUN_ID.tar \
         --platform windows/amd64 \
         -t $REGISTRY/$TARGET:win-$WIN_ARCH-$VERSION-$IMAGE_VERSION \
         --build-arg VERSION=$1 \
