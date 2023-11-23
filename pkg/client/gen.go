@@ -500,7 +500,7 @@ func clusterAdminRBAC(w io.Writer, cfg *GenConfig) error {
 			Verbs:     []string{"*"},
 		},
 		{
-			NonResourceURLs: []string{"/metrics", "/logs", "/logs/*"},
+			NonResourceURLs: []string{"/"},
 			Verbs:           []string{"get"},
 		},
 	}
@@ -538,7 +538,7 @@ func clusterReadRBAC(w io.Writer, cfg *GenConfig) error {
 			Verbs:     []string{"get", "list", "watch"},
 		},
 		{
-			NonResourceURLs: []string{"/metrics", "/logs", "/logs/*"},
+			NonResourceURLs: []string{"/"},
 			Verbs:           []string{"get"},
 		},
 	}
