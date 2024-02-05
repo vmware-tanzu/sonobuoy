@@ -119,28 +119,30 @@ func (p *Plugin) filterByNodeSelector(nodes []v1.Node) []v1.Node {
 	}
 	ls = ls.Add(reqs...)
 
-	if ls.Empty() && nodeSelector == nil {
-		logrus.Trace("Filtering by nodes had no requirements, returning all nodes")
-		return nodes
-	}
-
 	retNodes := []v1.Node{}
 	for _, node := range nodes {
 		logrus.Tracef("Filtering by labelSelector, checking node.GetLabels(): %v against %v", node, node.GetLabels())
+
+		// Accept only if both of nodeSelctor and nodeAffinity match the node label
 		// Split checks up to clarify logging/debugging.
-		if !ls.Empty() && ls.Matches(labels.Set(node.GetLabels())) {
-			logrus.Tracef("Matched labelSelctors")
-			retNodes = append(retNodes, node)
-			continue
+		ignored := false
+
+		if ls.Empty() || ls.Matches(labels.Set(node.GetLabels())) {
+			logrus.Tracef("Passed labelSelectors")
 		} else {
-			logrus.Tracef("Did not match labelSelctors")
+			logrus.Tracef("Did not match labelSelectors")
+			ignored = true
 		}
-		if nodeMatchesNodeSelector(&node, nodeSelector) {
-			logrus.Tracef("Matched affinity")
-			retNodes = append(retNodes, node)
-			continue
+
+		if nodeSelector == nil || nodeMatchesNodeSelector(&node, nodeSelector) {
+			logrus.Tracef("Passed nodeAffinity")
 		} else {
-			logrus.Tracef("Did not match labelSelctors")
+			logrus.Tracef("Did not match labelSelectors")
+			ignored = true
+		}
+
+		if !ignored {
+			retNodes = append(retNodes, node)
 		}
 	}
 	return retNodes

@@ -549,46 +549,29 @@ func TestExpectedResults(t *testing.T) {
 		{ObjectMeta: metav1.ObjectMeta{Name: "node4", Labels: map[string]string{"foo": "bar2"}}},
 	}
 
-	pluginWithAffinity := func(reqs []corev1.NodeSelectorRequirement) *Plugin {
+	pluginWithNodeFilters := func(nodeSelector map[string]string, nodeAffinityReqs []corev1.NodeSelectorRequirement) *Plugin {
 		p := &Plugin{
 			Base: driver.Base{
 				Definition: manifest.Manifest{
 					SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myPlugin"},
-				},
-			},
-		}
-		if len(reqs) > 0 {
-			p.Base.Definition.PodSpec = &manifest.PodSpec{
-				PodSpec: corev1.PodSpec{
-					Affinity: &corev1.Affinity{
-						NodeAffinity: &corev1.NodeAffinity{
-							RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
-								NodeSelectorTerms: []corev1.NodeSelectorTerm{
-									{
-										MatchExpressions: reqs,
-									},
-								},
-							},
+					PodSpec: &manifest.PodSpec{
+						PodSpec: corev1.PodSpec{
+							NodeSelector: nodeSelector,
 						},
 					},
 				},
-			}
-		}
-		return p
-	}
-
-	pluginWithNodeSelector := func(key, val string) *Plugin {
-		p := &Plugin{
-			Base: driver.Base{
-				Definition: manifest.Manifest{
-					SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myPlugin"},
-				},
 			},
 		}
-		if len(key) > 0 {
-			p.Base.Definition.PodSpec = &manifest.PodSpec{
-				PodSpec: corev1.PodSpec{
-					NodeSelector: map[string]string{key: val},
+		if len(nodeAffinityReqs) > 0 {
+			p.Base.Definition.PodSpec.Affinity = &corev1.Affinity{
+				NodeAffinity: &corev1.NodeAffinity{
+					RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+						NodeSelectorTerms: []corev1.NodeSelectorTerm{
+							{
+								MatchExpressions: nodeAffinityReqs,
+							},
+						},
+					},
 				},
 			}
 		}
@@ -608,60 +591,74 @@ func TestExpectedResults(t *testing.T) {
 				{NodeName: "node3", ResultType: "myPlugin"},
 				{NodeName: "node4", ResultType: "myPlugin"},
 			},
-			p: pluginWithAffinity(nil),
+			p: pluginWithNodeFilters(nil, nil),
 		}, {
-			desc: "Filters for label exists",
+			desc: "Affinity: Filters for label exists",
 			expect: []plugin.ExpectedResult{
 				{NodeName: "node2", ResultType: "myPlugin"},
 				{NodeName: "node3", ResultType: "myPlugin"},
 				{NodeName: "node4", ResultType: "myPlugin"},
 			},
-			p: pluginWithAffinity([]corev1.NodeSelectorRequirement{
+			p: pluginWithNodeFilters(nil, []corev1.NodeSelectorRequirement{
 				{Key: "foo", Operator: corev1.NodeSelectorOpExists},
 			}),
 		}, {
-			desc: "Filters for label does not exist",
+			desc: "Affinity: Filters for label does not exist",
 			expect: []plugin.ExpectedResult{
 				{NodeName: "node1", ResultType: "myPlugin"},
 			},
-			p: pluginWithAffinity([]corev1.NodeSelectorRequirement{
+			p: pluginWithNodeFilters(nil, []corev1.NodeSelectorRequirement{
 				{Key: "foo", Operator: corev1.NodeSelectorOpDoesNotExist},
 			}),
 		}, {
-			desc: "Filters for label value in",
+			desc: "Affinity: Filters for label value in",
 			expect: []plugin.ExpectedResult{
 				{NodeName: "node2", ResultType: "myPlugin"},
 				{NodeName: "node3", ResultType: "myPlugin"},
 			},
-			p: pluginWithAffinity([]corev1.NodeSelectorRequirement{
+			p: pluginWithNodeFilters(nil, []corev1.NodeSelectorRequirement{
 				{Key: "foo", Operator: corev1.NodeSelectorOpIn, Values: []string{"bar", "baz"}},
 			}),
 		}, {
-			desc: "Filters for label value not in",
+			desc: "Affinity: Filters for label value not in",
 			expect: []plugin.ExpectedResult{
 				{NodeName: "node1", ResultType: "myPlugin"},
 				{NodeName: "node4", ResultType: "myPlugin"},
 			},
-			p: pluginWithAffinity([]corev1.NodeSelectorRequirement{
+			p: pluginWithNodeFilters(nil, []corev1.NodeSelectorRequirement{
 				{Key: "foo", Operator: corev1.NodeSelectorOpNotIn, Values: []string{"bar", "baz"}},
 			}),
 		}, {
-			desc: "Can combine filters as union",
+			desc: "Affinity: Can combine filters as union",
 			expect: []plugin.ExpectedResult{
 				{NodeName: "node1", ResultType: "myPlugin"},
 				{NodeName: "node2", ResultType: "myPlugin"},
 				{NodeName: "node4", ResultType: "myPlugin"},
 			},
-			p: pluginWithAffinity([]corev1.NodeSelectorRequirement{
+			p: pluginWithNodeFilters(nil, []corev1.NodeSelectorRequirement{
 				{Key: "foo", Operator: corev1.NodeSelectorOpNotIn, Values: []string{"bar", "baz"}},
 				{Key: "foo", Operator: corev1.NodeSelectorOpIn, Values: []string{"bar"}},
 			}),
 		}, {
-			desc: "Can use nodeSelector field",
+			desc: "Selector: Can use nodeSelector field",
 			expect: []plugin.ExpectedResult{
 				{NodeName: "node2", ResultType: "myPlugin"},
 			},
-			p: pluginWithNodeSelector("foo", "bar"),
+			p: pluginWithNodeFilters(map[string]string{"foo": "bar"}, nil),
+		}, {
+			desc: "Selector and Affinity: ANDed if both specified",
+			expect: []plugin.ExpectedResult{
+				{NodeName: "node2", ResultType: "myPlugin"},
+			},
+			p: pluginWithNodeFilters(map[string]string{"foo": "bar"}, []corev1.NodeSelectorRequirement{
+				{Key: "foo", Operator: corev1.NodeSelectorOpExists},
+			}),
+		}, {
+			desc:   "Selector and Affinity: ANDed if both specified (negative affinity)",
+			expect: []plugin.ExpectedResult{},
+			p: pluginWithNodeFilters(map[string]string{"foo": "bar"}, []corev1.NodeSelectorRequirement{
+				{Key: "foo", Operator: corev1.NodeSelectorOpDoesNotExist},
+			}),
 		},
 	}
 	for _, tc := range testCases {
