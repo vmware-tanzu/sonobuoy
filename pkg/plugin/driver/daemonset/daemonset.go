@@ -434,27 +434,39 @@ func nodeMatchesNodeSelector(node *v1.Node, sel *v1.NodeSelector) bool {
 	}
 	for _, term := range sel.NodeSelectorTerms {
 		// We only support MatchExpressions at this time.
+		// All expressions in a NodeSelectorTerm must be satisfied
+		matched := true
 		for _, exp := range term.MatchExpressions {
-			switch exp.Operator {
-			case v1.NodeSelectorOpExists:
-				if _, ok := node.Labels[exp.Key]; ok {
-					return true
-				}
-			case v1.NodeSelectorOpDoesNotExist:
-				if _, ok := node.Labels[exp.Key]; !ok {
-					return true
-				}
-			case v1.NodeSelectorOpIn:
-				if val, ok := node.Labels[exp.Key]; ok && stringInList(exp.Values, val) {
-					return true
-				}
-			case v1.NodeSelectorOpNotIn:
-				if val, ok := node.Labels[exp.Key]; !ok || !stringInList(exp.Values, val) {
-					return true
-				}
-			default:
-				continue
+			if !labelsMatchesNodeSelectorRequirement(node.Labels, exp) {
+				matched = false
+				break
 			}
+		}
+
+		if matched {
+			return true
+		}
+	}
+	return false
+}
+
+func labelsMatchesNodeSelectorRequirement(labels map[string]string, req v1.NodeSelectorRequirement) bool {
+	switch req.Operator {
+	case v1.NodeSelectorOpExists:
+		if _, ok := labels[req.Key]; ok {
+			return true
+		}
+	case v1.NodeSelectorOpDoesNotExist:
+		if _, ok := labels[req.Key]; !ok {
+			return true
+		}
+	case v1.NodeSelectorOpIn:
+		if val, ok := labels[req.Key]; ok && stringInList(req.Values, val) {
+			return true
+		}
+	case v1.NodeSelectorOpNotIn:
+		if val, ok := labels[req.Key]; !ok || !stringInList(req.Values, val) {
+			return true
 		}
 	}
 	return false

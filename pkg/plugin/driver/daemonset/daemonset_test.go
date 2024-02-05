@@ -578,6 +578,31 @@ func TestExpectedResults(t *testing.T) {
 		return p
 	}
 
+	pluginWithNodeAffinity := func(nodeAffinitySelector *corev1.NodeSelector) *Plugin {
+		p := &Plugin{
+			Base: driver.Base{
+				Definition: manifest.Manifest{
+					SonobuoyConfig: manifest.SonobuoyConfig{PluginName: "myPlugin"},
+					PodSpec: &manifest.PodSpec{
+						PodSpec: corev1.PodSpec{},
+					},
+				},
+			},
+		}
+		if nodeAffinitySelector != nil {
+			p.Base.Definition.PodSpec = &manifest.PodSpec{
+				PodSpec: corev1.PodSpec{
+					Affinity: &corev1.Affinity{
+						NodeAffinity: &corev1.NodeAffinity{
+							RequiredDuringSchedulingIgnoredDuringExecution: nodeAffinitySelector,
+						},
+					},
+				},
+			}
+		}
+		return p
+	}
+
 	testCases := []struct {
 		desc   string
 		p      *Plugin
@@ -629,15 +654,30 @@ func TestExpectedResults(t *testing.T) {
 				{Key: "foo", Operator: corev1.NodeSelectorOpNotIn, Values: []string{"bar", "baz"}},
 			}),
 		}, {
-			desc: "Affinity: Can combine filters as union",
+			desc: "Affinity: Can combine selctor terms as union",
 			expect: []plugin.ExpectedResult{
 				{NodeName: "node1", ResultType: "myPlugin"},
 				{NodeName: "node2", ResultType: "myPlugin"},
 				{NodeName: "node4", ResultType: "myPlugin"},
 			},
-			p: pluginWithNodeFilters(nil, []corev1.NodeSelectorRequirement{
-				{Key: "foo", Operator: corev1.NodeSelectorOpNotIn, Values: []string{"bar", "baz"}},
-				{Key: "foo", Operator: corev1.NodeSelectorOpIn, Values: []string{"bar"}},
+			p: pluginWithNodeAffinity(&corev1.NodeSelector{
+				NodeSelectorTerms: []corev1.NodeSelectorTerm{
+					{MatchExpressions: []corev1.NodeSelectorRequirement{{Key: "foo", Operator: corev1.NodeSelectorOpNotIn, Values: []string{"bar", "baz"}}}},
+					{MatchExpressions: []corev1.NodeSelectorRequirement{{Key: "foo", Operator: corev1.NodeSelectorOpIn, Values: []string{"bar"}}}},
+				},
+			}),
+		}, {
+			desc: "Affinity: Expressions in a single MatchExpressions are ANDed",
+			expect: []plugin.ExpectedResult{
+				{NodeName: "node3", ResultType: "myPlugin"},
+			},
+			p: pluginWithNodeAffinity(&corev1.NodeSelector{
+				NodeSelectorTerms: []corev1.NodeSelectorTerm{
+					{MatchExpressions: []corev1.NodeSelectorRequirement{
+						{Key: "foo", Operator: corev1.NodeSelectorOpIn, Values: []string{"bar", "baz"}},
+						{Key: "foo", Operator: corev1.NodeSelectorOpIn, Values: []string{"baz", "bar2"}},
+					}},
+				},
 			}),
 		}, {
 			desc: "Selector: Can use nodeSelector field",
