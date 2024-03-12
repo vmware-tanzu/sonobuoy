@@ -60,6 +60,7 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 	ec := make(chan error, 1)
 	client, err := c.Client()
 	if err != nil {
+		ec <- err
 		return nil, ec, nil
 	}
 
