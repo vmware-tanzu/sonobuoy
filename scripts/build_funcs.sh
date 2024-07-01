@@ -13,7 +13,7 @@ LINUX_ARCH=(amd64 arm64 ppc64le s390x)
 
 # Currently only under a single arch, can iterate over these and still assume arch value.
 WIN_ARCH=amd64
-WINVERSIONS=("1809" "1903" "1909" "2004" "20H2")
+WINVERSIONS=("ltsc2022")
 
 # Not used for pushing images, just for local building on other GOOS. Defaults to
 # grabbing from the local go env but can be set manually to avoid that requirement.
