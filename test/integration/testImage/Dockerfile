@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.21.11 AS base
+FROM golang:1.21.12 AS base
 WORKDIR /src
 
 # Handle the go modules first to take advantage of Docker cache.

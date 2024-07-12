@@ -28,7 +28,7 @@ IMAGE_BRANCH=$(git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF_LONG=$(git rev-parse --verify HEAD)
 
 BUILDMNT=/go/src/$GOTARGET
-BUILD_IMAGE=golang:1.21.11
+BUILD_IMAGE=golang:1.21.12
 AMD_IMAGE=gcr.io/distroless/static:nonroot
 ARM_IMAGE=gcr.io/distroless/static:nonroot-arm64
 PPC64LE_IMAGE=gcr.io/distroless/static:nonroot-ppc64le
