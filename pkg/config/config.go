@@ -147,16 +147,17 @@ type Config struct {
 	///////////////////////////////////////////////
 	// Sonobuoy configuration
 	///////////////////////////////////////////////
-	WorkerImage              string            `json:"WorkerImage" mapstructure:"WorkerImage"`
-	ImagePullPolicy          string            `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
-	ForceImagePullPolicy     bool              `json:"ForceImagePullPolicy,omitempty" mapstructure:"ForceImagePullPolicy"`
-	ImagePullSecrets         string            `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
-	CustomAnnotations        map[string]string `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
-	AggregatorPermissions    string            `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
-	ServiceAccountName       string            `json:"ServiceAccountName" mapstructure:"ServiceAccountName"`
-	ExistingServiceAccount   bool              `json:"ExistingServiceAccount,omitempty" mapstructure:"ExistingServiceAccount,omitempty"`
-	E2EDockerConfigFile      string            `json:"E2EDockerConfigFile,omitempty" mapstructure:"E2EDockerConfigFile,omitempty"`
-	NamespacePSAEnforceLevel string            `json:"NamespacePSAEnforceLevel,omitempty" mapstructure:"NamespacePSAEnforceLevel,omitempty"`
+	WorkerImage              string              `json:"WorkerImage" mapstructure:"WorkerImage"`
+	ImagePullPolicy          string              `json:"ImagePullPolicy" mapstructure:"ImagePullPolicy"`
+	ForceImagePullPolicy     bool                `json:"ForceImagePullPolicy,omitempty" mapstructure:"ForceImagePullPolicy"`
+	ImagePullSecrets         string              `json:"ImagePullSecrets" mapstructure:"ImagePullSecrets"`
+	CustomAnnotations        map[string]string   `json:"CustomAnnotations,omitempty" mapstructure:"CustomAnnotations"`
+	AggregatorPermissions    string              `json:"AggregatorPermissions" mapstructure:"AggregatorPermissions"`
+	AggregatorTolerations    []map[string]string `json:"AggregatorTolerations,omitempty" mapstructure:"AggregatorTolerations"`
+	ServiceAccountName       string              `json:"ServiceAccountName" mapstructure:"ServiceAccountName"`
+	ExistingServiceAccount   bool                `json:"ExistingServiceAccount,omitempty" mapstructure:"ExistingServiceAccount,omitempty"`
+	E2EDockerConfigFile      string              `json:"E2EDockerConfigFile,omitempty" mapstructure:"E2EDockerConfigFile,omitempty"`
+	NamespacePSAEnforceLevel string              `json:"NamespacePSAEnforceLevel,omitempty" mapstructure:"NamespacePSAEnforceLevel,omitempty"`
 
 	// ProgressUpdatesPort is the port on which the Sonobuoy worker will listen for status updates from its plugin.
 	ProgressUpdatesPort string `json:"ProgressUpdatesPort,omitempty" mapstructure:"ProgressUpdatesPort"`
