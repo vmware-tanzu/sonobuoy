@@ -410,6 +410,38 @@ func generateAggregatorAndService(w io.Writer, cfg *GenConfig) error {
 	if len(cfg.Config.CustomAnnotations) > 0 {
 		p.ObjectMeta.Annotations = cfg.Config.CustomAnnotations
 	}
+	if len(cfg.Config.AggregatorTolerations) > 0 {
+		for _, t := range cfg.Config.AggregatorTolerations {
+			var toleration corev1.Toleration
+			if val, exists := t["key"]; exists {
+				toleration.Key = val
+			}
+			if val, exists := t["value"]; exists {
+				toleration.Value = val
+			}
+			if val, exists := t["effect"]; exists {
+				if val == "NoSchedule" {
+					toleration.Effect = corev1.TaintEffectNoSchedule
+				} else if val == "NoExecute" {
+					toleration.Effect = corev1.TaintEffectNoExecute
+				} else if val == "PreferNoSchedule" {
+					toleration.Effect = corev1.TaintEffectPreferNoSchedule
+				} else {
+					return errors.New("Invalid effect: " + val)
+				}
+			}
+			if val, exists := t["operator"]; exists {
+				if val == "Equal" {
+					toleration.Operator = corev1.TolerationOpEqual
+				} else if val == "Exists" {
+					toleration.Operator = corev1.TolerationOpExists
+				} else {
+					return errors.New("Invalid operator: " + val)
+				}
+			}
+			p.Spec.Tolerations = append(p.Spec.Tolerations, toleration)
+		}
+	}
 
 	switch cfg.Config.SecurityContextMode {
 	case "none":
