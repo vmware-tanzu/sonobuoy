@@ -80,7 +80,7 @@ jobs:
     needs: [build-linux, unit-test-linux]
     steps:
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: sonobuoy-build-linux-${{ github.run_id }}
           path: build
@@ -108,7 +108,7 @@ jobs:
           clean
           setup_kind_cluster
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: sonobuoy-build-linux-${{ github.run_id }}
           path: build
@@ -142,12 +142,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: sonobuoy-build-linux-${{ github.run_id }}
           path: build
       - name: Download binaries and prebuilt images
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: sonobuoy-build-windows-${{ github.run_id }}
           path: build
