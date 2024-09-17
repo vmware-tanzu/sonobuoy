@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -255,14 +254,14 @@ func TestLogReaderInvalidConfig(t *testing.T) {
 
 func TestPodsForLogs(t *testing.T) {
 	pluginName := "my-plugin"
-	pluginPod := corev1.Pod{
+	pluginPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: map[string]string{
 				"sonobuoy-plugin": pluginName,
 			},
 		},
 	}
-	allPods := &corev1.PodList{Items: []corev1.Pod{pluginPod, {}}}
+	allPods := &v1.PodList{Items: []v1.Pod{pluginPod, {}}}
 	testCases := []struct {
 		desc                  string
 		pluginName            string
