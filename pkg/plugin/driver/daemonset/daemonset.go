@@ -119,28 +119,30 @@ func (p *Plugin) filterByNodeSelector(nodes []v1.Node) []v1.Node {
 	}
 	ls = ls.Add(reqs...)
 
-	if ls.Empty() && nodeSelector == nil {
-		logrus.Trace("Filtering by nodes had no requirements, returning all nodes")
-		return nodes
-	}
-
 	retNodes := []v1.Node{}
 	for _, node := range nodes {
 		logrus.Tracef("Filtering by labelSelector, checking node.GetLabels(): %v against %v", node, node.GetLabels())
+
+		// Accept only if both of nodeSelctor and nodeAffinity match the node label
 		// Split checks up to clarify logging/debugging.
-		if !ls.Empty() && ls.Matches(labels.Set(node.GetLabels())) {
-			logrus.Tracef("Matched labelSelctors")
-			retNodes = append(retNodes, node)
-			continue
+		ignored := false
+
+		if ls.Empty() || ls.Matches(labels.Set(node.GetLabels())) {
+			logrus.Tracef("Passed labelSelectors")
 		} else {
-			logrus.Tracef("Did not match labelSelctors")
+			logrus.Tracef("Did not match labelSelectors")
+			ignored = true
 		}
-		if nodeMatchesNodeSelector(&node, nodeSelector) {
-			logrus.Tracef("Matched affinity")
-			retNodes = append(retNodes, node)
-			continue
+
+		if nodeSelector == nil || nodeMatchesNodeSelector(&node, nodeSelector) {
+			logrus.Tracef("Passed nodeAffinity")
 		} else {
-			logrus.Tracef("Did not match labelSelctors")
+			logrus.Tracef("Did not match labelSelectors")
+			ignored = true
+		}
+
+		if !ignored {
+			retNodes = append(retNodes, node)
 		}
 	}
 	return retNodes
@@ -432,27 +434,39 @@ func nodeMatchesNodeSelector(node *v1.Node, sel *v1.NodeSelector) bool {
 	}
 	for _, term := range sel.NodeSelectorTerms {
 		// We only support MatchExpressions at this time.
+		// All expressions in a NodeSelectorTerm must be satisfied
+		matched := true
 		for _, exp := range term.MatchExpressions {
-			switch exp.Operator {
-			case v1.NodeSelectorOpExists:
-				if _, ok := node.Labels[exp.Key]; ok {
-					return true
-				}
-			case v1.NodeSelectorOpDoesNotExist:
-				if _, ok := node.Labels[exp.Key]; !ok {
-					return true
-				}
-			case v1.NodeSelectorOpIn:
-				if val, ok := node.Labels[exp.Key]; ok && stringInList(exp.Values, val) {
-					return true
-				}
-			case v1.NodeSelectorOpNotIn:
-				if val, ok := node.Labels[exp.Key]; !ok || !stringInList(exp.Values, val) {
-					return true
-				}
-			default:
-				continue
+			if !labelsMatchesNodeSelectorRequirement(node.Labels, exp) {
+				matched = false
+				break
 			}
+		}
+
+		if matched {
+			return true
+		}
+	}
+	return false
+}
+
+func labelsMatchesNodeSelectorRequirement(labels map[string]string, req v1.NodeSelectorRequirement) bool {
+	switch req.Operator {
+	case v1.NodeSelectorOpExists:
+		if _, ok := labels[req.Key]; ok {
+			return true
+		}
+	case v1.NodeSelectorOpDoesNotExist:
+		if _, ok := labels[req.Key]; !ok {
+			return true
+		}
+	case v1.NodeSelectorOpIn:
+		if val, ok := labels[req.Key]; ok && stringInList(req.Values, val) {
+			return true
+		}
+	case v1.NodeSelectorOpNotIn:
+		if val, ok := labels[req.Key]; !ok || !stringInList(req.Values, val) {
+			return true
 		}
 	}
 	return false
