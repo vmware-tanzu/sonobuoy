@@ -13,7 +13,7 @@ LINUX_ARCH=(amd64 arm64 ppc64le s390x)
 
 # Currently only under a single arch, can iterate over these and still assume arch value.
 WIN_ARCH=amd64
-WINVERSIONS=("1809" "1903" "1909" "2004" "20H2")
+WINVERSIONS=("ltsc2022")
 
 # Not used for pushing images, just for local building on other GOOS. Defaults to
 # grabbing from the local go env but can be set manually to avoid that requirement.
@@ -28,14 +28,14 @@ IMAGE_BRANCH=$(git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF_LONG=$(git rev-parse --verify HEAD)
 
 BUILDMNT=/go/src/$GOTARGET
-BUILD_IMAGE=golang:1.20
+BUILD_IMAGE=golang:1.23.1
 AMD_IMAGE=gcr.io/distroless/static:nonroot
 ARM_IMAGE=gcr.io/distroless/static:nonroot-arm64
 PPC64LE_IMAGE=gcr.io/distroless/static:nonroot-ppc64le
 S390X_IMAGE=gcr.io/distroless/static:nonroot-s390x
 WIN_AMD64_BASEIMAGE=mcr.microsoft.com/windows/nanoserver
 TEST_IMAGE=testimage:v0.1
-LINT_IMAGE=golangci/golangci-lint:v1.52.2
+LINT_IMAGE=golangci/golangci-lint:v1.61.0
 KIND_CLUSTER=kind
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )"
@@ -84,7 +84,7 @@ local_integration(){
 }
 
 lint() {
-  docker run --rm -v "$(pwd)":$BUILDMNT -w $BUILDMNT $LINT_IMAGE /bin/sh -c \
+  docker run --rm -v "$(pwd)":$BUILDMNT -w $BUILDMNT $LINT_IMAGE /bin/sh -c \F
     "golangci-lint run --out-format=github-actions --timeout=5m0s -v"
 }
 
@@ -107,7 +107,7 @@ build_container_dockerfile_arch() {
 buildx_container_windows_version(){
     mkdir -p "build/windows/$WIN_ARCH/$VERSION"
     docker buildx build --pull \
-        --output=type=oci,dest=build/windows/$WIN_ARCH/$VERSION/sonobuoy-img-win-$WIN_ARCH-$VERSION-$GITHUB_RUN_ID.tar \
+        --output=type=docker,dest=build/windows/$WIN_ARCH/$VERSION/sonobuoy-img-win-$WIN_ARCH-$VERSION-$GITHUB_RUN_ID.tar \
         --platform windows/amd64 \
         -t $REGISTRY/$TARGET:win-$WIN_ARCH-$VERSION-$IMAGE_VERSION \
         --build-arg VERSION=$1 \
