@@ -2,4 +2,13 @@ run:
   tests: false
 linters-settings:
   errcheck:
-    exclude: ./.errcheck.list
+    # Keyword `exclude` is removed: https://golangci-lint.run/usage/linters/#errcheck
+    exclude-functions:
+    - github.com/imdario/mergo.Merge
+    - github.com/spf13/viper.BindEnv
+    - (github.com/spf13/pflag.Value).Set
+    - (*github.com/briandowns/spinner.Spinner).Color
+    - (*github.com/spf13/cobra.Command).MarkFlagRequired
+    - (*github.com/spf13/cobra.Command).Help
+    - (*github.com/spf13/pflag.FlagSet).MarkHidden
+    - (*github.com/spf13/pflag.FlagSet).Set
