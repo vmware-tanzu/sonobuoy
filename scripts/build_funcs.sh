@@ -21,7 +21,10 @@ HOST_GOOS=$(go env GOOS)
 HOST_GOARCH=$(go env GOARCH)
 
 # --tags allows detecting non-annotated tags as well as annotated ones
-GIT_VERSION=$(git describe --always --dirty --tags)
+GIT_VERSION=${VERSION:-"$(git describe --always --dirty --tags)"}
+# PRE_DEFINED_VERSION is used when building binary and tagging image. Fallback to GIT_VERSION if not set.
+# This is useful when automate creating documents. Otherwise the version in the doc will be git shas.
+PRE_DEFINED_VERSION=${PRE_DEFINED_VERSION:-$GIT_VERSION}
 IMAGE_VERSION=$(git describe --always --dirty --tags)
 IMAGE_TAG=$(echo "$IMAGE_VERSION" | cut -d. -f1,2)
 IMAGE_BRANCH=$(git rev-parse --abbrev-ref HEAD | sed 's/\///g')
@@ -143,7 +146,7 @@ gen_dockerfile_for_os_arch(){
             # Onlhy doing one arch so this could be hardcoded, likewise we could handle the
             # base image differently. Wanted something here for parity with linux in case we expand it though.
             sed -e 's|BINARY|build/windows/amd64/sonobuoy.exe|g' DockerfileWindows > "$dockerfile"
-        else 
+        else
             echo "Windows ARCH unknown"
         fi
     else
@@ -155,7 +158,7 @@ gen_dockerfile_for_os_arch(){
 build_container_os_arch_version(){
     dockerfile="build/$1/$2/Dockerfile"
     gen_dockerfile_for_os_arch "$1" "$2"
-    if [ "$1" = "windows" ]; then 
+    if [ "$1" = "windows" ]; then
         buildx_container_windows_version $3
     else
         build_container_dockerfile_arch "$dockerfile" $2
@@ -178,7 +181,7 @@ windows_containers() {
 
 # Builds a binary for a specific goos/goarch.
 build_binary_GOOS_GOARCH() {
-    LDFLAGS="-s -w -X $GOTARGET/pkg/buildinfo.Version=$GIT_VERSION -X $GOTARGET/pkg/buildinfo.GitSHA=$GIT_REF_LONG"
+    LDFLAGS="-s -w -X $GOTARGET/pkg/buildinfo.Version=$PRE_DEFINED_VERSION -X $GOTARGET/pkg/buildinfo.GitSHA=$GIT_REF_LONG"
     args=(${VERBOSE:+-v} -ldflags "${LDFLAGS}" "$GOTARGET")
     if [ "$VERBOSE" ]; then args+=("-v"); fi;
 
@@ -209,7 +212,7 @@ build_binaries() {
 
 # Builds sonobuoy using the local goos/goarch.
 native() {
-    LDFLAGS="-s -w -X $GOTARGET/pkg/buildinfo.Version=$GIT_VERSION -X $GOTARGET/pkg/buildinfo.GitSHA=$GIT_REF_LONG"
+    LDFLAGS="-s -w -X $GOTARGET/pkg/buildinfo.Version=$PRE_DEFINED_VERSION -X $GOTARGET/pkg/buildinfo.GitSHA=$GIT_REF_LONG"
     args=(-ldflags "${LDFLAGS}" "$GOTARGET")
     CGO_ENABLED=0 GOOS="$HOST_GOOS" GOARCH="$HOST_GOARCH" go build -buildvcs=false -o sonobuoy "${args[@]}"
     mkdir -p ./build/$HOST_GOOS/$HOST_GOARCH
