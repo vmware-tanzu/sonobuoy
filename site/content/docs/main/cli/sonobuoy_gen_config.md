@@ -40,7 +40,7 @@ sonobuoy gen config [flags]
       --service-account-name string              Name of the service account to be used by sonobuoy. (default "sonobuoy-serviceaccount")
       --show-default-podspec                     If true, include the default pod spec used for plugins in the output.
       --skip-preflight strings[=true]            Skips the specified preflight checks. Valid values are [dnscheck, versioncheck, existingnamespace] or true to skip all of the checks.
-      --sonobuoy-image string                    Container image override for the sonobuoy worker and aggregator. (default "sonobuoy/sonobuoy:v0.57.2")
+      --sonobuoy-image string                    Container image override for the sonobuoy worker and aggregator. (default "sonobuoy/sonobuoy:v0.57.3")
       --ssh-key yamlFile                         Path to the private key enabling SSH to cluster nodes. May be required by some tests from the e2e plugin.
       --ssh-user envModifier                     SSH user for ssh-key. Required if running e2e plugin with certain tests that require SSH access to nodes.
       --systemd-logs-image image                 Container image override for the systemd-logs plugin. Shorthand for --plugin-image=systemd-logs:<string> (default map[])
