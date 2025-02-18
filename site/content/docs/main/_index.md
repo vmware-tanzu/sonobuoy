@@ -59,7 +59,7 @@ The following methods exist for installing Sonobuoy:
 ### Install with Hombrew (MacOS)
 
 1. Run the command:
-  
+
    ```
    brew install sonobuoy
    ```
@@ -144,11 +144,6 @@ user interface to work around this. Until then, this is the recommended approach
 ### Sonobuoy Pod
 
 Sonobuoy by default pulls from Docker Hub for [`sonobuoy/sonobuoy` image](https://hub.docker.com/r/sonobuoy/sonobuoy).
-If you're encountering rate limit on this, you can use VMware-provided mirror with:
-
-```bash
-sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:<VERSION>
-```
 
 ### Conformance
 
@@ -162,7 +157,7 @@ dockerLibraryRegistry: mirror.gcr.io/library
 Then on running conformance:
 
 ```bash
-sonobuoy run --sonobuoy-image projects.registry.vmware.com/sonobuoy/sonobuoy:<VERSION> --e2e-repo-config conformance-image-config.yaml
+sonobuoy run --sonobuoy-image sonobuoy/sonobuoy:<VERSION> --e2e-repo-config conformance-image-config.yaml
 ```
 
 Technically `dockerGluster` is also a registry pulling from Docker Hub, but it's not part of Conformance test suite at
