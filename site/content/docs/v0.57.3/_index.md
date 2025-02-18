@@ -59,7 +59,7 @@ The following methods exist for installing Sonobuoy:
 ### Install with Hombrew (MacOS)
 
 1. Run the command:
-
+  
    ```
    brew install sonobuoy
    ```
