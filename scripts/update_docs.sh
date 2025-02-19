@@ -31,6 +31,8 @@ done
 # Using local build for this portion rather than docer to avoid having to use a go build image, long build with go modules, etc.
 # Refresh CLI docs to ensure the docs are up to date when copied for the next version.
 echo "Refreshing CLI docs in main docs..."
+# Set PRE_DEFINED_VERSION so that sonobuoy is built with this exact version, not version of a dirty git tag.
+PRE_DEFINED_VERSION="$VERSION"
 source "${DIR}/scripts/build_funcs.sh"; update_cli_docs
 echo "Done. Beginning to generate docs for specified version..."
 
