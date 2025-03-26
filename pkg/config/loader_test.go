@@ -33,11 +33,10 @@ func (cfg *Config) getPlugins() []plugin.Interface {
 }
 
 func TestOpenConfigFile(t *testing.T) {
-
 	// Set up 3 files with contents matching their path for this test. Cleanup afterwards.
 	f1, f2 := "TestOpenConfigFile1", "TestOpenConfigFile2"
 	for _, v := range []string{f1, f2} {
-		err := os.WriteFile(v, []byte(v), 0644)
+		err := os.WriteFile(v, []byte(v), 0o644)
 		if err != nil {
 			t.Fatalf("Failed to setup test files: %v", err)
 		}
@@ -110,7 +109,7 @@ func TestSaveAndLoad(t *testing.T) {
 	cfg.Filters.Namespaces = "funky*"
 
 	if blob, err := json.Marshal(&cfg); err == nil {
-		if err = os.WriteFile("./config.json", blob, 0644); err != nil {
+		if err = os.WriteFile("./config.json", blob, 0o644); err != nil {
 			t.Fatalf("Failed to write default config.json: %v", err)
 		}
 		defer os.Remove("./config.json")
@@ -139,7 +138,7 @@ func TestLoadConfigSetsUUID(t *testing.T) {
 	cfg := New()
 
 	if blob, err := json.Marshal(&cfg); err == nil {
-		if err = os.WriteFile("./config.json", blob, 0644); err != nil {
+		if err = os.WriteFile("./config.json", blob, 0o644); err != nil {
 			t.Fatalf("Failed to write default config.json: %v", err)
 		}
 		defer os.Remove("./config.json")
@@ -160,7 +159,7 @@ func TestLoadConfigSetsUUID(t *testing.T) {
 func TestDefaultResources(t *testing.T) {
 	// Check that giving empty resources results in empty resources
 	blob := `{"Resources":[]}`
-	if err := os.WriteFile("./config.json", []byte(blob), 0644); err != nil {
+	if err := os.WriteFile("./config.json", []byte(blob), 0o644); err != nil {
 		t.Fatalf("Failed to write default config.json: %v", err)
 	}
 	defer os.Remove("./config.json")
@@ -177,7 +176,7 @@ func TestDefaultResources(t *testing.T) {
 
 	// Check that not specifying resources results in all the defaults
 	blob = `{}`
-	if err = os.WriteFile("./config.json", []byte(blob), 0644); err != nil {
+	if err = os.WriteFile("./config.json", []byte(blob), 0o644); err != nil {
 		t.Fatalf("Failed to write default config.json: %v", err)
 	}
 	cfg, err = LoadConfig()
@@ -190,7 +189,7 @@ func TestDefaultResources(t *testing.T) {
 
 	// Check that specifying one resource results in one resource
 	blob = `{"Resources": ["Pods"]}`
-	if err = os.WriteFile("./config.json", []byte(blob), 0644); err != nil {
+	if err = os.WriteFile("./config.json", []byte(blob), 0o644); err != nil {
 		t.Fatalf("Failed to write default config.json: %v", err)
 	}
 	cfg, err = LoadConfig()
@@ -200,7 +199,6 @@ func TestDefaultResources(t *testing.T) {
 	if len(cfg.Resources) != 1 || cfg.Resources[0] != "Pods" {
 		t.Error("Incorrect resources in config")
 	}
-
 }
 
 func TestLoadAllPlugins(t *testing.T) {

@@ -51,8 +51,8 @@ func TestRun(t *testing.T) {
 			}
 
 			withTempDir(t, func(tmpdir string) {
-				os.WriteFile(filepath.Join(tmpdir, "systemd_logs"), []byte("{}"), 0755)
-				os.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs")), 0755)
+				os.WriteFile(filepath.Join(tmpdir, "systemd_logs"), []byte("{}"), 0o755)
+				os.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs")), 0o755)
 				err := GatherResults(filepath.Join(tmpdir, "done"), URL, srv.Client(), nil)
 				if err != nil {
 					t.Fatalf("Got error running agent: %v", err)
@@ -65,7 +65,6 @@ func TestRun(t *testing.T) {
 }
 
 func TestRunGlobal(t *testing.T) {
-
 	// Create an expectedResults array
 	expectedResults := []plugin.ExpectedResult{
 		{ResultType: "systemd_logs", NodeName: "global"},
@@ -78,8 +77,8 @@ func TestRunGlobal(t *testing.T) {
 		}
 
 		withTempDir(t, func(tmpdir string) {
-			os.WriteFile(filepath.Join(tmpdir, "systemd_logs.json"), []byte("{}"), 0755)
-			os.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs.json")), 0755)
+			os.WriteFile(filepath.Join(tmpdir, "systemd_logs.json"), []byte("{}"), 0o755)
+			os.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs.json")), 0o755)
 			err := GatherResults(filepath.Join(tmpdir, "done"), url, srv.Client(), nil)
 			if err != nil {
 				t.Fatalf("Got error running agent: %v", err)
@@ -91,7 +90,6 @@ func TestRunGlobal(t *testing.T) {
 }
 
 func TestRunGlobal_noExtension(t *testing.T) {
-
 	// Create an expectedResults array
 	expectedResults := []plugin.ExpectedResult{
 		{ResultType: "systemd_logs", NodeName: "global"},
@@ -103,8 +101,8 @@ func TestRunGlobal_noExtension(t *testing.T) {
 			t.Fatalf("unexpected error getting global result url %v", err)
 		}
 		withTempDir(t, func(tmpdir string) {
-			os.WriteFile(filepath.Join(tmpdir, "systemd_logs"), []byte("{}"), 0755)
-			os.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs")), 0755)
+			os.WriteFile(filepath.Join(tmpdir, "systemd_logs"), []byte("{}"), 0o755)
+			os.WriteFile(filepath.Join(tmpdir, "done"), []byte(filepath.Join(tmpdir, "systemd_logs")), 0o755)
 			err := GatherResults(filepath.Join(tmpdir, "done"), url, srv.Client(), nil)
 			if err != nil {
 				t.Fatalf("Got error running agent: %v", err)
@@ -116,7 +114,6 @@ func TestRunGlobal_noExtension(t *testing.T) {
 }
 
 func TestRunGlobalCleanup(t *testing.T) {
-
 	// Create an expectedResults array
 	expectedResults := []plugin.ExpectedResult{
 		{ResultType: "systemd_logs"},

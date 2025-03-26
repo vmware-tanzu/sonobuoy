@@ -218,7 +218,7 @@ func TestPostProcessPluginGolden(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Failed to marshal item: %v", err)
 				}
-				os.WriteFile(expectResults(tc.key), itemBytes, 0666)
+				os.WriteFile(expectResults(tc.key), itemBytes, 0o666)
 			} else {
 				// Read in golden file and unmarshal. Easier to debug differences in the items than
 				// comparing the bytes directly.

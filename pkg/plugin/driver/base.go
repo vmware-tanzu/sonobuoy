@@ -134,7 +134,6 @@ func (b *Base) MakeTLSSecret(cert *tls.Certificate, ownerPod *v1.Pod) (*v1.Secre
 		},
 		Type: v1.SecretTypeTLS,
 	}, nil
-
 }
 
 // getCACertPEM extracts the CA cert from a tls.Certificate.
@@ -223,19 +222,24 @@ func (b *Base) workerEnvironment(hostname string, cert *tls.Certificate, progres
 		{
 			Name:  "SONOBUOY_DIR",
 			Value: "/tmp/sonobuoy",
-		}, {
+		},
+		{
 			Name: "SONOBUOY_NS",
 			ValueFrom: &v1.EnvVarSource{
 				FieldRef: &v1.ObjectFieldSelector{
 					FieldPath: "metadata.namespace",
-				}},
-		}, {
+				},
+			},
+		},
+		{
 			Name: "SONOBUOY_PLUGIN_POD",
 			ValueFrom: &v1.EnvVarSource{
 				FieldRef: &v1.ObjectFieldSelector{
 					FieldPath: "metadata.name",
-				}},
-		}, {
+				},
+			},
+		},
+		{
 			// Downward-api doesn't support this value so we have to just rely on hardcoding it.
 			Name:  "SONOBUOY_WORKER_CONTAINER",
 			Value: "sonobuoy-worker",

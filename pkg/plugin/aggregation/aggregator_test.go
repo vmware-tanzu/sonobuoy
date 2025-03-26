@@ -142,7 +142,6 @@ func TestAggregation_wrongnodes(t *testing.T) {
 		URL, err := NodeResultURL(srv.URL, "randomnodename", "systemd_logs")
 		if err != nil {
 			t.Fatalf("couldn't get test server URL: %v", err)
-
 		}
 		resp := doRequest(t, srv.Client(), "PUT", URL, []byte("foo"))
 		if resp.StatusCode != 403 {
@@ -164,7 +163,6 @@ func TestAggregation_duplicates(t *testing.T) {
 		URL, err := NodeResultURL(srv.URL, "node1", "systemd_logs")
 		if err != nil {
 			t.Fatalf("couldn't get test server URL: %v", err)
-
 		}
 		// Check in a node
 		resp := doRequest(t, srv.Client(), "PUT", URL, []byte("foo"))
@@ -511,7 +509,7 @@ func makeTarWithContents(t *testing.T, filename string, fileContents []byte) (ta
 	defer os.RemoveAll(dir)
 
 	tardir := path.Join(dir, "results")
-	err = os.Mkdir(tardir, 0755)
+	err = os.Mkdir(tardir, 0o755)
 	if err != nil {
 		t.Fatalf("Could not create results directory %v: %v", tardir, err)
 		return
@@ -520,7 +518,7 @@ func makeTarWithContents(t *testing.T, filename string, fileContents []byte) (ta
 	filepath := path.Join(tardir, filename)
 	tarfile := path.Join(dir, "results.tar.gz")
 
-	err = os.WriteFile(filepath, fileContents, 0644)
+	err = os.WriteFile(filepath, fileContents, 0o644)
 	if err != nil {
 		t.Fatalf("Could not write to temp file %v: %v", filepath, err)
 		return

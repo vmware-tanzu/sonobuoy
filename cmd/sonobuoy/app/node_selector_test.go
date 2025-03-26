@@ -18,8 +18,9 @@ package app
 
 import (
 	"fmt"
-	"github.com/kylelemons/godebug/pretty"
 	"testing"
+
+	"github.com/kylelemons/godebug/pretty"
 )
 
 func TestSetNodeSelector(t *testing.T) {

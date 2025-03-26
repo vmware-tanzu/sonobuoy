@@ -40,6 +40,7 @@ type version struct {
 func (v *version) path() string {
 	return fmt.Sprintf("testdata/results-%v.%v.tar.gz", v.major, v.minor)
 }
+
 func (v *version) String() string {
 	return fmt.Sprintf("v%v.%v", v.major, v.minor)
 }
@@ -338,7 +339,6 @@ func TestExtractBytes(t *testing.T) {
 				t.Fatalf("expected %v string, found %v", tc.expectedOutput, buf.String())
 			}
 		})
-
 	}
 }
 

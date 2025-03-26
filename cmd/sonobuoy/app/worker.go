@@ -43,7 +43,7 @@ import (
 // as a sidecar with a plugin. It will wait for a 'done' file then transmit the results to the
 // aggregator pod.
 func NewCmdWorker() *cobra.Command {
-	var workerCmd = &cobra.Command{
+	workerCmd := &cobra.Command{
 		Use:    "worker",
 		Short:  "Gather and send data to the sonobuoy aggregator instance (for internal use)",
 		Hidden: true,

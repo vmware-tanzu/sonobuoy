@@ -143,7 +143,7 @@ func TestPluginGenDef(t *testing.T) {
 			}
 
 			if *update {
-				os.WriteFile(tC.expectFile, []byte(manifest), 0666)
+				os.WriteFile(tC.expectFile, []byte(manifest), 0o666)
 			} else {
 				fileData, err := os.ReadFile(tC.expectFile)
 				if err != nil {

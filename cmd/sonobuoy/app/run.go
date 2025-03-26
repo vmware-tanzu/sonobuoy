@@ -28,9 +28,7 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/errlog"
 )
 
-var (
-	allowedGenFlagsWithRunFile = []string{kubeconfig, kubecontext}
-)
+var allowedGenFlagsWithRunFile = []string{kubeconfig, kubecontext}
 
 func givenAnyGenConfigFlags(fs *pflag.FlagSet, allowedFlagNames []string) bool {
 	changed := false

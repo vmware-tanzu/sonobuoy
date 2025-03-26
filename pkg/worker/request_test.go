@@ -31,7 +31,6 @@ import (
 )
 
 func TestErrorRequestRetry(t *testing.T) {
-
 	tests := []struct {
 		name string
 		f    func() (io.Reader, string, string, error)
@@ -51,7 +50,6 @@ func TestErrorRequestRetry(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		t.Run(test.name, func(t *testing.T) {
 			testServer := &testServer{
 				responseCodes: []int{500, 200},
@@ -61,7 +59,6 @@ func TestErrorRequestRetry(t *testing.T) {
 			defer server.Close()
 
 			err := DoRequest(server.URL, server.Client(), test.f)
-
 			if err != nil {
 				t.Errorf("unexpected error: %v", err)
 			}
@@ -103,7 +100,6 @@ func TestDoRequest_Headers(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-
 			handler := func(w http.ResponseWriter, r *http.Request) {
 				for k, expect := range test.expectedHeaders {
 					real := r.Header.Get(k)

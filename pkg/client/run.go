@@ -51,9 +51,7 @@ const (
 	stdinFile = "-"
 )
 
-var (
-	whitespaceRemover = strings.NewReplacer(" ", "", "\t", "")
-)
+var whitespaceRemover = strings.NewReplacer(" ", "", "\t", "")
 
 // RunManifest is the same as Run(*RunConfig) execpt that the []byte given
 // should represent the output from `sonobuoy gen`, a series of YAML resources
@@ -119,7 +117,7 @@ func (c *SonobuoyClient) WaitForRun(cfg *RunConfig) error {
 	ns := cfg.GetNamespace()
 
 	// Printer allows us to more easily add output conditionally throughout the runCondition.
-	var printer = func(string) {}
+	printer := func(string) {}
 	if cfg.WaitOutput == progressMode {
 		lastMsg := ""
 		seenLines := map[string]struct{}{}
@@ -140,7 +138,6 @@ func (c *SonobuoyClient) WaitForRun(cfg *RunConfig) error {
 		}
 	}
 	runCondition := func(ctx context.Context) (bool, error) {
-
 		// Get the Aggregator pod and check if its status is completed or terminated.
 		status, pod, err := c.GetStatusPod(&StatusConfig{Namespace: ns})
 		switch {
@@ -180,7 +177,7 @@ func (c *SonobuoyClient) WaitForRun(cfg *RunConfig) error {
 
 	switch cfg.WaitOutput {
 	case spinnerMode:
-		var s = getSpinnerInstance()
+		s := getSpinnerInstance()
 		s.Start()
 		defer s.Stop()
 	case progressMode:
@@ -311,12 +308,12 @@ func humanReadableStatus(str string) string {
 func getPodStatus(pod corev1.Pod) string {
 	const ContainersNotReady = "ContainersNotReady"
 	if pod.Status.Phase != corev1.PodRunning && pod.Status.Phase != corev1.PodSucceeded {
-		//Scan all the pod.Status.Conditions
-		//scan pod.Conditions, and find the first where condition.Status != corev1.ConditionTrue
+		// Scan all the pod.Status.Conditions
+		// scan pod.Conditions, and find the first where condition.Status != corev1.ConditionTrue
 		for _, condition := range pod.Status.Conditions {
 			if condition.Status != corev1.ConditionTrue {
 				retval := fmt.Sprintf("Status: %s, Reason: %s, %s", pod.Status.Phase, condition.Reason, condition.Message)
-				//If the reason is ContainersNotReady, we can also print information about why the containers are not ready
+				// If the reason is ContainersNotReady, we can also print information about why the containers are not ready
 				if string(condition.Reason) == ContainersNotReady {
 					retval += "\nDetails of containers that are not ready:\n"
 					for _, containerStatus := range pod.Status.ContainerStatuses {
@@ -335,7 +332,7 @@ func getPodStatus(pod corev1.Pod) string {
 								retval += "terminated: "
 							}
 							retval += reason
-							//Add state.MEssage only if it isn't blank
+							// Add state.MEssage only if it isn't blank
 							if len(strings.TrimSpace(message)) > 0 {
 								retval += ", " + message
 							}
@@ -348,6 +345,6 @@ func getPodStatus(pod corev1.Pod) string {
 			}
 		}
 	}
-	//If the status is running or succeeded, we just print the status, although this function might never be called in this case
+	// If the status is running or succeeded, we just print the status, although this function might never be called in this case
 	return fmt.Sprintf("Status: %s", pod.Status.Phase)
 }

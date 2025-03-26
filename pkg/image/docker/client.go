@@ -19,9 +19,8 @@ package docker
 import (
 	"bytes"
 	"encoding/json"
-	"time"
-
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -39,8 +38,7 @@ type Docker interface {
 	Run(image string, entryPoint string, env map[string]string, args ...string) ([]string, error)
 }
 
-type LocalDocker struct {
-}
+type LocalDocker struct{}
 
 type inspectResponse struct {
 	SchemaVersion int    `json:"schemaVersion"`
@@ -159,7 +157,7 @@ func (l LocalDocker) Rmi(image string, retries int) error {
 func (l LocalDocker) Save(images []string, filename string) error {
 	log.Info("Saving images: ...")
 
-	//TODO(stevesloka) Check if all images exist on local client first
+	// TODO(stevesloka) Check if all images exist on local client first
 
 	// Build out docker command
 	args := append([]string{"save"}, images...)

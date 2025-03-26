@@ -80,26 +80,26 @@ func ReadPodHealth(r *results.Reader) (HealthInfo, error) {
 				podHealth.Name = pod.ObjectMeta.Name
 				podHealth.Namespace = pod.ObjectMeta.Namespace
 				if !podHealth.Healthy {
-					//scan pod.Conditions, and find the first where condition.Status != v1.ConditionTrue
+					// scan pod.Conditions, and find the first where condition.Status != v1.ConditionTrue
 					for _, condition := range pod.Status.Conditions {
 						if condition.Status != v1.ConditionTrue {
 							podHealth.Ready = string(condition.Status)
 							podHealth.Reason = condition.Reason
 							podHealth.Message = condition.Message
-							//We don't need to look further
+							// We don't need to look further
 							break
 						}
 					}
 				} else {
-					//Otherwise count this pod as healthy
+					// Otherwise count this pod as healthy
 					health.Healthy++
-					//And fill in the remaining fields
+					// And fill in the remaining fields
 					podHealth.Ready = string(v1.PodReady)
 				}
 				health.Details = append(health.Details, podHealth)
 			}
 
-			//We can skip the current directory anyway
+			// We can skip the current directory anyway
 			return filepath.SkipDir
 		}
 		return nil
@@ -138,7 +138,7 @@ func ReadHealthSummary(tarballRootDir string) (ClusterSummary, error) {
 				summary.NodeHealth.Details[nodeIdx].Ready = string(condition.Status)
 				summary.NodeHealth.Details[nodeIdx].Reason = condition.Reason
 				summary.NodeHealth.Details[nodeIdx].Message = condition.Message
-				//And count the healthy nodes
+				// And count the healthy nodes
 				if summary.NodeHealth.Details[nodeIdx].Healthy {
 					summary.NodeHealth.Healthy++
 				}
@@ -146,13 +146,13 @@ func ReadHealthSummary(tarballRootDir string) (ClusterSummary, error) {
 		}
 	}
 	summary.APIVersion, _ = r.ReadVersion()
-	//ReadVersion already logged this error, and we can continue with the rest of the information
+	// ReadVersion already logged this error, and we can continue with the rest of the information
 
 	summary.PodHealth, _ = ReadPodHealth(r)
-	//ReadPodHealth already logged this error, and we can continue with the rest of the information
+	// ReadPodHealth already logged this error, and we can continue with the rest of the information
 
 	summary.ErrorInfo, _ = ReadLogSummaryWithDefaultPatterns(r)
-	//ReadLogSummary already logged this error, and we can continue with the rest of the information
+	// ReadLogSummary already logged this error, and we can continue with the rest of the information
 
 	return summary, nil
 }
@@ -178,11 +178,10 @@ func SaveHealthSummary(tarballRootDir string) error {
 		logrus.Errorf("File '%s' will not be included in '%s'.", outputFileName, tarballRootDir)
 		return err
 	}
-	err = os.WriteFile(outputFileName, data, os.FileMode(0644))
+	err = os.WriteFile(outputFileName, data, os.FileMode(0o644))
 	if err != nil {
 		logrus.Errorf("Failed to write health information to file '%s': %s", outputFileName, err)
 		return err
 	}
 	return nil
-
 }

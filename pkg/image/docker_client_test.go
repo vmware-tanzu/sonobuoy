@@ -143,7 +143,6 @@ func TestPushImages(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			imgClient := DockerClient{
 				dockerClient: tc.client,
 			}
@@ -156,6 +155,7 @@ func TestPushImages(t *testing.T) {
 		})
 	}
 }
+
 func TestPullImages(t *testing.T) {
 	tests := map[string]struct {
 		client         docker.Docker
@@ -188,7 +188,6 @@ func TestPullImages(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			imgClient := DockerClient{
 				dockerClient: tc.client,
 			}
@@ -201,6 +200,7 @@ func TestPullImages(t *testing.T) {
 		})
 	}
 }
+
 func TestDownloadImages(t *testing.T) {
 	const k8sVersion = "99.YY.ZZ"
 	images := []string{"foo.io/sonobuoy/test:1.0"}
@@ -228,7 +228,6 @@ func TestDownloadImages(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			imgClient := DockerClient{
 				dockerClient: tc.client,
 			}
@@ -245,6 +244,7 @@ func TestDownloadImages(t *testing.T) {
 		})
 	}
 }
+
 func TestDeleteImages(t *testing.T) {
 	tests := map[string]struct {
 		client         docker.Docker
@@ -266,7 +266,6 @@ func TestDeleteImages(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			imgClient := DockerClient{
 				dockerClient: tc.client,
 			}

@@ -369,7 +369,7 @@ func (a *Aggregator) handleResult(result *plugin.Result) error {
 	}
 	resultFile := filepath.Join(resultsDir, result.Filename)
 
-	if err := os.MkdirAll(resultsDir, 0755); err != nil {
+	if err := os.MkdirAll(resultsDir, 0o755); err != nil {
 		return errors.Wrapf(err, "couldn't create directory %q", resultsDir)
 	}
 
