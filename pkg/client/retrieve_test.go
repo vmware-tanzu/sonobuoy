@@ -17,6 +17,8 @@ limitations under the License.
 package client
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -93,6 +95,96 @@ func TestGetFilename(t *testing.T) {
 			o := getFilename(tc.input, tc.count)
 			if o != tc.expect {
 				t.Errorf("Expected %v but got %v", tc.expect, o)
+			}
+		})
+	}
+}
+
+func TestTarCmd(t *testing.T) {
+	testCases := []struct {
+		path     string
+		expected []string
+	}{
+		{
+			path:     "/results",
+			expected: []string{"/sonobuoy", "splat", "/results"},
+		},
+		{
+			path:     "",
+			expected: []string{"/sonobuoy", "splat", ""},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.path, func(t *testing.T) {
+			cmd := tarCmd(tc.path)
+			if len(cmd) != len(tc.expected) {
+				t.Fatalf("Expected length %d, got %d", len(tc.expected), len(cmd))
+			}
+
+			for i, v := range tc.expected {
+				if cmd[i] != v {
+					t.Errorf("Expected command[%d] to be %s, got %s", i, v, cmd[i])
+				}
+			}
+		})
+	}
+}
+
+func TestDirExists(t *testing.T) {
+	// Create temporary directory for testing
+	tmpDir, err := os.MkdirTemp("", "sonobuoy-test-")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create a file in the temp directory
+	tmpFile := filepath.Join(tmpDir, "testfile.txt")
+	if err := os.WriteFile(tmpFile, []byte("test"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	testCases := []struct {
+		name           string
+		path           string
+		expectedExists bool
+		expectError    bool
+	}{
+		{
+			name:           "Directory exists",
+			path:           tmpDir,
+			expectedExists: true,
+			expectError:    false,
+		},
+		{
+			name:           "File is not a directory",
+			path:           tmpFile,
+			expectedExists: false,
+			expectError:    false,
+		},
+		{
+			name:           "Path does not exist",
+			path:           filepath.Join(tmpDir, "non-existent"),
+			expectedExists: false,
+			expectError:    false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			exists, err := dirExists(tc.path)
+
+			if tc.expectError && err == nil {
+				t.Error("Expected error but got nil")
+			}
+
+			if !tc.expectError && err != nil {
+				t.Errorf("Expected no error but got: %v", err)
+			}
+
+			if exists != tc.expectedExists {
+				t.Errorf("Expected exists to be %v, got %v", tc.expectedExists, exists)
 			}
 		})
 	}
