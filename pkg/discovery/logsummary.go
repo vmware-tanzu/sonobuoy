@@ -27,8 +27,8 @@ import (
 )
 
 const (
-	//String format for the regex to match all pod log files inside the podlog directory
-	//Equivalent to a shell glob podlogs/*/logs/*.txt
+	// String format for the regex to match all pod log files inside the podlog directory
+	// Equivalent to a shell glob podlogs/*/logs/*.txt
 	logFilePatternPodlogsString = `^podlogs/[^/]+/[^/]+/logs/.+\.txt`
 
 	logPatternNameErrors         = "Errors"
@@ -123,7 +123,7 @@ func ReadLogSummary(r *results.Reader, patterns LogPatterns) (LogSummary, error)
 		}
 		if !info.IsDir() {
 			patternsForFile := getPatternNamesForfile(filePath, patterns)
-			//If the patternsForFile list is empty it means this file is not interesting
+			// If the patternsForFile list is empty it means this file is not interesting
 			if len(patternsForFile) == 0 {
 				return nil
 			}
@@ -145,7 +145,7 @@ func ReadLogSummary(r *results.Reader, patterns LogPatterns) (LogSummary, error)
 								logSummary[patternName] = make(LogHitCounter)
 							}
 							logSummary[patternName][filePath]++
-							//We can stop looping through patterns from this patternName for this line
+							// We can stop looping through patterns from this patternName for this line
 							break
 						}
 					}

@@ -48,13 +48,13 @@ const (
 	// resultModeDump will just copy the post-processed yaml file to stdout.
 	resultModeDump = "dump"
 
-	//resultModeReadable will copy the post-processed yaml file to stdout and replace \n and \t with new lines and tabs respectively.
+	// resultModeReadable will copy the post-processed yaml file to stdout and replace \n and \t with new lines and tabs respectively.
 	resultModeReadable = "readable"
 
 	windowsSeperator = `\`
 
-	//Name of the "fake" plugin used to enable printing the health summary.
-	//This name needs to be reserved to avoid conflicts with a plugin with the same name
+	// Name of the "fake" plugin used to enable printing the health summary.
+	// This name needs to be reserved to avoid conflicts with a plugin with the same name
 	clusterHealthSummaryPluginName = "sonobuoy"
 )
 
@@ -145,7 +145,7 @@ func result(input resultsInput) error {
 		if len(plugins) == 0 {
 			return fmt.Errorf("no plugins specified by either the --plugin flag or tarball metadata")
 		}
-		//Add clusterHealthSummaryPluginName only after we verified there is at least another plugin
+		// Add clusterHealthSummaryPluginName only after we verified there is at least another plugin
 		plugins = append(plugins, clusterHealthSummaryPluginName)
 	}
 
@@ -161,7 +161,7 @@ func result(input resultsInput) error {
 			lastErr = err
 		}
 
-		//bypass if this plugin is called clusterHealthSummaryPluginName
+		// bypass if this plugin is called clusterHealthSummaryPluginName
 		if input.plugin == clusterHealthSummaryPluginName {
 			err = printHealthSummary(input, r)
 			if err != nil {
@@ -189,7 +189,7 @@ func result(input resultsInput) error {
 func printHealthSummary(input resultsInput, r *results.Reader) error {
 	var err error
 
-	//For detailed view we can just dump the contents of the clusterHealthSummaryPluginName file
+	// For detailed view we can just dump the contents of the clusterHealthSummaryPluginName file
 	if input.mode == resultModeDetailed {
 		reader, err := r.FileReader(results.ClusterHealthFilePath())
 		if err != nil {
@@ -369,8 +369,8 @@ func sortErrors(errorSummary discovery.LogSummary) map[string][]string {
 		for fileName := range hitCounter {
 			sortedFileNamesList = append(sortedFileNamesList, fileName)
 		}
-		//Sort in descending order,
-		//And use the values in hitCounter for the sorting
+		// Sort in descending order,
+		// And use the values in hitCounter for the sorting
 		isMore := func(i, j int) bool {
 			valueI := hitCounter[sortedFileNamesList[i]]
 			valueJ := hitCounter[sortedFileNamesList[j]]
@@ -414,12 +414,12 @@ func printClusterHealthResultsSummary(summary discovery.ClusterSummary) error {
 	fmt.Printf("API Server version: %s\n", summary.APIVersion)
 
 	fmt.Printf("Node health: %d/%d", summary.NodeHealth.Healthy, summary.NodeHealth.Total)
-	//Print the percentage only if Total is not 0 to avoid division by zero errors
+	// Print the percentage only if Total is not 0 to avoid division by zero errors
 	if summary.NodeHealth.Total != 0 {
 		fmt.Printf(" (%d%%)", 100*summary.NodeHealth.Healthy/summary.NodeHealth.Total)
 	}
 	fmt.Println()
-	//Details of the failed pods. Checking the slice length to avoid trusting the Total
+	// Details of the failed pods. Checking the slice length to avoid trusting the Total
 	if len(summary.NodeHealth.Details) > 0 && summary.NodeHealth.Healthy < summary.NodeHealth.Total {
 		fmt.Println("Details for failed nodes:")
 		nodes := filterAndSortHealthInfoDetails(summary.NodeHealth.Details)
@@ -429,11 +429,11 @@ func printClusterHealthResultsSummary(summary discovery.ClusterSummary) error {
 		fmt.Println()
 	}
 
-	//It might be nice to group pods by namespace.
-	//Also here, use len instead of trusting Total
+	// It might be nice to group pods by namespace.
+	// Also here, use len instead of trusting Total
 	if len(summary.PodHealth.Details) > 0 {
 		fmt.Printf("Pods health: %d/%d", summary.PodHealth.Healthy, summary.PodHealth.Total)
-		//Print the percentage only if Total is not 0 to avoid division by zero errors
+		// Print the percentage only if Total is not 0 to avoid division by zero errors
 		if summary.PodHealth.Total != 0 {
 			fmt.Printf(" (%d%%)", 100*summary.PodHealth.Healthy/summary.PodHealth.Total)
 		}
@@ -441,7 +441,7 @@ func printClusterHealthResultsSummary(summary discovery.ClusterSummary) error {
 		if summary.PodHealth.Healthy < summary.PodHealth.Total {
 			fmt.Println("Details for failed pods:")
 			pods := filterAndSortHealthInfoDetails(summary.PodHealth.Details)
-			//And then print them, sorted by namespace
+			// And then print them, sorted by namespace
 			for _, pod := range pods {
 				fmt.Printf("%s/%s Ready:%s: %s: %s\n", pod.Namespace, pod.Name, pod.Ready, pod.Reason, pod.Message)
 			}
@@ -452,9 +452,9 @@ func printClusterHealthResultsSummary(summary discovery.ClusterSummary) error {
 		fmt.Println("Errors detected in files:")
 		sortedFileNames := sortErrors(summary.ErrorInfo)
 		for errorType := range summary.ErrorInfo {
-			//Get the first item in the list of sorted file names and get the value for that file name
+			// Get the first item in the list of sorted file names and get the value for that file name
 			maxValue := summary.ErrorInfo[errorType][sortedFileNames[errorType][0]]
-			//Calculate the width of the string representation of the maxValue
+			// Calculate the width of the string representation of the maxValue
 			maxWidth := len(fmt.Sprintf("%d", maxValue))
 			fmt.Printf("%s:\n", errorType)
 

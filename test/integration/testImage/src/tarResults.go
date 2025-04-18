@@ -70,7 +70,7 @@ func reportTarFile(cmd *cobra.Command, args []string) error {
 	}
 
 	// Report location to Sonobuoy.
-	err = os.WriteFile(doneFile, []byte(tb), os.FileMode(0666))
+	err = os.WriteFile(doneFile, []byte(tb), os.FileMode(0o666))
 	return errors.Wrap(err, "failed to write to done file")
 }
 

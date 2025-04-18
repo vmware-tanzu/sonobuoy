@@ -124,9 +124,7 @@ func TestLoadValidPluginWithSkipCleanup(t *testing.T) {
 			if jobDef.SonobuoyConfig.SkipCleanup != tc.expectedValue {
 				t.Errorf("expected skip-cleanup to be %v but was %v", tc.expectedValue, jobDef.SonobuoyConfig.SkipCleanup)
 			}
-
 		})
-
 	}
 }
 

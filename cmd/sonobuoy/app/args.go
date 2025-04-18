@@ -241,7 +241,8 @@ func AddLegacyE2EFlags(cfg *SonobuoyConfig, env *PluginEnvVars, pluginTransforms
 		&envVarModierFlag{
 			plugin: e2ePlugin, field: "E2E_FOCUS",
 			PluginEnvVars:  *env,
-			validationFunc: regexpValidation},
+			validationFunc: regexpValidation,
+		},
 		e2eFocusFlag,
 		"Specify the E2E_FOCUS value for the e2e plugin, specifying which tests to run. Shorthand for --plugin-env=e2e.E2E_FOCUS=<string>",
 	)
@@ -249,7 +250,8 @@ func AddLegacyE2EFlags(cfg *SonobuoyConfig, env *PluginEnvVars, pluginTransforms
 		&envVarModierFlag{
 			plugin: e2ePlugin, field: "E2E_SKIP",
 			PluginEnvVars:  *env,
-			validationFunc: regexpValidation},
+			validationFunc: regexpValidation,
+		},
 		e2eSkipFlag,
 		"Specify the E2E_SKIP value for the e2e plugin, specifying which tests to skip. Shorthand for --plugin-env=e2e.E2E_SKIP=<string>",
 	)
@@ -616,7 +618,6 @@ func (f *e2eDockerConfigFlag) Set(str string) error {
 		}
 		m.ConfigMap[name] = string(fData)
 		return nil
-
 	})
 	return nil
 }

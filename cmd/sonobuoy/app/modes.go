@@ -54,68 +54,66 @@ const (
 	E2eModeConformanceLite = "conformance-lite"
 )
 
-var (
-	liteSkips = []string{
-		"Serial", "Slow", "Disruptive",
-		"[sig-apps] StatefulSet Basic StatefulSet functionality [StatefulSetBasic] should have a working scale subresource [Conformance]",
-		"[sig-network] EndpointSlice should create Endpoints and EndpointSlices for Pods matching a Service [Conformance]",
-		"[sig-api-machinery] CustomResourcePublishOpenAPI [Privileged:ClusterAdmin] works for multiple CRDs of same group and version but different kinds [Conformance]",
-		"[sig-auth] ServiceAccounts ServiceAccountIssuerDiscovery should support OIDC discovery of service account issuer [Conformance]",
-		"[sig-network] DNS should provide DNS for services  [Conformance]",
-		"[sig-network] DNS should resolve DNS of partial qualified names for services [LinuxOnly] [Conformance]",
-		"[sig-apps] Job should delete a job [Conformance]",
-		"[sig-network] DNS should provide DNS for ExternalName services [Conformance]",
-		"[sig-node] Variable Expansion should succeed in writing subpaths in container [Slow] [Conformance]",
-		"[sig-apps] Daemon set [Serial] should rollback without unnecessary restarts [Conformance]",
-		"[sig-api-machinery] Garbage collector should orphan pods created by rc if delete options say so [Conformance]",
-		"[sig-network] Services should have session affinity timeout work for service with type clusterIP [LinuxOnly] [Conformance]",
-		"[sig-network] Services should have session affinity timeout work for NodePort service [LinuxOnly] [Conformance]",
-		"[sig-node] InitContainer [NodeConformance] should not start app containers if init containers fail on a RestartAlways pod [Conformance]",
-		"[sig-apps] Daemon set [Serial] should update pod when spec was updated and update strategy is RollingUpdate [Conformance]",
-		"[sig-api-machinery] CustomResourcePublishOpenAPI [Privileged:ClusterAdmin] works for multiple CRDs of same group but different versions [Conformance]",
-		"[sig-apps] StatefulSet Basic StatefulSet functionality [StatefulSetBasic] Burst scaling should run to completion even with unhealthy pods [Slow] [Conformance]",
-		`[sig-node] Probing container should be restarted with a exec "cat /tmp/health" liveness probe [NodeConformance] [Conformance]`,
-		"[sig-network] Services should be able to switch session affinity for service with type clusterIP [LinuxOnly] [Conformance]",
-		"[sig-node] Probing container with readiness probe that fails should never be ready and never restart [NodeConformance] [Conformance]",
-		"[sig-api-machinery] Watchers should observe add, update, and delete watch notifications on configmaps [Conformance]",
-		"[sig-scheduling] SchedulerPreemption [Serial] PriorityClass endpoints verify PriorityClass endpoints can be operated with different HTTP methods [Conformance]",
-		"[sig-api-machinery] CustomResourceDefinition resources [Privileged:ClusterAdmin] Simple CustomResourceDefinition listing custom resource definition objects works  [Conformance]",
-		"[sig-api-machinery] CustomResourceDefinition Watch [Privileged:ClusterAdmin] CustomResourceDefinition Watch watch on custom resource definition objects [Conformance]",
-		"[sig-scheduling] SchedulerPreemption [Serial] validates basic preemption works [Conformance]",
-		"[sig-storage] ConfigMap optional updates should be reflected in volume [NodeConformance] [Conformance]",
-		"[sig-apps] StatefulSet Basic StatefulSet functionality [StatefulSetBasic] Scaling should happen in predictable order and halt if any stateful pod is unhealthy [Slow] [Conformance]",
-		"[sig-storage] EmptyDir wrapper volumes should not cause race condition when used for configmaps [Serial] [Conformance]",
-		"[sig-scheduling] SchedulerPreemption [Serial] validates lower priority pod preemption by critical pod [Conformance]",
-		"[sig-storage] Projected secret optional updates should be reflected in volume [NodeConformance] [Conformance]",
-		"[sig-apps] CronJob should schedule multiple jobs concurrently [Conformance]",
-		"[sig-apps] CronJob should replace jobs when ReplaceConcurrent [Conformance]",
-		"[sig-scheduling] SchedulerPreemption [Serial] PreemptionExecutionPath runs ReplicaSets to verify preemption running path [Conformance]",
-		"[sig-apps] StatefulSet Basic StatefulSet functionality [StatefulSetBasic] should perform canary updates and phased rolling updates of template modifications [Conformance]",
-		"[sig-apps] StatefulSet Basic StatefulSet functionality [StatefulSetBasic] should perform rolling updates and roll backs of template modifications [Conformance]",
-		"[sig-node] Probing container should have monotonically increasing restart count [NodeConformance] [Conformance]",
-		"[sig-node] Variable Expansion should verify that a failing subpath expansion can be modified during the lifecycle of a container [Slow] [Conformance]",
-		`[sig-node] Probing container should *not* be restarted with a exec "cat /tmp/health" liveness probe [NodeConformance] [Conformance]`,
-		"[sig-node] Probing container should *not* be restarted with a tcp:8080 liveness probe [NodeConformance] [Conformance]",
-		"[sig-node] Probing container should *not* be restarted with a /healthz http liveness probe [NodeConformance] [Conformance]",
-		"[sig-apps] CronJob should not schedule jobs when suspended [Slow] [Conformance]",
-		"[sig-scheduling] SchedulerPredicates [Serial] validates that there exists conflict between pods with same hostPort and protocol but one using 0.0.0.0 hostIP [Conformance]",
-		"[sig-apps] CronJob should not schedule new jobs when ForbidConcurrent [Slow] [Conformance]",
+var liteSkips = []string{
+	"Serial", "Slow", "Disruptive",
+	"[sig-apps] StatefulSet Basic StatefulSet functionality [StatefulSetBasic] should have a working scale subresource [Conformance]",
+	"[sig-network] EndpointSlice should create Endpoints and EndpointSlices for Pods matching a Service [Conformance]",
+	"[sig-api-machinery] CustomResourcePublishOpenAPI [Privileged:ClusterAdmin] works for multiple CRDs of same group and version but different kinds [Conformance]",
+	"[sig-auth] ServiceAccounts ServiceAccountIssuerDiscovery should support OIDC discovery of service account issuer [Conformance]",
+	"[sig-network] DNS should provide DNS for services  [Conformance]",
+	"[sig-network] DNS should resolve DNS of partial qualified names for services [LinuxOnly] [Conformance]",
+	"[sig-apps] Job should delete a job [Conformance]",
+	"[sig-network] DNS should provide DNS for ExternalName services [Conformance]",
+	"[sig-node] Variable Expansion should succeed in writing subpaths in container [Slow] [Conformance]",
+	"[sig-apps] Daemon set [Serial] should rollback without unnecessary restarts [Conformance]",
+	"[sig-api-machinery] Garbage collector should orphan pods created by rc if delete options say so [Conformance]",
+	"[sig-network] Services should have session affinity timeout work for service with type clusterIP [LinuxOnly] [Conformance]",
+	"[sig-network] Services should have session affinity timeout work for NodePort service [LinuxOnly] [Conformance]",
+	"[sig-node] InitContainer [NodeConformance] should not start app containers if init containers fail on a RestartAlways pod [Conformance]",
+	"[sig-apps] Daemon set [Serial] should update pod when spec was updated and update strategy is RollingUpdate [Conformance]",
+	"[sig-api-machinery] CustomResourcePublishOpenAPI [Privileged:ClusterAdmin] works for multiple CRDs of same group but different versions [Conformance]",
+	"[sig-apps] StatefulSet Basic StatefulSet functionality [StatefulSetBasic] Burst scaling should run to completion even with unhealthy pods [Slow] [Conformance]",
+	`[sig-node] Probing container should be restarted with a exec "cat /tmp/health" liveness probe [NodeConformance] [Conformance]`,
+	"[sig-network] Services should be able to switch session affinity for service with type clusterIP [LinuxOnly] [Conformance]",
+	"[sig-node] Probing container with readiness probe that fails should never be ready and never restart [NodeConformance] [Conformance]",
+	"[sig-api-machinery] Watchers should observe add, update, and delete watch notifications on configmaps [Conformance]",
+	"[sig-scheduling] SchedulerPreemption [Serial] PriorityClass endpoints verify PriorityClass endpoints can be operated with different HTTP methods [Conformance]",
+	"[sig-api-machinery] CustomResourceDefinition resources [Privileged:ClusterAdmin] Simple CustomResourceDefinition listing custom resource definition objects works  [Conformance]",
+	"[sig-api-machinery] CustomResourceDefinition Watch [Privileged:ClusterAdmin] CustomResourceDefinition Watch watch on custom resource definition objects [Conformance]",
+	"[sig-scheduling] SchedulerPreemption [Serial] validates basic preemption works [Conformance]",
+	"[sig-storage] ConfigMap optional updates should be reflected in volume [NodeConformance] [Conformance]",
+	"[sig-apps] StatefulSet Basic StatefulSet functionality [StatefulSetBasic] Scaling should happen in predictable order and halt if any stateful pod is unhealthy [Slow] [Conformance]",
+	"[sig-storage] EmptyDir wrapper volumes should not cause race condition when used for configmaps [Serial] [Conformance]",
+	"[sig-scheduling] SchedulerPreemption [Serial] validates lower priority pod preemption by critical pod [Conformance]",
+	"[sig-storage] Projected secret optional updates should be reflected in volume [NodeConformance] [Conformance]",
+	"[sig-apps] CronJob should schedule multiple jobs concurrently [Conformance]",
+	"[sig-apps] CronJob should replace jobs when ReplaceConcurrent [Conformance]",
+	"[sig-scheduling] SchedulerPreemption [Serial] PreemptionExecutionPath runs ReplicaSets to verify preemption running path [Conformance]",
+	"[sig-apps] StatefulSet Basic StatefulSet functionality [StatefulSetBasic] should perform canary updates and phased rolling updates of template modifications [Conformance]",
+	"[sig-apps] StatefulSet Basic StatefulSet functionality [StatefulSetBasic] should perform rolling updates and roll backs of template modifications [Conformance]",
+	"[sig-node] Probing container should have monotonically increasing restart count [NodeConformance] [Conformance]",
+	"[sig-node] Variable Expansion should verify that a failing subpath expansion can be modified during the lifecycle of a container [Slow] [Conformance]",
+	`[sig-node] Probing container should *not* be restarted with a exec "cat /tmp/health" liveness probe [NodeConformance] [Conformance]`,
+	"[sig-node] Probing container should *not* be restarted with a tcp:8080 liveness probe [NodeConformance] [Conformance]",
+	"[sig-node] Probing container should *not* be restarted with a /healthz http liveness probe [NodeConformance] [Conformance]",
+	"[sig-apps] CronJob should not schedule jobs when suspended [Slow] [Conformance]",
+	"[sig-scheduling] SchedulerPredicates [Serial] validates that there exists conflict between pods with same hostPort and protocol but one using 0.0.0.0 hostIP [Conformance]",
+	"[sig-apps] CronJob should not schedule new jobs when ForbidConcurrent [Slow] [Conformance]",
 
-		`[k8s.io] Probing container should *not* be restarted with a exec "cat /tmp/health" liveness probe [NodeConformance] [Conformance]`,
-		`[sig-apps] StatefulSet [k8s.io] Basic StatefulSet functionality [StatefulSetBasic] should perform canary updates and phased rolling updates of template modifications [Conformance]`,
-		`[sig-storage] ConfigMap updates should be reflected in volume [NodeConformance] [Conformance]`,
-		`[sig-network] Services should be able to switch session affinity for NodePort service [LinuxOnly] [Conformance]`,
-		`[k8s.io] Probing container with readiness probe that fails should never be ready and never restart [NodeConformance] [Conformance]`,
-		`[sig-storage] Projected configMap optional updates should be reflected in volume [NodeConformance] [Conformance]`,
-		`[k8s.io] Probing container should be restarted with a exec "cat /tmp/health" liveness probe [NodeConformance] [Conformance]`,
-		`[sig-api-machinery] Garbage collector should delete RS created by deployment when not orphaning [Conformance]`,
-		`[sig-api-machinery] Garbage collector should delete pods created by rc when not orphaning [Conformance]`,
-		`[k8s.io] Probing container should have monotonically increasing restart count [NodeConformance] [Conformance]`,
-		`[k8s.io] Probing container should *not* be restarted with a tcp:8080 liveness probe [NodeConformance] [Conformance]`,
-		`[sig-api-machinery] Garbage collector should keep the rc around until all its pods are deleted if the deleteOptions says so [Conformance]`,
-		`[sig-apps] StatefulSet [k8s.io] Basic StatefulSet functionality [StatefulSetBasic] should perform rolling updates and roll backs of template modifications [Conformance]`,
-	}
-)
+	`[k8s.io] Probing container should *not* be restarted with a exec "cat /tmp/health" liveness probe [NodeConformance] [Conformance]`,
+	`[sig-apps] StatefulSet [k8s.io] Basic StatefulSet functionality [StatefulSetBasic] should perform canary updates and phased rolling updates of template modifications [Conformance]`,
+	`[sig-storage] ConfigMap updates should be reflected in volume [NodeConformance] [Conformance]`,
+	`[sig-network] Services should be able to switch session affinity for NodePort service [LinuxOnly] [Conformance]`,
+	`[k8s.io] Probing container with readiness probe that fails should never be ready and never restart [NodeConformance] [Conformance]`,
+	`[sig-storage] Projected configMap optional updates should be reflected in volume [NodeConformance] [Conformance]`,
+	`[k8s.io] Probing container should be restarted with a exec "cat /tmp/health" liveness probe [NodeConformance] [Conformance]`,
+	`[sig-api-machinery] Garbage collector should delete RS created by deployment when not orphaning [Conformance]`,
+	`[sig-api-machinery] Garbage collector should delete pods created by rc when not orphaning [Conformance]`,
+	`[k8s.io] Probing container should have monotonically increasing restart count [NodeConformance] [Conformance]`,
+	`[k8s.io] Probing container should *not* be restarted with a tcp:8080 liveness probe [NodeConformance] [Conformance]`,
+	`[sig-api-machinery] Garbage collector should keep the rc around until all its pods are deleted if the deleteOptions says so [Conformance]`,
+	`[sig-apps] StatefulSet [k8s.io] Basic StatefulSet functionality [StatefulSetBasic] should perform rolling updates and roll backs of template modifications [Conformance]`,
+}
 
 // validModes is a map of the various valid modes. Name is duplicated as the key and in the e2eModeOptions itself.
 var validModes = map[string]e2eModeOptions{
@@ -162,7 +160,7 @@ type modesOptions struct {
 
 func NewCmdModes() *cobra.Command {
 	f := modesOptions{}
-	var modesCmd = &cobra.Command{
+	modesCmd := &cobra.Command{
 		Use:   "modes",
 		Short: "Display the various modes in which to run the e2e plugin",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -192,6 +190,7 @@ func showModes(opt modesOptions) {
 		fmt.Println(truncate(fmt.Sprintf("E2E_PARALLEL: %v", opt.parallel), count))
 	}
 }
+
 func truncate(s string, count int) string {
 	if count <= 0 {
 		return s

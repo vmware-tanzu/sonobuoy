@@ -94,7 +94,7 @@ func TestJUnitProcessReader(t *testing.T) {
 					t.Fatalf("Failed to marshal expected Item for debug: %v", err)
 				}
 				t.Logf("Updating goldenfile %v", tc.expectItemFromFile)
-				os.WriteFile(tc.expectItemFromFile, b, 0666)
+				os.WriteFile(tc.expectItemFromFile, b, 0o666)
 				return
 			}
 

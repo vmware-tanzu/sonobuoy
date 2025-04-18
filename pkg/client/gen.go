@@ -270,7 +270,6 @@ func generateAdditionalConfigmaps(w io.Writer, cfg *GenConfig, configs map[strin
 		sort.Strings(filenames)
 		for _, filename := range filenames {
 			cm.Data[filename] = configs[pluginName][filename]
-
 		}
 
 		if err := appendAsYAML(w, cm); err != nil {
@@ -336,7 +335,6 @@ func generateRegistrySecret(w io.Writer, cfg *GenConfig) error {
 	s.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Secret"})
 
 	return appendAsYAML(w, s)
-
 }
 
 func generateSecret(w io.Writer, cfg *GenConfig) error {
@@ -613,6 +611,7 @@ func clusterReadRBAC(w io.Writer, cfg *GenConfig) error {
 	}
 	return appendAsYAML(w, r)
 }
+
 func namespaceAdminRBAC(w io.Writer, cfg *GenConfig) error {
 	r, rb := &v1.Role{}, &v1.RoleBinding{}
 	r.SetGroupVersionKind(schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Role"})
@@ -791,7 +790,8 @@ func SystemdLogsManifest(cfg *GenConfig) *manifest.Manifest {
 					{Name: "CHROOT_DIR", Value: "/node"},
 					{Name: "RESULTS_DIR", Value: cfg.Config.ResultsDir},
 					{Name: "SONOBUOY_RESULTS_DIR", Value: cfg.Config.ResultsDir},
-					{Name: "NODE_NAME",
+					{
+						Name: "NODE_NAME",
 						ValueFrom: &corev1.EnvVarSource{
 							FieldRef: &corev1.ObjectFieldSelector{FieldPath: "spec.nodeName"},
 						},

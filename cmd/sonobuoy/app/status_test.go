@@ -89,7 +89,7 @@ func TestPrintStatus(t *testing.T) {
 			}
 
 			if *update {
-				os.WriteFile(tc.expectFile, b.Bytes(), 0666)
+				os.WriteFile(tc.expectFile, b.Bytes(), 0o666)
 			} else {
 				fileData, err := os.ReadFile(tc.expectFile)
 				if err != nil {

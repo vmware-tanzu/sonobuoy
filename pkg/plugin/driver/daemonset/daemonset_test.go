@@ -212,7 +212,6 @@ func TestCreateDaemonSetDefintionUsesDefaultPodSpec(t *testing.T) {
 
 	if podSpec.ServiceAccountName != expectedServiceAccount {
 		t.Errorf("expected pod spec to have default service account name %q, got %q", expectedServiceAccount, podSpec.ServiceAccountName)
-
 	}
 
 	// Check something specific to the daemonset default pod spec

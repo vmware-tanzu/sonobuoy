@@ -36,9 +36,7 @@ const (
 	SonobuoyDirEnvKey = "SONOBUOY_DIR"
 )
 
-var (
-	defaultSonobuoyDir = filepath.Join("~", ".sonobuoy")
-)
+var defaultSonobuoyDir = filepath.Join("~", ".sonobuoy")
 
 // pluginNotFoundError is a custom type so we can tell whether or not loading the plugin
 // from the installation directory FAILED or if it just wasn't found.
@@ -117,7 +115,7 @@ func getPluginCacheLocation() string {
 
 	if _, err := os.Stat(expandedPath); err != nil && os.IsNotExist(err) {
 		logrus.Debugf("sonobuoy plugin location %q does not exist, creating it.", expandedPath)
-		if err := os.Mkdir(expandedPath, 0777); err != nil {
+		if err := os.Mkdir(expandedPath, 0o777); err != nil {
 			logrus.Errorf("failed to create directory for installed plugins %q: %v", expandedPath, err)
 			return ""
 		}
@@ -256,7 +254,7 @@ func installPlugin(installedDir, filename, src string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to encode plugin")
 	}
-	if err := os.WriteFile(newPath, yaml, 0666); err != nil {
+	if err := os.WriteFile(newPath, yaml, 0o666); err != nil {
 		return err
 	}
 	fmt.Printf("Installed plugin %v into file %v from source %v\n", pl.StaticPlugins[0].Spec.Name, newPath, src)

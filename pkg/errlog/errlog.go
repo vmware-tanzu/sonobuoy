@@ -67,7 +67,6 @@ func SetLevel(s string) error {
 	}
 
 	return nil
-
 }
 
 func GetLevelForGlog() int {

@@ -260,7 +260,6 @@ func TestCreateWorkerContainerDefinition(t *testing.T) {
 			return fmt.Errorf("expected volume mount to equal %v, got %v", expectedVolume, container.VolumeMounts[0])
 		}
 		return nil
-
 	}
 
 	testCases := []struct {

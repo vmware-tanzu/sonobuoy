@@ -7,7 +7,7 @@ import (
 )
 
 func NewCmdGenCLIDocs() *cobra.Command {
-	var docsCmd = &cobra.Command{
+	docsCmd := &cobra.Command{
 		Use:   "cli <output dir>",
 		Short: "Generates markdown docs for the CLI",
 		Run: func(cmd *cobra.Command, args []string) {

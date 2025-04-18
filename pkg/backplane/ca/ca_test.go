@@ -17,15 +17,14 @@ limitations under the License.
 package ca
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"crypto/tls"
-	"crypto/x509"
 )
 
 func TestSerial(t *testing.T) {
@@ -61,7 +60,6 @@ func TestCA(t *testing.T) {
 			DNSName:   srvName,
 			KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		})
-
 		if err != nil {
 			t.Errorf("Expected server key to verify, got error %v", err)
 		}
@@ -78,7 +76,6 @@ func TestCA(t *testing.T) {
 			DNSName:   clientName,
 			KeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		})
-
 		if err != nil {
 			t.Errorf("Expected client key to verify, got error %v", err)
 		}
@@ -100,7 +97,6 @@ func TestServer(t *testing.T) {
 	cfg, err := auth.MakeServerConfig("127.0.0.1")
 	if err != nil {
 		t.Fatalf("Couldn't get server config %v", err)
-
 	}
 	srv := httptest.NewUnstartedServer(handler)
 	srv.TLS = cfg

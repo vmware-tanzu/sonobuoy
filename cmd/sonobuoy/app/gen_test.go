@@ -48,6 +48,5 @@ func TestVerifyKubernetesVersion(t *testing.T) {
 				}
 			}
 		})
-
 	}
 }

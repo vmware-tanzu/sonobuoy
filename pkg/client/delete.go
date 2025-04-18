@@ -107,7 +107,7 @@ func (c *SonobuoyClient) Delete(cfg *DeleteConfig) error {
 
 		switch cfg.WaitOutput {
 		case spinnerMode:
-			var s = getSpinnerInstance()
+			s := getSpinnerInstance()
 			s.Start()
 			defer s.Stop()
 		}

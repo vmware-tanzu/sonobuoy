@@ -184,7 +184,7 @@ func GatherResults(waitfile string, url string, client *http.Client, stopc <-cha
 				if err := tarball.DirToTarball(dir, tarballPath, true); err != nil {
 					logrus.Errorf("Failed to tar directory %v: %v", dir, err)
 				}
-				if err := os.WriteFile(waitfile, []byte(tarballPath), 0644); err != nil {
+				if err := os.WriteFile(waitfile, []byte(tarballPath), 0o644); err != nil {
 					logrus.Errorf("Failed to write donefile (%v) with contents %q: %v", waitfile, tarballPath, err)
 				}
 				containerTicker.Stop()
