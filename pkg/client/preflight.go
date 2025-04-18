@@ -171,9 +171,9 @@ func nsCheck(getter nsGetFunc, ns string) error {
 	case apierrors.IsNotFound(err):
 		return nil
 	case err != nil:
-		return errors.Wrap(err, "error checking for namespace")
+		return errors.Wrap(err, fmt.Sprintf("error checking for namespace %s", ns))
 	case err == nil:
-		return errors.New("namespace already exists")
+		return errors.New(fmt.Sprintf("namespace %s already exists", ns))
 	}
 	return nil
 }
