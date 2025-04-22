@@ -232,11 +232,11 @@ func (p *Plugin) Run(kubeclient kubernetes.Interface, hostname string, cert *tls
 	}
 
 	if _, err := kubeclient.CoreV1().Secrets(p.Namespace).Create(context.TODO(), secret, metav1.CreateOptions{}); err != nil {
-		return errors.Wrapf(err, "couldn't create TLS secret for daemonset plugin %v", p.GetName())
+		return errors.Wrapf(err, "couldn't create TLS secret for daemonset plugin %v, secret name is %s", p.GetName(), secret.Namespace+"/"+secret.Name)
 	}
 
 	if _, err := kubeclient.AppsV1().DaemonSets(p.Namespace).Create(context.TODO(), &daemonSet, metav1.CreateOptions{}); err != nil {
-		return errors.Wrapf(err, "could not create DaemonSet for daemonset plugin %v", p.GetName())
+		return errors.Wrapf(err, "could not create DaemonSet for daemonset plugin %v, daemonset name is %s", p.GetName(), daemonSet.Namespace+"/"+daemonSet.Name)
 	}
 
 	return nil
