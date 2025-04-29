@@ -160,7 +160,6 @@ func TestGetAggregatorPod(t *testing.T) {
 					t.Errorf("Incorrect pod returned, expected %q but got %q", tc.expectedPod.GetName(), pod.GetName())
 				}
 			}
-
 		})
 	}
 }

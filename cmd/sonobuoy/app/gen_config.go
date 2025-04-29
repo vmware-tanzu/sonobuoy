@@ -15,7 +15,7 @@ import (
 func NewCmdGenConfig() *cobra.Command {
 	var f genFlags
 
-	var GenCommand = &cobra.Command{
+	GenCommand := &cobra.Command{
 		Use:   "config",
 		Short: "Generates a Sonobuoy config for input to sonobuoy gen or run.",
 		Run:   genConfigCobra(&f),

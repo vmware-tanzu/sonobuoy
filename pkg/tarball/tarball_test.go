@@ -62,7 +62,7 @@ func TestDecodeTarball(t *testing.T) {
 	w := tar.NewWriter(gz)
 	err := w.WriteHeader(&tar.Header{
 		Name:     dirName,
-		Mode:     0755,
+		Mode:     0o755,
 		Typeflag: tar.TypeDir,
 		ModTime:  time.Now(),
 	})
@@ -71,7 +71,7 @@ func TestDecodeTarball(t *testing.T) {
 	}
 	err = w.WriteHeader(&tar.Header{
 		Name:     path.Join(dirName, fileName),
-		Mode:     0755,
+		Mode:     0o755,
 		Typeflag: tar.TypeReg,
 		Size:     int64(len(testData)),
 		ModTime:  time.Now(),
@@ -88,7 +88,7 @@ func TestDecodeTarball(t *testing.T) {
 	err = w.WriteHeader(&tar.Header{
 		Name:     path.Join(dirName, symLinkName),
 		Linkname: path.Join(dirName, fileName),
-		Mode:     0755,
+		Mode:     0o755,
 		Typeflag: tar.TypeSymlink,
 		ModTime:  time.Now(),
 	})

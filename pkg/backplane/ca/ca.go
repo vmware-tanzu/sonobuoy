@@ -122,7 +122,6 @@ func (a *Authority) makeLeafCert(mut func(*x509.Certificate)) (*tls.Certificate,
 		PrivateKey:  privKey,
 		Leaf:        cert,
 	}, errors.Wrap(err, "couldn't make leaf cert")
-
 }
 
 func (a *Authority) nextSerial() *big.Int {

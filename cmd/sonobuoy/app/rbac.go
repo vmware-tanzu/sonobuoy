@@ -32,10 +32,8 @@ import (
 // RBACMode determines whether to enable or disable RBAC for a Sonobuoy run
 type RBACMode string
 
-var (
-	//ErrRBACNoClient is the error returned when we need a client but didn't get on
-	ErrRBACNoClient = errors.New(`can't use nil client with "detect" RBAC mode`)
-)
+// ErrRBACNoClient is the error returned when we need a client but didn't get on
+var ErrRBACNoClient = errors.New(`can't use nil client with "detect" RBAC mode`)
 
 const (
 	// DisableRBACMode means rbac is always disable

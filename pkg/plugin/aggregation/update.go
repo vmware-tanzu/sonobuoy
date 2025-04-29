@@ -265,7 +265,6 @@ func GetAggregatorPod(client kubernetes.Interface, namespace string) (*v1.Pod, e
 // if the pod cannot be found.
 func GetAggregatorPodName(client kubernetes.Interface, namespace string) (string, error) {
 	ap, err := GetAggregatorPod(client, namespace)
-
 	if err != nil {
 		switch err.(type) {
 		case NoPodWithLabelError:

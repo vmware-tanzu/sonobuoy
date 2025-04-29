@@ -56,9 +56,11 @@ type pluginSummary struct {
 
 // For sort.Interface
 func (p pluginSummaries) Len() int { return len(p) }
+
 func (p pluginSummaries) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
+
 func (p pluginSummaries) Less(i, j int) bool {
 	pi, pj := p[i], p[j]
 	if pi.plugin == pj.plugin {

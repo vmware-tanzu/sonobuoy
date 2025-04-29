@@ -386,7 +386,7 @@ func TestCleanup(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			var plugins = make([]plugin.Interface, len(tc.plugins))
+			plugins := make([]plugin.Interface, len(tc.plugins))
 			for i, p := range tc.plugins {
 				plugins[i] = p
 			}

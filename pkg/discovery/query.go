@@ -62,7 +62,7 @@ func QueryCluster(restConf *rest.Config, cfg *config.Config) error {
 	// config)
 	outpath := cfg.QueryOutputDir()
 	metapath := filepath.Join(outpath, MetaLocation)
-	err = os.MkdirAll(metapath, 0755)
+	err = os.MkdirAll(metapath, 0o755)
 	if err != nil {
 		return errors.Wrap(err, "could not create directory to store results")
 	}
@@ -177,8 +177,10 @@ const (
 	secretResourceName = "secrets"
 )
 
-type listQuery func() (*unstructured.UnstructuredList, error)
-type objQuery func() (interface{}, error)
+type (
+	listQuery func() (*unstructured.UnstructuredList, error)
+	objQuery  func() (interface{}, error)
+)
 
 // timedListQuery performs a list query and serialize the results
 func timedListQuery(outpath string, file string, f listQuery) (time.Duration, error) {
@@ -262,8 +264,8 @@ func QueryResources(
 	recorder *QueryRecorder,
 	resources []schema.GroupVersionResource,
 	ns *string,
-	cfg *config.Config) error {
-
+	cfg *config.Config,
+) error {
 	// Early exit; avoid forming query or creating output directories.
 	if len(resources) == 0 {
 		return nil
@@ -281,7 +283,7 @@ func QueryResources(
 		outdir = filepath.Join(cfg.QueryOutputDir(), NSResourceLocation, *ns)
 	}
 
-	if err := os.MkdirAll(outdir, 0755); err != nil {
+	if err := os.MkdirAll(outdir, 0o755); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -394,8 +396,8 @@ func filterResources(gvrs map[schema.GroupVersion][]metav1.APIResource, namespac
 // VisitedPods will eliminate duplicate pods when execute overlapping queries,
 // e.g. query by namespaces and query by fieldSelectors.
 func QueryPodLogs(kubeClient kubernetes.Interface, recorder *QueryRecorder, ns string, cfg *config.Config,
-	visitedPods map[string]struct{}) error {
-
+	visitedPods map[string]struct{},
+) error {
 	start := time.Now()
 
 	opts := metav1.ListOptions{}
@@ -540,11 +542,11 @@ func (q *QueryRecorder) DumpQueryData(filepath string) error {
 	}
 
 	// Ensure the leading path is created
-	if err := os.MkdirAll(path.Dir(filepath), 0755); err != nil {
+	if err := os.MkdirAll(path.Dir(filepath), 0o755); err != nil {
 		return err
 	}
 
-	return os.WriteFile(filepath, data, 0755)
+	return os.WriteFile(filepath, data, 0o755)
 }
 
 const (
@@ -574,8 +576,8 @@ func getPodLogOptions(cfg *config.Config) *v1.PodLogOptions {
 // visitedPods will eliminate duplicate pods when execute overlapping queries,
 // e.g. query by namespaces and query by fieldSelectors
 func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListOptions, cfg *config.Config,
-	visitedPods map[string]struct{}) error {
-
+	visitedPods map[string]struct{},
+) error {
 	// 1 - Collect the list of pods
 	podlist, err := kubeClient.CoreV1().Pods(ns).List(context.TODO(), opts)
 	if err != nil {
@@ -606,12 +608,12 @@ func gatherPodLogs(kubeClient kubernetes.Interface, ns string, opts metav1.ListO
 				return errors.WithStack(err)
 			}
 			outdir := path.Join(cfg.QueryOutputDir(), PodLogsLocation, pod.Namespace, pod.Name, "logs")
-			if err = os.MkdirAll(outdir, 0755); err != nil {
+			if err = os.MkdirAll(outdir, 0o755); err != nil {
 				return errors.WithStack(err)
 			}
 
 			outfile := path.Join(outdir, container.Name) + ".txt"
-			if err = os.WriteFile(outfile, body, 0644); err != nil {
+			if err = os.WriteFile(outfile, body, 0o644); err != nil {
 				return errors.WithStack(err)
 			}
 		}
@@ -649,7 +651,7 @@ func gatherNodeData(nodeNames []string, restclient rest.Interface, cfg *config.C
 		// Create the output for each node
 		out := path.Join(cfg.QueryOutputDir(), HostsLocation, name)
 		logrus.Infof("Creating host results for %v under %v\n", name, out)
-		if err := os.MkdirAll(out, 0755); err != nil {
+		if err := os.MkdirAll(out, 0o755); err != nil {
 			return err
 		}
 
@@ -707,7 +709,7 @@ func getPodLogNamespaceFilter(cfg *config.Config) string {
 // SerializeObj will write out an object
 func SerializeObj(obj interface{}, outpath string, file string) error {
 	var err error
-	if err = os.MkdirAll(outpath, 0755); err != nil {
+	if err = os.MkdirAll(outpath, 0o755); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -725,5 +727,5 @@ func SerializeObj(obj interface{}, outpath string, file string) error {
 		return errors.WithStack(err)
 	}
 
-	return errors.WithStack(os.WriteFile(filepath.Join(outpath, file), b, 0644))
+	return errors.WithStack(os.WriteFile(filepath.Join(outpath, file), b, 0o644))
 }

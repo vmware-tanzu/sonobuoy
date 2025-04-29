@@ -145,7 +145,7 @@ func TestDNSCheck(t *testing.T) {
 			lister: func(context.Context, metav1.ListOptions) (*apicorev1.PodList, error) {
 				return &apicorev1.PodList{
 					Items: []apicorev1.Pod{
-						apicorev1.Pod{},
+						{},
 					},
 				}, nil
 			},
@@ -156,8 +156,8 @@ func TestDNSCheck(t *testing.T) {
 			lister: func(context.Context, metav1.ListOptions) (*apicorev1.PodList, error) {
 				return &apicorev1.PodList{
 					Items: []apicorev1.Pod{
-						apicorev1.Pod{},
-						apicorev1.Pod{},
+						{},
+						{},
 					},
 				}, nil
 			},

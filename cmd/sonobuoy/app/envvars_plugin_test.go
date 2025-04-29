@@ -35,78 +35,78 @@ func TestPluginEnvSet(t *testing.T) {
 			init:  PluginEnvVars(map[string]map[string]string{}),
 			input: "name.env=val",
 			expect: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val"},
+				"name": {"env": "val"},
 			}),
 		}, {
 			desc: "Set value again same plugin",
 			init: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val"},
+				"name": {"env": "val"},
 			}),
 			input: "name.env2=val2",
 			expect: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val", "env2": "val2"},
+				"name": {"env": "val", "env2": "val2"},
 			}),
 		}, {
 			desc: "Set value again different plugin",
 			init: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val"},
+				"name": {"env": "val"},
 			}),
 			input: "name2.env2=val2",
 			expect: PluginEnvVars(map[string]map[string]string{
-				"name":  map[string]string{"env": "val"},
-				"name2": map[string]string{"env2": "val2"},
+				"name":  {"env": "val"},
+				"name2": {"env2": "val2"},
 			}),
 		}, {
 			desc: "Override value already in map",
 			init: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val"},
+				"name": {"env": "val"},
 			}),
 			input: "name.env=val2",
 			expect: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val2"},
+				"name": {"env": "val2"},
 			}),
 		}, {
 			desc: "Empty string if no equals",
 			init: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val"},
+				"name": {"env": "val"},
 			}),
 			input: "name.env2",
 			expect: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val", "env2": ""},
+				"name": {"env": "val", "env2": ""},
 			}),
 		}, {
 			desc: "Empty string if equals but no value",
 			init: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val"},
+				"name": {"env": "val"},
 			}),
 			input: "name.env2=",
 			expect: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val", "env2": ""},
+				"name": {"env": "val", "env2": ""},
 			}),
 		}, {
 			desc: "Splits on first period",
 			init: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val"},
+				"name": {"env": "val"},
 			}),
 			input: "name.env.with.dot=val2",
 			expect: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val", "env.with.dot": "val2"},
+				"name": {"env": "val", "env.with.dot": "val2"},
 			}),
 		}, {
 			desc: "Splits on first equals and period",
 			init: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val"},
+				"name": {"env": "val"},
 			}),
 			input: "name.env.with.dot=val=with=equals",
 			expect: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val", "env.with.dot": "val=with=equals"},
+				"name": {"env": "val", "env.with.dot": "val=with=equals"},
 			}),
 		}, {
 			desc:  "Starting with nil map",
 			init:  PluginEnvVars(nil),
 			input: "name.env=val",
 			expect: PluginEnvVars(map[string]map[string]string{
-				"name": map[string]string{"env": "val"},
+				"name": {"env": "val"},
 			}),
 		},
 	}

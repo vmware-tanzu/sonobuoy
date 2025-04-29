@@ -203,7 +203,6 @@ func TestCreatePodDefinitionUsesDefaultPodSpec(t *testing.T) {
 	expectedServiceAccount := "sonobuoy-serviceaccount"
 	if pod.Spec.ServiceAccountName != expectedServiceAccount {
 		t.Errorf("expected pod spec to have default service account name %q, got %q", expectedServiceAccount, pod.Spec.ServiceAccountName)
-
 	}
 
 	// Check something specific to the job default pod spec

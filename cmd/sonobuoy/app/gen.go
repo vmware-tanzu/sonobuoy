@@ -211,7 +211,7 @@ func (g *genFlags) RunConfig() (*client.RunConfig, error) {
 
 func NewCmdGen() *cobra.Command {
 	var genflags genFlags
-	var GenCommand = &cobra.Command{
+	GenCommand := &cobra.Command{
 		Use:   "gen",
 		Short: "Generates a sonobuoy manifest for submission via kubectl",
 		Run:   genManifest(&genflags),

@@ -42,6 +42,7 @@ func (t *testMetadataAccessor) Namespace(obj runtime.Object) (string, error) {
 	}
 	return "", nil
 }
+
 func (t *testMetadataAccessor) Name(obj runtime.Object) (string, error) {
 	if obj.GetObjectKind().GroupVersionKind().Kind == "fail-name" {
 		return "", errors.New("name error")
@@ -59,41 +60,53 @@ func (t *testDyanmicInterface) Resource(resource schema.GroupVersionResource) dy
 	return &testNamespaceableResourceInterface{}
 }
 
-type testResourceInterface struct{}
-type testNamespaceableResourceInterface struct {
-	testResourceInterface
-}
+type (
+	testResourceInterface              struct{}
+	testNamespaceableResourceInterface struct {
+		testResourceInterface
+	}
+)
 
 func (t *testNamespaceableResourceInterface) Namespace(string) dynamic.ResourceInterface {
 	return &testResourceInterface{}
 }
+
 func (t *testResourceInterface) Create(ctx context.Context, obj *unstructured.Unstructured, opts metav1.CreateOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return obj, nil
 }
+
 func (t *testResourceInterface) Update(ctx context.Context, obj *unstructured.Unstructured, opts metav1.UpdateOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
+
 func (t *testResourceInterface) UpdateStatus(ctx context.Context, obj *unstructured.Unstructured, opts metav1.UpdateOptions) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
+
 func (t *testResourceInterface) Delete(ctx context.Context, name string, options metav1.DeleteOptions, subresources ...string) error {
 	return nil
 }
+
 func (t *testResourceInterface) DeleteCollection(ctx context.Context, options metav1.DeleteOptions, listOptions metav1.ListOptions) error {
 	return nil
 }
+
 func (t *testResourceInterface) Get(ctx context.Context, name string, options metav1.GetOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
+
 func (t *testResourceInterface) List(ctx context.Context, opts metav1.ListOptions) (*unstructured.UnstructuredList, error) {
 	return nil, nil
 }
+
 func (t *testResourceInterface) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return nil, nil
 }
+
 func (t *testResourceInterface) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
+
 func (t *testResourceInterface) Apply(ctx context.Context, name string, obj *unstructured.Unstructured, options metav1.ApplyOptions, subresources ...string) (*unstructured.Unstructured, error) {
 	return nil, nil
 }
@@ -135,7 +148,6 @@ func TestCreateObject(t *testing.T) {
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			helper, err := sonodynamic.NewAPIHelper(&testDyanmicInterface{}, &testMapper{}, &testMetadataAccessor{})
 			if err != nil {
 				t.Fatalf("could not create apihelper: %v", err)
@@ -161,6 +173,5 @@ func TestCreateObject(t *testing.T) {
 				t.Fatalf("out should not be nil")
 			}
 		})
-
 	}
 }

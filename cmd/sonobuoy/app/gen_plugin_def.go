@@ -223,7 +223,7 @@ func NewCmdGenE2E() *cobra.Command {
 	var genE2Eflags genFlags
 	configMapFiles := []string{}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "e2e",
 		Short: "Generates the e2e plugin definition based on the given options",
 		RunE:  genManifestForPlugin(&genE2Eflags, e2ePlugin),
@@ -267,7 +267,7 @@ func genManifestForPlugin(genflags *genFlags, pluginName string) func(cmd *cobra
 
 func NewCmdGenSystemdLogs() *cobra.Command {
 	var genSystemdLogsflags genFlags
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "systemd-logs",
 		Short: "Generates the systemd-logs plugin definition based on the given options",
 		RunE:  genManifestForPlugin(&genSystemdLogsflags, systemdLogsPlugin),

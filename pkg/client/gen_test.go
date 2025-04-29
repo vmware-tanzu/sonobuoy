@@ -166,7 +166,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "default.golden"),
-		}, {
+		},
+		{
 			name: "Only e2e (legacy plugin choice)",
 			inputcm: &client.GenConfig{
 				Config: fromConfig(func(c *config.Config) *config.Config {
@@ -176,7 +177,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "e2e-default.golden"),
-		}, {
+		},
+		{
 			name: "Only systemd_logs (legacy plugin choice)",
 			inputcm: &client.GenConfig{
 				Config: fromConfig(func(c *config.Config) *config.Config {
@@ -186,7 +188,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "systemd-logs-default.golden"),
-		}, {
+		},
+		{
 			name: "Empty array leads to default plugins, not 0",
 			inputcm: &client.GenConfig{
 				Config: fromConfig(func(c *config.Config) *config.Config {
@@ -196,7 +199,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "default-plugins-via-selection.golden"),
-		}, {
+		},
+		{
 			// For backwards compatibility.
 			name: "Nil plugin selection and no manual choice leads to e2e/systemd",
 			inputcm: &client.GenConfig{
@@ -207,7 +211,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "default-plugins-via-nil-selection.golden"),
-		}, {
+		},
+		{
 			name: "Plugins skipped entirely if config specifies",
 			inputcm: &client.GenConfig{
 				Config: fromConfig(func(c *config.Config) *config.Config {
@@ -218,7 +223,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "no-plugins-via-option.golden"),
-		}, {
+		},
+		{
 			name: "Manually specify e2e",
 			inputcm: &client.GenConfig{
 				DynamicPlugins: []string{"e2e"},
@@ -226,7 +232,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				Config:         staticConfig(),
 			},
 			goldenFile: filepath.Join("testdata", "manual-e2e.golden"),
-		}, {
+		},
+		{
 			name: "Manually specify custom plugin",
 			inputcm: &client.GenConfig{
 				StaticPlugins: []*manifest.Manifest{
@@ -238,7 +245,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				Config:      staticConfig(),
 			},
 			goldenFile: filepath.Join("testdata", "manual-custom-plugin.golden"),
-		}, {
+		},
+		{
 			name: "Manually custom plugin and e2e plugins",
 			inputcm: &client.GenConfig{
 				DynamicPlugins: []string{"e2e"},
@@ -251,7 +259,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				Config:      staticConfig(),
 			},
 			goldenFile: filepath.Join("testdata", "manual-custom-plugin-plus-e2e.golden"),
-		}, {
+		},
+		{
 			name: "Manually custom plugin and systemd-logs plugins",
 			inputcm: &client.GenConfig{
 				DynamicPlugins: []string{"systemd-logs"},
@@ -264,7 +273,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				Config:      staticConfig(),
 			},
 			goldenFile: filepath.Join("testdata", "manual-custom-plugin-plus-systemd.golden"),
-		}, {
+		},
+		{
 			name: "Duplicates plugin names fail",
 			inputcm: &client.GenConfig{
 				StaticPlugins: []*manifest.Manifest{
@@ -275,7 +285,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				Config:      staticConfig(),
 			},
 			expectErr: "plugin YAML generation: plugin names must be unique, got duplicated plugin name 'a'",
-		}, {
+		},
+		{
 			// In this case the server will just load both and filter like it does currently.
 			name: "Plugin selection and custom plugins both specified allowed",
 			inputcm: &client.GenConfig{
@@ -294,7 +305,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "plugins-and-pluginSelection.golden"),
-		}, {
+		},
+		{
 			name: "ImagePullSecrets is set on plugins and aggregator",
 			inputcm: &client.GenConfig{
 				DynamicPlugins: []string{"e2e"},
@@ -317,7 +329,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "envoverrides.golden"),
-		}, {
+		},
+		{
 			name: "Env overrides must match plugin names",
 			inputcm: &client.GenConfig{
 				Config:         staticConfig(),
@@ -328,7 +341,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			expectErr: "failed to override env vars for plugin e2e2, no plugin with that name found; have plugins: [e2e]",
-		}, {
+		},
+		{
 			name: "Default pod spec is included if requested and no other pod spec provided",
 			inputcm: &client.GenConfig{
 				Config:             staticConfig(),
@@ -336,7 +350,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion:        "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "default-pod-spec.golden"),
-		}, {
+		},
+		{
 			name: "E2E_USE_GO_RUNNER can be overridden/removed",
 			inputcm: &client.GenConfig{
 				Config:         staticConfig(),
@@ -347,7 +362,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "goRunnerRemoved.golden"),
-		}, {
+		},
+		{
 			name: "Existing pod spec is not modified if default pod spec is requested",
 			inputcm: &client.GenConfig{
 				Config:             staticConfig(),
@@ -361,7 +377,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "use-existing-pod-spec.golden"),
-		}, {
+		},
+		{
 			name: "E2E images >= v1.17 support progress",
 			inputcm: &client.GenConfig{
 				Config:         staticConfig(),
@@ -369,7 +386,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion:    "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "e2e-progress.golden"),
-		}, {
+		},
+		{
 			name: "ProgressUpdatesPort is customizable for e2e",
 			inputcm: &client.GenConfig{
 				DynamicPlugins: []string{"e2e"},
@@ -380,7 +398,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "e2e-progress-custom-port.golden"),
-		}, {
+		},
+		{
 			name: "E2E images >= v1.17 will not override E2E_EXTRA_ARGS if specified by user",
 			inputcm: &client.GenConfig{
 				Config:         staticConfig(),
@@ -391,7 +410,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion: "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "e2e-progress-vs-user-defined.golden"),
-		}, {
+		},
+		{
 			name: "Node selector can be added",
 			inputcm: &client.GenConfig{
 				Config:        staticConfig(),
@@ -399,7 +419,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion:   "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "single-node-selector.golden"),
-		}, {
+		},
+		{
 			name: "Multiple node selectors can be added",
 			inputcm: &client.GenConfig{
 				Config:        staticConfig(),
@@ -407,7 +428,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				KubeVersion:   "v99+static.testing",
 			},
 			goldenFile: filepath.Join("testdata", "multiple-node-selector.golden"),
-		}, {
+		},
+		{
 			name: "Plugins can specify configmaps",
 			inputcm: &client.GenConfig{
 				Config:      staticConfig(),
@@ -429,7 +451,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				},
 			},
 			goldenFile: filepath.Join("testdata", "plugin-configmaps.golden"),
-		}, {
+		},
+		{
 			name: "ImagePullPolicy applied to all plugins if forced",
 			inputcm: &client.GenConfig{
 				Config: fromConfig(func(c *config.Config) *config.Config {
@@ -448,7 +471,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				},
 			},
 			goldenFile: filepath.Join("testdata", "imagePullPolicy-all-plugins.golden"),
-		}, {
+		},
+		{
 			name: "ImagePullPolicy not applied to all plugins by default",
 			inputcm: &client.GenConfig{
 				Config:      staticConfig(),
@@ -464,7 +488,8 @@ func TestGenerateManifestGolden(t *testing.T) {
 				},
 			},
 			goldenFile: filepath.Join("testdata", "imagePullPolicy-not-all-plugins.golden"),
-		}, {
+		},
+		{
 			name: "AggregatorPermissions for non-cluster admin",
 			inputcm: &client.GenConfig{
 				Config: fromConfig(func(c *config.Config) *config.Config {
@@ -499,7 +524,7 @@ func TestGenerateManifestGolden(t *testing.T) {
 			}
 
 			if *update {
-				os.WriteFile(tc.goldenFile, manifest, 0666)
+				os.WriteFile(tc.goldenFile, manifest, 0o666)
 			} else {
 				fileData, err := os.ReadFile(tc.goldenFile)
 				if err != nil {

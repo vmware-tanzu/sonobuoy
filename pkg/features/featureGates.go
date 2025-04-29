@@ -10,12 +10,10 @@ const (
 	WaitOutputProgressByDefault = "SONOBUOY_WAIT_PROGRESS"
 )
 
-var (
-	featureDefaultMap = map[string]bool{
-		PluginInstallation:          true,
-		WaitOutputProgressByDefault: true,
-	}
-)
+var featureDefaultMap = map[string]bool{
+	PluginInstallation:          true,
+	WaitOutputProgressByDefault: true,
+}
 
 // Enabled returns if the named feature is enabled based on the current env and defaults.
 func Enabled(feature string) bool {

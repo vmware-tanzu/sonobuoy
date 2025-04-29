@@ -170,11 +170,11 @@ func UntarAll(reader io.Reader, destDir, filename string) (filenames []string, r
 		outFileName := filepath.Join(destDir, header.Name)
 		baseName := filepath.Dir(outFileName)
 
-		if err := os.MkdirAll(baseName, 0755); err != nil {
+		if err := os.MkdirAll(baseName, 0o755); err != nil {
 			return filenames, err
 		}
 		if header.FileInfo().IsDir() {
-			if err := os.MkdirAll(outFileName, 0755); err != nil {
+			if err := os.MkdirAll(outFileName, 0o755); err != nil {
 				return filenames, err
 			}
 			continue
@@ -218,7 +218,7 @@ func UntarAll(reader io.Reader, destDir, filename string) (filenames []string, r
 	}
 
 	if entrySeq == -1 {
-		//if no file was copied
+		// if no file was copied
 		return filenames, errors.New("no valid entries in result")
 	}
 	return filenames, nil

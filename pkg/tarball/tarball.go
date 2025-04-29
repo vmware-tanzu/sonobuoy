@@ -57,7 +57,7 @@ func DecodeTarball(reader io.Reader, baseDir string) error {
 		case tar.TypeReg:
 			filePath := filepath.Join(baseDir, name)
 			// Directory should come first, but some tarballes are malformed
-			if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Dir(filePath), 0o755); err != nil {
 				return errors.Wrap(err, "error decoding tarball for result (mkdir)")
 			}
 			file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.FileMode(header.Mode))
@@ -73,7 +73,7 @@ func DecodeTarball(reader io.Reader, baseDir string) error {
 			}
 			filePath := filepath.Join(baseDir, name)
 			// Directory should come first, but some tarballes are malformed
-			if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Dir(filePath), 0o755); err != nil {
 				return errors.Wrapf(err, "error decoding tarball for result (mkdir)")
 			}
 			if err := os.Symlink(

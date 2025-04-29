@@ -55,6 +55,6 @@ func reportSingleFile(cmd *cobra.Command, args []string) error {
 		resultsFile = doneContents
 	}
 
-	err := os.WriteFile(doneFile, []byte(resultsFile), os.FileMode(0666))
+	err := os.WriteFile(doneFile, []byte(resultsFile), os.FileMode(0o666))
 	return errors.Wrap(err, "failed to write to done file")
 }

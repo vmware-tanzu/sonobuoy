@@ -55,7 +55,8 @@ func TestPodFailing(t *testing.T) {
 								ExitCode:   1,
 								FinishedAt: metav1.Time{Time: time.Now().Add(-3 * terminatedContainerWindow)},
 							},
-						}},
+						},
+					},
 				}
 				return p
 			}),
@@ -120,7 +121,8 @@ func TestPodFailing(t *testing.T) {
 							Waiting: &corev1.ContainerStateWaiting{
 								Reason: "ImagePullBackOff",
 							},
-						}},
+						},
+					},
 				}
 				return p
 			}),
@@ -138,7 +140,8 @@ func TestPodFailing(t *testing.T) {
 							Waiting: &corev1.ContainerStateWaiting{
 								Reason: "ErrImagePull",
 							},
-						}},
+						},
+					},
 				}
 				return p
 			}),
@@ -154,7 +157,8 @@ func TestPodFailing(t *testing.T) {
 							Waiting: &corev1.ContainerStateWaiting{
 								Reason: "ContainerCreating",
 							},
-						}},
+						},
+					},
 				}
 				return p
 			}),
