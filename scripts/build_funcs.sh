@@ -87,7 +87,7 @@ local_integration(){
 }
 
 lint() {
-  docker run --rm -v "$(pwd)":$BUILDMNT -w $BUILDMNT $LINT_IMAGE /bin/sh -c \F
+  docker run --rm -v "$(pwd)":$BUILDMNT -w $BUILDMNT $LINT_IMAGE /bin/sh -c \
     "golangci-lint run --out-format=github-actions --timeout=5m0s -v"
 }
 
