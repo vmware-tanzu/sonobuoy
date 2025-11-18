@@ -31,14 +31,14 @@ IMAGE_BRANCH=$(git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF_LONG=$(git rev-parse --verify HEAD)
 
 BUILDMNT=/go/src/$GOTARGET
-BUILD_IMAGE=golang:1.23.8
+BUILD_IMAGE=golang:1.24.9
 AMD_IMAGE=gcr.io/distroless/static:nonroot
 ARM_IMAGE=gcr.io/distroless/static:nonroot-arm64
 PPC64LE_IMAGE=gcr.io/distroless/static:nonroot-ppc64le
 S390X_IMAGE=gcr.io/distroless/static:nonroot-s390x
 WIN_AMD64_BASEIMAGE=mcr.microsoft.com/windows/nanoserver
 TEST_IMAGE=testimage:v0.1
-LINT_IMAGE=golangci/golangci-lint:v1.61.0
+LINT_IMAGE=golangci/golangci-lint:v1.64.8
 KIND_CLUSTER=kind
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )"
@@ -87,7 +87,7 @@ local_integration(){
 }
 
 lint() {
-  docker run --rm -v "$(pwd)":$BUILDMNT -w $BUILDMNT $LINT_IMAGE /bin/sh -c \F
+  docker run --rm -v "$(pwd)":$BUILDMNT -w $BUILDMNT $LINT_IMAGE /bin/sh -c \
     "golangci-lint run --out-format=github-actions --timeout=5m0s -v"
 }
 

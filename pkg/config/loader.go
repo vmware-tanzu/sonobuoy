@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"strings"
 
@@ -90,7 +91,12 @@ func (cfg *Config) Resolve() {
 	// Figure out what address we will tell pods to dial for aggregation
 	if cfg.Aggregation.AdvertiseAddress == "" {
 		if ip := os.Getenv("SONOBUOY_ADVERTISE_IP"); ip != "" {
-			cfg.Aggregation.AdvertiseAddress = fmt.Sprintf("[%v]:%d", ip, cfg.Aggregation.BindPort)
+			netIp := net.ParseIP(ip)
+			if netIp != nil && netIp.To4() != nil {
+				cfg.Aggregation.AdvertiseAddress = fmt.Sprintf("%v:%d", ip, cfg.Aggregation.BindPort)
+			} else {
+				cfg.Aggregation.AdvertiseAddress = fmt.Sprintf("[%v]:%d", ip, cfg.Aggregation.BindPort)
+			}
 		} else {
 			hostname, _ := os.Hostname()
 			if hostname != "" {

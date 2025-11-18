@@ -8,9 +8,7 @@ jobs:
       - name: golangci-lint run
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.61.0
-          skip-pkg-cache: true
-          skip-build-cache: true
+          version: v1.64.8
           args: --timeout=5m0s -v
   bash-lint:
     runs-on: ubuntu-latest
