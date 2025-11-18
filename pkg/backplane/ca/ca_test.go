@@ -94,7 +94,7 @@ func TestServer(t *testing.T) {
 	testString := "Whose woods these are, I think I know.\n"
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, testString)
+		fmt.Fprintf(w, "%s", testString)
 	})
 
 	cfg, err := auth.MakeServerConfig("127.0.0.1")

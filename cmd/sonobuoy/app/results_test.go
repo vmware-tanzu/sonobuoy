@@ -96,7 +96,7 @@ func TestHumanReadableWriter(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			buffer := bytes.Buffer{}
 			writer := humanReadableWriter{&buffer}
-			fmt.Fprintf(&writer, tc.input)
+			fmt.Fprintf(&writer, "%s", tc.input)
 			for _, contains := range tc.contains {
 				out := strings.Contains(buffer.String(), contains)
 				if out != tc.expected {
