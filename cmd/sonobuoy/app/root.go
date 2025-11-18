@@ -97,7 +97,6 @@ func NewSonobuoyCommand() *cobra.Command {
 	}
 
 	return cmds
-
 }
 
 func rootCmd(cmd *cobra.Command, args []string) {

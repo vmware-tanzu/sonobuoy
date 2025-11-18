@@ -25,7 +25,6 @@ import (
 
 // Version gets the Kubernetes API version
 func (c *SonobuoyClient) Version() (string, error) {
-
 	// Init client
 	client, err := c.Client()
 	if err != nil {

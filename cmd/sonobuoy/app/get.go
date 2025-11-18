@@ -59,19 +59,16 @@ func getPods(flags *getFlags) error {
 	}
 
 	sbc, err := getSonobuoyClientFromKubecfg(flags.kubecfg)
-
 	if err != nil {
 		return errors.Wrap(err, "could not create sonobuoy client")
 	}
 
 	client, err := sbc.Client()
-
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve kubernetes client")
 	}
 
 	pods, err := client.CoreV1().Pods(flags.namespace).List(context.TODO(), listOptions)
-
 	if err != nil {
 		return errors.Wrap(err, "could not retrieve list of pods")
 	}

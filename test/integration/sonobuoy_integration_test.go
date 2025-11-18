@@ -8,9 +8,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/kylelemons/godebug/pretty"
-	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
-	yaml "gopkg.in/yaml.v2"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,6 +16,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/kylelemons/godebug/pretty"
+	"github.com/vmware-tanzu/sonobuoy/pkg/client/results"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -481,7 +482,7 @@ func saveToArtifacts(t *testing.T, p string) (newPath string) {
 	artifactFile := filepath.Join(artifactsDir, filepath.Base(p))
 	origFile := filepath.Join(pwd(t), filepath.Base(p))
 
-	if err := os.MkdirAll(artifactsDir, 0755); err != nil {
+	if err := os.MkdirAll(artifactsDir, 0o755); err != nil {
 		t.Logf("Error creating directory %v: %v", artifactsDir, err)
 		return p
 	}
@@ -953,7 +954,7 @@ func TestPluginComplexCmds_LocalGolden(t *testing.T) {
 			defer os.RemoveAll(tmpDir)
 
 			for _, v := range tc.addBadPlugins {
-				if err := os.WriteFile(filepath.Join(tmpDir, v), []byte("a:b:c:d:bad:file"), 0777); err != nil {
+				if err := os.WriteFile(filepath.Join(tmpDir, v), []byte("a:b:c:d:bad:file"), 0o777); err != nil {
 					t.Fatalf("failed to setup bad plugins for test: %v", err)
 				}
 			}
@@ -1009,7 +1010,7 @@ func TestPluginLoading_LocalGolden(t *testing.T) {
 	}
 
 	// Create difference between local/installed plugin so we can differentiate them.
-	err = os.WriteFile("hello-world.yaml", bytes.Replace(input, []byte("foo.com"), []byte("localfile.com"), -1), 0644)
+	err = os.WriteFile("hello-world.yaml", bytes.Replace(input, []byte("foo.com"), []byte("localfile.com"), -1), 0o644)
 	if err != nil {
 		t.Fatalf("Failed to copy hello-world to pwd: %v", err)
 	}
@@ -1050,7 +1051,7 @@ func checkFileMatchesOrUpdate(t *testing.T, output, expectFile, maskDir string) 
 	outString = r.ReplaceAllString(outString, `time="STATIC_TIME_FOR_TESTING"`)
 
 	if *update {
-		if err := os.WriteFile(expectFile, []byte(outString), 0666); err != nil {
+		if err := os.WriteFile(expectFile, []byte(outString), 0o666); err != nil {
 			t.Fatalf("Failed to update goldenfile: %v", err)
 		}
 	} else {

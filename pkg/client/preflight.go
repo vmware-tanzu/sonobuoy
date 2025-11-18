@@ -44,8 +44,10 @@ var (
 	}
 )
 
-type listFunc func(context.Context, metav1.ListOptions) (*apicorev1.PodList, error)
-type nsGetFunc func(context.Context, string, metav1.GetOptions) (*apicorev1.Namespace, error)
+type (
+	listFunc  func(context.Context, metav1.ListOptions) (*apicorev1.PodList, error)
+	nsGetFunc func(context.Context, string, metav1.GetOptions) (*apicorev1.Namespace, error)
+)
 
 // PreflightChecks runs all preflight checks in order, returning the first error encountered.
 func (c *SonobuoyClient) PreflightChecks(cfg *PreflightConfig) []error {
@@ -108,7 +110,7 @@ func dnsCheck(listPods listFunc, dnsNamespace string, dnsLabels ...string) error
 		return nil
 	}
 
-	var nPods = 0
+	nPods := 0
 	for _, label := range dnsLabels {
 
 		obj, err := listPods(context.TODO(), metav1.ListOptions{LabelSelector: label})

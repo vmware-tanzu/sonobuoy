@@ -49,10 +49,8 @@ type imagesFlags struct {
 	pluginEnvs        PluginEnvVars
 }
 
-var (
-	// transformSink avoids nil issues despite not really needing the transforms for these commands.
-	transformSink = map[string][]func(*manifest.Manifest) error{}
-)
+// transformSink avoids nil issues despite not really needing the transforms for these commands.
+var transformSink = map[string][]func(*manifest.Manifest) error{}
 
 func runListImages(flags imagesFlags) {
 	client := image.NewDockerClient()

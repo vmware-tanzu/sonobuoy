@@ -64,7 +64,6 @@ func TestGetDefaultImageRegistryVersionValidation(t *testing.T) {
 			} else if tc.error && !strings.Contains(err.Error(), tc.expect) {
 				t.Fatalf("expected error to contain %q, got %v", tc.expect, err.Error())
 			}
-
 		})
 	}
 }

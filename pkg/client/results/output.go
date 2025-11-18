@@ -28,7 +28,7 @@ import (
 // for the postprocessed results (the path base/plugins/plugin_name/sonobuoy_results)
 func SaveProcessedResults(pluginName, baseDir string, item Item) error {
 	resultsFile := filepath.Join(baseDir, PluginsDir, pluginName, PostProcessedResultsFile)
-	if err := os.MkdirAll(filepath.Dir(resultsFile), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(resultsFile), 0o755); err != nil {
 		return errors.Wrap(err, "error creating plugin directory")
 	}
 

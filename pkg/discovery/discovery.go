@@ -82,7 +82,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// config)
 	outpath := filepath.Join(config.AggregatorResultsPath, cfg.UUID)
 	metapath := filepath.Join(outpath, MetaLocation)
-	err = os.MkdirAll(metapath, 0755)
+	err = os.MkdirAll(metapath, 0o755)
 	if err != nil {
 		errlog.LogError(errors.Wrap(err, "could not create directory to store results"))
 		return errCount + 1
@@ -127,7 +127,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	// 3. Dump the config.json we used to run our test
 	if blob, err := json.Marshal(cfg); err == nil {
 		logrus.Trace("Recording the marshalled Sonobuoy config")
-		if err = os.WriteFile(filepath.Join(metapath, "config.json"), blob, 0644); err != nil {
+		if err = os.WriteFile(filepath.Join(metapath, "config.json"), blob, 0o644); err != nil {
 			errlog.LogError(errors.Wrap(err, "could not write config.json file"))
 			return errCount + 1
 		}
@@ -196,7 +196,7 @@ func Run(restConf *rest.Config, cfg *config.Config) (errCount int) {
 	blob, err := json.Marshal(runInfo)
 	trackErrorsFor("marshalling run info")(err)
 	if err == nil {
-		err = os.WriteFile(filepath.Join(metapath, results.InfoFile), blob, 0644)
+		err = os.WriteFile(filepath.Join(metapath, results.InfoFile), blob, 0o644)
 		trackErrorsFor("saving" + results.InfoFile)(err)
 	}
 
@@ -311,7 +311,7 @@ func dumpPlugin(p plugin.Interface, outputDir string) error {
 	err = os.WriteFile(
 		filepath.Join(outputDir, results.PluginsDir, p.GetName(), pluginDefinitionFilename),
 		b,
-		os.FileMode(0644),
+		os.FileMode(0o644),
 	)
 	return errors.Wrapf(err, "writing plugin %v definition to yaml", p.GetName())
 }

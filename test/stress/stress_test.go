@@ -34,9 +34,11 @@ import (
 	"github.com/vmware-tanzu/sonobuoy/pkg/worker"
 )
 
-var numResults = 1000
-var timeoutSeconds = 10
-var bindAddr = ":8080"
+var (
+	numResults     = 1000
+	timeoutSeconds = 10
+	bindAddr       = ":8080"
+)
 
 func TestStress(t *testing.T) {
 	// Create temp dir for results

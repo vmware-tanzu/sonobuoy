@@ -33,10 +33,8 @@ import (
 // ConformanceImageVersion represents the version of a conformance image, or "auto" to detect the version
 type ConformanceImageVersion string
 
-var (
-	//ErrImageVersionNoClient is the error returned when we need a client but didn't get on
-	ErrImageVersionNoClient = errors.New(`can't use nil client with "auto" image version`)
-)
+// ErrImageVersionNoClient is the error returned when we need a client but didn't get on
+var ErrImageVersionNoClient = errors.New(`can't use nil client with "auto" image version`)
 
 const (
 	// ConformanceImageVersionAuto represents detecting the server's kubernetes version.

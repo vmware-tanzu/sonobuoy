@@ -28,9 +28,9 @@ import (
 var update = flag.Bool("update", false, "update the .golden files")
 
 func TestReadHealthSummary(t *testing.T) {
-	//Root directory where all the file sin the tarball are located
-	//Simulates the directory where all the files resulting from discovery end up before being compressed into the tarball
-	//For the test, this directory is the location where the test files are located
+	// Root directory where all the file sin the tarball are located
+	// Simulates the directory where all the files resulting from discovery end up before being compressed into the tarball
+	// For the test, this directory is the location where the test files are located
 	tarballRootDir := "testdata/healthsummary"
 
 	goldenFilePath := filepath.Join(tarballRootDir, "summary_test.golden")
@@ -46,7 +46,7 @@ func TestReadHealthSummary(t *testing.T) {
 	}
 
 	if *update {
-		os.WriteFile(goldenFilePath, gotJson, 0666)
+		os.WriteFile(goldenFilePath, gotJson, 0o666)
 	} else {
 		expectedJson, err := os.ReadFile(goldenFilePath)
 		if err != nil {

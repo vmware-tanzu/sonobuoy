@@ -42,7 +42,6 @@ func TestContainerToYAML(t *testing.T) {
 	}
 
 	yamlDoc, err := kuberuntime.Encode(Encoder, container)
-
 	if err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
@@ -125,5 +124,4 @@ func TestUnmarshallWithExtraVolumes(t *testing.T) {
 	if !reflect.DeepEqual(parsed, expected) {
 		t.Errorf("Expected:\n%+v\nGot:\n%+v", expected, parsed)
 	}
-
 }

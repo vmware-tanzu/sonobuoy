@@ -1,15 +1,14 @@
 package timetest
 
 import (
-	sonotime "github.com/vmware-tanzu/sonobuoy/pkg/time"
 	"time"
+
+	sonotime "github.com/vmware-tanzu/sonobuoy/pkg/time"
 )
 
-var (
-	// shortDuration is used in tests when we want to sleep, but not for long
-	// for the sake of testing time.
-	shortDuration = 250 * time.Millisecond
-)
+// shortDuration is used in tests when we want to sleep, but not for long
+// for the sake of testing time.
+var shortDuration = 250 * time.Millisecond
 
 // UseShortAfter updates the After method to expedite sleep times for tests. Callers
 // should call ResetAfter() when they are done with their test.
