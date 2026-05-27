@@ -1,14 +1,43 @@
+version: "2"
 run:
   tests: false
-linters-settings:
-  errcheck:
-    # Keyword `exclude` is removed: https://golangci-lint.run/usage/linters/#errcheck
-    exclude-functions:
-    - github.com/imdario/mergo.Merge
-    - github.com/spf13/viper.BindEnv
-    - (github.com/spf13/pflag.Value).Set
-    - (*github.com/briandowns/spinner.Spinner).Color
-    - (*github.com/spf13/cobra.Command).MarkFlagRequired
-    - (*github.com/spf13/cobra.Command).Help
-    - (*github.com/spf13/pflag.FlagSet).MarkHidden
-    - (*github.com/spf13/pflag.FlagSet).Set
+linters:
+  settings:
+    errcheck:
+      exclude-functions:
+        - github.com/imdario/mergo.Merge
+        - github.com/spf13/viper.BindEnv
+        - (github.com/spf13/pflag.Value).Set
+        - (*github.com/briandowns/spinner.Spinner).Color
+        - (*github.com/spf13/cobra.Command).MarkFlagRequired
+        - (*github.com/spf13/cobra.Command).Help
+        - (*github.com/spf13/pflag.FlagSet).MarkHidden
+        - (*github.com/spf13/pflag.FlagSet).Set
+    staticcheck:
+      checks:
+        - all
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
+        - -QF1*
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

@@ -92,7 +92,7 @@ func (r *RBACMode) Enabled(client kubernetes.Interface) (bool, error) {
 		}
 		return checkRBACEnabled(client.Discovery().RESTClient())
 	default:
-		return false, fmt.Errorf("Unknown RBAC mode %v", *r)
+		return false, fmt.Errorf("unknown RBAC mode %v", *r)
 	}
 }
 
@@ -107,7 +107,7 @@ func checkRBACEnabled(client rest.Interface) (bool, error) {
 
 	groups, ok := result.(*metav1.APIGroupList)
 	if !ok {
-		return false, fmt.Errorf("Unknown type for API group %T", groups)
+		return false, fmt.Errorf("unknown type for API group %T", groups)
 	}
 
 	for _, group := range groups.Groups {

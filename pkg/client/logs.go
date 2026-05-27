@@ -34,9 +34,9 @@ import (
 const (
 	bufSize = 4096
 
-	// maxBackoffSeconds is the maximum time to backoff when waiting for pods to startup. Prevents
+	// maxBackoff is the maximum time to backoff when waiting for pods to startup. Prevents
 	// unhelpfully large noop periods.
-	maxBackoffSeconds = 32
+	maxBackoff = 32 * time.Second
 )
 
 // Reader provides an io.Reader interface to a channel of bytes. The first error
@@ -340,7 +340,7 @@ func isContainerRunning(statuses *[]v1.ContainerStatus, containerName string) bo
 }
 
 func (l *logStreamer) waitForContainerRunning() error {
-	backoffSeconds := 1 * time.Second
+	backoff := 1 * time.Second
 	for {
 		pod, err := l.client.CoreV1().Pods(l.ns).Get(context.TODO(), l.pod, metav1.GetOptions{})
 		if err != nil {
@@ -351,11 +351,11 @@ func (l *logStreamer) waitForContainerRunning() error {
 			return nil
 		}
 
-		fmt.Printf("container %v, is not running, will retry streaming logs in %v seconds\n", l.podName(), backoffSeconds)
-		time.Sleep(backoffSeconds)
-		backoffSeconds *= 2
-		if backoffSeconds > maxBackoffSeconds*time.Second {
-			backoffSeconds = maxBackoffSeconds * time.Second
+		fmt.Printf("container %v, is not running, will retry streaming logs in %v seconds\n", l.podName(), backoff)
+		time.Sleep(backoff)
+		backoff *= 2
+		if backoff > maxBackoff {
+			backoff = maxBackoff
 		}
 	}
 }

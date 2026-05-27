@@ -295,7 +295,7 @@ func (s *ProgressUpdate) FormatPluginProgress() (output string) {
 		return ""
 	}
 	output = fmt.Sprintf("Passed:%[1]*[2]v, Failed:%[1]*[3]v", minSize, s.Completed, int64(len(s.Failures)))
-	var remaining int64 = s.Total - s.Completed - int64(len(s.Failures))
+	var remaining = s.Total - s.Completed - int64(len(s.Failures))
 	if remaining >= 0 {
 		output += fmt.Sprintf(", Remaining:%[1]*[2]v", minSize, remaining)
 	}
