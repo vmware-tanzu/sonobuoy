@@ -107,12 +107,12 @@ func (p *pluginList) Set(str string) error {
 	case pluginE2E:
 		p.DynamicPlugins = append(p.DynamicPlugins, str)
 		if renameAs != "" {
-			return fmt.Errorf("Cannot use @ renaming of plugins not loaded from file or URL")
+			return fmt.Errorf("cannot use @ renaming of plugins not loaded from file or URL")
 		}
 	case pluginSystemdLogs:
 		p.DynamicPlugins = append(p.DynamicPlugins, str)
 		if renameAs != "" {
-			return fmt.Errorf("Cannot use @ renaming of plugins not loaded from file or URL")
+			return fmt.Errorf("cannot use @ renaming of plugins not loaded from file or URL")
 		}
 	default:
 		if isURL(str) {
