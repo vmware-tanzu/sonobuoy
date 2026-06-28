@@ -104,12 +104,12 @@ func NewRegistryList(repoConfig, k8sVersion string) (*RegistryList, error) {
 
 		fileContent, err := os.ReadFile(repoConfig)
 		if err != nil {
-			return nil, fmt.Errorf("Error reading '%v' file contents: %v", repoConfig, err)
+			return nil, fmt.Errorf("error reading '%v' file contents: %v", repoConfig, err)
 		}
 
 		err = yaml.Unmarshal(fileContent, &registry)
 		if err != nil {
-			return nil, fmt.Errorf("Error unmarshalling '%v' YAML file: %v", repoConfig, err)
+			return nil, fmt.Errorf("error unmarshalling '%v' YAML file: %v", repoConfig, err)
 		}
 	}
 
