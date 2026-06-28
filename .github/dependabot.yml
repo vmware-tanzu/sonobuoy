@@ -1,0 +1,31 @@
+# .github/dependabot.yml
+# Documentation: https://docs.github.com/en/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically/configuration-options-for-dependency-updates
+version: 2
+updates:
+
+  # GitHub Actions workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: ":seedling:"
+    labels:
+      - "github-actions"
+
+  # Go modules
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: ":seedling:"
+    labels:
+      - "dependencies"
+    groups:
+      kubernetes:
+        patterns:
+          - "k8s.io/*"
+
