@@ -56,7 +56,7 @@ The following methods exist for installing Sonobuoy:
 
    Move the extracted `sonobuoy` executable to somewhere on your `PATH`.
 
-### Install with Hombrew (MacOS)
+### Install with Homebrew (MacOS)
 
 1. Run the command:
 

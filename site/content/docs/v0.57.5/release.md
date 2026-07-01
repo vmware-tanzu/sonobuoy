@@ -85,7 +85,7 @@ This step will tag the code and triggers a release.
 
 
 ## Release Validation
-1. Open a browser tab and go to: https://https://github.com/vmware-tanzu/sonobuoy/actions and verify go releaser for tag v0.x.y completes successfully.
+1. Open a browser tab and go to: https://github.com/vmware-tanzu/sonobuoy/actions and verify go releaser for tag v0.x.y completes successfully.
 1. Upon successful completion of build job above, check the [releases tab of Sonobuoy](https://github.com/vmware-tanzu/sonobuoy/releases) and verify the artifacts and changelog were published correctly.
 1. Run the following command to make sure the image was pushed correctly to [Docker Hub][dockerhub]:
 
