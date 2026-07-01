@@ -9,7 +9,7 @@ TARGET=sonobuoy
 GOTARGET=github.com/vmware-tanzu/"$TARGET"
 GOPATH=$(go env GOPATH)
 REGISTRY=sonobuoy
-LINUX_ARCH=(amd64 arm64 ppc64le s390x)
+LINUX_ARCH=(amd64 arm64 ppc64le s390x riscv64)
 
 # Currently only under a single arch, can iterate over these and still assume arch value.
 WIN_ARCH=amd64
@@ -36,6 +36,7 @@ AMD_IMAGE=gcr.io/distroless/static:nonroot
 ARM_IMAGE=gcr.io/distroless/static:nonroot-arm64
 PPC64LE_IMAGE=gcr.io/distroless/static:nonroot-ppc64le
 S390X_IMAGE=gcr.io/distroless/static:nonroot-s390x
+RISCV64_IMAGE=gcr.io/distroless/static:nonroot-riscv64
 WIN_AMD64_BASEIMAGE=mcr.microsoft.com/windows/nanoserver
 TEST_IMAGE=testimage:v0.1
 LINT_IMAGE=golangci/golangci-lint:v1.64.8
@@ -134,10 +135,14 @@ gen_dockerfile_for_os_arch(){
             sed -e "s|BASEIMAGE|$PPC64LE_IMAGE|g" \
                 -e 's|CMD1||g' \
                 -e 's|BINARY|build/linux/ppc64le/sonobuoy|g' Dockerfile > "$dockerfile"
-	elif [ "$2" = "s390x" ]; then
+        elif [ "$2" = "s390x" ]; then
             sed -e "s|BASEIMAGE|$S390X_IMAGE|g" \
                 -e 's|CMD1||g' \
                 -e 's|BINARY|build/linux/s390x/sonobuoy|g' Dockerfile > "$dockerfile"
+        elif [ "$2" = "riscv64" ]; then
+            sed -e "s|BASEIMAGE|$RISCV64_IMAGE|g" \
+                -e 's|CMD1||g' \
+                -e 's|BINARY|build/linux/riscv64/sonobuoy|g' Dockerfile > "$dockerfile"
         else
             echo "Linux ARCH unknown"
         fi
