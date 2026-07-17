@@ -489,6 +489,13 @@ func AddNamespacePSAEnforceLevelFlag(str *string, flags *pflag.FlagSet) {
 	)
 }
 
+func AddExcludeResourcesFlag(strs *[]string, flags *pflag.FlagSet) {
+	flags.StringSliceVar(
+		strs, "exclude-resources", nil,
+		"Resources to exclude from collection (e.g. MachineConfig,PackageManifest). Applied after the implicit secrets filter.",
+	)
+}
+
 // Used if we're just setting the given string as the value; focus and skip need
 // regexp validation first.
 type envVarModierFlag struct {
