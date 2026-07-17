@@ -48,9 +48,10 @@ func TestFilterResources(t *testing.T) {
 	}
 
 	tcs := []struct {
-		desc          string
-		ns            bool
-		wantResources []string
+		desc             string
+		ns               bool
+		wantResources    []string
+		excludeResources []string
 
 		// To test some things we may not want to worry about the whole list
 		// and instead worry about some custom concern, hence the customCheck.
@@ -114,12 +115,49 @@ func TestFilterResources(t *testing.T) {
 			expect: []schema.GroupVersionResource{
 				{Group: "", Version: "v1", Resource: "secrets"},
 			},
+		}, {
+			desc:             "Excludes resources in ExcludeResources list",
+			wantResources:    []string{"pods", "configmaps"},
+			excludeResources: []string{"configmaps"},
+			ns:               true,
+			expect: []schema.GroupVersionResource{
+				{Group: "", Version: "v1", Resource: "pods"},
+			},
+		}, {
+			desc:             "ExcludeResources with nil list excludes nothing",
+			wantResources:    []string{"pods"},
+			excludeResources: nil,
+			ns:               true,
+			expect: []schema.GroupVersionResource{
+				{Group: "", Version: "v1", Resource: "pods"},
+			},
+		}, {
+			desc:             "ExcludeResources does not affect resources not in list",
+			wantResources:    []string{"pods", "configmaps"},
+			excludeResources: []string{"services"},
+			ns:               true,
+			expect: []schema.GroupVersionResource{
+				{Group: "", Version: "v1", Resource: "pods"},
+				{Group: "", Version: "v1", Resource: "configmaps"},
+			},
+		}, {
+			desc:             "ExcludeResources works when querying everything implicitly",
+			excludeResources: []string{"configmaps"},
+			ns:               true,
+			customCheck: func(gvrList []schema.GroupVersionResource) error {
+				for _, gvr := range gvrList {
+					if gvr.Resource == "configmaps" {
+						return fmt.Errorf("Expected configmaps to be excluded but found gvr: %#v", gvr)
+					}
+				}
+				return nil
+			},
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			out := filterResources(resourceMap, tc.ns, tc.wantResources)
+			out := filterResources(resourceMap, tc.ns, tc.wantResources, tc.excludeResources)
 			if tc.customCheck != nil {
 				err := tc.customCheck(out)
 				if err != nil {
