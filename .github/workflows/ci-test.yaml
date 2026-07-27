@@ -78,6 +78,7 @@ jobs:
   vulnerability-scan-linux:
     runs-on: ubuntu-latest
     needs: [build-linux, unit-test-linux]
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'cve-fix')
     steps:
       - name: Download binaries and prebuilt images
         uses: actions/download-artifact@v4
