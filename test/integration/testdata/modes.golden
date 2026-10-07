@@ -10,6 +10,12 @@ E2E_FOCUS: \[Conformance\]
 E2E_SKIP: Serial|Slow|Disruptive|\[sig-apps\] StatefulSet Basic StatefulSet functionality \[StatefulSetBasic\] should have a working scale subresource \[Conformance\]|\[sig-network\] EndpointSlice sho... (truncated) ...
 E2E_PARALLEL: true
 
+Mode: future-conformance
+Description: Future conformance mode runs all e2e tests that are marked as being conformance requirements for a future release of Kubernetes.
+E2E_FOCUS: \[FutureConformance\]
+E2E_SKIP: 
+E2E_PARALLEL: false
+
 Mode: non-disruptive-conformance
 Description: Non-destructive conformance mode runs all of the conformance tests except those that would disrupt other cluster operations (e.g. tests that may cause nodes to be restarted or impact clus... (truncated) ...
 E2E_FOCUS: \[Conformance\]
