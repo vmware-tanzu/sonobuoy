@@ -44,6 +44,10 @@ This mode runs all of the `Conformance` tests and is the mode used when applying
 
 > NOTE: The length of time it takes to run conformance can vary based on the size of your cluster---the timeout can be adjusted in the Server.timeoutseconds field of the Sonobuoy `config.json` or on the CLI via the `--timeout` flag.
 
+* future-conformance
+
+This mode runs all of the `FutureConformance` tests: tests that have been tagged to indicate that they will become part of `Conformance` in a future Kubernetes release. In particular, this can be used to detect when some cluster component (such as a network plugin) does not yet implement some soon-to-be-required feature. Some releases may have no `FutureConformance` tests.
+
 ## Dry Run and the E2E Command
 
 When specifying your own focus/skip values, it may be useful to figure out which tests will be run before actually spending the time/resources to run them.
