@@ -28,7 +28,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 // once used just to initKlogs one time; the `gen cli` command will hit that path a second time
@@ -158,6 +158,9 @@ func prerunChecks(cmd *cobra.Command, args []string) error {
 func initKlog(cmd *cobra.Command) {
 	initKlogsOnce := func() {
 		klog.InitFlags(nil)
+		// Opt into fixed stderrthreshold behavior (kubernetes/klog#212).
+		_ = flag.Set("legacy_stderr_threshold_behavior", "false")
+		_ = flag.Set("stderrthreshold", "INFO")
 	}
 	once.Do(initKlogsOnce)
 
