@@ -28,7 +28,7 @@ sonobuoy gen plugin systemd-logs [flags]
       --kube-conformance-image image             Container image override for the e2e plugin. Shorthand for --plugin-image=e2e:<string> (default map[])
       --kubeconfig Kubeconfig                    Path to explicit kubeconfig file.
       --kubernetes-version string                Use default E2E image, but override the version. Default is 'auto', which will be set to your cluster's version if detected, erroring otherwise. 'ignore' will try version resolution but ignore errors. 'latest' will find the latest dev image/version upstream.
-  -m, --mode Mode                                What mode to run the e2e plugin in. Valid modes are [certified-conformance conformance-lite non-disruptive-conformance quick]. (default non-disruptive-conformance)
+  -m, --mode Mode                                What mode to run the e2e plugin in. Valid modes are [certified-conformance conformance-lite future-conformance non-disruptive-conformance quick]. (default non-disruptive-conformance)
   -n, --namespace string                         The namespace to run Sonobuoy in. Only one Sonobuoy run can exist per namespace simultaneously. (default "sonobuoy")
       --namespace-psa-enforce-level string       The PSA enforce level for the namespace. (default "privileged")
   -p, --plugin pluginList                        Which plugins to run. Can either point to a URL, local file/directory, or be one of the known plugins (e2e or systemd-logs). Can be specified multiple times to run multiple plugins.

@@ -42,14 +42,18 @@ const (
 	// E2eModeCertifiedConformance runs all of the `Conformance` E2E tests and the systemd log tests.
 	E2eModeCertifiedConformance string = "certified-conformance"
 
+	// E2eModeFutureConformance runs all of the `FutureConformance` E2E tests (if any).
+	E2eModeFutureConformance string = "future-conformance"
+
 	// nonDisruptiveSkipList should generally just need to skip disruptive tests since upstream
 	// will disallow the other types of tests from being tagged as Conformance. However, in v1.16
 	// two disruptive tests were  not marked as such, meaning we needed to specify them here to ensure
 	// user workload safety. See https://github.com/kubernetes/kubernetes/issues/82663
 	// and https://github.com/kubernetes/kubernetes/issues/82787
-	nonDisruptiveSkipList = `\[Disruptive\]|NoExecuteTaintManager`
-	conformanceFocus      = `\[Conformance\]`
-	quickFocus            = "Pods should be submitted and removed"
+	nonDisruptiveSkipList  = `\[Disruptive\]|NoExecuteTaintManager`
+	conformanceFocus       = `\[Conformance\]`
+	futureConformanceFocus = `\[FutureConformance\]`
+	quickFocus             = "Pods should be submitted and removed"
 
 	E2eModeConformanceLite = "conformance-lite"
 )
@@ -134,6 +138,10 @@ var validModes = map[string]e2eModeOptions{
 	E2eModeConformanceLite: {
 		name: E2eModeConformanceLite, focus: conformanceFocus, skip: genLiteSkips(), parallel: true,
 		desc: "An unofficial mode of running the e2e tests which removes some of the longest running tests so that your tests can complete in the fastest time possible while maximizing coverage.",
+	},
+	E2eModeFutureConformance: {
+		name: E2eModeFutureConformance, focus: futureConformanceFocus,
+		desc: "Future conformance mode runs all e2e tests that are marked as being conformance requirements for a future release of Kubernetes.",
 	},
 }
 
