@@ -128,7 +128,8 @@ type Config struct {
 	///////////////////////////////////////////////
 	// Query options
 	///////////////////////////////////////////////
-	Resources []string      `json:"Resources" mapstructure:"Resources"`
+	Resources        []string `json:"Resources" mapstructure:"Resources"`
+	ExcludeResources []string `json:"ExcludeResources,omitempty" mapstructure:"ExcludeResources,omitempty"`
 	Filters   FilterOptions `json:"Filters" mapstructure:"Filters"`
 	Limits    LimitConfig   `json:"Limits" mapstructure:"Limits"`
 	QPS       float32       `json:"QPS,omitempty" mapstructure:"QPS"`
