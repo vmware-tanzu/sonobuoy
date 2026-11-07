@@ -217,6 +217,18 @@ func TestFilenameFromHeader(t *testing.T) {
 			desc:   "No header leads to default",
 			input:  "",
 			expect: "result",
+		}, {
+			desc:   "Path in filename is reduced to its last element",
+			input:  `attachment;filename="../../etc/foo"`,
+			expect: "foo",
+		}, {
+			desc:   "Filename that is only a traversal leads to default",
+			input:  `attachment;filename=".."`,
+			expect: "result",
+		}, {
+			desc:   "Absolute filename is reduced to its last element",
+			input:  `attachment;filename="/etc/foo"`,
+			expect: "foo",
 		},
 	}
 	for _, tc := range testCases {

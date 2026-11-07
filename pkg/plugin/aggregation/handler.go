@@ -21,6 +21,7 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -225,8 +226,12 @@ func filenameFromHeader(contentDisposition string) string {
 	if err != nil {
 		return defaultFilename
 	}
-	if params["filename"] != "" {
-		return params["filename"]
+	// The filename lands in a path join, so only the last element is usable and
+	// anything that is not a plain name falls back to the default.
+	if name := filepath.Base(params["filename"]); name != "" {
+		if name != "." && name != ".." && name != string(filepath.Separator) {
+			return name
+		}
 	}
 	return defaultFilename
 }
