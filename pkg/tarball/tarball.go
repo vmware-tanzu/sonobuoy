@@ -69,7 +69,7 @@ func DecodeTarball(reader io.Reader, baseDir string) error {
 			}
 		case tar.TypeSymlink:
 			if !noTraversal(name, baseDir) {
-				return errors.Wrapf(err, "unsafe symlink detected in name: %v", name)
+				return errors.Errorf("unsafe symlink detected in name: %v", name)
 			}
 			filePath := filepath.Join(baseDir, name)
 			// Directory should come first, but some tarballes are malformed
