@@ -1,6 +1,6 @@
 module github.com/vmware-tanzu/sonobuoy
 
-go 1.26.10
+go 1.26.11
 
 require (
 	github.com/briandowns/spinner v1.19.0
