@@ -69,7 +69,7 @@ func QueryCluster(restConf *rest.Config, cfg *config.Config) error {
 
 	// Run the queries
 	recorder := NewQueryRecorder()
-	clusterResources, nsResources, err := getAllFilteredResources(apiHelper, cfg.Resources)
+	clusterResources, nsResources, err := getAllFilteredResources(apiHelper, cfg.Resources, cfg.ExcludeResources)
 	if err != nil {
 		return errors.Wrap(err, "unable to filter resources")
 	}
@@ -338,17 +338,17 @@ func QueryResources(
 
 // getAllFilteredResources figure out which resources we want to query for based on the filter list and whether
 // or not we are considering namespaced objects or not.
-func getAllFilteredResources(client *dynamic.APIHelper, wantResources []string) (clusterResources, nsResources []schema.GroupVersionResource, retErr error) {
+func getAllFilteredResources(client *dynamic.APIHelper, wantResources []string, excludeResources []string) (clusterResources, nsResources []schema.GroupVersionResource, retErr error) {
 	groupResources, err := getResources(client)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "choosing resources to gather")
 	}
-	return filterResources(groupResources, false, wantResources),
-		filterResources(groupResources, true, wantResources),
+	return filterResources(groupResources, false, wantResources, excludeResources),
+		filterResources(groupResources, true, wantResources, excludeResources),
 		nil
 }
 
-func filterResources(gvrs map[schema.GroupVersion][]metav1.APIResource, namespaced bool, wantResources []string) []schema.GroupVersionResource {
+func filterResources(gvrs map[schema.GroupVersion][]metav1.APIResource, namespaced bool, wantResources []string, excludeResources []string) []schema.GroupVersionResource {
 	results := []schema.GroupVersionResource{}
 	for gv, resources := range gvrs {
 		for _, res := range resources {
@@ -381,6 +381,11 @@ func filterResources(gvrs map[schema.GroupVersion][]metav1.APIResource, namespac
 					logrus.Infof("Resources is not set explicitly implying query all resources, but skipping %v for safety. Specify the value explicitly in Resources to gather this data.", res.Name)
 					continue
 				}
+			}
+
+			if len(excludeResources) > 0 && sliceContains(excludeResources, res.Name) {
+				logrus.Infof("Resource %v is in ExcludeResources list. Skipping %v query.", res.Name, res.Name)
+				continue
 			}
 
 			results = append(results, gv.WithResource(res.Name))
