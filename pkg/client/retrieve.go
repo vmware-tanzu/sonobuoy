@@ -32,6 +32,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 )
@@ -85,11 +86,26 @@ func (c *SonobuoyClient) RetrieveResults(cfg *RetrieveConfig) (io.Reader, <-chan
 		Stdout:    true,
 		Stderr:    false,
 	}, scheme.ParameterCodec)
-	executor, err := remotecommand.NewSPDYExecutor(c.RestConfig, "POST", req.URL())
+
+	// WebSocketExecutor must be "GET" method as described in RFC 6455 Sec. 4.1 (page 17).
+	websocketExecutor, err := remotecommand.NewWebSocketExecutor(c.RestConfig, "GET", req.URL().String())
 	if err != nil {
 		ec <- err
 		return nil, ec, nil
 	}
+	spdyExecutor, err := remotecommand.NewSPDYExecutor(c.RestConfig, "POST", req.URL())
+	if err != nil {
+		ec <- err
+		return nil, ec, nil
+	}
+	executor, err := remotecommand.NewFallbackExecutor(websocketExecutor, spdyExecutor, func(err error) bool {
+		return httpstream.IsUpgradeFailure(err) || httpstream.IsHTTPSProxyError(err)
+	})
+	if err != nil {
+		ec <- err
+		return nil, ec, nil
+	}
+
 	reader, writer := io.Pipe()
 	go func(writer *io.PipeWriter, ec chan error) {
 		defer writer.Close()
