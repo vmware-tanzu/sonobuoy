@@ -49,6 +49,12 @@ func DecodeTarball(reader io.Reader, baseDir string) error {
 		}
 		name := path.Clean(header.Name)
 
+		// The symlink branch has always refused to escape the base directory;
+		// files and directories need the same check.
+		if !noTraversal(name, baseDir) {
+			return errors.Errorf("unsafe path detected in name: %v", name)
+		}
+
 		switch header.Typeflag {
 		case tar.TypeDir:
 			if err := os.MkdirAll(filepath.Join(baseDir, name), os.FileMode(header.Mode)); err != nil {
@@ -68,8 +74,8 @@ func DecodeTarball(reader io.Reader, baseDir string) error {
 				return errors.Wrap(err, "error decoding tarball for result (copy)")
 			}
 		case tar.TypeSymlink:
-			if !noTraversal(name, baseDir) {
-				return errors.Wrapf(err, "unsafe symlink detected in name: %v", name)
+			if !noTraversal(path.Clean(header.Linkname), baseDir) {
+				return errors.Errorf("unsafe symlink target detected in name: %v", header.Linkname)
 			}
 			filePath := filepath.Join(baseDir, name)
 			// Directory should come first, but some tarballes are malformed

@@ -152,3 +152,62 @@ func TestDecodeTarball(t *testing.T) {
 		})
 	}
 }
+
+func TestDecodeTarballTraversal(t *testing.T) {
+	testCases := []struct {
+		desc     string
+		name     string
+		typeflag byte
+	}{
+		{desc: "regular file above the base directory", name: "../escaped.txt", typeflag: tar.TypeReg},
+		{desc: "directory above the base directory", name: "../escaped-dir", typeflag: tar.TypeDir},
+		{desc: "regular file at an absolute path", name: "/tmp/escaped-abs.txt", typeflag: tar.TypeReg},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			buffer := &bytes.Buffer{}
+			gz := gzip.NewWriter(buffer)
+			w := tar.NewWriter(gz)
+
+			header := &tar.Header{
+				Name:     tc.name,
+				Mode:     0755,
+				Typeflag: tc.typeflag,
+				ModTime:  time.Now(),
+			}
+			if tc.typeflag == tar.TypeReg {
+				header.Size = int64(len(stoppingByTheWoods))
+			}
+			if err := w.WriteHeader(header); err != nil {
+				t.Fatalf("Unexpected error %v", err)
+			}
+			if tc.typeflag == tar.TypeReg {
+				if _, err := w.Write([]byte(stoppingByTheWoods)); err != nil {
+					t.Fatalf("Unexpected error %v", err)
+				}
+			}
+			if err := w.Close(); err != nil {
+				t.Fatalf("Unexpected error %v", err)
+			}
+			if err := gz.Close(); err != nil {
+				t.Fatalf("Unexpected error %v", err)
+			}
+
+			parent := t.TempDir()
+			baseDir := filepath.Join(parent, "base")
+			if err := os.MkdirAll(baseDir, 0755); err != nil {
+				t.Fatalf("Unexpected error %v", err)
+			}
+
+			if err := DecodeTarball(buffer, baseDir); err == nil {
+				t.Error("expected an error for an entry outside the base directory, got nil")
+			}
+
+			escaped := filepath.Join(parent, filepath.Base(tc.name))
+			if _, err := os.Stat(escaped); err == nil {
+				t.Errorf("entry was written outside the base directory at %v", escaped)
+			}
+		})
+	}
+}
