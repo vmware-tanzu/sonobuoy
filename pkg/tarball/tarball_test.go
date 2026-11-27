@@ -152,3 +152,38 @@ func TestDecodeTarball(t *testing.T) {
 		})
 	}
 }
+
+// TestDecodeTarballUnsafeSymlink ensures that a tarball containing a symlink
+// whose path attempts to traverse outside of the destination directory is
+// rejected with an error rather than being silently ignored.
+func TestDecodeTarballUnsafeSymlink(t *testing.T) {
+	buffer := &bytes.Buffer{}
+	gz := gzip.NewWriter(buffer)
+	w := tar.NewWriter(gz)
+
+	if err := w.WriteHeader(&tar.Header{
+		Name:     "../escape",
+		Linkname: "target",
+		Mode:     0755,
+		Typeflag: tar.TypeSymlink,
+		ModTime:  time.Now(),
+	}); err != nil {
+		t.Fatalf("Unexpected error %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatalf("Unexpected error %v", err)
+	}
+	if err := gz.Close(); err != nil {
+		t.Fatalf("Unexpected error %v", err)
+	}
+
+	dir, err := os.MkdirTemp("", "tarball-test")
+	if err != nil {
+		t.Fatalf("Unexpected error %v", err)
+	}
+	defer os.RemoveAll(dir)
+
+	if err := DecodeTarball(bytes.NewBuffer(buffer.Bytes()), dir); err == nil {
+		t.Fatal("Expected an error when decoding a tarball with an unsafe symlink, got nil")
+	}
+}
